@@ -1,0 +1,32 @@
+services:
+  resourcespace:
+    build:
+      context: ./.runtime/resourcespace-docker
+    container_name: tjc-resourcespace
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    ports:
+      - "${RESOURCESPACE_PORT:-8088}:80"
+    volumes:
+      - ./.runtime/filestore:/var/www/html/filestore
+      - ./.runtime/resourcespace-config.php:/var/www/html/include/config.php
+    networks:
+      - frontend
+      - backend
+
+  mariadb:
+    image: mariadb:11
+    container_name: tjc-resourcespace-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./.runtime/mariadb:/var/lib/mysql
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+
