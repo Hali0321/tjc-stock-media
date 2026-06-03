@@ -39,9 +39,17 @@
 | `approval_notes` | Why this asset is safe or restricted. |
 | `expiration_or_recheck_date` | Date to revisit rights if needed. |
 
+## Derivatives / Format Handling
+
+| Field | Purpose |
+|---|---|
+| `derivative_status` | Notes whether a preview/use derivative exists, especially for HEIC originals. |
+| `alternative_file_count` | Export-only count of attached alternatives, such as generated JPG derivatives. |
+
+Policy: preserve originals as masters. If HEIC preview fails, attach a metadata-stripped JPG derivative to the same asset record instead of replacing the HEIC or creating an unmanaged duplicate.
+
 ## Important Rule
 
 Keep `visible_content_tags` separate from `TJC_terms`.
 
 Example: a photo may visibly show `people, table, flowers`, but the TJC context may be `fellowship lunch` or `youth ministry`.
-

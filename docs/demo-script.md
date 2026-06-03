@@ -43,7 +43,11 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 
    Show source path, tags, review status, and `Do Not Publish`.
 
-6. Approve two example assets.
+6. Show HEIC handling.
+
+   Open a HEIC that failed native preview. Show that the original HEIC remains preserved, while a JPG derivative alternative is attached for preview/use. Explain: normal users use the JPG; admins/designers can still access the HEIC when needed.
+
+7. Approve two example assets.
 
    - One `Approved Public`
    - One `Approved Internal`
@@ -53,15 +57,15 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
    - Resource `368`: `Approved Public`, demo only
    - Resource `441`: `Approved Internal`, demo only
 
-7. Export metadata CSV.
+8. Export metadata CSV.
 
-   Show that the system can leave with its metadata. Current export: `.runtime/exports/resourcespace-metadata-20260603-172736.csv`.
+   Show that the system can leave with its metadata. Current export: `.runtime/exports/resourcespace-metadata-20260603-184435.csv`.
 
-8. Copy approved sample back to Shared Drive.
+9. Copy approved sample back to Shared Drive.
 
    Show approved output, not source mutation.
 
-9. Show original untouched.
+10. Show original untouched.
 
    The source folder still exists and files are not renamed or deleted.
 

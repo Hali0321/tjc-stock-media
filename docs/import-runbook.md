@@ -8,8 +8,9 @@
 - Stored binaries: 181
 - Review state: 179 Pending Review, 2 active demo-approved samples
 - Import audit: `.runtime/audits/resourcespace-import-audit-20260603-171816.csv`
+- HEIC derivative audit: `.runtime/heic-derivatives/20260603-184347/resourcespace-heic-attach-audit.csv`
 - Demo metadata: 77 resources seeded with visible/TJC tags
-- Metadata export: `.runtime/exports/resourcespace-metadata-20260603-172736.csv`
+- Metadata export: `.runtime/exports/resourcespace-metadata-20260603-184435.csv`
 
 ## Commands
 
@@ -29,6 +30,7 @@ Verify local runtime:
 
 ```bash
 make smoke
+make heic-derivatives
 make backup
 make restore-test
 ```
@@ -43,16 +45,24 @@ make restore-test
 
 ## HEIC Handling
 
-18 HEIC files imported. 2 generated previews. 16 produced HEIC codec warnings during preview generation.
+18 HEIC files imported. 2 generated previews natively. 16 produced HEIC codec warnings during preview generation and now have attached JPG derivative alternatives.
 
 | Scenario | Action |
 |---|---|
 | Imports and previews work | Mark HEIC supported in local test. |
-| Imports but preview fails | Keep original and create derivative JPG copy only. |
+| Imports but preview fails | Keep original and attach derivative JPG to the same ResourceSpace asset. |
 | Import fails | List in failed import report. |
 | Conversion needed | Convert copied file only; never mutate original. |
 
-MVP decision: keep original HEIC files, but create derivative JPG copies for preview/use if the asset is selected for the demo or approved library.
+MVP decision: keep original HEIC files as master assets. Use attached metadata-stripped JPG derivatives for preview and normal user downloads. Admins/designers can still access the original HEIC if Apple-format originals are needed.
+
+Run:
+
+```bash
+make heic-derivatives
+```
+
+The workflow converts local source copies with macOS `sips`, strips derivative metadata with `jpegtran -copy none`, attaches JPG alternatives in ResourceSpace, records `derivative_status`, and leaves the primary HEIC file unchanged.
 
 ## Audit Fields
 
@@ -64,6 +74,7 @@ Record:
 - preview success count
 - preview failed count
 - HEIC behavior notes
+- derivative status and alternative file count
 
 ## Safety Rules
 

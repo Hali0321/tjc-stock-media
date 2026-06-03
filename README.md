@@ -41,10 +41,10 @@ Current import status:
 - Imported active resources: 181
 - Review state: 179 Pending Review, 2 active demo-approved samples
 - Files with stored binaries: 181
-- HEIC preview result: 18 imported, 2 previewed, 16 need derivative JPG or HEIC codec handling
+- HEIC result: 18 originals preserved, 2 previewed natively, 16 have attached JPG derivative alternatives for preview/use
 - Demo metadata: 77 resources seeded with visible/TJC tags
 - Search checks: Bible 23, Plant 34, Fountain 6, Needs Review 179
-- Metadata export: `.runtime/exports/resourcespace-metadata-20260603-172736.csv`
+- Metadata export: `.runtime/exports/resourcespace-metadata-20260603-184435.csv`
 
 ## Quick Start
 
@@ -91,11 +91,16 @@ make up              # bootstrap official ResourceSpace Docker repo and start lo
 make smoke           # local health checks
 make import-audit    # generate source manifest with checksums
 make import-mvp-batch # import first batch into ResourceSpace
+make heic-derivatives # attach JPG derivatives to HEICs that failed preview
 make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
 make down            # stop local containers
 ```
+
+## HEIC Policy
+
+Keep HEIC originals as the master files. When ResourceSpace cannot preview a HEIC, create an attached metadata-stripped JPG derivative on the same asset record. Normal users can use/download the JPG derivative; admins or designers can still retrieve the original HEIC when Apple-format originals are needed.
 
 ## Not Production
 

@@ -26,6 +26,7 @@ $fields = [
     "reviewed_by" => "reviewed_by",
     "reviewed_date" => "reviewed_date",
     "approval_notes" => "approval_notes",
+    "derivative_status" => "derivative_status",
 ];
 
 foreach ($fields as $name => $ref_or_shortname) {
@@ -46,18 +47,25 @@ $header = array_merge([
     "resource_type",
     "file_extension",
     "file_size",
+    "alternative_file_count",
 ], array_keys($fields));
 fputcsv($handle, $header);
 
 $rows = ps_query("SELECT ref, archive, resource_type, file_extension, file_size FROM resource WHERE ref >= 363 AND archive IN (-1,0) ORDER BY ref");
 foreach ($rows as $row) {
     $ref = (int) $row["ref"];
+    $alternative_count = (int) ps_value(
+        "SELECT COUNT(*) value FROM resource_alt_files WHERE resource = ?",
+        ["i", $ref],
+        0
+    );
     $line = [
         $ref,
         $row["archive"],
         $row["resource_type"],
         $row["file_extension"],
         $row["file_size"],
+        $alternative_count,
     ];
     foreach ($fields as $field_ref) {
         $line[] = $field_ref > 0 ? get_data_by_field($ref, $field_ref) : "";
