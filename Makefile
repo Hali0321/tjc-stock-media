@@ -1,6 +1,7 @@
-.PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui export-metadata backup restore-test
+.PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui lm-photos-zip-inventory lm-photos-stream-run lm-photos-run-report export-metadata backup restore-test
 
 IMPORT_DIR ?= /Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024
+LM_PHOTOS_ZIP_DIR ?= /Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo
 
 init:
 	./scripts/bootstrap-official-docker.sh
@@ -34,6 +35,15 @@ heic-derivatives:
 
 polish-mvp-ui:
 	./scripts/polish-mvp-ui.sh
+
+lm-photos-zip-inventory:
+	./scripts/lm-photos-zip-inventory.sh "$(LM_PHOTOS_ZIP_DIR)"
+
+lm-photos-stream-run:
+	./scripts/lm-photos-stream-run.sh "$(LM_PHOTOS_ZIP_DIR)"
+
+lm-photos-run-report:
+	./scripts/generate-run-report.py
 
 export-metadata:
 	./scripts/export-metadata.sh

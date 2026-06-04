@@ -40,7 +40,7 @@ docker compose cp scripts/resourcespace-heic-derivatives.php resourcespace:/tmp/
 docker compose exec -T resourcespace php /tmp/resourcespace-heic-derivatives.php plan "$CONTAINER_PLAN"
 docker compose cp "resourcespace:$CONTAINER_PLAN" "$PLAN"
 
-python3 - "$PLAN" "$SOURCE_DIR" "$RUN_DIR/derivatives" "$AUDIT" <<'PY'
+python3 - "$PLAN" "$SOURCE_DIR" "$RUN_DIR/derivatives" "$AUDIT" "$ROOT/.runtime/filestore" <<'PY'
 import csv
 import subprocess
 import sys
@@ -50,6 +50,7 @@ plan = Path(sys.argv[1])
 source_dir = Path(sys.argv[2])
 derivative_dir = Path(sys.argv[3])
 audit = Path(sys.argv[4])
+host_filestore = Path(sys.argv[5])
 
 with plan.open(newline="") as src, audit.open("w", newline="") as out:
     reader = csv.DictReader(src)
@@ -58,6 +59,8 @@ with plan.open(newline="") as src, audit.open("w", newline="") as out:
     for row in reader:
         resource_id = row["resource_id"]
         source_file = source_dir / row["source_basename"]
+        if not source_file.exists() and row.get("resource_path", "").startswith("/var/www/html/filestore/"):
+            source_file = host_filestore / row["resource_path"].removeprefix("/var/www/html/filestore/")
         derivative_file = derivative_dir / f"{resource_id}.jpg"
         temp_file = derivative_dir / f"{resource_id}.with-metadata.jpg"
         status = "converted"
@@ -93,6 +96,11 @@ with plan.open(newline="") as src, audit.open("w", newline="") as out:
 PY
 
 converted_count="$(awk -F, 'NR>1 && $5=="converted"{count++} END{print count+0}' "$AUDIT")"
+planned_count="$(awk 'NR>1{count++} END{print count+0}' "$PLAN")"
+if [ "$planned_count" -eq 0 ]; then
+  echo "No HEIC resources currently need derivatives. Plan: $PLAN"
+  exit 0
+fi
 if [ "$converted_count" -eq 0 ]; then
   echo "No HEIC derivatives converted. Audit: $AUDIT"
   exit 1

@@ -5,6 +5,8 @@ imports/
 exports/
 backups/
 *.log
+__pycache__/
+*.pyc
 
 # Never commit church media assets.
 *.jpg
@@ -23,4 +25,3 @@ backups/
 *.m4a
 *.aac
 *.flac
-

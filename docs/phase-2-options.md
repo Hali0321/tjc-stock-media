@@ -49,8 +49,9 @@ Production decision must include:
 Scale in stages:
 
 ```text
-181 files -> 500 files -> 1,000-2,000 files -> broader migration
+181 files -> LM Photos completion run -> 1,000-2,000 broader sources -> broader migration
 ```
 
 Do not scale until import accuracy, previews, search, rights workflow, metadata export, and restore test pass.
 
+The LM Photos completion run uses a streaming ZIP strategy because the local Mac has limited free space. Process one album ZIP at a time and delete only verified ZIPs.

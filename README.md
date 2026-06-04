@@ -11,7 +11,7 @@ Google Photos / old Drive folders / IA DME folders
         | manual selected batch import for MVP
         v
 TJC Stock Media Library Shared Drive
-master copy / organized storage
+master warehouse / selected originals / organized storage
         |
         | manual import now
         | Phase 2: Google Drive connector or StaticSync-style workflow
@@ -21,6 +21,7 @@ DAM index / tags / search / review / downloads
         |
         v
 Metadata exports + approved sample exports back to Shared Drive
+Approved Public/Internal folders are delivery shelves, not the archive.
 ```
 
 ## First Batch
@@ -98,6 +99,9 @@ make import-mvp-batch # import first batch into ResourceSpace
 make approve-mvp-batch # approve/publish MVP 2024 after reviewer signoff
 make heic-derivatives # attach JPG derivatives to HEICs that failed preview
 make polish-mvp-ui    # feature MVP collection and promote HEIC JPG thumbnails to front previews
+make lm-photos-zip-inventory # inventory remaining LM Photos album ZIPs
+make lm-photos-stream-run # dry-run one-album-at-a-time ZIP processing plan
+make lm-photos-run-report # summarize LM Photos streaming audits into Markdown
 make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
@@ -111,3 +115,28 @@ Keep HEIC originals as the master files. When ResourceSpace cannot preview a HEI
 ## Not Production
 
 This is a local prototype. It does not prove 24/7 uptime, production security, remote access, or full backup policy. Production hosting is a later decision.
+
+## LM Photos Completion
+
+Remaining LM Photos are downloaded as Google Photos album ZIPs under:
+
+`/Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo`
+
+Use streaming mode because local disk is tight:
+
+```bash
+make lm-photos-zip-inventory
+DRY_RUN=1 make lm-photos-stream-run
+DRY_RUN=0 DELETE_VERIFIED_ZIPS=1 make lm-photos-stream-run
+```
+
+ZIP deletion is allowed only after an album is extracted, imported or duplicate-linked, audited, verified, and temp extraction is removed. `Open Album` is processed last because it is the largest ZIP.
+
+Each real streaming album now creates:
+
+- a source manifest with SHA-256 checksums
+- a Shared Drive-style master path under `.runtime/shared-drive-staging`
+- a ResourceSpace import audit
+- duplicate-linked rows when an exact checksum already exists
+
+Batch success is not "many files imported." Batch success is that approved media is searchable, rights-aware, traceable, and safe to use.

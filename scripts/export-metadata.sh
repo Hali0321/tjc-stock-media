@@ -28,7 +28,7 @@ else
 fi
 
 header="$(head -1 "$DEST" | tr '[:upper:]' '[:lower:]')"
-required=(rights_status usage_scope source_system source_path)
+required=(rights_status usage_scope publish_status workflow_state source_system source_path master_drive_path checksum_sha256 source_album_memberships)
 missing=()
 for col in "${required[@]}"; do
   if ! grep -q "$col" <<<"$header"; then

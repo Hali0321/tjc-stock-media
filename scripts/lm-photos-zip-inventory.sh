@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ZIP_DIR="${1:-/Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo}"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+OUT_DIR="$ROOT/.runtime/audits"
+OUT="$OUT_DIR/lm-photos-zip-inventory-$STAMP.csv"
+
+mkdir -p "$OUT_DIR"
+python3 "$ROOT/scripts/lm-photos-zip-inventory.py" "$ZIP_DIR" "$OUT"
+
+echo "LM Photos ZIP inventory: $OUT"

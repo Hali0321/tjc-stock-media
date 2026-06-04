@@ -49,6 +49,50 @@ make backup
 make restore-test
 ```
 
+## LM Photos Completion Run
+
+Inventory the remaining Google Photos album ZIPs:
+
+```bash
+make lm-photos-zip-inventory
+```
+
+Preview the one-ZIP-at-a-time order without extracting/importing:
+
+```bash
+DRY_RUN=1 make lm-photos-stream-run
+```
+
+Run the streaming import only after confirming enough free space and ResourceSpace health:
+
+```bash
+make smoke
+DRY_RUN=0 DELETE_VERIFIED_ZIPS=1 PROCESS_LIMIT=1 make lm-photos-stream-run
+```
+
+When disk is tight, use manifest-only staging. This still records planned Shared Drive master paths in the manifest and ResourceSpace metadata, but does not keep a second local file copy:
+
+```bash
+STAGE_MODE=manifest-only DRY_RUN=0 DELETE_VERIFIED_ZIPS=1 PROCESS_LIMIT=1 make lm-photos-stream-run
+```
+
+Safety gates:
+
+- Process one ZIP album at a time.
+- Keep original filenames.
+- Create a source manifest and Shared Drive-style staging path before import.
+- Link exact duplicates by checksum instead of importing duplicate binaries.
+- Preserve every duplicate album membership and source path.
+- Delete a ZIP only after source count equals audit count for that album.
+- Keep `Open Album` last because it is largest.
+- Do not edit Google Photos source.
+
+Generate a decision-ready run report:
+
+```bash
+make lm-photos-run-report
+```
+
 ## Import Rules
 
 - Use manageable batches.
@@ -94,6 +138,7 @@ Record:
 
 - Do not rename, move, or delete source files.
 - Keep newly imported files in Pending Review until a human reviewer approves use.
+- Treat `01_Photos` staging as master originals. Treat `04_Approved_Public` and `05_Approved_Internal` as curated delivery outputs only.
 - After reviewer signoff for a batch, run `make approve-mvp-batch` to update approval metadata, publish resources, and write an approval audit CSV.
 - Do not treat preview success as rights approval.
 - Keep failed preview formats in the audit trail.

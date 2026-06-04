@@ -13,8 +13,10 @@ fi
 tmp="$(mktemp -d /tmp/tjc-rs-restore-test-XXXXXX)"
 trap 'rm -rf "$tmp"' EXIT
 
-tar -tzf "$latest/filestore-config.tgz" >/dev/null
-tar -xzf "$latest/filestore-config.tgz" -C "$tmp"
+tar -tzf "$latest/filestore-config.tgz" > "$tmp/archive-list.txt"
+grep -q '^filestore/' "$tmp/archive-list.txt"
+grep -q '^resourcespace-config.php$' "$tmp/archive-list.txt"
+tar -xzf "$latest/filestore-config.tgz" -C "$tmp" resourcespace-config.php
 
 if [ -f "$latest/database.sql" ]; then
   test -s "$latest/database.sql"
@@ -23,8 +25,7 @@ else
   echo "WARN: database dump not present in latest backup"
 fi
 
-test -d "$tmp/filestore"
 test -f "$tmp/resourcespace-config.php"
 
+date > "$latest/restore-test-passed.txt"
 echo "Non-destructive restore test passed for: $latest"
-

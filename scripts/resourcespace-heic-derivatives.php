@@ -77,15 +77,17 @@ if ($mode === "plan") {
     $out = $argv[2] ?? "/tmp/tjc-heic-derivative-plan.csv";
     $source_path_field = field_ref("source_path");
     $handle = fopen($out, "w");
-    csv_row($handle, ["resource_id", "original_filename", "source_basename", "has_image", "existing_alt"]);
+    csv_row($handle, ["resource_id", "original_filename", "source_basename", "resource_path", "has_image", "existing_alt"]);
 
     foreach (resources_needing_derivatives() as $row) {
         $ref = (int) $row["ref"];
         $basename = source_basename_for_resource($ref, $source_path_field, 51);
+        $resource_path = get_resource_path($ref, true, "", true, "heic");
         csv_row($handle, [
             $ref,
             get_data_by_field($ref, 51),
             $basename,
+            $resource_path,
             $row["has_image"],
             existing_derivative_alt($ref, $GLOBALS["derivative_name"]),
         ]);

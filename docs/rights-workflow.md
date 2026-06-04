@@ -4,9 +4,11 @@
 
 Every imported asset starts as:
 
-- `rights_status = Needs Review`
+- `rights_status = Unknown`
+- `publish_status = Needs Review`
 - `public_safe = Unknown`
 - `usage_scope = Do Not Publish`
+- `quality_status = Unreviewed`
 
 ## Roles
 
@@ -28,6 +30,19 @@ Every imported asset starts as:
 | Unknown people or children default to Needs Review. | Consent risk. |
 | No asset goes to Approved Public without metadata. | Prevents looks-fine approvals. |
 
+## Quality vs Rights vs Publishing
+
+Do not use one field to mean everything.
+
+| Field | Question |
+|---|---|
+| `quality_status` | Is this useful stock media? |
+| `rights_status` | Do we know the source/use rights? |
+| `usage_scope` | Where may it be used? |
+| `publish_status` | What should users do with it operationally? |
+
+Low-use but safe media should be `Archive - Not Promoted`, not `Do Not Use`. Reserve `Do Not Use` for rights, safety, privacy, or mission-alignment problems.
+
 ## Review States
 
 ```text
@@ -37,7 +52,7 @@ Needs Review
    |
    +--> Approved Public
    |
-   +--> Restricted
+   +--> Archive - Not Promoted
    |
    +--> Do Not Use
 ```
@@ -56,4 +71,3 @@ Keep these in `Needs Review` until a reviewer approves:
 - unknown people
 - volunteer-created media
 - third-party design assets
-
