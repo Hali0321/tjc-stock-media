@@ -6,11 +6,12 @@
 - ResourceSpace collection: `MVP 2024 - First Batch`
 - Imported active resources: 181
 - Stored binaries: 181
-- Review state: 179 Pending Review, 2 active demo-approved samples
+- Review state: 181 approved and published for MVP 2024 prototype batch after reviewer signoff
 - Import audit: `.runtime/audits/resourcespace-import-audit-20260603-171816.csv`
+- Approval audit: `.runtime/audits/approval-audit-20260604-165722.csv`
 - HEIC derivative audit: `.runtime/heic-derivatives/20260603-184347/resourcespace-heic-attach-audit.csv`
 - Demo metadata: 77 resources seeded with visible/TJC tags
-- Metadata export: `.runtime/exports/resourcespace-metadata-20260603-184435.csv`
+- Metadata export: `.runtime/exports/resourcespace-metadata-20260604-165746.csv`
 
 ## Commands
 
@@ -24,6 +25,12 @@ Import the first batch:
 
 ```bash
 make import-mvp-batch
+```
+
+Approve the reviewed MVP 2024 batch:
+
+```bash
+make approve-mvp-batch
 ```
 
 Verify local runtime:
@@ -79,7 +86,8 @@ Record:
 ## Safety Rules
 
 - Do not rename, move, or delete source files.
-- Keep imported files in Pending Review until a human reviewer approves use.
+- Keep newly imported files in Pending Review until a human reviewer approves use.
+- After reviewer signoff for a batch, run `make approve-mvp-batch` to update approval metadata, publish resources, and write an approval audit CSV.
 - Do not treat preview success as rights approval.
 - Keep failed preview formats in the audit trail.
-- Demo approvals are prototype-only and are not final ministry/public release approvals.
+- MVP 2024 first batch was approved by Hali for public/internal prototype use on 2026-06-04. Future batches still require reviewer signoff before approval.

@@ -18,7 +18,8 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 
 3. State the safety rule.
 
-   Every imported asset starts as `Needs Review` and `Do Not Publish`.
+   Every new imported asset starts as `Needs Review` and `Do Not Publish`.
+   For the current MVP 2024 prototype batch, Hali approved the reviewed photos for public/internal prototype use, so they are now marked `Approved Public` and published in ResourceSpace.
 
 4. Search real terms.
 
@@ -26,40 +27,34 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
    - `Plant`
    - `Fountain`
    - `MVP 2024`
-   - `Needs Review`
    - `Approved Public`
-   - `Approved Internal`
 
    Current seeded search checks:
 
-   - `Bible` in Pending Review: 23 resources
-   - `Plant` in Pending Review: 34 resources
-   - `Fountain` in Pending Review: 6 resources
-   - `Needs Review` in Pending Review: 179 resources
-   - `Approved Public`: demo-approved sample results
-   - `Approved Internal`: 1 demo-approved sample
+   - `Bible`: searchable approved resources
+   - `Plant`: searchable approved resources
+   - `Fountain`: searchable approved resources
+   - `Approved Public`: MVP 2024 approved batch results
 
-5. Open one unreviewed asset.
+5. Open one approved asset.
 
-   Show source path, tags, review status, and `Do Not Publish`.
+   Show source path, tags, review status, reviewed by, review date, and `Public and Internal` usage scope.
 
 6. Show HEIC handling.
 
    Open a HEIC that failed native preview. Show that the original HEIC remains preserved, while a JPG derivative alternative is attached for preview/use. Explain: normal users use the JPG; admins/designers can still access the HEIC when needed.
 
-7. Approve two example assets.
+7. Show approval metadata.
 
-   - One `Approved Public`
-   - One `Approved Internal`
+   - `Approved Public`
+   - `Public and Internal`
+   - `ResourceSpace admin`
 
-   Current demo samples:
-
-   - Resource `368`: `Approved Public`, demo only
-   - Resource `441`: `Approved Internal`, demo only
+   Current approval state: 181 MVP 2024 assets are approved for public/internal prototype use.
 
 8. Export metadata CSV.
 
-   Show that the system can leave with its metadata. Current export: `.runtime/exports/resourcespace-metadata-20260603-184435.csv`.
+   Show that the system can leave with its metadata. Current export: `.runtime/exports/resourcespace-metadata-20260604-165746.csv`.
 
 9. Copy approved sample back to Shared Drive.
 

@@ -1,4 +1,4 @@
-.PHONY: init up down restart logs smoke import-audit import-mvp-batch heic-derivatives export-metadata backup restore-test
+.PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives export-metadata backup restore-test
 
 IMPORT_DIR ?= /Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024
 
@@ -25,6 +25,9 @@ import-audit:
 
 import-mvp-batch:
 	./scripts/import-mvp-batch.sh "$(IMPORT_DIR)"
+
+approve-mvp-batch:
+	./scripts/approve-mvp-batch.sh
 
 heic-derivatives:
 	./scripts/heic-derivatives.sh "$(IMPORT_DIR)"

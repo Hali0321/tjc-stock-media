@@ -39,12 +39,13 @@ Current import status:
 
 - ResourceSpace collection: `MVP 2024 - First Batch`
 - Imported active resources: 181
-- Review state: 179 Pending Review, 2 active demo-approved samples
+- Review state: 181 approved and published for the MVP 2024 prototype batch
 - Files with stored binaries: 181
 - HEIC result: 18 originals preserved, 2 previewed natively, 16 have attached JPG derivative alternatives for preview/use
 - Demo metadata: 77 resources seeded with visible/TJC tags
-- Search checks: Bible 23, Plant 34, Fountain 6, Needs Review 179
-- Metadata export: `.runtime/exports/resourcespace-metadata-20260603-184435.csv`
+- Search checks: Bible 23, Plant 34, Fountain 6
+- Latest approval audit: `.runtime/audits/approval-audit-20260604-165722.csv`
+- Latest metadata export: `.runtime/exports/resourcespace-metadata-20260604-165746.csv`
 
 ## Quick Start
 
@@ -74,12 +75,12 @@ If you rebuild from scratch and see the ResourceSpace setup page, use:
 
 Do not demo "ResourceSpace is running." Demo the product behavior:
 
-1. Search `Bible`, `Plant`, `Fountain`, `MVP 2024`, `Needs Review`.
+1. Search `Bible`, `Plant`, `Fountain`, `MVP 2024`, `Approved Public`.
 2. Open a result.
 3. Show source path, tags, rights status, usage scope, and notes.
-4. Show every import starts as `Needs Review / Do Not Publish`.
-5. Show demo-approved resource `368` as `Approved Public`.
-6. Show demo-approved resource `441` as `Approved Internal`.
+4. Explain every new import starts as `Needs Review / Do Not Publish`.
+5. Show MVP 2024 resources are now `Approved Public`.
+6. Show `Reviewed By`, `Reviewed Date`, and `Public and Internal` usage scope.
 7. Export metadata CSV.
 8. Copy approved sample back to Shared Drive.
 9. Show original source files remain untouched.
@@ -91,6 +92,7 @@ make up              # bootstrap official ResourceSpace Docker repo and start lo
 make smoke           # local health checks
 make import-audit    # generate source manifest with checksums
 make import-mvp-batch # import first batch into ResourceSpace
+make approve-mvp-batch # approve/publish MVP 2024 after reviewer signoff
 make heic-derivatives # attach JPG derivatives to HEICs that failed preview
 make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
