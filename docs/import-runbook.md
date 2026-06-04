@@ -9,9 +9,10 @@
 - Review state: 181 approved and published for MVP 2024 prototype batch after reviewer signoff
 - Import audit: `.runtime/audits/resourcespace-import-audit-20260603-171816.csv`
 - Approval audit: `.runtime/audits/approval-audit-20260604-165722.csv`
+- UI polish audit: `.runtime/audits/ui-polish-audit-20260604-171229.csv`
 - HEIC derivative audit: `.runtime/heic-derivatives/20260603-184347/resourcespace-heic-attach-audit.csv`
 - Demo metadata: 77 resources seeded with visible/TJC tags
-- Metadata export: `.runtime/exports/resourcespace-metadata-20260604-165746.csv`
+- Metadata export: `.runtime/exports/resourcespace-metadata-20260604-171242.csv`
 
 ## Commands
 
@@ -31,6 +32,12 @@ Approve the reviewed MVP 2024 batch:
 
 ```bash
 make approve-mvp-batch
+```
+
+Feature the MVP collection and promote HEIC JPG previews to the front:
+
+```bash
+make polish-mvp-ui
 ```
 
 Verify local runtime:

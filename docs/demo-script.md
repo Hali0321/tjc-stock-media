@@ -15,6 +15,7 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 2. State the system.
 
    Google Shared Drive is the master library. ResourceSpace is the searchable review layer. Originals are not moved or deleted during MVP.
+   Use the featured `MVP 2024 - First Batch` collection as the demo album/folder.
 
 3. State the safety rule.
 
@@ -42,7 +43,7 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 
 6. Show HEIC handling.
 
-   Open a HEIC that failed native preview. Show that the original HEIC remains preserved, while a JPG derivative alternative is attached for preview/use. Explain: normal users use the JPG; admins/designers can still access the HEIC when needed.
+   Open a HEIC asset. Show that the card/preview displays a JPG derivative so normal users are not confused. Then show the original HEIC remains preserved and downloadable as the master file, with the JPG derivative also listed under alternative files.
 
 7. Show approval metadata.
 
@@ -54,7 +55,7 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 
 8. Export metadata CSV.
 
-   Show that the system can leave with its metadata. Current export: `.runtime/exports/resourcespace-metadata-20260604-165746.csv`.
+   Show that the system can leave with its metadata. Current export: `.runtime/exports/resourcespace-metadata-20260604-171242.csv`.
 
 9. Copy approved sample back to Shared Drive.
 

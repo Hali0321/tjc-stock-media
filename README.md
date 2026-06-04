@@ -42,10 +42,13 @@ Current import status:
 - Review state: 181 approved and published for the MVP 2024 prototype batch
 - Files with stored binaries: 181
 - HEIC result: 18 originals preserved, 2 previewed natively, 16 have attached JPG derivative alternatives for preview/use
+- HEIC front preview: derivative JPG thumbnails promoted for ResourceSpace cards while original HEIC files remain preserved
+- Featured collection: `MVP 2024 - First Batch`
 - Demo metadata: 77 resources seeded with visible/TJC tags
 - Search checks: Bible 23, Plant 34, Fountain 6
 - Latest approval audit: `.runtime/audits/approval-audit-20260604-165722.csv`
-- Latest metadata export: `.runtime/exports/resourcespace-metadata-20260604-165746.csv`
+- Latest UI polish audit: `.runtime/audits/ui-polish-audit-20260604-171229.csv`
+- Latest metadata export: `.runtime/exports/resourcespace-metadata-20260604-171242.csv`
 
 ## Quick Start
 
@@ -94,6 +97,7 @@ make import-audit    # generate source manifest with checksums
 make import-mvp-batch # import first batch into ResourceSpace
 make approve-mvp-batch # approve/publish MVP 2024 after reviewer signoff
 make heic-derivatives # attach JPG derivatives to HEICs that failed preview
+make polish-mvp-ui    # feature MVP collection and promote HEIC JPG thumbnails to front previews
 make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
