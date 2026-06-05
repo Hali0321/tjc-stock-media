@@ -69,3 +69,14 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 ## Final Ask
 
 Should we continue from 181 assets to the next 500 assets using the same workflow?
+
+## Five-Minute Launch Demo
+
+1. Show ResourceSpace login is protected.
+2. Search for an approved asset.
+3. Download an approved use copy.
+4. Upload one normal photo as a contributor.
+5. Show the upload enters `Needs Review / Do Not Publish`.
+6. Approve one sample as reviewer with reviewer/date/notes.
+7. Show a large video uses admin intake, not browser upload.
+8. Explain Google Shared Drive is the master warehouse and ResourceSpace is the review/search/download front door.

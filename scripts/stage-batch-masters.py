@@ -60,6 +60,14 @@ def safe_folder(value: str) -> str:
     return cleaned or "Unknown_Album"
 
 
+def media_root_folder(media_type: str) -> str:
+    return {
+        "Photo": "01_Photos",
+        "Video": "02_Videos",
+        "Audio": "03_Audio",
+    }.get(media_type, "90_Source_Archives")
+
+
 def hardlink_or_copy(source: Path, destination: Path, mode: str) -> tuple[str, str]:
     if destination.exists():
         if sha256(destination) == sha256(source):
@@ -143,7 +151,7 @@ def main() -> int:
             year = derive_year(source_album, str(relative_path), path.name)
             extension = path.suffix.lower().lstrip(".")
             media_type = MEDIA_EXTENSIONS[path.suffix.lower()]
-            drive_relative = Path("TJC Stock Media Library") / "01_Photos" / year / source_album_safe / relative_path
+            drive_relative = Path("TJC Stock Media Library") / media_root_folder(media_type) / year / source_album_safe / relative_path
             destination = args.staging_root / drive_relative
             status, error = hardlink_or_copy(path, destination, args.mode)
             if status not in {"manifest_only", "collision"} and destination.exists() and sha256(destination) != checksum:

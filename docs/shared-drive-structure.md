@@ -54,6 +54,19 @@ If year cannot be derived, use:
 01_Photos/Unknown_Date/<source_album>/<original_filename>
 ```
 
+## Video And Audio Pattern
+
+Use media-specific roots:
+
+```text
+02_Videos/<year>/<source_album_or_event>/<original_filename>
+03_Audio/<year>/<source_album_or_event>/<original_filename>
+```
+
+Large media can enter through `00_Incoming` first, but only DAM Owner/Admin should promote it into the master warehouse after manifest/checksum audit.
+
+ResourceSpace remains the review/search/download layer. Shared Drive folders are not a substitute for ResourceSpace approval metadata.
+
 ## Batch 02 Local Staging
 
 The local prototype creates a Shared Drive-style staging mirror under:

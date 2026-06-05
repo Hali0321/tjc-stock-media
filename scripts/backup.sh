@@ -16,6 +16,7 @@ set +a
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="$ROOT/.runtime/backups/$STAMP"
 mkdir -p "$BACKUP_DIR"
+mkdir -p "$ROOT/.runtime/audits" "$ROOT/.runtime/exports"
 
 if docker compose ps --status running | grep -q 'tjc-resourcespace-db'; then
   docker compose exec -T mariadb mariadb-dump \
@@ -26,5 +27,13 @@ fi
 
 tar -czf "$BACKUP_DIR/filestore-config.tgz" -C "$ROOT/.runtime" filestore resourcespace-config.php
 
-echo "Backup written: $BACKUP_DIR"
+tar -czf "$BACKUP_DIR/launch-artifacts.tgz" \
+  docker-compose.yml \
+  Makefile \
+  .env.production.example \
+  docs \
+  scripts \
+  .runtime/audits \
+  .runtime/exports
 
+echo "Backup written: $BACKUP_DIR"

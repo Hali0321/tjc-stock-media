@@ -52,6 +52,8 @@ Needs Review
    |
    +--> Approved Public
    |
+   +--> Searchable Archive
+   |
    +--> Archive - Not Promoted
    |
    +--> Do Not Use
@@ -71,3 +73,13 @@ Keep these in `Needs Review` until a reviewer approves:
 - unknown people
 - volunteer-created media
 - third-party design assets
+
+## Archive Tiers
+
+| Tier | Meaning |
+|---|---|
+| Approved Stock | Reviewed, tagged, and approved public/internal assets. |
+| Searchable Archive | Indexed and traceable, but not publishable until reviewed. |
+| Cold Archive / Do Not Use | Duplicate, low-value, restricted, risky, or unreviewed assets. |
+
+Full archive launch should use tiers. Do not promise that every imported archive file is fully reviewed and usable.

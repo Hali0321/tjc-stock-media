@@ -47,6 +47,7 @@ make smoke
 make heic-derivatives
 make backup
 make restore-test
+make launch-readiness
 ```
 
 ## LM Photos Completion Run
@@ -98,12 +99,21 @@ make lm-photos-run-report
 Current waiting video source:
 
 - Source ZIP: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo-3-001.zip`
+- Extracted folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo`
 - ZIP size: about 9.9 GB
 - Contents: 18 files, including 11 MP4 and 7 JPG
 - Uncompressed estimate: about 10.6 GB
 - Intake note: `docs/runs/video-intake-samuel-kuo.md`
 
-Do not extract this ZIP during photo workflows. For the video phase, first confirm free disk space, create a video manifest, then test one or two MP4 imports into ResourceSpace before importing the full ZIP.
+The ZIP has been extracted locally. For the video phase, create a video manifest, then test one or two MP4 imports into ResourceSpace before importing the full batch:
+
+```bash
+make video-manifest
+```
+
+Do not delete the ZIP until the manifest/checksum audit is verified. Do not bulk-import the full video batch until the 1-2 MP4 pilot passes preview/playback/download/storage checks.
+
+Large video/audio files should use Shared Drive Incoming or local admin intake, then be imported/indexed by DAM Owner/Admin. Do not force large browser uploads through Cloudflare.
 
 ## Import Rules
 

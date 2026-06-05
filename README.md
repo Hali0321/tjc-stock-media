@@ -2,7 +2,7 @@
 
 North Star: a TJC user can find a rights-safe asset for a real communication need in under 60 seconds.
 
-This repo sets up a local ResourceSpace DAM prototype for True Jesus Church stock media. Google Shared Drive remains the master copy. ResourceSpace is the librarian: intake, tags, search, rights review, and approved downloads.
+This repo sets up a local ResourceSpace DAM prototype for True Jesus Church stock media and documents the controlled internal launch path. Google Shared Drive remains the master copy. ResourceSpace is the librarian: intake, tags, search, rights review, and approved downloads.
 
 ```text
 Legacy sources
@@ -16,13 +16,29 @@ master warehouse / selected originals / organized storage
         | manual import now
         | Phase 2: Google Drive connector or StaticSync-style workflow
         v
-ResourceSpace on Hali Mac
+ResourceSpace prototype on Hali Mac
 DAM index / tags / search / review / downloads
         |
         v
 Metadata exports + approved sample exports back to Shared Drive
+Controlled launch target: church PC/NAS + Cloudflare Access + fresh install/restore.
 Approved Public/Internal folders are delivery shelves, not the archive.
 ```
+
+## Launch Plan
+
+Combined launch plan:
+
+`docs/launch-plan.md`
+
+Key launch wording:
+
+```text
+4-6 weeks to launch full-archive-capable infrastructure,
+with tiered archive import and partial human review.
+```
+
+Launch is blocked until a church-owned PC/NAS can run ResourceSpace without Hali's Mac, Cloudflare Access protects the site, backups restore on a clean host, large media has an admin intake path, and unreviewed assets cannot be mistaken for approved media.
 
 ## First Batch
 
@@ -115,9 +131,11 @@ make polish-mvp-ui    # feature MVP collection and promote HEIC JPG thumbnails t
 make lm-photos-zip-inventory # inventory remaining LM Photos album ZIPs
 make lm-photos-stream-run # dry-run one-album-at-a-time ZIP processing plan
 make lm-photos-run-report # summarize LM Photos streaming audits into Markdown
+make video-manifest # manifest/checksum Samuel Kuo video intake without importing
 make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
+make launch-readiness # local launch documentation/config guardrail check
 make down            # stop local containers
 ```
 
@@ -168,4 +186,6 @@ Current waiting video source:
 - About 10.6 GB uncompressed
 - Intake note: `docs/runs/video-intake-samuel-kuo.md`
 
-Do not extract or import this ZIP until disk space and video workflow are confirmed. Treat it as next-phase video stock intake, not part of the photo batches.
+The ZIP has since been extracted locally for inspection. Do not bulk-import the video batch until `make video-manifest` passes and 1-2 MP4 files pass preview/playback/download/storage checks.
+
+Large video/audio files should use Shared Drive Incoming or local admin intake, then be imported/indexed by the DAM admin. Do not force large browser uploads through Cloudflare.

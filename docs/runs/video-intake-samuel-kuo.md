@@ -2,11 +2,12 @@
 
 ## Status
 
-Parked for next-phase video stock work. This ZIP has been inventoried only; it has not been extracted or imported.
+Extracted locally for inspection. The ZIP and extracted folder currently both exist, so do not duplicate more video data. This batch has not been imported into ResourceSpace.
 
 ## Source
 
 - ZIP: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo-3-001.zip`
+- Extracted folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo`
 - Root folder inside ZIP: `Samuel Kuo`
 - ZIP size: 10,626,352,881 bytes, about 9.9 GiB
 - Uncompressed size: 10,624,852,997 bytes, about 9.9 GiB
@@ -25,4 +26,12 @@ Parked for next-phase video stock work. This ZIP has been inventoried only; it h
 
 ## Next Step
 
-Do not extract the full ZIP during photo work. For video stock, create a video manifest first, then test one or two MP4 imports into ResourceSpace to confirm preview generation, playback, file size behavior, and metadata fields before importing everything.
+Create a video manifest first:
+
+```bash
+make video-manifest
+```
+
+Then test one or two MP4 imports into ResourceSpace to confirm preview generation, playback, file size behavior, and metadata fields before importing everything.
+
+Do not delete the ZIP until the manifest/checksum audit is verified. Do not bulk-import this full batch until the video pilot passes.

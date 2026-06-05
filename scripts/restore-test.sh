@@ -18,6 +18,18 @@ grep -q '^filestore/' "$tmp/archive-list.txt"
 grep -q '^resourcespace-config.php$' "$tmp/archive-list.txt"
 tar -xzf "$latest/filestore-config.tgz" -C "$tmp" resourcespace-config.php
 
+if [ -f "$latest/launch-artifacts.tgz" ]; then
+  tar -tzf "$latest/launch-artifacts.tgz" > "$tmp/launch-artifacts-list.txt"
+  grep -q '^docker-compose.yml$' "$tmp/launch-artifacts-list.txt"
+  grep -q '^docs/launch-plan.md$' "$tmp/launch-artifacts-list.txt"
+  grep -q '^scripts/backup.sh$' "$tmp/launch-artifacts-list.txt"
+  grep -q '^.runtime/audits/' "$tmp/launch-artifacts-list.txt"
+  grep -q '^.runtime/exports/' "$tmp/launch-artifacts-list.txt"
+  echo "Launch artifacts archive: OK"
+else
+  echo "WARN: launch artifacts archive not present in latest backup"
+fi
+
 if [ -f "$latest/database.sql" ]; then
   test -s "$latest/database.sql"
   echo "Database dump: OK"

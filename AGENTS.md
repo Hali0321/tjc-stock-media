@@ -10,6 +10,8 @@
 - Exception: downloaded LM Photos ZIPs may be deleted only after that ZIP's album has been extracted, imported or duplicate-linked, audited, verified, and temporary extraction removed.
 - Use manual batch import for MVP. Google Drive connector/sync is Phase 2.
 - Every imported asset defaults to `Needs Review / Do Not Publish`.
+- Normal contributors upload through ResourceSpace; large video/audio uses Shared Drive Incoming or admin intake.
+- Full archive launch means full-archive-capable infrastructure with tiered import/review, not full approval of every file.
 - Exact duplicate resources may be linked by checksum, but preserve every source album membership and source path.
 - AI may suggest tags, but humans approve rights.
 
@@ -21,6 +23,7 @@ make smoke
 make import-audit
 make backup
 make restore-test
+make launch-readiness
 ```
 
 ## Safety

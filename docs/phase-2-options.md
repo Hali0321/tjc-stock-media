@@ -16,6 +16,8 @@ Do not build this during the 181-file MVP. Manual is fine until manual breaks.
 
 AI should suggest tags, not approve rights.
 
+Launch v1 uses paid image suggestions only, capped under `$25/month`. Video/audio AI is deferred until image tagging proves useful and cost logging works.
+
 Future options:
 
 - ResourceSpace Google Vision plugin
@@ -44,6 +46,8 @@ Production decision must include:
 - admin owner
 - cost owner
 
+Current launch direction is a controlled internal church PC/NAS deployment with Cloudflare Access. Treat this as launch infrastructure, not final enterprise production.
+
 ## Scaling Gate
 
 Scale in stages:
@@ -55,3 +59,5 @@ Scale in stages:
 Do not scale until import accuracy, previews, search, rights workflow, metadata export, and restore test pass.
 
 The LM Photos completion run uses a streaming ZIP strategy because the local Mac has limited free space. Process one album ZIP at a time and delete only verified ZIPs.
+
+For "full archive scale", launch means full-archive-capable infrastructure plus tiered import/review. It does not mean every archive asset is fully reviewed and approved at launch.
