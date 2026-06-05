@@ -6,6 +6,7 @@ import { Database, ExternalLink, Lock, ShieldCheck, ShieldX } from "lucide-react
 import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
+import { normalizeAssetTitle } from "@/lib/display";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 
 type ReviewResponse = {
@@ -20,7 +21,15 @@ const actions = [
   { label: "Archive only", backend: "Searchable Archive" },
   { label: "Do not publish externally", backend: "Do Not Use" }
 ] as const;
-const queueFilters = ["Review needed", "Children/youth", "Rights review", "Missing tags", "Large media"];
+const queueFilters = ["Pending Review", "Possible Children/Youth", "Missing Source", "Needs Usage Guidance", "Internal Only", "Do Not Publish"];
+
+function sourceSummary(asset: StockMediaAsset) {
+  if (!asset.sourcePath) return "Source pending";
+  const parts = asset.sourcePath.split("/").filter(Boolean);
+  const filename = parts.at(-1) || asset.sourcePath;
+  const folder = parts.at(-2);
+  return folder ? `${folder} · ${filename}` : filename;
+}
 
 export function ReviewPage() {
   const { role } = useDemoRole();
@@ -100,19 +109,21 @@ export function ReviewPage() {
       {message ? <div className="form-message">{message}</div> : null}
 
       <div className="review-list">
-        {(data?.assets || []).slice(0, 24).map((asset) => (
+        {(data?.assets || []).slice(0, 24).map((asset) => {
+          const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
+          return (
           <article className="review-row" key={asset.id}>
-            <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${asset.title}`}>
-              {asset.thumbnail ? <img src={asset.thumbnail} alt={asset.thumbnailAlt} loading="lazy" /> : <span>Preview unavailable</span>}
+            <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${displayTitle}`}>
+              {asset.thumbnail ? <img src={asset.thumbnail} alt={asset.thumbnailAlt} loading="eager" /> : <span>Preview unavailable</span>}
               <span className="asset-card__type">{asset.mediaType}</span>
             </Link>
             <div className="review-row__actions">
               <div className="review-row__heading">
                 <div>
-                  <h2>{asset.title}</h2>
-                  <p>{asset.collection}</p>
+                  <h2>{displayTitle}</h2>
+                  <p>{asset.collection} · {sourceSummary(asset)}</p>
                 </div>
-                <a href={`/assets/${asset.id}`} aria-label={`Open ${asset.title} detail`}>
+                <a href={`/assets/${asset.id}`} aria-label={`Open ${displayTitle} detail`}>
                   <ExternalLink size={16} aria-hidden="true" />
                 </a>
               </div>
@@ -142,7 +153,8 @@ export function ReviewPage() {
               </div>
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

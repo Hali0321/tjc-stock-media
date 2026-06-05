@@ -14,9 +14,10 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 
 - Photo-first library, not admin dashboard.
 - Warm white background, deep charcoal text, evergreen/navy accents.
-- Compact header, large search, filter chips, image grid high on page.
+- Compact header, utility role switch, large search, filter chips, sort chips, curated album cards, and image grid high on page.
 - Status labels use warm text plus color. Color never carries meaning alone.
-- Cards stay simple: thumbnail, title, status, usage scope, media type, collection, download state.
+- Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
+- Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
 - Use less explanatory text. Thumbnails, badges, filters, and clear actions should carry the product.
 - Asset detail includes moment-of-use guidance: best used for, please avoid, caption suggestion, credit requirement, and ministry sensitivity.
 
@@ -61,6 +62,8 @@ User-facing labels map to backend statuses:
 | `Do Not Use` | Do not publish externally |
 | `Possible Minors` | Contains children/youth |
 
+Primary navigation is intentionally limited to Library, Collections, Upload, and Review. The usage Guide remains available through the help utility and footer so normal browsing stays media-first.
+
 First 10 seconds should prove:
 
 1. This is a media library.
@@ -99,7 +102,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 | Token | Value / rule |
 |---|---|
-| Background | warm white `#fbfaf7`; no beige/yellow dashboard treatment |
+| Background | warm white `#faf9f5`; no beige/yellow dashboard treatment |
 | Surface | white or translucent white; minimal borders |
 | Text | deep charcoal `#20221f` |
 | Muted text | gray-green `#6b6f69` |
@@ -116,6 +119,15 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Shadow | very soft image shadow only |
 | Typography | system sans, compact hierarchy, no giant marketing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
+
+## Current Library Pattern
+
+- Max shell width: 1320px.
+- Featured collections render as thumbnail album cards with count/date/scope signals.
+- Search result copy uses `Showing first 84 of 2,290 matching assets` style language.
+- Responsive media grid uses CSS columns: 4 columns desktop, 3 tablet landscape, 2 tablet/mobile landscape, 1 at 320px.
+- Asset cards eager-load thumbnails in the local demo to avoid placeholder-heavy stakeholder screenshots.
+- Raw filenames are not mutated; a display helper normalizes titles such as `Copy Of Img 0625` to `Image 0625` while preserving original filename in detail metadata.
 
 ## Anti-AI Checklist
 

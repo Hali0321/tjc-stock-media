@@ -21,6 +21,14 @@ make demo-check
 
 Latest local QA also captured the required screenshots under `docs/screenshots/` and checked 1440, 1024, 768, and 320 px browser widths with no horizontal overflow.
 
+The current frontend shell is the redesigned ministry media-library UI:
+
+- Main nav: Library, Collections, Upload, Review.
+- Usage Guide: secondary utility/footer link, not primary navigation.
+- Library: photo-first grid, compact filters, sort chips, clear result count, curated collection cards.
+- Asset cards: short status, usage label, display-normalized title, one tag, download/blocked signal, provenance on hover/focus.
+- Asset detail: usage guidance, source/review/technical provenance, approved copy separated from original/master restriction.
+
 ## Architecture
 
 ```text
@@ -37,6 +45,8 @@ ResourceSpace remains the source of truth for assets, metadata, review state, ap
 Google Shared Drive remains the master-original warehouse.
 
 The frontend is not a second DAM. It does not store approval state, create a second metadata database, rename files, move files, delete files, or expose ResourceSpace API keys to the browser.
+
+Display title cleanup is presentation-only. Original filenames and ResourceSpace IDs remain in asset detail metadata and the ResourceSpace export remains the source data.
 
 ## Current Data Source
 

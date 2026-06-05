@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Database, FolderOpen, Search, ShieldCheck, UploadCloud } from "lucide-react";
+import { FolderOpen, HelpCircle, Search, ShieldCheck, UploadCloud } from "lucide-react";
 import { roles } from "@/lib/permissions";
 import { useDemoRole } from "@/components/RoleProvider";
 
@@ -10,8 +10,7 @@ const nav = [
   { href: "/", label: "Library", icon: Search },
   { href: "/#collections", label: "Collections", icon: FolderOpen },
   { href: "/upload", label: "Upload", icon: UploadCloud },
-  { href: "/review", label: "Review", icon: ShieldCheck },
-  { href: "/guide", label: "Guide", icon: Database }
+  { href: "/review", label: "Review", icon: ShieldCheck }
 ];
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
@@ -45,18 +44,28 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          <label className="role-switch">
-            <span>Demo role</span>
-            <select value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
-              {roles.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
+          <div className="utility-cluster">
+            <Link href="/guide" className="help-link" aria-label="Open usage guide">
+              <HelpCircle aria-hidden="true" size={16} />
+              <span>Guide</span>
+            </Link>
+            <label className="role-switch">
+              <span id="demo-role-label">Demo role</span>
+              <select aria-labelledby="demo-role-label" value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
+                {roles.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
         <div className="demo-note">Demo role switch - production roles will map to church access control later.</div>
       </header>
       <main>{children}</main>
+      <footer className="app-footer">
+        <Link href="/guide">Usage guide</Link>
+        <span>ResourceSpace remains the source of truth.</span>
+      </footer>
     </>
   );
 }

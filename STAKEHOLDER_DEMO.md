@@ -14,9 +14,9 @@ http://localhost:3008
 
 1. Start on Library.
 2. Search `Bible`.
-3. Show approved assets first.
+3. Show approved assets first, clear result count, compact filters, sort chips, and curated collection cards.
 4. Open one asset.
-5. Point to `Approved for church-wide use`, usage scope, reviewer, reviewed date, tags, and source path.
+5. Point to the normalized display title, `Approved for church-wide use`, usage scope, reviewer, reviewed date, tags, and source/provenance metadata.
 6. Show `Download approved copy`.
 7. Show `Original/master restricted`.
 8. Switch role to Reviewer.
@@ -28,10 +28,13 @@ http://localhost:3008
 14. Open Upload as Contributor.
 15. Show new media defaults to `Needs Review / Do Not Publish`, shown to users as review-required.
 16. Show large-media rule for files over 100 MB.
+17. Mention the Guide is available from the help/footer area, while primary navigation stays focused on Library, Collections, Upload, and Review.
 
 ## Main Message
 
 ResourceSpace remains the backend/source of truth. The new portal is the friendly church-facing layer for search, upload intake, and review safety.
+
+The UI is now photo-first and ministry-warm: album-style featured collections, short safety badges, polished asset cards, and usage guidance at the point of download.
 
 ## Decision Ask
 

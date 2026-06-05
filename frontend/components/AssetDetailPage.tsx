@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle2, Download, ExternalLink, FileLock2, ShieldAlert
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
+import { normalizeAssetTitle } from "@/lib/display";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 
 type DetailResponse = {
@@ -76,6 +77,7 @@ export function AssetDetailPage({ id }: { id: string }) {
 
   const { asset } = data;
   const canDownload = canDownloadApprovedCopy(role, asset);
+  const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
   const guidance = guidanceFor(asset, canDownload);
 
   return (
@@ -92,7 +94,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           <div className="detail-title">
             <div>
               <p className="eyebrow">{asset.collection}</p>
-              <h1>{asset.title}</h1>
+              <h1>{displayTitle}</h1>
             </div>
             <div className="asset-card__chips">
               <StatusBadge status={asset.status} />
@@ -149,13 +151,13 @@ export function AssetDetailPage({ id }: { id: string }) {
           </div>
 
           <dl className="meta-list">
+            <div className="meta-list__group"><dt>Usage</dt><dd>{asset.usageScope} · {asset.peopleRisk || "Unknown people/minors risk"}</dd></div>
+            <div><dt>Source / photographer</dt><dd>{asset.sourcePath || "Source not exported"}</dd></div>
+            <div><dt>Event / collection</dt><dd>{asset.collection}</dd></div>
+            <div><dt>Review</dt><dd>{asset.reviewer || "Not reviewed"} · {asset.reviewedDate || "Pending"}</dd></div>
             <div><dt>ResourceSpace ID</dt><dd>{asset.resourceSpaceId || asset.id}</dd></div>
-            <div><dt>Reviewer</dt><dd>{asset.reviewer || "Not reviewed"}</dd></div>
-            <div><dt>Reviewed date</dt><dd>{asset.reviewedDate || "Pending"}</dd></div>
-            <div><dt>People/minors risk</dt><dd>{asset.peopleRisk || "Unknown"}</dd></div>
-            <div><dt>Source path</dt><dd>{asset.sourcePath || "Not exported"}</dd></div>
-            <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Pending Shared Drive staging"}</dd></div>
             <div><dt>Original filename</dt><dd>{asset.originalFilename || "Unknown"}</dd></div>
+            <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Visible to DAM admins after Shared Drive staging"}</dd></div>
           </dl>
 
           <section className="tag-section" aria-label="Tags">
@@ -170,6 +172,10 @@ export function AssetDetailPage({ id }: { id: string }) {
             <h2>Rights notes</h2>
             <p>{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
           </section>
+
+          <a className="secondary-action secondary-action--quiet" href="mailto:media@tjc.org?subject=TJC Stock Media asset question">
+            Ask a media coworker
+          </a>
 
           {data.resourceSpaceUrl ? (
             <a className="secondary-action" href={data.resourceSpaceUrl} target="_blank" rel="noreferrer">

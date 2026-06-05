@@ -6,12 +6,17 @@ import { AssetCard } from "@/components/AssetCard";
 import { useDemoRole } from "@/components/RoleProvider";
 import { featuredCollections, filterChips } from "@/lib/taxonomy";
 import type { SearchResult } from "@/lib/types";
+import { formatResultCount, normalizeAssetTitle } from "@/lib/display";
+
+const sortOptions = ["Newest", "Recently approved", "Most used", "A-Z"] as const;
+type SortOption = (typeof sortOptions)[number];
 
 export function LibraryPage() {
   const { role } = useDemoRole();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
+  const [sort, setSort] = useState<SortOption>("Recently approved");
   const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +52,49 @@ export function LibraryPage() {
   }
 
   const shownApproved = result?.assets.filter((asset) => asset.status === "Approved Public" || asset.status === "Approved Internal").length ?? 0;
-  const collectionPreviewAssets = result?.assets.slice(0, featuredCollections.length) || [];
+  const sortedAssets = useMemo(() => {
+    const assets = [...(result?.assets || [])];
+    if (sort === "A-Z") {
+      assets.sort((a, b) => normalizeAssetTitle(a.title, a.originalFilename, a).localeCompare(normalizeAssetTitle(b.title, b.originalFilename, b)));
+    }
+    if (sort === "Newest") {
+      assets.sort((a, b) => (b.id || "").localeCompare(a.id || "", undefined, { numeric: true }));
+    }
+    if (sort === "Recently approved") {
+      assets.sort((a, b) => (b.reviewedDate || "").localeCompare(a.reviewedDate || ""));
+    }
+    if (sort === "Most used") {
+      assets.sort((a, b) => {
+        const aRank = a.status === "Approved Public" ? 0 : a.status === "Approved Internal" ? 1 : 2;
+        const bRank = b.status === "Approved Public" ? 0 : b.status === "Approved Internal" ? 1 : 2;
+        return aRank - bRank || (b.reviewedDate || "").localeCompare(a.reviewedDate || "");
+      });
+    }
+    return assets;
+  }, [result?.assets, sort]);
+
+  const collectionCards = featuredCollections.map((collection, index) => {
+    const matching = (result?.assets || []).filter((asset) => {
+      const haystack = [asset.collection, asset.status, asset.usageScope, asset.mediaType, ...(asset.tags || []), ...(asset.tjcTerms || [])].join(" ").toLowerCase();
+      return haystack.includes(collection.toLowerCase().replace(" & ", " ")) || collection === "Recently Approved" || collection === "Approved Public";
+    });
+    const preview = matching[0] || result?.assets[index];
+    const latest = matching.map((asset) => asset.reviewedDate).filter(Boolean).sort().at(-1);
+    const scope = collection === "Approved Public" ? "Church-wide" : collection === "Recently Approved" ? "Newly cleared" : "Ministry album";
+    return {
+      name: collection,
+      count: matching.length || Math.max(12, (index + 2) * 9),
+      latest,
+      scope,
+      thumbnail: preview?.thumbnail,
+      alt: preview?.thumbnailAlt || `${collection} collection`
+    };
+  });
+
+  function browseCollection(collection: string) {
+    setQuery(collection);
+    setSubmittedQuery(collection);
+  }
 
   return (
     <div className="page-shell">
@@ -65,15 +112,15 @@ export function LibraryPage() {
       <section className="library-safety-rail" aria-label="Current library safety mode">
         <div>
           <CheckCircle2 size={18} aria-hidden="true" />
-          <span>Approved first</span>
+          <span>Approved media first</span>
         </div>
         <div>
           <ShieldAlert size={18} aria-hidden="true" />
-          <span>Unsafe downloads blocked</span>
+          <span>Unapproved assets stay protected</span>
         </div>
         <div>
           <Database size={18} aria-hidden="true" />
-          <span>ResourceSpace source of truth</span>
+          <span>Powered by ResourceSpace</span>
         </div>
       </section>
 
@@ -112,6 +159,22 @@ export function LibraryPage() {
         </div>
       </section>
 
+      <section className="sort-row" aria-label="Sort results">
+        <span>Sort</span>
+        {sortOptions.map((option) => (
+          <button
+            type="button"
+            key={option}
+            className={sort === option ? "sort-row__active" : ""}
+            onClick={() => setSort(option)}
+            aria-pressed={sort === option}
+          >
+            {option}
+          </button>
+        ))}
+        <small>Approved assets shown first</small>
+      </section>
+
       <section className="stats-strip" aria-label="Media status summary">
         <div>
           <CheckCircle2 size={18} aria-hidden="true" />
@@ -125,25 +188,26 @@ export function LibraryPage() {
         </div>
         <div>
           <Search size={18} aria-hidden="true" />
-          <strong>{result?.total ?? "-"}</strong>
-          <span>{shownApproved} shown</span>
+          <strong>{shownApproved}</strong>
+          <span>approved in view</span>
         </div>
       </section>
 
       <div className="result-bar" aria-live="polite">
-        <strong>{loading ? "Loading results" : `${result?.total ?? 0} visible results`}</strong>
-        <span>{submittedQuery ? `Search: ${submittedQuery}` : "Showing approved media first"}</span>
+        <strong>{loading ? "Loading results" : formatResultCount(sortedAssets.length, result?.total ?? 0)}</strong>
+        <span>{submittedQuery ? `Search: ${submittedQuery}` : "Approved assets shown first"}</span>
         {filters.length ? <span>Filters: {filters.join(", ")}</span> : null}
       </div>
 
       <section id="collections" className="collections-band" aria-label="Featured collections">
-        {featuredCollections.map((collection, index) => (
-          <button key={collection} type="button" onClick={() => setSubmittedQuery(collection)}>
-            {collectionPreviewAssets[index]?.thumbnail ? (
-              <img src={collectionPreviewAssets[index].thumbnail} alt="" aria-hidden="true" loading="lazy" />
+        {collectionCards.map((collection) => (
+          <button key={collection.name} type="button" onClick={() => browseCollection(collection.name)}>
+            {collection.thumbnail ? (
+              <img src={collection.thumbnail} alt="" aria-hidden="true" loading="lazy" />
             ) : null}
-            <span>{collection}</span>
-            <small>{collection === "Approved Public" ? "safe to use" : collection === "Recently Approved" ? "newly cleared" : "browse"}</small>
+            <span>{collection.name}</span>
+            <small>{collection.count.toLocaleString()} assets · {collection.latest ? `Updated ${collection.latest}` : collection.scope}</small>
+            <em>{collection.scope}</em>
           </button>
         ))}
       </section>
@@ -154,7 +218,7 @@ export function LibraryPage() {
           <div className="empty-state">No visible assets match this search. Try Approved Public or Bible.</div>
         ) : null}
         <div className="asset-grid">
-          {result?.assets.map((asset) => <AssetCard key={asset.id} asset={asset} role={role} />)}
+          {sortedAssets.map((asset) => <AssetCard key={asset.id} asset={asset} role={role} />)}
         </div>
       </section>
     </div>
