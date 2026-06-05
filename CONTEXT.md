@@ -32,14 +32,14 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 
 ## Current First Batch
 
-- Source: `/Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024`
+- Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024`
 - Size: about 480 MB
 - Count: 181 image files
 - Goal: prove search, tags, review, metadata export, and approved-copy workflow.
 
 ## Current LM Photos Completion Source
 
-- Source ZIP folder: `/Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo`
+- Source ZIP folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo`
 - Count: 31 Google Photos album ZIP files
 - Size: about 8.3 GB compressed
 - ZIP inventory observed: about 3,963 files, mostly JPG plus HEIC, PNG, JPEG, TIF, and one ARW

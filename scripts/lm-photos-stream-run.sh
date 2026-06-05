@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ZIP_DIR="${1:-/Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo}"
+ZIP_DIR="${1:-/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo}"
 RUN_ID="${RUN_ID:-lm-photos-completion-$(date +%Y%m%d-%H%M%S)}"
 WORK_ROOT="$ROOT/.runtime/lm-photos-stream/$RUN_ID"
 AUDIT_DIR="$ROOT/.runtime/audits/$RUN_ID"

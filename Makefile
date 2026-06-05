@@ -1,7 +1,7 @@
 .PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui lm-photos-zip-inventory lm-photos-stream-run lm-photos-run-report export-metadata backup restore-test
 
-IMPORT_DIR ?= /Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024
-LM_PHOTOS_ZIP_DIR ?= /Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo
+IMPORT_DIR ?= /Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024
+LM_PHOTOS_ZIP_DIR ?= /Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo
 
 init:
 	./scripts/bootstrap-official-docker.sh

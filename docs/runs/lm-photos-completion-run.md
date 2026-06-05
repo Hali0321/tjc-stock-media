@@ -16,7 +16,7 @@ filenames and unsafe/unreviewed assets cannot be mistaken for publishable media.
 
 ## Source
 
-- ZIP folder: `/Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo`
+- ZIP folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo`
 - Observed ZIPs: 31
 - Observed compressed size: about 8.3 GB
 - Observed contents: about 3,963 files

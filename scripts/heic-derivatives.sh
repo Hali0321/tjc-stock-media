@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_DIR="${1:-/Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024}"
+SOURCE_DIR="${1:-/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT_DIR="$ROOT/.runtime/heic-derivatives"
 RUN_DIR="$OUT_DIR/$STAMP"

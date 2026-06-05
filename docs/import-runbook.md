@@ -2,7 +2,7 @@
 
 ## Current MVP 2024 Import
 
-- Source: `/Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024`
+- Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024`
 - ResourceSpace collection: `MVP 2024 - First Batch`
 - Imported active resources: 181
 - Stored binaries: 181

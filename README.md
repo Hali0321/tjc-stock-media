@@ -28,7 +28,7 @@ Approved Public/Internal folders are delivery shelves, not the archive.
 
 Source folder:
 
-`/Users/halim4pro/Desktop/MVP/ResourceSpace/MVP 2024`
+`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024`
 
 Current inventory:
 
@@ -120,7 +120,7 @@ This is a local prototype. It does not prove 24/7 uptime, production security, r
 
 Remaining LM Photos are downloaded as Google Photos album ZIPs under:
 
-`/Users/halim4pro/Desktop/MVP/ResourceSpace/lm-photo`
+`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo`
 
 Use streaming mode because local disk is tight:
 
