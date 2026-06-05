@@ -71,3 +71,22 @@ export function formatResultCount(shown: number, total: number) {
   const totalText = total.toLocaleString();
   return shown >= total ? `${totalText} matching assets` : `Showing first ${shownText} of ${totalText} matching assets`;
 }
+
+export function cardImageUrl(asset: StockMediaAsset) {
+  return asset.preview || asset.thumbnail;
+}
+
+export function collectionImageUrl(asset: StockMediaAsset) {
+  return asset.preview || asset.thumbnail;
+}
+
+export function friendlySourceLabel(asset: Pick<StockMediaAsset, "collection" | "resourceSpaceId" | "id">) {
+  if (asset.collection) return asset.collection;
+  return asset.resourceSpaceId ? `ResourceSpace ${asset.resourceSpaceId}` : `Asset ${asset.id}`;
+}
+
+export function friendlyReviewTrace(asset: Pick<StockMediaAsset, "reviewedDate" | "reviewer" | "resourceSpaceId" | "id">) {
+  if (asset.reviewedDate && asset.reviewer) return `Reviewed ${asset.reviewedDate} by ${asset.reviewer}`;
+  if (asset.reviewedDate) return `Reviewed ${asset.reviewedDate}`;
+  return asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : `Asset ID ${asset.id}`;
+}

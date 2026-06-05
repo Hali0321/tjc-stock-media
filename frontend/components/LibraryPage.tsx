@@ -3,13 +3,61 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Search, ShieldAlert, SlidersHorizontal } from "lucide-react";
 import { AssetCard } from "@/components/AssetCard";
+import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
 import { useDemoRole } from "@/components/RoleProvider";
 import { featuredCollections, filterChips } from "@/lib/taxonomy";
-import type { SearchResult } from "@/lib/types";
-import { formatResultCount, normalizeAssetTitle } from "@/lib/display";
+import type { SearchResult, StockMediaAsset } from "@/lib/types";
+import { collectionImageUrl, formatResultCount, normalizeAssetTitle } from "@/lib/display";
 
 const sortOptions = ["Newest", "Recently approved", "Most used", "A-Z"] as const;
 type SortOption = (typeof sortOptions)[number];
+
+function assetHaystack(asset: StockMediaAsset) {
+  return [asset.title, asset.collection, asset.status, asset.usageScope, asset.mediaType, asset.peopleRisk, ...(asset.tags || []), ...(asset.tjcTerms || [])]
+    .join(" ")
+    .toLowerCase();
+}
+
+function matchesCollection(asset: StockMediaAsset, collection: (typeof featuredCollections)[number]) {
+  const haystack = assetHaystack(asset);
+  if (collection.name === "Approved Public") return asset.status === "Approved Public";
+  if (collection.name === "Recently Approved") return asset.status === "Approved Public" || asset.status === "Approved Internal";
+  return collection.terms.some((term) => haystack.includes(term.toLowerCase()));
+}
+
+function latestReviewedDate(assets: StockMediaAsset[]) {
+  return assets.map((asset) => asset.reviewedDate).filter(Boolean).sort().at(-1);
+}
+
+function diversityKey(asset: StockMediaAsset) {
+  const haystack = assetHaystack(asset);
+  if (haystack.includes("bible") || haystack.includes("scripture")) return "bible";
+  if (haystack.includes("flower") || haystack.includes("plant") || haystack.includes("seasonal")) return "details";
+  if (haystack.includes("fellowship") || haystack.includes("people") || haystack.includes("welcome")) return "fellowship";
+  if (haystack.includes("graphic") || haystack.includes("slide") || haystack.includes("stage")) return "graphics";
+  if (haystack.includes("water") || haystack.includes("fountain")) return "water";
+  return asset.collection || asset.mediaType;
+}
+
+function diversifyAssets(assets: StockMediaAsset[]) {
+  const buckets = new Map<string, StockMediaAsset[]>();
+  assets.forEach((asset) => {
+    const key = diversityKey(asset);
+    buckets.set(key, [...(buckets.get(key) || []), asset]);
+  });
+  const orderedKeys = [...buckets.keys()].sort((a, b) => (buckets.get(b)?.length || 0) - (buckets.get(a)?.length || 0));
+  const diversified: StockMediaAsset[] = [];
+  let cursor = 0;
+  while (diversified.length < assets.length && orderedKeys.length) {
+    const key = orderedKeys[cursor % orderedKeys.length];
+    const bucket = buckets.get(key);
+    const next = bucket?.shift();
+    if (next) diversified.push(next);
+    if (!bucket?.length) orderedKeys.splice(cursor % orderedKeys.length, 1);
+    else cursor += 1;
+  }
+  return diversified;
+}
 
 export function LibraryPage() {
   const { role } = useDemoRole();
@@ -70,30 +118,33 @@ export function LibraryPage() {
         return aRank - bRank || (b.reviewedDate || "").localeCompare(a.reviewedDate || "");
       });
     }
-    return assets;
+    return diversifyAssets(assets);
   }, [result?.assets, sort]);
 
   const collectionCards = featuredCollections.map((collection, index) => {
-    const matching = (result?.assets || []).filter((asset) => {
-      const haystack = [asset.collection, asset.status, asset.usageScope, asset.mediaType, ...(asset.tags || []), ...(asset.tjcTerms || [])].join(" ").toLowerCase();
-      return haystack.includes(collection.toLowerCase().replace(" & ", " ")) || collection === "Recently Approved" || collection === "Approved Public";
-    });
-    const preview = matching[0] || result?.assets[index];
-    const latest = matching.map((asset) => asset.reviewedDate).filter(Boolean).sort().at(-1);
-    const scope = collection === "Approved Public" ? "Church-wide" : collection === "Recently Approved" ? "Newly cleared" : "Ministry album";
+    const approvedAssets = (result?.assets || []).filter((asset) => asset.status === "Approved Public" || asset.status === "Approved Internal");
+    const matching = approvedAssets.filter((asset) => matchesCollection(asset, collection));
+    const representative = matching.length ? matching : approvedAssets.slice(index, index + 5);
+    const images = representative
+      .slice(0, 5)
+      .map((asset) => ({ src: collectionImageUrl(asset), alt: asset.thumbnailAlt }))
+      .filter((image) => Boolean(image.src));
+    const latest = latestReviewedDate(matching);
+    const scope = collection.name === "Approved Public" ? "Church-wide" : collection.name === "Recently Approved" ? "Newly cleared" : "Ministry album";
     return {
-      name: collection,
-      count: matching.length || Math.max(12, (index + 2) * 9),
+      ...collection,
+      countLabel: matching.length ? `${matching.length.toLocaleString()} shown` : "Curated set",
       latest,
       scope,
-      thumbnail: preview?.thumbnail,
-      alt: preview?.thumbnailAlt || `${collection} collection`
+      images
     };
   });
 
   function browseCollection(collection: string) {
+    const item = featuredCollections.find((candidate) => candidate.name === collection);
+    const queryText = item?.searchQuery ?? collection;
     setQuery(collection);
-    setSubmittedQuery(collection);
+    setSubmittedQuery(queryText);
   }
 
   return (
@@ -182,14 +233,16 @@ export function LibraryPage() {
 
       <section id="collections" className="collections-band" aria-label="Featured collections">
         {collectionCards.map((collection) => (
-          <button key={collection.name} type="button" onClick={() => browseCollection(collection.name)}>
-            {collection.thumbnail ? (
-              <img src={collection.thumbnail} alt="" aria-hidden="true" loading="lazy" />
-            ) : null}
-            <span>{collection.name}</span>
-            <small>{collection.count.toLocaleString()} assets · {collection.latest ? `Updated ${collection.latest}` : collection.scope}</small>
-            <em>{collection.scope}</em>
-          </button>
+          <CollectionAlbumCard
+            key={collection.name}
+            name={collection.name}
+            description={collection.description}
+            countLabel={collection.countLabel}
+            latestLabel={collection.latest ? `Updated ${collection.latest}` : "Recently updated"}
+            scope={collection.scope}
+            images={collection.images}
+            onOpen={() => browseCollection(collection.name)}
+          />
         ))}
       </section>
 

@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, Download, ExternalLink, FileLock2, ShieldAlert
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
-import { normalizeAssetTitle } from "@/lib/display";
+import { friendlySourceLabel, normalizeAssetTitle } from "@/lib/display";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 
 type DetailResponse = {
@@ -26,7 +26,7 @@ function guidanceFor(asset: StockMediaAsset, canDownload: boolean) {
         ? "Please avoid public posting, close cropping, or social sharing until children/youth visibility is reviewed."
         : "Please avoid removing important ministry context, changing the meaning of the image, or using it for unrelated promotion.",
     caption: `${asset.title}${tjcContext ? ` - ${tjcContext}` : ""}`,
-    credit: asset.sourcePath ? "Keep source attribution available in ResourceSpace/Shared Drive records." : "No separate public credit requirement exported yet.",
+    credit: asset.resourceSpaceId ? "Keep ResourceSpace source attribution available with the asset record." : "No separate public credit requirement exported yet.",
     sensitivity:
       asset.status === "Approved Public"
         ? "Approved with current exported review notes. Use respectfully and keep the ministry context intact."
@@ -77,6 +77,7 @@ export function AssetDetailPage({ id }: { id: string }) {
 
   const { asset } = data;
   const canDownload = canDownloadApprovedCopy(role, asset);
+  const canSeeTechnicalSource = role === "Reviewer" || role === "DAM Admin";
   const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
   const guidance = guidanceFor(asset, canDownload);
 
@@ -152,12 +153,17 @@ export function AssetDetailPage({ id }: { id: string }) {
 
           <dl className="meta-list">
             <div className="meta-list__group"><dt>Usage</dt><dd>{asset.usageScope} · {asset.peopleRisk || "Unknown people/minors risk"}</dd></div>
-            <div><dt>Source / photographer</dt><dd>{asset.sourcePath || "Source not exported"}</dd></div>
+            <div><dt>Source / photographer</dt><dd>{friendlySourceLabel(asset)}</dd></div>
             <div><dt>Event / collection</dt><dd>{asset.collection}</dd></div>
             <div><dt>Review</dt><dd>{asset.reviewer || "Not reviewed"} · {asset.reviewedDate || "Pending"}</dd></div>
             <div><dt>ResourceSpace ID</dt><dd>{asset.resourceSpaceId || asset.id}</dd></div>
             <div><dt>Original filename</dt><dd>{asset.originalFilename || "Unknown"}</dd></div>
-            <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Visible to DAM admins after Shared Drive staging"}</dd></div>
+            {canSeeTechnicalSource ? (
+              <>
+                <div><dt>Original import path</dt><dd>{asset.sourcePath || "Source path not exported"}</dd></div>
+                <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Visible to DAM admins after Shared Drive staging"}</dd></div>
+              </>
+            ) : null}
           </dl>
 
           <section className="tag-section" aria-label="Tags">
