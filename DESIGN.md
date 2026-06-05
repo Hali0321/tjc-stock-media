@@ -15,9 +15,10 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 - Photo-first library, not admin dashboard.
 - Warm white background, deep charcoal text, evergreen/navy accents.
 - Compact header, large search, filter chips, image grid high on page.
-- Status labels use text plus color. Color never carries meaning alone.
+- Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, title, status, usage scope, media type, collection, download state.
 - Use less explanatory text. Thumbnails, badges, filters, and clear actions should carry the product.
+- Asset detail includes moment-of-use guidance: best used for, please avoid, caption suggestion, credit requirement, and ministry sensitivity.
 
 Reference patterns, adapted without copying:
 
@@ -48,6 +49,17 @@ Every asset detail page answers:
 - Who reviewed it?
 
 Approved copy and original/master are visually separated. Normal users only see active download for approved use copies. Original/master files are marked restricted.
+
+User-facing labels map to backend statuses:
+
+| Backend status | User-facing label |
+|---|---|
+| `Approved Public` | Approved for church-wide use |
+| `Approved Internal` | Internal ministry use only |
+| `Needs Review` | Please review before public sharing |
+| `Searchable Archive` | Archive only |
+| `Do Not Use` | Do not publish externally |
+| `Possible Minors` | Contains children/youth |
 
 First 10 seconds should prove:
 
@@ -93,11 +105,11 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Muted text | gray-green `#6b6f69` |
 | Accent | deep evergreen `#123f3a` |
 | Secondary accent | calm navy `#1f4f73` |
-| Approved Public | restrained green |
-| Approved Internal | navy/blue |
-| Needs Review | muted amber |
-| Searchable Archive | muted purple/gray |
-| Do Not Use | muted red |
+| Approved for church-wide use | restrained green |
+| Internal ministry use only | navy/blue |
+| Please review before public sharing | muted amber |
+| Archive only | muted purple/gray |
+| Do not publish externally | muted red |
 | Spacing scale | 4px rhythm, mostly 8/12/16/24px |
 | Card radius | image radius 10px; cards unboxed where possible |
 | Chip radius | 999px pills |

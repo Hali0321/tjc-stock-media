@@ -16,17 +16,17 @@ http://localhost:3008
 2. Search `Bible`.
 3. Show approved assets first.
 4. Open one asset.
-5. Point to status, usage scope, reviewer, reviewed date, tags, and source path.
+5. Point to `Approved for church-wide use`, usage scope, reviewer, reviewed date, tags, and source path.
 6. Show `Download approved copy`.
 7. Show `Original/master restricted`.
 8. Switch role to Reviewer.
 9. Open Review.
-10. Open first Needs Review asset from the demo path.
+10. Open first asset marked `Please review before public sharing` from the demo path.
 11. Show it is not downloadable.
-12. Return to Review and show approval actions.
+12. Return to Review and show approval actions: `Approve for church-wide use`, `Approve for internal ministry use`, `Archive only`, and `Do not publish externally`.
 13. Click one action and explain the current Mac reference refuses fake backend writes until ResourceSpace API write mapping is configured.
 14. Open Upload as Contributor.
-15. Show new media defaults to `Needs Review / Do Not Publish`.
+15. Show new media defaults to `Needs Review / Do Not Publish`, shown to users as review-required.
 16. Show large-media rule for files over 100 MB.
 
 ## Main Message
@@ -50,7 +50,7 @@ Viewer cannot download unsafe assets.
 
 Original/master files are restricted.
 
-Needs Review is not publishable.
+Please review before public sharing is not publishable.
 
 Possible Minors requires review.
 

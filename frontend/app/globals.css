@@ -762,6 +762,7 @@ textarea:focus-visible {
 }
 
 .safe-answer,
+.usage-guidance-panel,
 .download-panel,
 .notes-panel,
 .tag-section,
@@ -794,8 +795,48 @@ textarea:focus-visible {
 .safe-answer span,
 .download-panel p,
 .notes-panel p,
-.guide-list p {
+.guide-list p,
+.usage-guidance-panel dd {
   color: var(--muted);
+}
+
+.usage-guidance-panel {
+  display: grid;
+  gap: 10px;
+  background: #fffdf8;
+}
+
+.usage-guidance-panel h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.usage-guidance-panel dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.usage-guidance-panel div {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.usage-guidance-panel dt {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.usage-guidance-panel dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .download-panel {
@@ -963,6 +1004,16 @@ textarea:focus-visible {
   min-height: 44px;
   padding: 10px 12px;
   font-weight: 400;
+}
+
+.ai-suggestion-note {
+  border: 1px dashed #cbd8e4;
+  border-radius: 12px;
+  background: #f4f8fb;
+  color: #52677a;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .form-grid {
@@ -1148,7 +1199,8 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .action-grid button:first-child {
@@ -1172,6 +1224,32 @@ textarea:focus-visible {
 .guide-list {
   display: grid;
   gap: 12px;
+}
+
+.do-avoid-block {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.do-avoid-block > div {
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.do-avoid-block > div:first-child {
+  border-color: #c7dfcf;
+  background: #f5fbf7;
+}
+
+.do-avoid-block > div:last-child {
+  border-color: #ead5a9;
+  background: #fffaf0;
 }
 
 @media (max-width: 1024px) {
@@ -1227,6 +1305,11 @@ textarea:focus-visible {
   .meta-list div {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+
+  .usage-guidance-panel div,
+  .do-avoid-block {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1394,8 +1477,9 @@ textarea:focus-visible {
   }
 
   .action-grid button {
-    flex: 1 1 142px;
+    flex: 1 1 150px;
     justify-content: center;
+    white-space: normal;
   }
 
   .library-top h1,

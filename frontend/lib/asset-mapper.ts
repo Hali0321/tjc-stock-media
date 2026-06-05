@@ -143,10 +143,12 @@ export function mapMetadataRowToAsset(row: Row): StockMediaAsset {
     rightsNotes: row.approval_notes || row.notes || undefined,
     usageGuidance:
       status === "Approved Public"
-        ? "Approved copy available for public and internal ministry use."
+        ? "Approved for newsletters, slides, local church announcements, and church-wide ministry communication."
         : status === "Approved Internal"
-          ? "Approved for internal ministry use only."
-          : "Reviewer approval required before use.",
+          ? "Approved for internal ministry use only. Please do not share publicly without another review."
+          : status === "Possible Minors"
+            ? "Use with care: children/youth may be visible. Please ask a media coworker before public sharing."
+            : "Please review before sharing publicly. A reviewer must approve this asset before reuse.",
     downloadPolicy: inferDownloadPolicy(status),
     resourceSpaceId: row.resource_id || row.resourcespace_ref || undefined,
     sourcePath: row.source_path || undefined,

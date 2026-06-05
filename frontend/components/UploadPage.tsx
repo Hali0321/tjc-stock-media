@@ -70,6 +70,10 @@ export function UploadPage() {
               </div>
             </div>
             <label>
+              Title
+              <input name="title" placeholder="Bible study fellowship photos" required />
+            </label>
+            <label>
               Event name
               <input name="eventName" placeholder="MVP worship workshop" required />
             </label>
@@ -83,6 +87,10 @@ export function UploadPage() {
                 <input name="ministry" placeholder="Internet Ministry" />
               </label>
             </div>
+            <label>
+              Source / photographer
+              <input name="source" placeholder="lm.photo@tjc.org, volunteer name, or Shared Drive folder" required />
+            </label>
           </section>
 
           <section className="intake-section">
@@ -112,6 +120,15 @@ export function UploadPage() {
             </label>
             </div>
             <label>
+              Usage rights
+              <select name="usageRights" defaultValue="Unknown - needs review">
+                <option>Unknown - needs review</option>
+                <option>TJC-owned / permission confirmed</option>
+                <option>Internal ministry use only</option>
+                <option>Do not publish externally</option>
+              </select>
+            </label>
+            <label>
               Usage notes/restrictions
               <textarea name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} />
             </label>
@@ -119,6 +136,9 @@ export function UploadPage() {
               Suggested tags
               <input name="tags" placeholder="Bible, fellowship, welcome, youth..." />
             </label>
+            <div className="ai-suggestion-note">
+              AI tag suggestions may help later, but a person still reviews titles, tags, people visibility, and rights before publishing.
+            </div>
           </section>
 
           <section className="intake-section">

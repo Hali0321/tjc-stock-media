@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     role?: string;
     id?: string;
     action?: "Approve Public" | "Approve Internal" | "Searchable Archive" | "Do Not Use";
+    label?: string;
     notes?: string;
   };
   const role = normalizeRole(body.role);
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       ...result,
       id: body.id,
       action: body.action,
+      label: body.label || body.action,
       notes: body.notes || "",
       mode: "server-route-contract"
     },

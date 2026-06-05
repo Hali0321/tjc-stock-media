@@ -69,12 +69,12 @@ function matchesQuery(asset: StockMediaAsset, query: string) {
 function matchesFilters(asset: StockMediaAsset, filters: string[]) {
   return filters.every((filter) => {
     const value = filter.toLowerCase();
-    if (value === "approved public") return asset.status === "Approved Public";
-    if (value === "approved internal") return asset.status === "Approved Internal";
+    if (value === "approved public" || value === "church-wide use") return asset.status === "Approved Public";
+    if (value === "approved internal" || value === "internal ministry") return asset.status === "Approved Internal";
     if (["photo", "video", "audio", "graphic"].includes(value)) return asset.mediaType === value;
     if (value === "no people") return asset.peopleRisk === "No people";
     if (value === "adults only") return asset.peopleRisk === "Adults visible";
-    if (value === "possible minors") return asset.peopleRisk === "Possible minors";
+    if (value === "possible minors" || value === "children/youth") return asset.peopleRisk === "Possible minors";
     return [asset.collection, asset.title, ...(asset.tags || []), ...(asset.tjcTerms || [])]
       .join(" ")
       .toLowerCase()

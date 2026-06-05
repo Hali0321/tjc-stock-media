@@ -14,8 +14,13 @@ type ReviewResponse = {
   canReview: boolean;
 };
 
-const actions = ["Approve Public", "Approve Internal", "Searchable Archive", "Do Not Use"] as const;
-const queueFilters = ["Needs Review", "Possible Minors", "Rights Review", "Missing Tags", "Large Media"];
+const actions = [
+  { label: "Approve for church-wide use", backend: "Approve Public" },
+  { label: "Approve for internal ministry use", backend: "Approve Internal" },
+  { label: "Archive only", backend: "Searchable Archive" },
+  { label: "Do not publish externally", backend: "Do Not Use" }
+] as const;
+const queueFilters = ["Review needed", "Children/youth", "Rights review", "Missing tags", "Large media"];
 
 export function ReviewPage() {
   const { role } = useDemoRole();
@@ -40,7 +45,7 @@ export function ReviewPage() {
     const response = await fetch("/api/review", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, id, action, notes: "Mac reference demo action through server route." })
+      body: JSON.stringify({ role, id, action: action.backend, label: action.label, notes: "Mac reference demo action through server route." })
     });
     const body = await response.json();
     setMessage(body.message || body.error || "Review route responded.");
@@ -77,8 +82,8 @@ export function ReviewPage() {
       {reviewer ? (
         <section className="review-demo-path" aria-label="Stakeholder demo path">
           <strong>Demo path</strong>
-          <span>Open a Needs Review asset to show blocked download, then return here for approval actions.</span>
-          {data?.assets[0] ? <a href={`/assets/${data.assets[0].id}`}>Open first Needs Review asset</a> : null}
+          <span>Open a review-needed asset to show blocked download, then return here for approval actions.</span>
+          {data?.assets[0] ? <a href={`/assets/${data.assets[0].id}`}>Open first review-needed asset</a> : null}
         </section>
       ) : null}
 
@@ -129,9 +134,9 @@ export function ReviewPage() {
               </div>
               <div className="action-grid">
                 {actions.map((action) => (
-                  <button key={action} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
-                    {action === "Do Not Use" ? <ShieldX size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
-                    {action}
+                  <button key={action.backend} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
+                    {action.backend === "Do Not Use" ? <ShieldX size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
+                    {action.label}
                   </button>
                 ))}
               </div>

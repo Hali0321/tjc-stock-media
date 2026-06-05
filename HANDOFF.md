@@ -60,11 +60,20 @@ Contributor can submit upload intake but cannot approve.
 
 Reviewer/DAM Admin can open review queue. Review actions go through `/api/review`; if ResourceSpace API write config is missing, the route refuses fake persistence and tells the user to use ResourceSpace admin.
 
+Reviewer action labels are user-facing, but map to backend workflow values:
+
+| UI action | Backend action/status |
+|---|---|
+| Approve for church-wide use | Approved Public |
+| Approve for internal ministry use | Approved Internal |
+| Archive only | Searchable Archive |
+| Do not publish externally | Do Not Use |
+
 ## Download Safety
 
 Only approved use copies are downloadable through `/api/download/:id`.
 
-Needs Review, Searchable Archive, Possible Minors, and Do Not Use assets return blocked responses for normal users. Original/master files are visually separated and restricted.
+Needs Review, Searchable Archive, Possible Minors, and Do Not Use assets return blocked responses for normal users. The UI presents these as `Please review before public sharing`, `Archive only`, `Contains children/youth`, and `Do not publish externally`. Original/master files are visually separated and restricted.
 
 ## Thumbnail Safety
 

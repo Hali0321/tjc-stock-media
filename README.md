@@ -115,9 +115,9 @@ Do not demo "ResourceSpace is running." Demo the product behavior:
 
 1. Search `Bible`, `Plant`, `Fountain`, `MVP 2024`, `Approved Public`.
 2. Open a result.
-3. Show source path, tags, rights status, usage scope, and notes.
+3. Show source path, tags, approval label, usage scope, and notes.
 4. Explain every new import starts as `Needs Review / Do Not Publish`.
-5. Show MVP 2024 resources are now `Approved Public`.
+5. Show MVP 2024 resources are now displayed as `Approved for church-wide use`.
 6. Show `Reviewed By`, `Reviewed Date`, and `Public and Internal` usage scope.
 7. Export metadata CSV.
 8. Copy approved sample back to Shared Drive.
@@ -164,6 +164,15 @@ Current data source priority:
 Current Mac reference uses exported ResourceSpace metadata for search/detail/review queue and a dev-only thumbnail proxy for individual ResourceSpace preview derivatives. Approval writes are intentionally read-only until ResourceSpace API field mapping is configured. The route refuses fake persistence instead of creating a second approval database.
 
 Normal users can only download approved use copies. Original/master files stay restricted.
+
+User-facing approval labels are warmer than backend values:
+
+- `Approved Public` appears as `Approved for church-wide use`
+- `Approved Internal` appears as `Internal ministry use only`
+- `Needs Review` appears as `Please review before public sharing`
+- `Searchable Archive` appears as `Archive only`
+- `Do Not Use` appears as `Do not publish externally`
+- `Possible Minors` appears as `Contains children/youth`
 
 Latest UI QA screenshots:
 
