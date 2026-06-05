@@ -15,6 +15,7 @@ type ReviewResponse = {
 };
 
 const actions = ["Approve Public", "Approve Internal", "Searchable Archive", "Do Not Use"] as const;
+const queueFilters = ["Needs Review", "Possible Minors", "Rights Review", "Missing Tags", "Large Media"];
 
 export function ReviewPage() {
   const { role } = useDemoRole();
@@ -78,6 +79,16 @@ export function ReviewPage() {
           <strong>Demo path</strong>
           <span>Open a Needs Review asset to show blocked download, then return here for approval actions.</span>
           {data?.assets[0] ? <a href={`/assets/${data.assets[0].id}`}>Open first Needs Review asset</a> : null}
+        </section>
+      ) : null}
+
+      {reviewer ? (
+        <section className="review-filter-bar" aria-label="Review filters">
+          {queueFilters.map((filter, index) => (
+            <button className={index === 0 ? "review-filter-bar__active" : ""} key={filter} type="button">
+              {filter}
+            </button>
+          ))}
         </section>
       ) : null}
 

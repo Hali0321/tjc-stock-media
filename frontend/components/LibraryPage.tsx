@@ -47,6 +47,7 @@ export function LibraryPage() {
   }
 
   const shownApproved = result?.assets.filter((asset) => asset.status === "Approved Public" || asset.status === "Approved Internal").length ?? 0;
+  const collectionPreviewAssets = result?.assets.slice(0, featuredCollections.length) || [];
 
   return (
     <div className="page-shell">
@@ -136,10 +137,13 @@ export function LibraryPage() {
       </div>
 
       <section id="collections" className="collections-band" aria-label="Featured collections">
-        {featuredCollections.map((collection) => (
+        {featuredCollections.map((collection, index) => (
           <button key={collection} type="button" onClick={() => setSubmittedQuery(collection)}>
+            {collectionPreviewAssets[index]?.thumbnail ? (
+              <img src={collectionPreviewAssets[index].thumbnail} alt="" aria-hidden="true" loading="lazy" />
+            ) : null}
             <span>{collection}</span>
-            <small>{collection === "Approved Public" ? "safe" : collection === "Recently Approved" ? "new" : "browse"}</small>
+            <small>{collection === "Approved Public" ? "safe to use" : collection === "Recently Approved" ? "newly cleared" : "browse"}</small>
           </button>
         ))}
       </section>

@@ -17,7 +17,7 @@ const mediaIcons = {
 export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
   const canDownload = canDownloadApprovedCopy(role, asset);
   const MediaIcon = mediaIcons[asset.mediaType];
-  const quickTags = [...(asset.tags || []), ...(asset.tjcTerms || [])].slice(0, 3);
+  const quickTags = [...(asset.tags || []), ...(asset.tjcTerms || [])].slice(0, 1);
   const traceLabel = asset.reviewedDate
     ? `Reviewed ${asset.reviewedDate}`
     : asset.resourceSpaceId

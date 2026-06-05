@@ -61,19 +61,39 @@ export function UploadPage() {
         <div className="empty-state">This role can search approved media but cannot upload. Switch to Contributor, Reviewer, or DAM Admin for intake demo.</div>
       ) : (
         <form className="intake-form" onSubmit={submit}>
-          <label>
-            Event name
-            <input name="eventName" placeholder="MVP worship workshop" required />
-          </label>
-          <label>
-            Event date
-            <input name="eventDate" type="date" defaultValue={today} />
-          </label>
-          <label>
-            Ministry/team
-            <input name="ministry" placeholder="Internet Ministry" />
-          </label>
-          <div className="form-grid">
+          <section className="intake-section">
+            <div className="intake-section__title">
+              <span>1</span>
+              <div>
+                <h2>Context</h2>
+                <p>Help reviewers understand where this media came from.</p>
+              </div>
+            </div>
+            <label>
+              Event name
+              <input name="eventName" placeholder="MVP worship workshop" required />
+            </label>
+            <div className="form-grid">
+              <label>
+                Event date
+                <input name="eventDate" type="date" defaultValue={today} />
+              </label>
+              <label>
+                Ministry/team
+                <input name="ministry" placeholder="Internet Ministry" />
+              </label>
+            </div>
+          </section>
+
+          <section className="intake-section">
+            <div className="intake-section__title">
+              <span>2</span>
+              <div>
+                <h2>People and rights</h2>
+                <p>Anything uncertain stays blocked until reviewed.</p>
+              </div>
+            </div>
+            <div className="form-grid">
             <label>
               People visible
               <select name="peopleVisible" defaultValue="Unknown">
@@ -90,27 +110,39 @@ export function UploadPage() {
                 <option>Yes</option>
               </select>
             </label>
-          </div>
-          <label>
-            Usage notes/restrictions
-            <textarea name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} />
-          </label>
-          <label>
-            Suggested tags
-            <input name="tags" placeholder="Bible, fellowship, welcome, youth..." />
-          </label>
-          <label>
-            Files
-            <input name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
-          </label>
-          {largeWarning ? <div className="large-warning">{largeWarning}</div> : null}
-          <div className="large-media-card">
-            <FolderInput size={18} aria-hidden="true" />
-            <div>
-              <strong>Large media intake</strong>
-              <span>Video/audio over 100 MB goes to Shared Drive Incoming, then DAM admin imports it into ResourceSpace.</span>
             </div>
-          </div>
+            <label>
+              Usage notes/restrictions
+              <textarea name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} />
+            </label>
+            <label>
+              Suggested tags
+              <input name="tags" placeholder="Bible, fellowship, welcome, youth..." />
+            </label>
+          </section>
+
+          <section className="intake-section">
+            <div className="intake-section__title">
+              <span>3</span>
+              <div>
+                <h2>Files</h2>
+                <p>Submissions enter Needs Review / Do Not Publish.</p>
+              </div>
+            </div>
+            <label>
+              Files
+              <input name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
+            </label>
+            {largeWarning ? <div className="large-warning">{largeWarning}</div> : null}
+            <div className="large-media-card">
+              <FolderInput size={18} aria-hidden="true" />
+              <div>
+                <strong>Large media intake</strong>
+                <span>Video/audio over 100 MB goes to Shared Drive Incoming, then DAM admin imports it into ResourceSpace.</span>
+              </div>
+            </div>
+          </section>
+
           <button className="primary-action" type="submit">
             <UploadCloud size={16} aria-hidden="true" />
             Submit intake
