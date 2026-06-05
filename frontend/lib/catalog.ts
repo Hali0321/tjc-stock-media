@@ -186,6 +186,9 @@ function matchesQuery(asset: StockMediaAsset, query: string) {
 function matchesFilters(asset: StockMediaAsset, filters: string[]) {
   return filters.every((filter) => {
     const value = filter.toLowerCase();
+    const dimensions = asset.imageDimensions?.match(/(\d+)\D+(\d+)/);
+    const width = Number(dimensions?.[1] || 0);
+    const height = Number(dimensions?.[2] || 0);
     if (value === "approved public" || value === "church-wide use") return asset.status === "Approved Public";
     if (value === "approved internal" || value === "internal ministry") return asset.status === "Approved Internal";
     if (value === "needs review") return asset.status === "Needs Review" || asset.status === "Possible Minors";
@@ -196,6 +199,12 @@ function matchesFilters(asset: StockMediaAsset, filters: string[]) {
     if (value === "possible minors" || value === "children/youth") return asset.peopleRisk === "Possible minors";
     if (value === "missing source") return !asset.sourcePath && !asset.sourceAccount && !asset.sourceSystem;
     if (value === "rights review") return reviewRiskFlags(asset).includes("Rights unclear");
+    if (value === "landscape") return width > height || assetHaystack(asset).includes("landscape");
+    if (value === "portrait") return height > width || assetHaystack(asset).includes("portrait");
+    if (value === "square") return Boolean(width && height && Math.abs(width - height) < Math.max(width, height) * 0.08) || assetHaystack(asset).includes("square");
+    if (value === "lm photos") return /lm photos/i.test(`${asset.sourceSystem || ""} ${asset.sourceAccount || ""}`);
+    if (value === "resourcespace") return Boolean(asset.resourceSpaceId);
+    if (value === "photographer") return Boolean(asset.sourceAccount);
     return assetHaystack(asset).includes(value);
   });
 }
@@ -348,6 +357,9 @@ export async function searchAssets({
     total: diversified.length,
     source: status,
     counts: {
+      visibleToRole: roleVisible.length,
+      matching: diversified.length,
+      rendered: diversified.slice(0, limit).length,
       approved: roleVisible.filter((asset) => asset.status === "Approved Public" || asset.status === "Approved Internal").length,
       needsReview: roleVisible.filter((asset) => asset.status === "Needs Review" || asset.status === "Possible Minors").length,
       archive: roleVisible.filter((asset) => asset.status === "Searchable Archive").length,

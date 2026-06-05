@@ -21,13 +21,13 @@ export async function updateResourceReviewStatus() {
     return {
       ok: false,
       status: 409,
-      message: "ResourceSpace API write config is not available. Use ResourceSpace admin for final approval."
+      message: "Review action is ready, but ResourceSpace API write mapping is not configured yet."
     };
   }
 
   return {
     ok: false,
     status: 501,
-    message: "ResourceSpace write bridge needs signed API field mapping before status changes can persist."
+    message: "Review action is ready, but ResourceSpace API write mapping is not configured yet."
   };
 }

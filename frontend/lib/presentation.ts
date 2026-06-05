@@ -27,7 +27,7 @@ export function provenanceSummary(asset: StockMediaAsset, role: DemoRole) {
   return {
     source,
     origin,
-    publicLabel: [source, origin].filter(Boolean).join(" · "),
+    publicLabel: [source, origin].filter(Boolean).join(" - "),
     technicalPath: adminDecision.allowed ? asset.sourcePath || asset.masterDrivePath || "Source path not exported" : undefined
   };
 }
@@ -73,6 +73,58 @@ export function guidanceFacts(asset: StockMediaAsset, role: DemoRole) {
   ];
 }
 
+function unknownReviewCopy(value?: string) {
+  if (!value || value === "Unknown") return "Unknown - reviewer should confirm before public use";
+  return value;
+}
+
+export function confidenceStates(asset: StockMediaAsset) {
+  const sourceKnown = Boolean(asset.sourcePath || asset.sourceAccount || asset.sourceSystem || asset.resourceSpaceId);
+  const peopleKnown = Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown");
+  const rightsText = `${asset.rightsStatus || ""} ${asset.rightsNotes || ""} ${asset.consentStatus || ""}`.toLowerCase();
+  const approved = asset.status === "Approved Public" || asset.status === "Approved Internal";
+  const rightsApproved = approved && (/approved|permission confirmed|tjc-owned|clear/i.test(rightsText) || Boolean(asset.rightsNotes));
+  const rightsNeedsReview = /unknown|unclear|concern|not confirmed|needs review|permission/i.test(rightsText) && !rightsApproved;
+  const usageMissing = !asset.usageGuidance || /review before sharing|reviewer must approve/i.test(asset.usageGuidance);
+
+  return [
+    {
+      key: "source",
+      label: "Source",
+      state: sourceKnown ? "Source verified" : "Source missing",
+      tone: sourceKnown ? "ok" : "warn"
+    },
+    {
+      key: "people",
+      label: "People/minors",
+      state: peopleKnown
+        ? asset.peopleRisk === "Possible minors"
+          ? "Children/youth possible"
+          : "People/minors reviewed"
+        : "People/minors unknown",
+      tone: asset.peopleRisk === "Possible minors" || !peopleKnown ? "warn" : "ok"
+    },
+    {
+      key: "rights",
+      label: "Rights",
+      state: rightsApproved ? "Rights approved" : rightsNeedsReview ? "Rights review required" : "Rights unknown",
+      tone: rightsApproved ? "ok" : "warn"
+    },
+    {
+      key: "usage",
+      label: "Usage",
+      state: usageMissing ? "Usage guidance missing" : "Usage guidance present",
+      tone: usageMissing ? "warn" : "ok"
+    },
+    {
+      key: "review",
+      label: "Review",
+      state: asset.reviewer && asset.reviewedDate ? "Review complete" : "Review pending",
+      tone: asset.reviewer && asset.reviewedDate ? "ok" : "warn"
+    }
+  ] as const;
+}
+
 function bestUseCopy(asset: StockMediaAsset) {
   const terms = [...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])].join(" ").toLowerCase();
   if (terms.includes("social")) return "Social media, event recap, and internal ministry updates when approval allows.";
@@ -88,9 +140,9 @@ export function trustFacts(asset: StockMediaAsset, role: DemoRole) {
     { label: "Approval", value: statusToUserLabel(asset.status) },
     { label: "Usage scope", value: usageScopeToUserLabel(asset.usageScope) },
     { label: "Source / provenance", value: provenance.publicLabel },
-    { label: "Reviewer", value: asset.reviewer && asset.reviewedDate ? `${asset.reviewer} · ${asset.reviewedDate}` : "Review pending" },
-    { label: "People/minors", value: asset.peopleRisk || "Unknown" },
-    { label: "Rights", value: asset.rightsStatus || asset.rightsNotes || "Rights review pending" }
+    { label: "Reviewer", value: asset.reviewer && asset.reviewedDate ? `${asset.reviewer} - ${asset.reviewedDate}` : "Review pending" },
+    { label: "People/minors", value: unknownReviewCopy(asset.peopleRisk) },
+    { label: "Rights", value: unknownReviewCopy(asset.rightsStatus || asset.rightsNotes || "Rights review pending") }
   ];
 }
 
@@ -121,6 +173,7 @@ export function assetPresentation(asset: StockMediaAsset, role: DemoRole) {
     detailImage: detailImageUrl(asset),
     download: downloadState(asset, role),
     trustFacts: trustFacts(asset, role),
+    confidence: confidenceStates(asset),
     guidanceFacts: guidanceFacts(asset, role),
     reviewFacts: reviewFacts(asset)
   };

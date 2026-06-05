@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { missingReviewFields, reviewActions, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+import { cn } from "@/lib/ui";
 
 type QueueSummary = {
   id: ReviewQueueId;
@@ -37,6 +40,13 @@ type ReviewResponse = {
   resourceSpaceUrls: Record<string, string>;
 };
 
+type AuditPreview = {
+  action: string;
+  role: string;
+  timestamp: string;
+  assetId: string;
+};
+
 const governanceCards = [
   { key: "pendingReview", label: "Pending review", icon: ShieldCheck },
   { key: "childrenYouth", label: "Children/youth", icon: Users },
@@ -46,19 +56,26 @@ const governanceCards = [
   { key: "archiveCandidates", label: "Archive candidates", icon: Archive }
 ] as const;
 
+const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
+const factTermClass = "text-xs font-semibold text-tjc-evergreen";
+const factDescClass = "mt-1 break-words text-sm leading-relaxed text-[#4d554d]";
+
 function sourceSummary(asset: StockMediaAsset) {
   return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
 }
 
 export function ReviewPage() {
-  const { role } = useDemoRole();
+  const { role, ready } = useDemoRole();
   const [data, setData] = useState<ReviewResponse | null>(null);
   const [message, setMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [activeQueue, setActiveQueue] = useState<ReviewQueueId>("pending");
-  const reviewer = canReview(role);
+  const [auditPreview, setAuditPreview] = useState<AuditPreview | null>(null);
+  const workbenchRef = useRef<HTMLElement>(null);
+  const reviewer = ready && canReview(role);
 
   useEffect(() => {
+    if (!ready) return;
     let cancelled = false;
     fetch(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(activeQueue)}`)
       .then((response) => response.json())
@@ -71,11 +88,41 @@ export function ReviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [role, activeQueue]);
+  }, [role, activeQueue, ready]);
 
   const selectedAsset = useMemo(() => data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0], [data?.assets, selectedId]);
+  const activeQueueSummary = data?.queues.find((queue) => queue.id === activeQueue);
+
+  useEffect(() => {
+    if (!reviewer || !data?.assets.length || !workbenchRef.current) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    gsap.registerPlugin(ScrollTrigger);
+    const ctx = gsap.context(() => {
+      gsap.utils.toArray<HTMLElement>(".review-media-reveal").forEach((item) => {
+        gsap.fromTo(
+          item,
+          { scale: 0.97, opacity: 0.75 },
+          {
+            scale: 1,
+            opacity: 1,
+            ease: "none",
+            scrollTrigger: {
+              trigger: item,
+              start: "top 92%",
+              end: "top 58%",
+              scrub: true
+            }
+          }
+        );
+      });
+    }, workbenchRef);
+    return () => ctx.revert();
+  }, [reviewer, data?.assets.length, activeQueue]);
 
   async function runAction(id: string, action: (typeof reviewActions)[number]) {
+    const timestamp = new Date().toISOString();
+    setAuditPreview({ action: action.label, role, timestamp, assetId: id });
     setMessage("");
     const response = await fetch("/api/review", {
       method: "POST",
@@ -86,22 +133,24 @@ export function ReviewPage() {
     setMessage(body.message || body.error || "Review route responded.");
   }
 
+  if (!ready) {
+    return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
+  }
+
   if (!reviewer) {
     return (
-      <div className="page-shell page-shell--workflow">
-        <section className="library-top">
-          <div>
-            <p className="eyebrow">Review</p>
-            <h1>Review is available to reviewers</h1>
-            <p>Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
-          </div>
+      <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
+        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+          <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em]">Review is available to reviewers</h1>
+          <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
         </section>
-        <section className="role-locked-workflow">
-          <ShieldCheck size={28} aria-hidden="true" />
+        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-lg border border-tjc-line bg-white/76 p-5">
+          <ShieldCheck size={28} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
           <div>
-            <h2>What reviewers check</h2>
-            <p>Approval status, source/provenance, people visibility, children/youth risk, rights notes, usage guidance, and download eligibility.</p>
-            <span>Use role switch to Reviewer or DAM Admin to inspect the governance workbench.</span>
+            <h2 className="text-xl font-semibold">What reviewers check</h2>
+            <p className="mt-1 text-tjc-muted">Approval status, source/provenance, people visibility, children/youth risk, rights notes, usage guidance, and download eligibility.</p>
+            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Reviewer or DAM Admin to inspect the governance workbench.</span>
           </div>
         </section>
       </div>
@@ -109,151 +158,176 @@ export function ReviewPage() {
   }
 
   return (
-    <div className="page-shell review-page-shell">
-      <section className="library-top review-top">
+    <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
+      <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
-          <p className="eyebrow">Govern</p>
-          <h1>Review workbench</h1>
-          <p>Prioritize risk, missing metadata, children/youth, rights issues, duplicates, large media, and archive decisions.</p>
+          <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em] md:text-4xl">Review workbench</h1>
+          <p className="mt-2 max-w-[78ch] text-base leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
-        <div className="source-pill">
-          <span>Queue</span>
-          <strong>{data?.assets.length ?? "-"} selected</strong>
+        <div className="rounded-lg border border-tjc-line bg-white/82 p-3">
+          <span className="text-sm font-semibold text-tjc-muted">Current queue</span>
+          <strong className="mt-1 block text-2xl font-semibold tabular-nums">{data?.assets.length ?? "-"} shown</strong>
+          <span className="text-sm text-tjc-muted">{activeQueueSummary ? `first ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
         </div>
       </section>
 
       {data?.source.readOnly ? (
-        <div className="review-mode-banner">
-          <Database size={18} aria-hidden="true" />
+        <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-4 text-[#27435b]">
+          <Database size={18} strokeWidth={1.8} aria-hidden="true" />
           <div>
-            <strong>Review queue is reading ResourceSpace export.</strong>
-            <span>Actions stay server-routed; ResourceSpace API write persistence is pending field mapping.</span>
+            <strong className="block font-semibold">Review queue is reading ResourceSpace export.</strong>
+            <span className="text-sm">Actions stay server-routed. ResourceSpace API write persistence is pending field mapping.</span>
           </div>
         </div>
       ) : null}
 
-      <section className="governance-summary" aria-label="Governance metrics">
+      <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6" aria-label="Governance metrics">
         {governanceCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div className="governance-card" key={card.key}>
-              <Icon size={16} aria-hidden="true" />
-              <strong>{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
-              <span>{card.label}</span>
+            <div className="grid min-h-20 content-center rounded-lg border border-tjc-line bg-white/82 p-3 shadow-[0_1px_0_rgba(32,34,31,.04)]" key={card.key}>
+              <Icon size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
+              <strong className="mt-1 text-xl font-semibold tabular-nums">{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
+              <span className="text-xs font-medium text-tjc-muted">{card.label}</span>
             </div>
           );
         })}
       </section>
 
-      <section className="review-queue-tabs" aria-label="Review queues">
+      <section className="mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Review queues">
         {(data?.queues || []).map((queue) => (
           <button
             key={queue.id}
             type="button"
-            className={activeQueue === queue.id ? "review-queue-tab review-queue-tab--active" : "review-queue-tab"}
+            className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
             onClick={() => setActiveQueue(queue.id)}
             aria-pressed={activeQueue === queue.id}
           >
             <span>{queue.label}</span>
-            <strong>{queue.count.toLocaleString()}</strong>
+            <strong className="tabular-nums">{queue.count.toLocaleString()}</strong>
           </button>
         ))}
       </section>
 
-      {message ? <div className="form-message">{message}</div> : null}
+      {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section className="review-workbench review-workbench--govern">
-        <div className="review-list review-list--govern">
-          {(data?.assets || []).slice(0, 36).map((asset) => {
-            const display = assetPresentation(asset, role);
-            const selected = selectedAsset?.id === asset.id;
-            const risks = reviewRiskFlags(asset);
-            const missing = missingReviewFields(asset);
-            return (
-              <article className={`review-row ${selected ? "review-row--selected" : ""}`} key={asset.id}>
-                <button type="button" className="review-row__select" onClick={() => setSelectedId(asset.id)} aria-label={`Select ${display.title}`}>
-                  <span />
-                </button>
-                <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${display.title}`}>
-                  {asset.thumbnail ? <img src={asset.thumbnail} alt={asset.thumbnailAlt} loading="eager" /> : <span>Preview unavailable</span>}
-                  <span className="asset-card__type">{asset.mediaType}</span>
-                </Link>
-                <div className="review-row__actions">
-                  <div className="review-row__heading">
-                    <div>
-                      <h2>{display.title}</h2>
-                      <p>{asset.collection} · {sourceSummary(asset)}</p>
+      <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
+        <div className="min-w-0 overflow-hidden rounded-lg border border-tjc-line bg-white/74">
+          <div className="hidden grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
+            <span>Preview</span>
+            <span>Asset</span>
+            <span>Reason</span>
+            <span>Missing / risk</span>
+            <span>Action</span>
+          </div>
+          <div className="grid">
+            {(data?.assets || []).slice(0, 80).map((asset) => {
+              const display = assetPresentation(asset, role);
+              const selected = selectedAsset?.id === asset.id;
+              const risks = reviewRiskFlags(asset);
+              const missing = missingReviewFields(asset);
+              return (
+                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-3 last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#f5fbf7]")} key={asset.id}>
+                  <Link href={`/assets/${asset.id}`} className="review-media-reveal group grid aspect-[4/3] place-items-center overflow-hidden rounded-md bg-[#e8eee8] p-1.5" aria-label={`Open ${display.title}`}>
+                    {display.image ? <img className="h-auto max-h-full w-auto max-w-full rounded object-contain shadow-[0_4px_12px_rgba(32,34,31,.14)] transition duration-500 group-hover:scale-[1.025]" src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : <span className="text-sm text-tjc-muted">Preview unavailable</span>}
+                  </Link>
+                  <div className="min-w-0">
+                    <h2 className="line-clamp-2 text-base font-semibold leading-tight">{display.title}</h2>
+                    <p className="mt-1 grid gap-1 text-sm text-tjc-muted"><span className="truncate">{asset.collection}</span><span className="truncate">{sourceSummary(asset)}</span></p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <StatusBadge status={asset.status} />
+                      <UsageBadge scope={asset.usageScope} />
                     </div>
-                    <a href={`/assets/${asset.id}`} aria-label={`Open ${display.title} detail`}>
-                      <ExternalLink size={16} aria-hidden="true" />
-                    </a>
                   </div>
-                  <div className="asset-card__chips">
-                    <StatusBadge status={asset.status} />
-                    <UsageBadge scope={asset.usageScope} />
-                    <span className="download-state">
-                      <Lock size={14} aria-hidden="true" />
-                      blocked
-                    </span>
+                  <div className="text-sm leading-relaxed text-[#4d554d]">
+                    <strong className="block font-semibold text-tjc-ink">{risks[0] || "Standard review"}</strong>
+                    <span>{asset.rightsNotes || "Review needed before reuse."}</span>
                   </div>
-                  <p>{asset.rightsNotes || "Review needed before reuse."}</p>
-                  <div className="risk-row risk-row--strong">
-                    {risks.slice(0, 5).map((flag) => <span key={flag}>{flag}</span>)}
+                  <div className="flex flex-wrap gap-1.5 text-xs font-medium text-[#5d665f]">
+                    {risks.slice(0, 4).map((flag) => <span className="rounded-md border border-[#ead6a8] bg-[#fff7e5] px-2 py-1 text-[#725216]" key={flag}>{flag}</span>)}
+                    <span className="rounded-md bg-[#f1f4ef] px-2 py-1">{missing.length ? `Missing: ${missing.join(", ")}` : "Required fields present"}</span>
+                    <span className="rounded-md bg-[#f1f4ef] px-2 py-1">RS {asset.resourceSpaceId || asset.id}</span>
                   </div>
-                  <div className="risk-row">
-                    <span>{missing.length ? `Missing: ${missing.join(", ")}` : "Required fields present"}</span>
-                    <span>{asset.fileExtension?.toUpperCase() || asset.mediaType}</span>
-                    <span>RS {asset.resourceSpaceId || asset.id}</span>
+                  <div className="flex flex-wrap content-start gap-2 lg:grid">
+                    <button
+                      className={cn("inline-flex min-h-8 items-center justify-center rounded-md border px-2.5 text-xs font-semibold transition hover:bg-[#eef7f1] active:translate-y-px", selected ? "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen" : "border-tjc-line bg-white text-tjc-evergreen")}
+                      type="button"
+                      onClick={() => setSelectedId(asset.id)}
+                      aria-pressed={selected}
+                    >
+                      Inspect
+                    </button>
+                    <Link className="inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/assets/${asset.id}`}>
+                      <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />
+                      Detail
+                    </Link>
                   </div>
-                  <div className="action-grid action-grid--review">
-                    {reviewActions.map((action) => (
-                      <button key={action.id} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
-                        {action.backend === "Do Not Use" ? <ShieldX size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
-                        {action.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-          {data && !data.assets.length ? <div className="empty-state">No assets in this queue.</div> : null}
+                </article>
+              );
+            })}
+            {data && !data.assets.length ? <div className="p-8 text-tjc-muted">No assets in this queue.</div> : null}
+          </div>
         </div>
 
         {selectedAsset ? (
-          <aside className="review-inspector review-inspector--govern" aria-label="Selected asset review summary">
-            <img src={detailImageUrl(selectedAsset)} alt={selectedAsset.thumbnailAlt} />
-            <div>
-              <p className="eyebrow">Selected asset</p>
-              <h2>{assetPresentation(selectedAsset, role).title}</h2>
+          <aside className="grid gap-3 self-start rounded-lg border border-tjc-line bg-white/86 p-3 shadow-[0_12px_28px_rgba(32,34,31,.08)] xl:sticky xl:top-24" aria-label="Selected asset review summary">
+            <div className="grid aspect-[4/3] place-items-center rounded-md bg-[#e8eee8] p-3">
+              <img className="h-auto max-h-56 w-auto max-w-full rounded-md object-contain shadow-[0_5px_16px_rgba(32,34,31,.14)]" src={detailImageUrl(selectedAsset)} alt={selectedAsset.thumbnailAlt} />
             </div>
-            <div className="asset-card__chips">
+            <div>
+              <span className="text-sm font-semibold text-tjc-evergreen">Selected asset</span>
+              <h2 className="mt-1 text-xl font-semibold tracking-[-.01em]">{assetPresentation(selectedAsset, role).title}</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
               <StatusBadge status={selectedAsset.status} />
               <UsageBadge scope={selectedAsset.usageScope} />
             </div>
-            <dl>
-              <div><dt>Why review</dt><dd>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
-              <div><dt>Source/provenance</dt><dd>{sourceSummary(selectedAsset)}</dd></div>
-              <div><dt>People/minors</dt><dd>{selectedAsset.peopleRisk || "Unknown"}</dd></div>
-              <div><dt>Usage guidance</dt><dd>{selectedAsset.usageGuidance || "Missing"}</dd></div>
-              <div><dt>Review notes</dt><dd>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
-              <div><dt>Status history</dt><dd>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
+            <dl className="grid gap-3">
+              <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>People/minors</dt><dd className={factDescClass}>{selectedAsset.peopleRisk || "Unknown - reviewer should confirm before public use"}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>Usage guidance</dt><dd className={factDescClass}>{selectedAsset.usageGuidance || "Missing"}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>Review notes</dt><dd className={factDescClass}>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
             </dl>
-            <div className="review-inspector__actions">
-              <Link href={`/assets/${selectedAsset.id}`} className="secondary-action">
-                <ExternalLink size={16} aria-hidden="true" />
+            <section className="border-t border-tjc-line pt-3" aria-label="Review action area">
+              <h3 className="text-sm font-semibold text-tjc-evergreen">Action area</h3>
+              <div className="mt-2 grid gap-2">
+                {reviewActions.map((action) => (
+                  <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer} onClick={() => runAction(selectedAsset.id, action)}>
+                    {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+            {auditPreview ? (
+              <section className="rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]" aria-label="Audit preview">
+                <h3 className="font-semibold text-[#27435b]">Audit preview</h3>
+                <dl className="mt-2 grid gap-1">
+                  <div><dt className="font-semibold">Intended action</dt><dd>{auditPreview.action}</dd></div>
+                  <div><dt className="font-semibold">Reviewer role</dt><dd>{auditPreview.role}</dd></div>
+                  <div><dt className="font-semibold">Timestamp</dt><dd>{auditPreview.timestamp}</dd></div>
+                  <div><dt className="font-semibold">Required before real write</dt><dd>ResourceSpace field mapping, signed API write, reviewer identity, and status audit fields.</dd></div>
+                </dl>
+              </section>
+            ) : null}
+            <div className="grid gap-2">
+              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-3 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px">
+                <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
                 Open detail
               </Link>
               {data?.resourceSpaceUrls[selectedAsset.id] ? (
-                <a className="secondary-action secondary-action--quiet" href={data.resourceSpaceUrls[selectedAsset.id]} target="_blank" rel="noreferrer">
-                  <ExternalLink size={16} aria-hidden="true" />
+                <a className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={data.resourceSpaceUrls[selectedAsset.id]} target="_blank" rel="noreferrer">
+                  <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
                   ResourceSpace
                 </a>
               ) : null}
             </div>
-            <div className="review-inspector__note">
-              <Info size={16} aria-hidden="true" />
-              <span>Final approval writes remain in ResourceSpace until API write mapping is live.</span>
+            <div className="grid grid-cols-[auto_1fr] gap-2 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]">
+              <Info size={16} strokeWidth={1.8} aria-hidden="true" />
+              <span>Review action is ready, but ResourceSpace API write mapping is not configured yet.</span>
             </div>
           </aside>
         ) : null}

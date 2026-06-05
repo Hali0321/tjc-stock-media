@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This role can search approved media but cannot upload." }, { status: 403 });
   }
 
-  const files = form.getAll("files").filter((value): value is File => value instanceof File);
+  const files = form.getAll("files").filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0);
   const largeFiles = files.filter((file) => file.size > LARGE_MEDIA_BYTES);
   if (largeFiles.length) {
     return NextResponse.json({

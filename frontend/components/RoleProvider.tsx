@@ -6,6 +6,7 @@ import { normalizeRole } from "@/lib/permissions";
 
 type RoleContextValue = {
   role: DemoRole;
+  ready: boolean;
   setRole: (role: DemoRole) => void;
 };
 
@@ -13,20 +14,24 @@ const RoleContext = createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleState] = useState<DemoRole>("Viewer");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setRoleState(normalizeRole(window.localStorage.getItem("tjc-demo-role")));
+    setReady(true);
   }, []);
 
   const value = useMemo(
     () => ({
       role,
+      ready,
       setRole(nextRole: DemoRole) {
         setRoleState(nextRole);
+        setReady(true);
         window.localStorage.setItem("tjc-demo-role", nextRole);
       }
     }),
-    [role]
+    [role, ready]
   );
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;

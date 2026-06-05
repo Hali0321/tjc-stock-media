@@ -14,7 +14,9 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 
 - Photo-first library, not admin dashboard.
 - Warm white background, deep charcoal text, evergreen/navy accents.
-- App-like shell with persistent navigation, utility role switch, large search, filter chips, sort chips, curated album cards, and image grid high on page.
+- Tailwind v4 utility system with a small global token/base layer.
+- Geist variable sans via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
+- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, compact album rail, filter controls, sort controls, and image grid high on page.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
 - Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
@@ -102,10 +104,10 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 | Token | Value / rule |
 |---|---|
-| Background | warm white `#faf9f5`; no beige/yellow dashboard treatment |
-| Surface | white or translucent white; minimal borders |
+| Background | warm white `#f7f8f4`; no beige/yellow dashboard treatment |
+| Surface | white or translucent white; minimal borders and soft depth |
 | Text | deep charcoal `#20221f` |
-| Muted text | gray-green `#6b6f69` |
+| Muted text | gray-green `#687068` |
 | Accent | deep evergreen `#123f3a` |
 | Secondary accent | calm navy `#1f4f73` |
 | Approved for church-wide use | restrained green |
@@ -114,27 +116,41 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Archive only | muted purple/gray |
 | Do not publish externally | muted red |
 | Spacing scale | 4px rhythm, mostly 8/12/16/24px |
-| Card radius | image radius 10px; cards unboxed where possible |
+| Card radius | 16-28px for app panels; image cards tighter inside panels |
 | Chip radius | 999px pills |
 | Shadow | very soft image shadow only |
-| Typography | system sans, compact hierarchy, no giant marketing hero |
+| Typography | Geist variable sans, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
+| Motion | GSAP only in review workbench; disabled under reduced-motion |
 
 ## Current Library Pattern
 
 - App shell: sidebar on desktop, compact top navigation on tablet/mobile.
-- Main workspace uses available width instead of a centered document column.
-- Featured collections render as thumbnail album cards with count/date/scope signals.
+- Mobile at 320px uses icon-first primary nav with accessible labels so controls fit without horizontal page overflow.
+- Main workspace is bounded to a wide app canvas so ultra-wide monitors do not stretch controls.
+- Library attention area is a compact DAM command center: Find / Trust / Reuse / Govern, search, use-case buttons, source/safety, and operational counters.
+- Saved DAM views are compact action cards with count and purpose, not long documentation cards.
+- Featured collections render as compact album thumbnail collages with count/date/scope signals, avoiding oversized low-resolution derivatives.
 - Search result copy uses `Showing first 84 of 2,290 matching assets` style language.
 - Responsive media grid uses CSS columns: 5 columns desktop, 3 tablet landscape, 2 tablet/mobile landscape, 1 at 320px.
 - Asset cards eager-load thumbnails in the local demo to avoid placeholder-heavy stakeholder screenshots.
 - Raw filenames are not mutated; a display helper normalizes titles such as `Copy Of Img 0625` to `Image 0625` while preserving original filename in detail metadata.
+- Final 320px Library QA measured search at 286px, asset results at 798px, no horizontal overflow, and no visible clipped controls.
 
 ## Workflow Screens
 
-- Upload uses a guided intake layout with Context, Rights, and Review step cards above the form.
-- Review uses a workbench layout: queue tabs, compact review rows, and a selected-asset inspector for source, risk, and ResourceSpace traceability.
+- Upload uses a lighter guided intake layout with Context, People and rights, and Files and tags.
+- Review uses a professional workbench layout: compact governance metrics, queue tabs, tighter review rows, smaller workflow actions, a selected-asset inspector for source/risk/ResourceSpace traceability, and desktop-only GSAP pin/scale motion that is skipped for reduced-motion users.
+- Guide is an actionable usage guide with download decision rows and Do/Avoid blocks.
 - Asset detail keeps a large preview and a right-side usage/download inspector, with approved copy and original/master restrictions separated.
+
+## Latest QA Evidence
+
+- `npm run typecheck`: passed on 2026-06-05.
+- `npm run build`: passed on 2026-06-05 after a clean `.next` rebuild.
+- Production browser QA covered Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px. Library was also checked at 1280, 1024, 768, 390, and 320px with no horizontal page overflow.
+- Role safety API checks: unsafe Viewer download 403; Viewer review/upload 403; Reviewer write action 409 when ResourceSpace API write config is missing; Contributor upload intake 200.
+- Refreshed screenshot set lives under `docs/screenshots/`.
 
 ## Anti-AI Checklist
 

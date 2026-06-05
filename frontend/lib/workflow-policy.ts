@@ -34,9 +34,18 @@ export const reviewQueues = [
 
 export type ReviewQueueId = (typeof reviewQueues)[number]["id"];
 
+function rightsNeedReview(asset: StockMediaAsset) {
+  const rightsText = `${asset.rightsStatus || ""} ${asset.consentStatus || ""} ${asset.rightsNotes || ""}`.toLowerCase();
+  const approved = asset.status === "Approved Public" || asset.status === "Approved Internal";
+  if (approved && (asset.rightsNotes || /approved|clear|permission confirmed|tjc-owned/i.test(rightsText))) return false;
+  if (/rights unclear|unknown|concern|not confirmed|needs review|permission/i.test(rightsText)) return true;
+  if (asset.status === "Do Not Use" || asset.usageScope === "Do Not Use") return true;
+  return false;
+}
+
 export function assetMatchesReviewQueue(asset: StockMediaAsset, queueId: ReviewQueueId) {
   const missingSource = !asset.sourcePath && !asset.sourceAccount && !asset.sourceSystem && !asset.resourceSpaceId;
-  const rightsUnclear = /unknown|concern|not confirmed/i.test(`${asset.rightsStatus || ""} ${asset.consentStatus || ""} ${asset.rightsNotes || ""}`);
+  const rightsUnclear = rightsNeedReview(asset);
   const largeMedia = asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES;
 
   switch (queueId) {
@@ -47,7 +56,7 @@ export function assetMatchesReviewQueue(asset: StockMediaAsset, queueId: ReviewQ
     case "missing-source":
       return missingSource;
     case "rights-review":
-      return rightsUnclear || asset.status === "Do Not Use" || asset.usageScope === "Do Not Publish";
+      return rightsUnclear;
     case "usage-guidance":
       return !asset.usageGuidance || /review before sharing|reviewer must approve/i.test(asset.usageGuidance);
     case "internal-only":
@@ -66,7 +75,7 @@ export function reviewRiskFlags(asset: StockMediaAsset) {
   if (asset.peopleRisk === "Possible minors") flags.push("Children/youth");
   if (asset.peopleRisk === "Adults visible") flags.push("People visible");
   if (!asset.sourcePath && !asset.sourceAccount && !asset.sourceSystem) flags.push("Missing source");
-  if (/unknown|concern|not confirmed/i.test(`${asset.rightsStatus || ""} ${asset.consentStatus || ""}`)) flags.push("Rights unclear");
+  if (rightsNeedReview(asset)) flags.push("Rights unclear");
   if (!asset.usageGuidance || /review before sharing|reviewer must approve/i.test(asset.usageGuidance)) flags.push("No usage guidance");
   if (asset.duplicateGroup) flags.push("Possible duplicate");
   if (asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES) flags.push("Large media");

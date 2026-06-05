@@ -9,6 +9,7 @@ import { useDemoRole } from "@/components/RoleProvider";
 import { decideAccess } from "@/lib/access-decisions";
 import { assetPresentation, collectionImageUrl, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import type { DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+import { cn } from "@/lib/ui";
 
 type DetailResponse = {
   asset: StockMediaAsset;
@@ -20,6 +21,10 @@ type DetailResponse = {
 const detailTabs = ["Use", "Source", "Review", "Files", "Related"] as const;
 type DetailTab = (typeof detailTabs)[number];
 
+const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
+const factTermClass = "text-xs font-semibold text-tjc-evergreen";
+const factDescClass = "mt-1 break-words text-sm leading-relaxed text-[#4d554d]";
+
 function formatBytes(value?: number) {
   if (!value) return "Not exported";
   if (value > 1024 * 1024 * 1024) return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
@@ -28,13 +33,15 @@ function formatBytes(value?: number) {
 }
 
 function RelatedStrip({ assets, role }: { assets: StockMediaAsset[]; role: DemoRole }) {
-  if (!assets.length) return <div className="related-empty">No related approved assets found in this local export.</div>;
+  if (!assets.length) return <div className="rounded-lg border border-tjc-line bg-white/72 p-4 text-sm text-tjc-muted">No related approved assets found in this local export.</div>;
   return (
-    <div className="related-strip">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       {assets.slice(0, 6).map((asset) => (
-        <Link href={`/assets/${asset.id}`} key={asset.id} className="related-card">
-          <img src={collectionImageUrl(asset)} alt={asset.thumbnailAlt} loading="lazy" />
-          <span>{assetPresentation(asset, role).title}</span>
+        <Link href={`/assets/${asset.id}`} key={asset.id} className="group overflow-hidden rounded-lg border border-tjc-line bg-white transition hover:-translate-y-0.5 active:translate-y-px">
+          <span className="grid aspect-[4/3] place-items-center bg-[#e8eee8] p-2">
+            <img className="h-auto max-h-36 w-auto max-w-full rounded-md object-contain shadow-[0_4px_12px_rgba(32,34,31,.12)] transition duration-500 group-hover:scale-[1.025]" src={collectionImageUrl(asset)} alt={asset.thumbnailAlt} loading="lazy" />
+          </span>
+          <span className="block p-2 text-xs font-semibold leading-tight text-tjc-ink">{assetPresentation(asset, role).title}</span>
         </Link>
       ))}
     </div>
@@ -42,12 +49,13 @@ function RelatedStrip({ assets, role }: { assets: StockMediaAsset[]; role: DemoR
 }
 
 export function AssetDetailPage({ id }: { id: string }) {
-  const { role } = useDemoRole();
+  const { role, ready } = useDemoRole();
   const [data, setData] = useState<DetailResponse | null>(null);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<DetailTab>("Use");
 
   useEffect(() => {
+    if (!ready) return;
     let cancelled = false;
     setError("");
     fetch(`/api/assets/${id}?role=${encodeURIComponent(role)}`)
@@ -65,22 +73,22 @@ export function AssetDetailPage({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id, role]);
+  }, [id, role, ready]);
 
   if (error) {
     return (
-      <div className="page-shell">
-        <Link href="/" className="back-link">
-          <ArrowLeft size={16} aria-hidden="true" />
+      <div className="px-3 py-5 md:px-5">
+        <Link href="/" className="inline-flex min-h-10 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen">
+          <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
           Back to library
         </Link>
-        <div className="empty-state">{error}</div>
+        <div className="mt-5 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-6 text-[#74531a]">{error}</div>
       </div>
     );
   }
 
   if (!data) {
-    return <div className="page-shell"><div className="empty-state">Loading asset...</div></div>;
+    return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
   }
 
   const { asset, related } = data;
@@ -91,121 +99,117 @@ export function AssetDetailPage({ id }: { id: string }) {
   const preview = detailImageUrl(asset);
 
   return (
-    <div className="page-shell detail-page-shell">
-      <Link href="/" className="back-link">
-        <ArrowLeft size={16} aria-hidden="true" />
+    <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
+      <Link href="/" className="inline-flex min-h-10 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px">
+        <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
         Back to library
       </Link>
-      <section className="detail-layout detail-layout--trust-record">
-        <div className="detail-main">
-          <div className="detail-preview detail-preview--large">
-            {preview ? <img src={preview} alt={asset.thumbnailAlt} /> : <div className="detail-preview__empty">Preview unavailable</div>}
+      <section className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(390px,.85fr)]">
+        <div className="min-w-0">
+          <div className="grid min-h-[22rem] place-items-center overflow-hidden rounded-lg border border-tjc-line bg-[#e8eee8] p-3 shadow-[0_1px_0_rgba(32,34,31,.05)]">
+            {preview ? <img className="h-auto max-h-[72dvh] w-auto max-w-full rounded-md object-contain shadow-[0_8px_24px_rgba(32,34,31,.16)]" src={preview} alt={asset.thumbnailAlt} /> : <div className="grid min-h-[28rem] place-items-center text-tjc-muted">Preview unavailable</div>}
           </div>
-          <section className="detail-related-panel" aria-label="Related assets">
-            <div className="panel-heading">
-              <div>
-                <h2>Related assets</h2>
-                <p>Same collection, tags, or TJC terms. Approved assets shown first.</p>
-              </div>
+          <section className="mt-4 rounded-lg border border-tjc-line bg-white/76 p-4" aria-label="Related assets">
+            <div className="mb-3">
+              <h2 className="text-lg font-semibold tracking-[-.01em]">Related assets</h2>
+              <p className="mt-1 text-sm text-tjc-muted">Same collection, tags, or TJC terms. Approved assets shown first.</p>
             </div>
             <RelatedStrip assets={related} role={role} />
           </section>
         </div>
 
-        <aside className="detail-panel detail-panel--trust">
-          <div className="detail-title">
-            <div>
-              <p className="eyebrow">{asset.collection}</p>
-              <h1>{display.title}</h1>
-              <p>{provenance.publicLabel}</p>
-            </div>
-          </div>
+        <aside className="grid gap-3 xl:sticky xl:top-24 xl:self-start">
+          <section className="rounded-lg border border-tjc-line bg-white/82 p-4">
+            <span className="text-sm font-semibold text-tjc-evergreen">{asset.collection}</span>
+            <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-[-.03em] md:text-4xl">{display.title}</h1>
+            <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{provenance.publicLabel}</p>
+          </section>
 
           <AssetTrustPanel asset={asset} role={role} />
           <DownloadOptionsPanel asset={asset} role={role} />
 
-          <nav className="detail-tabs" aria-label="Asset detail sections">
+          <nav className="flex flex-wrap gap-2" aria-label="Asset detail sections">
             {detailTabs.map((tab) => (
-              <button key={tab} type="button" className={activeTab === tab ? "detail-tabs__active" : ""} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab}>
+              <button key={tab} type="button" className={cn("min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#424c45] transition hover:bg-[#eef7f1] active:translate-y-px", activeTab === tab && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab}>
                 {tab}
               </button>
             ))}
           </nav>
 
           {activeTab === "Use" ? (
-            <section className="detail-tab-panel" aria-label="Usage guidance">
-              <h2><ShieldCheck size={18} aria-hidden="true" /> Use guidance</h2>
-              <dl>
+            <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Usage guidance">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold"><ShieldCheck size={18} strokeWidth={1.8} aria-hidden="true" /> Use guidance</h2>
+              <dl className="grid gap-3">
                 {display.guidanceFacts.map((fact) => (
-                  <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>
+                  <div className={factItemClass} key={fact.label}><dt className={factTermClass}>{fact.label}</dt><dd className={factDescClass}>{fact.value}</dd></div>
                 ))}
               </dl>
             </section>
           ) : null}
 
           {activeTab === "Source" ? (
-            <section className="detail-tab-panel" aria-label="Source and provenance">
-              <h2><Info size={18} aria-hidden="true" /> Source and provenance</h2>
-              <dl>
-                <div><dt>Source system</dt><dd>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
-                <div><dt>Source / photographer</dt><dd>{asset.sourceAccount || asset.collection || "Not exported"}</dd></div>
-                <div><dt>Event / collection</dt><dd>{asset.eventName || asset.collection}</dd></div>
-                <div><dt>Captured / event date</dt><dd>{asset.capturedDate || asset.eventDate || "Not exported"}</dd></div>
-                <div><dt>ResourceSpace ID</dt><dd>{asset.resourceSpaceId || asset.id}</dd></div>
-                {canSeeOriginal ? <div><dt>Original import path</dt><dd>{asset.sourcePath || "Source path not exported"}</dd></div> : null}
-                {canSeeOriginal ? <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Visible after Shared Drive staging"}</dd></div> : null}
+            <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Source and provenance">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold"><Info size={18} strokeWidth={1.8} aria-hidden="true" /> Source and provenance</h2>
+              <dl className="grid gap-3">
+                <div className={factItemClass}><dt className={factTermClass}>Source system</dt><dd className={factDescClass}>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Source / photographer</dt><dd className={factDescClass}>{asset.sourceAccount || asset.collection || "Not exported"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Event / collection</dt><dd className={factDescClass}>{asset.eventName || asset.collection}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Captured / event date</dt><dd className={factDescClass}>{asset.capturedDate || asset.eventDate || "Not exported"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div>
+                {canSeeOriginal ? <div className={factItemClass}><dt className={factTermClass}>Original import path</dt><dd className={factDescClass}>{asset.sourcePath || "Source path not exported"}</dd></div> : null}
+                {canSeeOriginal ? <div className={factItemClass}><dt className={factTermClass}>Master Drive path</dt><dd className={factDescClass}>{asset.masterDrivePath || "Visible after Shared Drive staging"}</dd></div> : null}
               </dl>
             </section>
           ) : null}
 
           {activeTab === "Review" ? (
-            <section className="detail-tab-panel" aria-label="Review status">
-              <h2><History size={18} aria-hidden="true" /> Review record</h2>
-              <dl>
-                <div><dt>Reviewer</dt><dd>{asset.reviewer || "Not reviewed"}</dd></div>
-                <div><dt>Review date</dt><dd>{asset.reviewedDate || "Pending"}</dd></div>
-                <div><dt>Rights status</dt><dd>{asset.rightsStatus || "Unknown"}</dd></div>
-                <div><dt>Consent</dt><dd>{asset.consentStatus || "Unknown"}</dd></div>
-                <div><dt>Risk flags</dt><dd>{display.reviewFacts.riskFlags.join(", ")}</dd></div>
-                <div><dt>Missing fields</dt><dd>{display.reviewFacts.missingFields.length ? display.reviewFacts.missingFields.join(", ") : "None for current export"}</dd></div>
+            <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Review status">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold"><History size={18} strokeWidth={1.8} aria-hidden="true" /> Review record</h2>
+              <dl className="grid gap-3">
+                <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{asset.reviewer || "Not reviewed"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Review date</dt><dd className={factDescClass}>{asset.reviewedDate || "Pending"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Rights status</dt><dd className={factDescClass}>{asset.rightsStatus || "Unknown - reviewer should confirm before public use"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Consent</dt><dd className={factDescClass}>{asset.consentStatus || "Unknown - reviewer should confirm before public use"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Risk flags</dt><dd className={factDescClass}>{display.reviewFacts.riskFlags.join(", ")}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Missing fields</dt><dd className={factDescClass}>{display.reviewFacts.missingFields.length ? display.reviewFacts.missingFields.join(", ") : "None for current export"}</dd></div>
               </dl>
-              <p>{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
+              <p className="mt-3 rounded-lg bg-[#f3f6f0] p-3 text-sm text-tjc-muted">{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
             </section>
           ) : null}
 
           {activeTab === "Files" ? (
-            <section className="detail-tab-panel" aria-label="File options">
-              <h2><FileText size={18} aria-hidden="true" /> Files</h2>
-              <dl>
-                <div><dt>Media type</dt><dd>{asset.mediaType}</dd></div>
-                <div><dt>Format</dt><dd>{asset.fileExtension?.toUpperCase() || "Not exported"}</dd></div>
-                <div><dt>Dimensions</dt><dd>{asset.imageDimensions || "Not exported"}</dd></div>
-                <div><dt>File size</dt><dd>{formatBytes(asset.fileSizeBytes)}</dd></div>
-                <div><dt>Original filename</dt><dd>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Hidden for this role"}</dd></div>
-                <div><dt>Checksum</dt><dd>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div>
+            <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="File options">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold"><FileText size={18} strokeWidth={1.8} aria-hidden="true" /> Files</h2>
+              <dl className="grid gap-3">
+                <div className={factItemClass}><dt className={factTermClass}>Media type</dt><dd className={factDescClass}>{asset.mediaType}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Format</dt><dd className={factDescClass}>{asset.fileExtension?.toUpperCase() || "Not exported"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Dimensions</dt><dd className={factDescClass}>{asset.imageDimensions || "Not exported"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>File size</dt><dd className={factDescClass}>{formatBytes(asset.fileSizeBytes)}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Original filename</dt><dd className={factDescClass}>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Hidden for this role"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Checksum</dt><dd className={factDescClass}>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div>
               </dl>
             </section>
           ) : null}
 
           {activeTab === "Related" ? (
-            <section className="detail-tab-panel" aria-label="Related assets">
-              <h2><Layers size={18} aria-hidden="true" /> Related</h2>
+            <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Related assets">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold"><Layers size={18} strokeWidth={1.8} aria-hidden="true" /> Related</h2>
               <RelatedStrip assets={related} role={role} />
             </section>
           ) : null}
 
-          <section className="tag-section" aria-label="Tags">
-            <h2><ImageIcon size={18} aria-hidden="true" /> Tags</h2>
-            <div className="chip-row">
-              {(asset.usageTerms || []).map((tag) => <span className="chip chip--static" key={tag}>{tag}</span>)}
-              {(asset.tags || []).map((tag) => <span className="chip chip--static" key={tag}>{tag}</span>)}
-              {(asset.tjcTerms || []).map((tag) => <span className="chip chip--static chip--tjc" key={tag}>{tag}</span>)}
+          <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Tags">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold"><ImageIcon size={18} strokeWidth={1.8} aria-hidden="true" /> Tags</h2>
+            <div className="flex flex-wrap gap-2">
+              {(asset.usageTerms || []).map((tag) => <span className="rounded-md bg-[#eef4f0] px-2.5 py-1 text-xs font-semibold text-[#4b5b51]" key={tag}>{tag}</span>)}
+              {(asset.tags || []).map((tag) => <span className="rounded-md bg-[#eef4f0] px-2.5 py-1 text-xs font-semibold text-[#4b5b51]" key={tag}>{tag}</span>)}
+              {(asset.tjcTerms || []).map((tag) => <span className="rounded-md bg-[#edf3fb] px-2.5 py-1 text-xs font-semibold text-tjc-blue" key={tag}>{tag}</span>)}
             </div>
           </section>
 
           {data.resourceSpaceUrl && canOpenResourceSpace ? (
-            <a className="secondary-action" href={data.resourceSpaceUrl} target="_blank" rel="noreferrer">
-              <ExternalLink size={16} aria-hidden="true" />
+            <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-blue px-4 text-sm font-semibold text-white transition hover:bg-[#163e5d] active:translate-y-px" href={data.resourceSpaceUrl} target="_blank" rel="noreferrer">
+              <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
               Open in ResourceSpace
             </a>
           ) : null}

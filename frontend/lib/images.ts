@@ -20,6 +20,7 @@ export function findResourceSpaceImageDerivative(id: string, variant: ImageVaria
   if (!fs.existsSync(filestore)) return null;
 
   const suffixes = variantSuffixes[variant];
+  const candidates = new Array<string | null>(suffixes.length).fill(null);
   const stack = [filestore];
   while (stack.length) {
     const dir = stack.pop();
@@ -28,10 +29,13 @@ export function findResourceSpaceImageDerivative(id: string, variant: ImageVaria
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         stack.push(fullPath);
-      } else if (suffixes.some((suffix) => entry.name.startsWith(`${id}${suffix}`)) && /\.(jpg|jpeg)$/i.test(entry.name)) {
-        return fullPath;
+      } else if (/\.(jpg|jpeg)$/i.test(entry.name)) {
+        const rank = suffixes.findIndex((suffix) => entry.name.startsWith(`${id}${suffix}`));
+        if (rank === -1) continue;
+        candidates[rank] ||= fullPath;
+        if (rank === 0) return fullPath;
       }
     }
   }
-  return null;
+  return candidates.find(Boolean) || null;
 }

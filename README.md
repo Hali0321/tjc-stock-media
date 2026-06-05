@@ -169,7 +169,9 @@ Current UI redesign notes:
 
 - Primary navigation is `Library`, `Collections`, `Upload`, and `Review`; `Guide` moved to utility/footer access.
 - The centered document-style shell has been replaced with an app-like sidebar plus top utility bar.
-- Library is photo-first with a full-width workspace, compact search/filter chips, clear result count copy, sort chips, curated collection album cards, and a 5/3/2/1 column responsive media grid.
+- The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Geist via `next/font/google`, and existing `lucide-react` icons.
+- Review includes isolated GSAP motion for desktop reviewer workflow only; reduced-motion disables the pin/scale effects.
+- Library is now a DAM command workspace, not a hero page: compact search, use-case buttons, source/safety strip, operational saved views, compact collection rail, filters, and real asset results high on the page.
 - Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
@@ -184,16 +186,20 @@ User-facing approval labels are warmer than backend values:
 - `Do Not Use` appears as `Do not publish externally`
 - `Possible Minors` appears as `Contains children/youth`
 
-Latest UI QA screenshots:
+Latest UI QA screenshots, refreshed from the production Next server:
 
 - `docs/screenshots/library-desktop.png`
+- `docs/screenshots/collections-desktop.png`
 - `docs/screenshots/asset-detail-desktop.png`
 - `docs/screenshots/upload-desktop.png`
 - `docs/screenshots/review-desktop.png`
+- `docs/screenshots/guide-desktop.png`
 - `docs/screenshots/library-mobile-320.png`
 - `docs/screenshots/detail-mobile-320.png`
+- `docs/screenshots/review-mobile-320.png`
+- `docs/screenshots/upload-mobile-320.png`
 
-Latest browser QA checked 1440, 1024, 768, and 320 px widths with no horizontal overflow. The visual target is Google Photos / Apple Photos simplicity, Brandfolder asset safety, PhotoShelter role-aware browsing, Notion gallery calm, Frontify usage guidance, and a warm TJC ministry tone.
+Latest browser QA checked 1440, 1280, 1024, 768, 390, and 320 px with no horizontal page overflow. Role/API checks confirmed unsafe Viewer download 403, Viewer review/upload 403, Reviewer write action 409 when ResourceSpace API write config is missing, and Contributor upload intake 200 with empty file placeholders ignored. The visual target is Google Photos / Apple Photos simplicity, Brandfolder asset safety, PhotoShelter role-aware browsing, Notion gallery calm, Frontify usage guidance, and a warm TJC ministry tone.
 
 ## HEIC Policy
 

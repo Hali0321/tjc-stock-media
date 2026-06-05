@@ -99,6 +99,9 @@ export type SearchResult = {
   total: number;
   source: MediaSourceStatus;
   counts: {
+    visibleToRole: number;
+    matching: number;
+    rendered: number;
     approved: number;
     needsReview: number;
     archive: number;

@@ -1,12 +1,15 @@
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
+import { cn } from "@/lib/ui";
 
 const filterGroups = [
-  { label: "Use", options: ["Church-wide use", "Internal ministry", "Needs review", "Archive only"] },
-  { label: "Media", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
-  { label: "People", options: ["No people", "Adults only", "Children/youth"] },
-  { label: "Govern", options: ["Missing source", "Rights review"] },
-  { label: "Ministry", options: ["Worship", "Bible Study", "Fellowship", "Seasonal", "Welcome Team"] },
-  { label: "Date", options: ["2026", "2025", "2024"] }
+  { label: "Status", options: ["Church-wide use", "Internal ministry", "Needs review", "Archive only"] },
+  { label: "Media type", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
+  { label: "People/minors", options: ["No people", "Adults only", "Children/youth"] },
+  { label: "Governance", options: ["Missing source", "Rights review"] },
+  { label: "Ministry", options: ["Worship", "Bible Study", "Fellowship", "Sabbath", "Welcome Team"] },
+  { label: "Event/date", options: ["2026", "2025", "2024"] },
+  { label: "Orientation", options: ["Landscape", "Square", "Portrait"] },
+  { label: "Source", options: ["LM Photos", "ResourceSpace", "Photographer"] }
 ];
 
 export function FilterSidebar({
@@ -19,32 +22,42 @@ export function FilterSidebar({
   onClear: () => void;
 }) {
   return (
-    <aside className="filter-sidebar" aria-label="Advanced filters">
-      <div className="filter-sidebar__header">
-        <div>
-          <SlidersHorizontal aria-hidden="true" size={16} />
+    <aside className="rounded-lg border border-tjc-line bg-white/82 shadow-[0_1px_0_rgba(32,34,31,.04)] xl:sticky xl:top-24" aria-label="Advanced filters">
+      <div className="flex items-center justify-between gap-3 border-b border-tjc-line px-3 py-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
+          <SlidersHorizontal aria-hidden="true" size={16} strokeWidth={1.8} />
           <strong>Filters</strong>
         </div>
-        {filters.length ? <button type="button" onClick={onClear}>Clear</button> : null}
+        {filters.length ? (
+          <button className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold text-tjc-muted transition hover:bg-[#eef4f1] hover:text-tjc-evergreen" type="button" onClick={onClear}>
+            <X size={13} strokeWidth={1.8} aria-hidden="true" />
+            Reset
+          </button>
+        ) : null}
       </div>
-      {filterGroups.map((group) => (
-        <section className="filter-group" key={group.label} aria-label={`${group.label} filters`}>
-          <h2>{group.label}</h2>
-          <div>
-            {group.options.map((filter) => (
-              <button
-                type="button"
-                key={filter}
-                className={filters.includes(filter) ? "filter-option filter-option--active" : "filter-option"}
-                onClick={() => onToggle(filter)}
-                aria-pressed={filters.includes(filter)}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
+      <div className="grid gap-0">
+        {filterGroups.map((group) => (
+          <section className="border-b border-tjc-line/70 px-3 py-3 last:border-b-0" key={group.label} aria-label={`${group.label} filters`}>
+            <h2 className="mb-2 text-xs font-semibold text-[#65736b]">{group.label}</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {group.options.map((filter) => (
+                <button
+                  type="button"
+                  key={filter}
+                  className={cn(
+                    "min-h-8 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3e4741] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1] active:translate-y-px",
+                    filters.includes(filter) && "border-[#92c2b0] bg-[#e8f5ef] text-tjc-evergreen"
+                  )}
+                  onClick={() => onToggle(filter)}
+                  aria-pressed={filters.includes(filter)}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </aside>
   );
 }

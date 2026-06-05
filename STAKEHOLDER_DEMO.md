@@ -10,11 +10,13 @@ Show that a ministry user can find a rights-safe approved media asset in under 6
 http://localhost:3008
 ```
 
+Use the production Next server for screenshots or stakeholder walkthroughs after `npm run build && npm run start -- --hostname 0.0.0.0 --port 3008`.
+
 ## Script
 
 1. Start on Library.
 2. Search `Bible`.
-3. Show the app-like sidebar, approved assets first, clear result count, compact filters, sort chips, and curated collection cards.
+3. Show the app-like sidebar, compact command search, use-case shortcuts, approved assets first, clear result count, saved DAM views, filters, sort chips, and compact collection rail.
 4. Open one asset.
 5. Point to the normalized display title, `Approved for church-wide use`, usage scope, reviewer, reviewed date, tags, and source/provenance metadata.
 6. Show `Download approved copy`.
@@ -28,13 +30,13 @@ http://localhost:3008
 14. Open Upload as Contributor.
 15. Show new media defaults to `Needs Review / Do Not Publish`, shown to users as review-required.
 16. Show large-media rule for files over 100 MB.
-17. Mention the Guide is available from the help/footer area, while primary navigation stays focused on Library, Collections, Upload, and Review.
+17. Mention the Guide is available from the help/footer area, with Do/Avoid guidance and download decision rules, while primary navigation stays focused on Library, Collections, Upload, and Review.
 
 ## Main Message
 
 ResourceSpace remains the backend/source of truth. The new portal is the friendly church-facing layer for search, upload intake, and review safety.
 
-The UI is now photo-first and ministry-warm: app-like navigation, album-style featured collections, short safety badges, polished asset cards, guided upload, reviewer workbench, and usage guidance at the point of download.
+The UI is now photo-first and ministry-warm: app-like navigation, Tailwind v4/Geist visual system, compact DAM command center, operational saved views, album-style collection rail, short safety badges, polished asset cards, guided upload, reviewer workbench, and usage guidance at the point of download.
 
 ## Decision Ask
 
@@ -58,3 +60,10 @@ Please review before public sharing is not publishable.
 Possible Minors requires review.
 
 The frontend does not create a second DAM or store secret API keys in the browser.
+
+## Latest Evidence
+
+- Screenshots refreshed under `docs/screenshots/`.
+- 1440, 1280, 1024, 768, 390, and 320 px checks have no horizontal page overflow.
+- Viewer unsafe download and review actions are blocked by server routes.
+- Reviewer approval action returns an honest ResourceSpace API-write blocker until field mapping is configured.

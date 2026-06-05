@@ -150,14 +150,15 @@ function normalizeDownloadPolicy(status: PublishStatus): StockMediaAsset["downlo
   return "not-downloadable";
 }
 
-export function imageUrlsForResource(id: string) {
+export function imageUrlsForResource(id: string, cacheKey?: string) {
   const encoded = encodeURIComponent(id);
+  const version = cacheKey ? `&v=${encodeURIComponent(cacheKey.slice(0, 16))}` : "";
   return {
-    small: `/api/assets/thumbnail/${encoded}?variant=small`,
-    card: `/api/assets/thumbnail/${encoded}?variant=card`,
-    collection: `/api/assets/thumbnail/${encoded}?variant=collection`,
-    detail: `/api/assets/thumbnail/${encoded}?variant=detail`,
-    download: `/api/assets/thumbnail/${encoded}?variant=download`
+    small: `/api/assets/thumbnail/${encoded}?variant=small${version}`,
+    card: `/api/assets/thumbnail/${encoded}?variant=card${version}`,
+    collection: `/api/assets/thumbnail/${encoded}?variant=collection${version}`,
+    detail: `/api/assets/thumbnail/${encoded}?variant=detail${version}`,
+    download: `/api/assets/thumbnail/${encoded}?variant=download${version}`
   };
 }
 
@@ -178,7 +179,8 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
   const rawTitle = value(row, "human_title_final", "title", "original_filename") || `Resource ${id}`;
   const title = cleanDisplayTitle(row, rawTitle);
   const collection = value(row, "source_album", "import_batch", "event_or_topic", "event_name") || "ResourceSpace export";
-  const imageUrls = imageUrlsForResource(id);
+  const checksumSha256 = value(row, "checksum_sha256") || undefined;
+  const imageUrls = imageUrlsForResource(id, checksumSha256 || value(row, "reviewed_date") || id);
   const fileSizeBytes = Number(value(row, "file_size", "original_file_size_bytes")) || undefined;
   const peopleRisk = normalizePeopleRisk(row);
 
@@ -212,7 +214,7 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     consentStatus: value(row, "consent_status") || undefined,
     usageTerms: splitResourceSpaceList(value(row, "usage_terms")),
     duplicateGroup: value(row, "duplicate_group") || undefined,
-    checksumSha256: value(row, "checksum_sha256") || undefined,
+    checksumSha256,
     reviewer: value(row, "reviewed_by") || undefined,
     reviewedDate: value(row, "reviewed_date") || undefined,
     rightsNotes: value(row, "approval_notes", "notes") || undefined,

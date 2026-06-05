@@ -19,18 +19,20 @@ make frontend-check
 make demo-check
 ```
 
-Latest local QA also captured the required screenshots under `docs/screenshots/` and checked 1440, 1024, 768, and 320 px browser widths with no horizontal overflow.
+Latest local QA captured the required screenshots under `docs/screenshots/` from the production Next server and checked 1440 px desktop plus 320 px mobile browser widths with no horizontal page overflow. The screenshots have no Next dev badge.
 
 The current frontend shell is the redesigned ministry media-library UI:
 
 - Desktop uses an app-like sidebar plus top utility bar rather than the old centered demo header.
+- Styling is Tailwind v4 with a small global token/base layer, Geist via `next/font/google`, and `lucide-react` icons.
 - Main nav: Library, Collections, Upload, Review.
+- Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
-- Library: full-width photo-first grid, compact filters, sort chips, clear result count, curated collection cards.
+- Library: compact DAM command center, early search, use-case shortcuts, operational saved views, compact collection rail, filters, sort chips, clear result count, and photo-first asset grid.
 - Asset cards: short status, usage label, display-normalized title, one tag, download/blocked signal, provenance on hover/focus.
 - Asset detail: usage guidance, source/review/technical provenance, approved copy separated from original/master restriction.
 - Upload: guided three-step intake.
-- Review: queue tabs, compact decision rows, and selected-asset inspector.
+- Review: queue tabs, compact decision rows, selected-asset inspector, and desktop-only GSAP pin/scale motion disabled by reduced-motion.
 
 ## Architecture
 
@@ -73,6 +75,19 @@ Contributor can submit upload intake but cannot approve.
 
 Reviewer/DAM Admin can open review queue. Review actions go through `/api/review`; if ResourceSpace API write config is missing, the route refuses fake persistence and tells the user to use ResourceSpace admin.
 
+Latest checked behavior on 2026-06-05:
+
+| Check | Result |
+|---|---|
+| Viewer download for unsafe asset `644` | 403 blocked |
+| Viewer unsafe detail asset `644` | cannot view |
+| Reviewer unsafe detail asset `644` | visible for review, no active download link |
+| Viewer review POST | 403 blocked |
+| Reviewer review POST without ResourceSpace API write config | 409 honest blocker |
+| Viewer upload POST | 403 blocked |
+| Contributor upload intake POST | 200 validated; empty browser file placeholders ignored |
+| Reviewer unsafe detail page | no active `/api/download` links |
+
 Reviewer action labels are user-facing, but map to backend workflow values:
 
 | UI action | Backend action/status |
@@ -100,3 +115,4 @@ The frontend uses `/api/assets/thumbnail/:id` to resolve a ResourceSpace derivat
 - Configure signed ResourceSpace API field mapping for portal review/upload writes.
 - Confirm backup job and restore test on the target host.
 - Pilot video/audio import with large-media intake.
+- Replace local demo role switch with real church access control.
