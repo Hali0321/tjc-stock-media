@@ -4,7 +4,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKUPS="$ROOT/.runtime/backups"
 
-latest="$(find "$BACKUPS" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | tail -1 || true)"
+latest="$(
+  find "$BACKUPS" -mindepth 1 -maxdepth 1 -type d 2>/dev/null \
+    | while read -r candidate; do
+        [ -f "$candidate/filestore-config.tgz" ] && echo "$candidate"
+      done \
+    | sort \
+    | tail -1 || true
+)"
 if [ -z "$latest" ]; then
   echo "FAIL: no backup found under $BACKUPS"
   exit 1

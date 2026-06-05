@@ -2,7 +2,7 @@
 
 North Star: a TJC user can find a rights-safe asset for a real communication need in under 60 seconds.
 
-This repo sets up a local ResourceSpace DAM prototype for True Jesus Church stock media and documents the controlled internal launch path. Google Shared Drive remains the master copy. ResourceSpace is the librarian: intake, tags, search, rights review, and approved downloads.
+This repo sets up a local ResourceSpace DAM prototype and a TJC-facing Next.js portal for True Jesus Church stock media. Google Shared Drive remains the master copy. ResourceSpace is the librarian: intake, tags, search, rights review, and approved downloads. The Next.js portal is the friendly search/upload/review surface for stakeholders and ministry users.
 
 ```text
 Legacy sources
@@ -65,7 +65,7 @@ Current import status:
 - Search checks: Bible 23, Plant 34, Fountain 6
 - Latest approval audit: `.runtime/audits/approval-audit-20260604-165722.csv`
 - Latest UI polish audit: `.runtime/audits/ui-polish-audit-20260604-171229.csv`
-- Latest metadata export: `.runtime/exports/resourcespace-metadata-20260604-171242.csv`
+- Latest metadata export: `.runtime/exports/resourcespace-metadata-20260604-193852.csv`
 - Local acceptance note: `docs/runs/local-prototype-acceptance-2026-06-04.md`
 
 ## Where Imported Files Are
@@ -87,11 +87,16 @@ cp .env.example .env
 make up
 make smoke
 make import-audit
+make frontend-dev
 ```
 
 Open ResourceSpace:
 
 `http://localhost:8088`
+
+Open TJC Stock Media portal:
+
+`http://localhost:3008`
 
 Current local prototype login:
 
@@ -136,8 +141,40 @@ make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
 make launch-readiness # local launch documentation/config guardrail check
+make frontend-dev # run Next.js portal locally at http://localhost:3008
+make frontend-check # typecheck/build frontend and scan for media/secrets/runtime files
+make demo-check # frontend checks plus demo/doc guardrails
 make down            # stop local containers
 ```
+
+## Frontend Portal
+
+The portal lives in `frontend/`.
+
+```text
+Browser -> Next.js portal -> server-side media-source adapter -> ResourceSpace API/export -> ResourceSpace backend
+```
+
+Current data source priority:
+
+1. ResourceSpace API when signed API credentials and field mapping are configured.
+2. Latest local ResourceSpace metadata CSV export under `.runtime/exports`.
+3. Temporary safe fallback data only if ResourceSpace data is unavailable.
+
+Current Mac reference uses exported ResourceSpace metadata for search/detail/review queue and a dev-only thumbnail proxy for individual ResourceSpace preview derivatives. Approval writes are intentionally read-only until ResourceSpace API field mapping is configured. The route refuses fake persistence instead of creating a second approval database.
+
+Normal users can only download approved use copies. Original/master files stay restricted.
+
+Latest UI QA screenshots:
+
+- `docs/screenshots/library-desktop.png`
+- `docs/screenshots/asset-detail-desktop.png`
+- `docs/screenshots/upload-desktop.png`
+- `docs/screenshots/review-desktop.png`
+- `docs/screenshots/library-mobile-320.png`
+- `docs/screenshots/detail-mobile-320.png`
+
+Latest browser QA checked 1440, 1024, 768, and 320 px widths with no horizontal overflow. The visual target is Google Photos / Apple Photos simplicity, Brandfolder asset safety, PhotoShelter role-aware browsing, Notion gallery calm, Frontify usage guidance, and a warm TJC ministry tone.
 
 ## HEIC Policy
 

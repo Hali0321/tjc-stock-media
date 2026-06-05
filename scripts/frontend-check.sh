@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+if [ ! -d frontend ]; then
+  echo "FAIL: frontend directory missing"
+  exit 1
+fi
+
+for required in \
+  frontend/app/page.tsx \
+  "frontend/app/assets/[id]/page.tsx" \
+  frontend/app/upload/page.tsx \
+  frontend/app/review/page.tsx \
+  frontend/app/guide/page.tsx \
+  frontend/app/api/assets/search/route.ts \
+  "frontend/app/api/assets/[id]/route.ts" \
+  frontend/app/api/upload/route.ts \
+  frontend/app/api/review/route.ts \
+  "frontend/app/api/download/[id]/route.ts"; do
+  [ -f "$required" ] || { echo "FAIL: missing $required"; exit 1; }
+done
+
+if [ ! -d frontend/node_modules ]; then
+  npm --prefix frontend install
+fi
+
+npm --prefix frontend run typecheck
+npm --prefix frontend run build
+
+if rg -n "RS_API_KEY|RS_API_USER|api_key|private key" frontend/app frontend/components >/tmp/tjc-frontend-secret-scan.txt; then
+  echo "FAIL: possible client-side API secret exposure"
+  cat /tmp/tjc-frontend-secret-scan.txt
+  exit 1
+fi
+
+if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' >/tmp/tjc-media-tracked.txt; then
+  echo "FAIL: media files are tracked by Git"
+  cat /tmp/tjc-media-tracked.txt
+  exit 1
+fi
+
+if git ls-files | rg '(^|/)(\.env$|\.runtime|filestore|mariadb|ComfyUI|models/)' >/tmp/tjc-runtime-tracked.txt; then
+  echo "FAIL: env/runtime/model files are tracked by Git"
+  cat /tmp/tjc-runtime-tracked.txt
+  exit 1
+fi
+
+if rg -n "comfyui|three.js|new Comfy|@react-three|three/examples" frontend Makefile >/tmp/tjc-forbidden-ui.txt; then
+  echo "FAIL: forbidden generation/3D dependency reference found"
+  cat /tmp/tjc-forbidden-ui.txt
+  exit 1
+fi
+
+echo "Frontend check complete."
