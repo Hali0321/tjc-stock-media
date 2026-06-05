@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_DIR="${1:-/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024}"
+SOURCE_DIR="${1:-/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024}"
 BATCH="${IMPORT_BATCH:-MVP 2024 First Batch}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT_DIR="$ROOT/.runtime/audits"
@@ -55,4 +55,3 @@ done < <(find "$SOURCE_DIR" -maxdepth 1 -type f -print0 | sort -z)
 
 echo "Manifest written: $MANIFEST"
 echo "Summary written: $SUMMARY"
-

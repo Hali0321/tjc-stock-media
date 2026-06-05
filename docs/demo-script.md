@@ -44,6 +44,7 @@ North Star: a TJC user can find a rights-safe asset for a real communication nee
 6. Show HEIC handling.
 
    Open a HEIC asset. Show that the card/preview displays a JPG derivative so normal users are not confused. Then show the original HEIC remains preserved and downloadable as the master file, with the JPG derivative also listed under alternative files.
+   Local check: Hali confirmed this HEIC behavior looks good for the prototype on 2026-06-04.
 
 7. Show approval metadata.
 

@@ -28,7 +28,7 @@ Approved Public/Internal folders are delivery shelves, not the archive.
 
 Source folder:
 
-`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024`
+`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024`
 
 Current inventory:
 
@@ -50,6 +50,19 @@ Current import status:
 - Latest approval audit: `.runtime/audits/approval-audit-20260604-165722.csv`
 - Latest UI polish audit: `.runtime/audits/ui-polish-audit-20260604-171229.csv`
 - Latest metadata export: `.runtime/exports/resourcespace-metadata-20260604-171242.csv`
+- Local acceptance note: `docs/runs/local-prototype-acceptance-2026-06-04.md`
+
+## Where Imported Files Are
+
+ResourceSpace imported files live in:
+
+`/Users/halim4pro/Desktop/MVP/tjc-stock-media/.runtime/filestore`
+
+Finder hides `.runtime` because the folder starts with a dot. For a visible Finder entry, use:
+
+`/Users/halim4pro/Desktop/MVP/Stock Media/02_Imported Into ResourceSpace`
+
+That folder contains links to the filestore, database, metadata exports, and LM Photos batch report. They are pointers, not duplicate copies.
 
 ## Quick Start
 
@@ -120,7 +133,7 @@ This is a local prototype. It does not prove 24/7 uptime, production security, r
 
 Remaining LM Photos are downloaded as Google Photos album ZIPs under:
 
-`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo`
+`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Incoming/lm-photo`
 
 Use streaming mode because local disk is tight:
 
@@ -140,3 +153,19 @@ Each real streaming album now creates:
 - duplicate-linked rows when an exact checksum already exists
 
 Batch success is not "many files imported." Batch success is that approved media is searchable, rights-aware, traceable, and safe to use.
+
+## Video Intake
+
+Video sources now live separately from photo sources:
+
+`/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming`
+
+Current waiting video source:
+
+- `Samuel Kuo/Samuel Kuo-3-001.zip`
+- 9.9 GB compressed
+- 18 files inside: 11 MP4 and 7 JPG
+- About 10.6 GB uncompressed
+- Intake note: `docs/runs/video-intake-samuel-kuo.md`
+
+Do not extract or import this ZIP until disk space and video workflow are confirmed. Treat it as next-phase video stock intake, not part of the photo batches.

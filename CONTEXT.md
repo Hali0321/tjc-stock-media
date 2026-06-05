@@ -32,15 +32,24 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 
 ## Current First Batch
 
-- Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024`
+- Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024`
 - Size: about 480 MB
 - Count: 181 image files
 - Goal: prove search, tags, review, metadata export, and approved-copy workflow.
 
 ## Current LM Photos Completion Source
 
-- Source ZIP folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/lm-photo`
+- Source ZIP folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Incoming/lm-photo`
 - Count: 31 Google Photos album ZIP files
 - Size: about 8.3 GB compressed
 - ZIP inventory observed: about 3,963 files, mostly JPG plus HEIC, PNG, JPEG, TIF, and one ARW
 - Constraint: local disk is tight, so process album ZIPs one at a time and delete a ZIP only after that album is imported, audited, staged, and verified.
+- Imported LM Photos binaries live in `/Users/halim4pro/Desktop/MVP/tjc-stock-media/.runtime/filestore`. Finder-visible links live in `/Users/halim4pro/Desktop/MVP/Stock Media/02_Imported Into ResourceSpace`.
+
+## Current Video Intake
+
+- Source ZIP: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo-3-001.zip`
+- Size: about 9.9 GB compressed
+- ZIP inventory observed: 18 files, including 11 MP4 and 7 JPG
+- Uncompressed estimate: about 10.6 GB
+- Status: parked for next video stock workflow. Do not extract until disk space and video import plan are confirmed.

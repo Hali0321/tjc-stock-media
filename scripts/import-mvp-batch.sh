@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_DIR="${1:-/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024}"
+SOURCE_DIR="${1:-/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024}"
 BATCH="${IMPORT_BATCH:-MVP 2024 First Batch}"
 COLLECTION="${IMPORT_COLLECTION:-MVP 2024 - First Batch}"
 RUN_COLLECTION="${IMPORT_RUN_COLLECTION:-}"

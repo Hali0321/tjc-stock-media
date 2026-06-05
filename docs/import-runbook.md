@@ -2,7 +2,7 @@
 
 ## Current MVP 2024 Import
 
-- Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/MVP 2024`
+- Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024`
 - ResourceSpace collection: `MVP 2024 - First Batch`
 - Imported active resources: 181
 - Stored binaries: 181
@@ -92,6 +92,18 @@ Generate a decision-ready run report:
 ```bash
 make lm-photos-run-report
 ```
+
+## Video Intake Run
+
+Current waiting video source:
+
+- Source ZIP: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo-3-001.zip`
+- ZIP size: about 9.9 GB
+- Contents: 18 files, including 11 MP4 and 7 JPG
+- Uncompressed estimate: about 10.6 GB
+- Intake note: `docs/runs/video-intake-samuel-kuo.md`
+
+Do not extract this ZIP during photo workflows. For the video phase, first confirm free disk space, create a video manifest, then test one or two MP4 imports into ResourceSpace before importing the full ZIP.
 
 ## Import Rules
 
