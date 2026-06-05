@@ -6,8 +6,10 @@ type CollectionAlbumCardProps = {
   name: string;
   description: string;
   countLabel: string;
-  latestLabel: string;
-  scope: string;
+  dateRange: string;
+  ministry: string;
+  approvalSummary: string;
+  peopleWarning?: string;
   images: { src: string; alt: string }[];
   onOpen: () => void;
 };
@@ -20,8 +22,10 @@ export function CollectionAlbumCard({
   name,
   description,
   countLabel,
-  latestLabel,
-  scope,
+  dateRange,
+  ministry,
+  approvalSummary,
+  peopleWarning,
   images,
   onOpen
 }: CollectionAlbumCardProps) {
@@ -61,8 +65,9 @@ export function CollectionAlbumCard({
       <span className="collection-album__content">
         <span className="collection-album__title">{name}</span>
         <span className="collection-album__description">{description}</span>
-        <span className="collection-album__meta">{countLabel} · {latestLabel}</span>
-        <span className="collection-album__scope">{scope}</span>
+        <span className="collection-album__meta">{countLabel} · {dateRange} · {ministry}</span>
+        <span className="collection-album__scope">{approvalSummary}</span>
+        {peopleWarning ? <span className="collection-album__warning">{peopleWarning}</span> : null}
       </span>
       {images.length > 1 ? (
         <span className="collection-album__dots" aria-hidden="true">

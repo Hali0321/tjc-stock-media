@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { NextRequest, NextResponse } from "next/server";
-import { findFilestoreDerivative, getAssetById } from "@/lib/media-source";
+import { getAssetById } from "@/lib/catalog";
+import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";

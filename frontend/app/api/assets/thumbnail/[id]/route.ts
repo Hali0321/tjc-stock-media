@@ -7,7 +7,16 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const variantParam = request.nextUrl.searchParams.get("variant");
-  const variant = variantParam === "download" ? "download" : variantParam === "preview" ? "preview" : "thumb";
+  const variant =
+    variantParam === "download"
+      ? "download"
+      : variantParam === "detail" || variantParam === "preview"
+        ? "detail"
+        : variantParam === "collection"
+          ? "collection"
+          : variantParam === "card"
+            ? "card"
+            : "small";
   const filePath = findFilestoreDerivative(id, variant);
 
   if (!filePath) {

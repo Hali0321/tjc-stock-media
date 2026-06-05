@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Download, Lock, Music, Video, Image as ImageIcon, FileText } from "lucide-react";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
-import { canDownloadApprovedCopy } from "@/lib/permissions";
-import { cardImageUrl, friendlyReviewTrace, friendlySourceLabel, normalizeAssetTitle, shortStatusLabel, usageLabel } from "@/lib/display";
+import { decideAccess } from "@/lib/access-decisions";
+import { assetPresentation, provenanceSummary } from "@/lib/presentation";
 
 const mediaIcons = {
   photo: ImageIcon,
@@ -15,23 +15,18 @@ const mediaIcons = {
 };
 
 export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
-  const canDownload = canDownloadApprovedCopy(role, asset);
+  const display = assetPresentation(asset, role);
+  const canDownload = display.download.approvedCopy.allowed;
   const MediaIcon = mediaIcons[asset.mediaType];
-  const quickTags = [...(asset.tags || []), ...(asset.tjcTerms || [])].slice(0, 1);
-  const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
-  const imageUrl = cardImageUrl(asset);
-  const traceLabel = asset.reviewedDate
-    ? `Reviewed ${asset.reviewedDate}`
-    : asset.resourceSpaceId
-      ? `RS ${asset.resourceSpaceId}`
-      : asset.peopleRisk === "Unknown"
-        ? "People unknown"
-        : asset.peopleRisk || "Trace pending";
+  const quickTags = [...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])].slice(0, 1);
+  const source = provenanceSummary(asset, role);
+  const canSeeOriginal = decideAccess(role, "viewOriginalMetadata", asset).allowed;
+  const traceLabel = asset.reviewedDate ? `Reviewed ${asset.reviewedDate}` : asset.peopleRisk === "Unknown" ? "People unknown" : asset.peopleRisk || "Trace pending";
   return (
     <article className={`asset-card asset-card--${asset.status.toLowerCase().replaceAll(" ", "-")}`}>
-      <Link href={`/assets/${asset.id}`} className="asset-card__image" aria-label={`Open ${displayTitle}`}>
-        {imageUrl ? (
-          <img src={imageUrl} alt={asset.thumbnailAlt} loading="eager" decoding="async" />
+      <Link href={`/assets/${asset.id}`} className="asset-card__image" aria-label={`Open ${display.title}`}>
+        {display.image ? (
+          <img src={display.image} alt={asset.thumbnailAlt} loading="eager" decoding="async" />
         ) : (
           <div className="asset-card__placeholder">
             <MediaIcon aria-hidden="true" size={28} />
@@ -42,12 +37,12 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
           {asset.mediaType}
         </span>
         <span className={`asset-card__status asset-card__status--${asset.status.toLowerCase().replaceAll(" ", "-")}`}>
-          {shortStatusLabel(asset.status)}
+          {display.shortStatus}
         </span>
       </Link>
       <div className="asset-card__body">
-        <h2>{displayTitle}</h2>
-        <p>{asset.collection}</p>
+        <h2>{display.title}</h2>
+        <p>{display.cardSubtitle}</p>
         {quickTags.length ? (
           <div className="asset-card__tags" aria-label="Asset tags">
             {quickTags.map((tag) => (
@@ -56,21 +51,22 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
           </div>
         ) : null}
         <div className="asset-card__hover-meta" aria-label="Source metadata">
-          <span>Source: {friendlySourceLabel(asset)}</span>
-          <span>{friendlyReviewTrace(asset)}</span>
+          <span>Source: {source.publicLabel}</span>
+          <span>{display.reviewFacts.reviewLine}</span>
           <span>{asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : "ResourceSpace export"}</span>
+          {canSeeOriginal && asset.originalFilename ? <span>Original: {asset.originalFilename}</span> : null}
         </div>
         <div className="asset-card__footer">
-          <span>{usageLabel(asset.usageScope)} · {quickTags[0] || traceLabel}</span>
+          <span>{display.usage} · {quickTags[0] || traceLabel}</span>
           {canDownload ? (
             <span className="download-state download-state--allowed">
               <Download aria-hidden="true" size={14} />
-              copy
+              {display.download.cardLabel}
             </span>
           ) : (
             <span className="download-state">
               <Lock aria-hidden="true" size={14} />
-              blocked
+              {display.download.cardLabel}
             </span>
           )}
         </div>

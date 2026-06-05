@@ -1,34 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Database, ExternalLink, Lock, ShieldCheck, ShieldX } from "lucide-react";
+import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
-import { normalizeAssetTitle } from "@/lib/display";
+import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
+import { missingReviewFields, reviewActions, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+
+type QueueSummary = {
+  id: ReviewQueueId;
+  label: string;
+  description: string;
+  count: number;
+};
+
+type Governance = {
+  pendingReview: number;
+  childrenYouth: number;
+  missingSource: number;
+  rightsReview: number;
+  approvedThisMonth: number;
+  archiveCandidates: number;
+  missingRequiredFields: number;
+};
 
 type ReviewResponse = {
   assets: StockMediaAsset[];
+  allAssets: StockMediaAsset[];
   source: MediaSourceStatus;
   canReview: boolean;
+  queues: QueueSummary[];
+  governance: Governance;
+  resourceSpaceUrls: Record<string, string>;
 };
 
-const actions = [
-  { label: "Approve for church-wide use", backend: "Approve Public" },
-  { label: "Approve for internal ministry use", backend: "Approve Internal" },
-  { label: "Archive only", backend: "Searchable Archive" },
-  { label: "Do not publish externally", backend: "Do Not Use" }
+const governanceCards = [
+  { key: "pendingReview", label: "Pending review", icon: ShieldCheck },
+  { key: "childrenYouth", label: "Children/youth", icon: Users },
+  { key: "missingSource", label: "Missing source", icon: FileWarning },
+  { key: "rightsReview", label: "Rights review", icon: Lock },
+  { key: "approvedThisMonth", label: "Approved this month", icon: ShieldCheck },
+  { key: "archiveCandidates", label: "Archive candidates", icon: Archive }
 ] as const;
-const queueFilters = ["Pending Review", "Possible Children/Youth", "Missing Source", "Needs Usage Guidance", "Internal Only", "Do Not Publish"];
 
 function sourceSummary(asset: StockMediaAsset) {
-  if (!asset.sourcePath) return "Source pending";
-  const parts = asset.sourcePath.split("/").filter(Boolean);
-  const filename = parts.at(-1) || asset.sourcePath;
-  const folder = parts.at(-2);
-  return folder ? `${folder} · ${filename}` : filename;
+  return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
 }
 
 export function ReviewPage() {
@@ -36,104 +55,136 @@ export function ReviewPage() {
   const [data, setData] = useState<ReviewResponse | null>(null);
   const [message, setMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
+  const [activeQueue, setActiveQueue] = useState<ReviewQueueId>("pending");
   const reviewer = canReview(role);
-  const selectedAsset = data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0];
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/review?role=${encodeURIComponent(role)}`)
+    fetch(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(activeQueue)}`)
       .then((response) => response.json())
       .then((body: ReviewResponse) => {
         if (!cancelled) {
           setData(body);
-          setSelectedId((current) => current || body.assets[0]?.id || "");
+          setSelectedId((current) => (body.assets.some((asset) => asset.id === current) ? current : body.assets[0]?.id || ""));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [role]);
+  }, [role, activeQueue]);
 
-  async function runAction(id: string, action: (typeof actions)[number]) {
+  const selectedAsset = useMemo(() => data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0], [data?.assets, selectedId]);
+
+  async function runAction(id: string, action: (typeof reviewActions)[number]) {
     setMessage("");
     const response = await fetch("/api/review", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, id, action: action.backend, label: action.label, notes: "Mac reference demo action through server route." })
+      body: JSON.stringify({ role, id, action: action.backend, label: action.label, notes: "Server-routed review action; ResourceSpace remains write target." })
     });
     const body = await response.json();
     setMessage(body.message || body.error || "Review route responded.");
   }
 
+  if (!reviewer) {
+    return (
+      <div className="page-shell page-shell--workflow">
+        <section className="library-top">
+          <div>
+            <p className="eyebrow">Review</p>
+            <h1>Review is available to reviewers</h1>
+            <p>Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
+          </div>
+        </section>
+        <section className="role-locked-workflow">
+          <ShieldCheck size={28} aria-hidden="true" />
+          <div>
+            <h2>What reviewers check</h2>
+            <p>Approval status, source/provenance, people visibility, children/youth risk, rights notes, usage guidance, and download eligibility.</p>
+            <span>Use role switch to Reviewer or DAM Admin to inspect the governance workbench.</span>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
-    <div className="page-shell">
-      <section className="library-top">
+    <div className="page-shell review-page-shell">
+      <section className="library-top review-top">
         <div>
-          <p className="eyebrow">Reviewer queue</p>
-          <h1>Review assets safely</h1>
-          <p>Few people approve. Many people can submit.</p>
+          <p className="eyebrow">Govern</p>
+          <h1>Review workbench</h1>
+          <p>Prioritize risk, missing metadata, children/youth, rights issues, duplicates, large media, and archive decisions.</p>
         </div>
         <div className="source-pill">
           <span>Queue</span>
-          <strong>{data?.assets.length ?? "-"} visible</strong>
+          <strong>{data?.assets.length ?? "-"} selected</strong>
         </div>
       </section>
 
-      {!reviewer ? (
-        <div className="empty-state">Reviewer controls are unavailable for this role. Switch to Reviewer or DAM Admin for approval demo.</div>
-      ) : null}
-
-      {reviewer && data?.source.readOnly ? (
+      {data?.source.readOnly ? (
         <div className="review-mode-banner">
           <Database size={18} aria-hidden="true" />
           <div>
             <strong>Review queue is reading ResourceSpace export.</strong>
-            <span>Actions are routed server-side, but final approval writes stay in ResourceSpace until API field mapping is configured.</span>
+            <span>Actions stay server-routed; ResourceSpace API write persistence is pending field mapping.</span>
           </div>
         </div>
       ) : null}
 
-      {reviewer ? (
-        <section className="review-demo-path" aria-label="Stakeholder demo path">
-          <strong>Demo path</strong>
-          <span>Open a review-needed asset to show blocked download, then return here for approval actions.</span>
-          {data?.assets[0] ? <a href={`/assets/${data.assets[0].id}`}>Open first review-needed asset</a> : null}
-        </section>
-      ) : null}
+      <section className="governance-summary" aria-label="Governance metrics">
+        {governanceCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div className="governance-card" key={card.key}>
+              <Icon size={16} aria-hidden="true" />
+              <strong>{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
+              <span>{card.label}</span>
+            </div>
+          );
+        })}
+      </section>
 
-      {reviewer ? (
-        <section className="review-filter-bar" aria-label="Review filters">
-          {queueFilters.map((filter, index) => (
-            <button className={index === 0 ? "review-filter-bar__active" : ""} key={filter} type="button">
-              {filter}
-            </button>
-          ))}
-        </section>
-      ) : null}
+      <section className="review-queue-tabs" aria-label="Review queues">
+        {(data?.queues || []).map((queue) => (
+          <button
+            key={queue.id}
+            type="button"
+            className={activeQueue === queue.id ? "review-queue-tab review-queue-tab--active" : "review-queue-tab"}
+            onClick={() => setActiveQueue(queue.id)}
+            aria-pressed={activeQueue === queue.id}
+          >
+            <span>{queue.label}</span>
+            <strong>{queue.count.toLocaleString()}</strong>
+          </button>
+        ))}
+      </section>
 
       {message ? <div className="form-message">{message}</div> : null}
 
-      <section className="review-workbench">
-        <div className="review-list">
-          {(data?.assets || []).slice(0, 24).map((asset) => {
-            const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
+      <section className="review-workbench review-workbench--govern">
+        <div className="review-list review-list--govern">
+          {(data?.assets || []).slice(0, 36).map((asset) => {
+            const display = assetPresentation(asset, role);
             const selected = selectedAsset?.id === asset.id;
+            const risks = reviewRiskFlags(asset);
+            const missing = missingReviewFields(asset);
             return (
               <article className={`review-row ${selected ? "review-row--selected" : ""}`} key={asset.id}>
-                <button type="button" className="review-row__select" onClick={() => setSelectedId(asset.id)} aria-label={`Select ${displayTitle}`}>
+                <button type="button" className="review-row__select" onClick={() => setSelectedId(asset.id)} aria-label={`Select ${display.title}`}>
                   <span />
                 </button>
-                <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${displayTitle}`}>
+                <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${display.title}`}>
                   {asset.thumbnail ? <img src={asset.thumbnail} alt={asset.thumbnailAlt} loading="eager" /> : <span>Preview unavailable</span>}
                   <span className="asset-card__type">{asset.mediaType}</span>
                 </Link>
                 <div className="review-row__actions">
                   <div className="review-row__heading">
                     <div>
-                      <h2>{displayTitle}</h2>
+                      <h2>{display.title}</h2>
                       <p>{asset.collection} · {sourceSummary(asset)}</p>
                     </div>
-                    <a href={`/assets/${asset.id}`} aria-label={`Open ${displayTitle} detail`}>
+                    <a href={`/assets/${asset.id}`} aria-label={`Open ${display.title} detail`}>
                       <ExternalLink size={16} aria-hidden="true" />
                     </a>
                   </div>
@@ -146,15 +197,17 @@ export function ReviewPage() {
                     </span>
                   </div>
                   <p>{asset.rightsNotes || "Review needed before reuse."}</p>
+                  <div className="risk-row risk-row--strong">
+                    {risks.slice(0, 5).map((flag) => <span key={flag}>{flag}</span>)}
+                  </div>
                   <div className="risk-row">
-                    <span>{asset.peopleRisk}</span>
+                    <span>{missing.length ? `Missing: ${missing.join(", ")}` : "Required fields present"}</span>
                     <span>{asset.fileExtension?.toUpperCase() || asset.mediaType}</span>
-                    <span>{asset.status === "Needs Review" ? "Reviewer required" : asset.status}</span>
                     <span>RS {asset.resourceSpaceId || asset.id}</span>
                   </div>
-                  <div className="action-grid">
-                    {actions.map((action) => (
-                      <button key={action.backend} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
+                  <div className="action-grid action-grid--review">
+                    {reviewActions.map((action) => (
+                      <button key={action.id} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
                         {action.backend === "Do Not Use" ? <ShieldX size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
                         {action.label}
                       </button>
@@ -164,29 +217,44 @@ export function ReviewPage() {
               </article>
             );
           })}
+          {data && !data.assets.length ? <div className="empty-state">No assets in this queue.</div> : null}
         </div>
 
         {selectedAsset ? (
-          <aside className="review-inspector" aria-label="Selected asset review summary">
-            <img src={selectedAsset.thumbnail} alt={selectedAsset.thumbnailAlt} />
+          <aside className="review-inspector review-inspector--govern" aria-label="Selected asset review summary">
+            <img src={detailImageUrl(selectedAsset)} alt={selectedAsset.thumbnailAlt} />
             <div>
               <p className="eyebrow">Selected asset</p>
-              <h2>{normalizeAssetTitle(selectedAsset.title, selectedAsset.originalFilename, selectedAsset)}</h2>
+              <h2>{assetPresentation(selectedAsset, role).title}</h2>
             </div>
             <div className="asset-card__chips">
               <StatusBadge status={selectedAsset.status} />
               <UsageBadge scope={selectedAsset.usageScope} />
             </div>
             <dl>
-              <div><dt>Why review</dt><dd>{selectedAsset.rightsNotes || "Human rights review required before reuse."}</dd></div>
-              <div><dt>Source</dt><dd>{sourceSummary(selectedAsset)}</dd></div>
+              <div><dt>Why review</dt><dd>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
+              <div><dt>Source/provenance</dt><dd>{sourceSummary(selectedAsset)}</dd></div>
               <div><dt>People/minors</dt><dd>{selectedAsset.peopleRisk || "Unknown"}</dd></div>
-              <div><dt>ResourceSpace</dt><dd>{selectedAsset.resourceSpaceId || selectedAsset.id}</dd></div>
+              <div><dt>Usage guidance</dt><dd>{selectedAsset.usageGuidance || "Missing"}</dd></div>
+              <div><dt>Review notes</dt><dd>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
+              <div><dt>Status history</dt><dd>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
             </dl>
-            <Link href={`/assets/${selectedAsset.id}`} className="secondary-action">
-              <ExternalLink size={16} aria-hidden="true" />
-              Open detail
-            </Link>
+            <div className="review-inspector__actions">
+              <Link href={`/assets/${selectedAsset.id}`} className="secondary-action">
+                <ExternalLink size={16} aria-hidden="true" />
+                Open detail
+              </Link>
+              {data?.resourceSpaceUrls[selectedAsset.id] ? (
+                <a className="secondary-action secondary-action--quiet" href={data.resourceSpaceUrls[selectedAsset.id]} target="_blank" rel="noreferrer">
+                  <ExternalLink size={16} aria-hidden="true" />
+                  ResourceSpace
+                </a>
+              ) : null}
+            </div>
+            <div className="review-inspector__note">
+              <Info size={16} aria-hidden="true" />
+              <span>Final approval writes remain in ResourceSpace until API write mapping is live.</span>
+            </div>
           </aside>
         ) : null}
       </section>

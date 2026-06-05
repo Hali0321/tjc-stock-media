@@ -2,42 +2,50 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Download, ExternalLink, FileLock2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, History, Image as ImageIcon, Info, Layers, ShieldCheck } from "lucide-react";
+import { AssetTrustPanel } from "@/components/AssetTrustPanel";
+import { DownloadOptionsPanel } from "@/components/DownloadOptionsPanel";
 import { useDemoRole } from "@/components/RoleProvider";
-import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
-import { canDownloadApprovedCopy } from "@/lib/permissions";
-import { friendlySourceLabel, normalizeAssetTitle } from "@/lib/display";
-import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+import { decideAccess } from "@/lib/access-decisions";
+import { assetPresentation, collectionImageUrl, detailImageUrl, provenanceSummary } from "@/lib/presentation";
+import type { DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 
 type DetailResponse = {
   asset: StockMediaAsset;
   source: MediaSourceStatus;
+  related: StockMediaAsset[];
   resourceSpaceUrl: string | null;
 };
 
-function guidanceFor(asset: StockMediaAsset, canDownload: boolean) {
-  const tjcContext = [...(asset.tjcTerms || []), ...(asset.tags || [])].slice(0, 3).join(", ") || asset.collection;
-  return {
-    bestUsedFor: canDownload
-      ? "Church newsletters, slides, local announcements, websites, and ministry reports when the context fits."
-      : "Reference only until a reviewer approves public or internal ministry use.",
-    avoid:
-      asset.peopleRisk === "Possible minors"
-        ? "Please avoid public posting, close cropping, or social sharing until children/youth visibility is reviewed."
-        : "Please avoid removing important ministry context, changing the meaning of the image, or using it for unrelated promotion.",
-    caption: `${asset.title}${tjcContext ? ` - ${tjcContext}` : ""}`,
-    credit: asset.resourceSpaceId ? "Keep ResourceSpace source attribution available with the asset record." : "No separate public credit requirement exported yet.",
-    sensitivity:
-      asset.status === "Approved Public"
-        ? "Approved with current exported review notes. Use respectfully and keep the ministry context intact."
-        : "Ask a media coworker if you are unsure. Review state must be resolved before reuse."
-  };
+const detailTabs = ["Use", "Source", "Review", "Files", "Related"] as const;
+type DetailTab = (typeof detailTabs)[number];
+
+function formatBytes(value?: number) {
+  if (!value) return "Not exported";
+  if (value > 1024 * 1024 * 1024) return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  if (value > 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
+}
+
+function RelatedStrip({ assets, role }: { assets: StockMediaAsset[]; role: DemoRole }) {
+  if (!assets.length) return <div className="related-empty">No related approved assets found in this local export.</div>;
+  return (
+    <div className="related-strip">
+      {assets.slice(0, 6).map((asset) => (
+        <Link href={`/assets/${asset.id}`} key={asset.id} className="related-card">
+          <img src={collectionImageUrl(asset)} alt={asset.thumbnailAlt} loading="lazy" />
+          <span>{assetPresentation(asset, role).title}</span>
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 export function AssetDetailPage({ id }: { id: string }) {
   const { role } = useDemoRole();
   const [data, setData] = useState<DetailResponse | null>(null);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<DetailTab>("Use");
 
   useEffect(() => {
     let cancelled = false;
@@ -75,115 +83,127 @@ export function AssetDetailPage({ id }: { id: string }) {
     return <div className="page-shell"><div className="empty-state">Loading asset...</div></div>;
   }
 
-  const { asset } = data;
-  const canDownload = canDownloadApprovedCopy(role, asset);
-  const canSeeTechnicalSource = role === "Reviewer" || role === "DAM Admin";
-  const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
-  const guidance = guidanceFor(asset, canDownload);
+  const { asset, related } = data;
+  const display = assetPresentation(asset, role);
+  const provenance = provenanceSummary(asset, role);
+  const canSeeOriginal = decideAccess(role, "viewOriginalMetadata", asset).allowed;
+  const canOpenResourceSpace = decideAccess(role, "viewResourceSpaceAdminLink", asset).allowed;
+  const preview = detailImageUrl(asset);
 
   return (
-    <div className="page-shell">
+    <div className="page-shell detail-page-shell">
       <Link href="/" className="back-link">
         <ArrowLeft size={16} aria-hidden="true" />
         Back to library
       </Link>
-      <section className="detail-layout">
-        <div className="detail-preview">
-          {asset.preview ? <img src={asset.preview} alt={asset.thumbnailAlt} /> : <div className="detail-preview__empty">Preview unavailable</div>}
+      <section className="detail-layout detail-layout--trust-record">
+        <div className="detail-main">
+          <div className="detail-preview detail-preview--large">
+            {preview ? <img src={preview} alt={asset.thumbnailAlt} /> : <div className="detail-preview__empty">Preview unavailable</div>}
+          </div>
+          <section className="detail-related-panel" aria-label="Related assets">
+            <div className="panel-heading">
+              <div>
+                <h2>Related assets</h2>
+                <p>Same collection, tags, or TJC terms. Approved assets shown first.</p>
+              </div>
+            </div>
+            <RelatedStrip assets={related} role={role} />
+          </section>
         </div>
-        <aside className="detail-panel">
+
+        <aside className="detail-panel detail-panel--trust">
           <div className="detail-title">
             <div>
               <p className="eyebrow">{asset.collection}</p>
-              <h1>{displayTitle}</h1>
-            </div>
-            <div className="asset-card__chips">
-              <StatusBadge status={asset.status} />
-              <UsageBadge scope={asset.usageScope} />
+              <h1>{display.title}</h1>
+              <p>{provenance.publicLabel}</p>
             </div>
           </div>
 
-          <div className="safe-answer">
-            {canDownload ? <CheckCircle2 size={20} aria-hidden="true" /> : <ShieldAlert size={20} aria-hidden="true" />}
-            <div>
-              <strong>{canDownload ? "Download approved copy." : "Reviewer approval required."}</strong>
-              <span>{asset.usageGuidance}</span>
-            </div>
-          </div>
+          <AssetTrustPanel asset={asset} role={role} />
+          <DownloadOptionsPanel asset={asset} role={role} />
 
-          <section className="usage-guidance-panel" aria-label="Usage guidance">
-            <h2>Use this asset with care</h2>
-            <dl>
-              <div><dt>Best used for</dt><dd>{guidance.bestUsedFor}</dd></div>
-              <div><dt>Please avoid</dt><dd>{guidance.avoid}</dd></div>
-              <div><dt>Caption suggestion</dt><dd>{guidance.caption}</dd></div>
-              <div><dt>Credit requirement</dt><dd>{guidance.credit}</dd></div>
-              <div><dt>Ministry sensitivity</dt><dd>{guidance.sensitivity}</dd></div>
-            </dl>
-          </section>
-
-          <div className="download-panel download-panel--approved">
-            <div>
-              <h2>Approved copy</h2>
-              <p>Use this copy for ministry work when the approval label allows.</p>
-            </div>
-            {canDownload ? (
-              <a className="primary-action" href={`/api/download/${asset.id}?role=${encodeURIComponent(role)}`}>
-                <Download size={16} aria-hidden="true" />
-                Download approved copy
-              </a>
-            ) : (
-              <button type="button" disabled className="primary-action primary-action--disabled">
-                <ShieldAlert size={16} aria-hidden="true" />
-                Reviewer approval required
+          <nav className="detail-tabs" aria-label="Asset detail sections">
+            {detailTabs.map((tab) => (
+              <button key={tab} type="button" className={activeTab === tab ? "detail-tabs__active" : ""} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab}>
+                {tab}
               </button>
-            )}
-          </div>
+            ))}
+          </nav>
 
-          <div className="download-panel download-panel--restricted">
-            <div>
-              <h2>Original/master restricted</h2>
-              <p>Admin/designer only. Master files stay in ResourceSpace and Google Shared Drive references.</p>
-            </div>
-            <span>
-              <FileLock2 size={16} aria-hidden="true" />
-              Original locked
-            </span>
-          </div>
+          {activeTab === "Use" ? (
+            <section className="detail-tab-panel" aria-label="Usage guidance">
+              <h2><ShieldCheck size={18} aria-hidden="true" /> Use guidance</h2>
+              <dl>
+                {display.guidanceFacts.map((fact) => (
+                  <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
 
-          <dl className="meta-list">
-            <div className="meta-list__group"><dt>Usage</dt><dd>{asset.usageScope} · {asset.peopleRisk || "Unknown people/minors risk"}</dd></div>
-            <div><dt>Source / photographer</dt><dd>{friendlySourceLabel(asset)}</dd></div>
-            <div><dt>Event / collection</dt><dd>{asset.collection}</dd></div>
-            <div><dt>Review</dt><dd>{asset.reviewer || "Not reviewed"} · {asset.reviewedDate || "Pending"}</dd></div>
-            <div><dt>ResourceSpace ID</dt><dd>{asset.resourceSpaceId || asset.id}</dd></div>
-            <div><dt>Original filename</dt><dd>{asset.originalFilename || "Unknown"}</dd></div>
-            {canSeeTechnicalSource ? (
-              <>
-                <div><dt>Original import path</dt><dd>{asset.sourcePath || "Source path not exported"}</dd></div>
-                <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Visible to DAM admins after Shared Drive staging"}</dd></div>
-              </>
-            ) : null}
-          </dl>
+          {activeTab === "Source" ? (
+            <section className="detail-tab-panel" aria-label="Source and provenance">
+              <h2><Info size={18} aria-hidden="true" /> Source and provenance</h2>
+              <dl>
+                <div><dt>Source system</dt><dd>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
+                <div><dt>Source / photographer</dt><dd>{asset.sourceAccount || asset.collection || "Not exported"}</dd></div>
+                <div><dt>Event / collection</dt><dd>{asset.eventName || asset.collection}</dd></div>
+                <div><dt>Captured / event date</dt><dd>{asset.capturedDate || asset.eventDate || "Not exported"}</dd></div>
+                <div><dt>ResourceSpace ID</dt><dd>{asset.resourceSpaceId || asset.id}</dd></div>
+                {canSeeOriginal ? <div><dt>Original import path</dt><dd>{asset.sourcePath || "Source path not exported"}</dd></div> : null}
+                {canSeeOriginal ? <div><dt>Master Drive path</dt><dd>{asset.masterDrivePath || "Visible after Shared Drive staging"}</dd></div> : null}
+              </dl>
+            </section>
+          ) : null}
+
+          {activeTab === "Review" ? (
+            <section className="detail-tab-panel" aria-label="Review status">
+              <h2><History size={18} aria-hidden="true" /> Review record</h2>
+              <dl>
+                <div><dt>Reviewer</dt><dd>{asset.reviewer || "Not reviewed"}</dd></div>
+                <div><dt>Review date</dt><dd>{asset.reviewedDate || "Pending"}</dd></div>
+                <div><dt>Rights status</dt><dd>{asset.rightsStatus || "Unknown"}</dd></div>
+                <div><dt>Consent</dt><dd>{asset.consentStatus || "Unknown"}</dd></div>
+                <div><dt>Risk flags</dt><dd>{display.reviewFacts.riskFlags.join(", ")}</dd></div>
+                <div><dt>Missing fields</dt><dd>{display.reviewFacts.missingFields.length ? display.reviewFacts.missingFields.join(", ") : "None for current export"}</dd></div>
+              </dl>
+              <p>{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
+            </section>
+          ) : null}
+
+          {activeTab === "Files" ? (
+            <section className="detail-tab-panel" aria-label="File options">
+              <h2><FileText size={18} aria-hidden="true" /> Files</h2>
+              <dl>
+                <div><dt>Media type</dt><dd>{asset.mediaType}</dd></div>
+                <div><dt>Format</dt><dd>{asset.fileExtension?.toUpperCase() || "Not exported"}</dd></div>
+                <div><dt>Dimensions</dt><dd>{asset.imageDimensions || "Not exported"}</dd></div>
+                <div><dt>File size</dt><dd>{formatBytes(asset.fileSizeBytes)}</dd></div>
+                <div><dt>Original filename</dt><dd>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Hidden for this role"}</dd></div>
+                <div><dt>Checksum</dt><dd>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div>
+              </dl>
+            </section>
+          ) : null}
+
+          {activeTab === "Related" ? (
+            <section className="detail-tab-panel" aria-label="Related assets">
+              <h2><Layers size={18} aria-hidden="true" /> Related</h2>
+              <RelatedStrip assets={related} role={role} />
+            </section>
+          ) : null}
 
           <section className="tag-section" aria-label="Tags">
-            <h2>Tags</h2>
+            <h2><ImageIcon size={18} aria-hidden="true" /> Tags</h2>
             <div className="chip-row">
+              {(asset.usageTerms || []).map((tag) => <span className="chip chip--static" key={tag}>{tag}</span>)}
               {(asset.tags || []).map((tag) => <span className="chip chip--static" key={tag}>{tag}</span>)}
               {(asset.tjcTerms || []).map((tag) => <span className="chip chip--static chip--tjc" key={tag}>{tag}</span>)}
             </div>
           </section>
 
-          <section className="notes-panel">
-            <h2>Rights notes</h2>
-            <p>{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
-          </section>
-
-          <a className="secondary-action secondary-action--quiet" href="mailto:media@tjc.org?subject=TJC Stock Media asset question">
-            Ask a media coworker
-          </a>
-
-          {data.resourceSpaceUrl ? (
+          {data.resourceSpaceUrl && canOpenResourceSpace ? (
             <a className="secondary-action" href={data.resourceSpaceUrl} target="_blank" rel="noreferrer">
               <ExternalLink size={16} aria-hidden="true" />
               Open in ResourceSpace
