@@ -23,11 +23,14 @@ Latest local QA also captured the required screenshots under `docs/screenshots/`
 
 The current frontend shell is the redesigned ministry media-library UI:
 
+- Desktop uses an app-like sidebar plus top utility bar rather than the old centered demo header.
 - Main nav: Library, Collections, Upload, Review.
 - Usage Guide: secondary utility/footer link, not primary navigation.
-- Library: photo-first grid, compact filters, sort chips, clear result count, curated collection cards.
+- Library: full-width photo-first grid, compact filters, sort chips, clear result count, curated collection cards.
 - Asset cards: short status, usage label, display-normalized title, one tag, download/blocked signal, provenance on hover/focus.
 - Asset detail: usage guidance, source/review/technical provenance, approved copy separated from original/master restriction.
+- Upload: guided three-step intake.
+- Review: queue tabs, compact decision rows, and selected-asset inspector.
 
 ## Architecture
 

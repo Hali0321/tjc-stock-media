@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, Database, Search, ShieldAlert, SlidersHorizontal } from "lucide-react";
+import { CheckCircle2, Clock3, Search, ShieldAlert, SlidersHorizontal } from "lucide-react";
 import { AssetCard } from "@/components/AssetCard";
 import { useDemoRole } from "@/components/RoleProvider";
 import { featuredCollections, filterChips } from "@/lib/taxonomy";
@@ -100,104 +100,85 @@ export function LibraryPage() {
     <div className="page-shell">
       <section className="library-top">
         <div>
-          <h1>TJC Stock Media</h1>
-          <p>Approved media for ministry teams</p>
+          <p className="eyebrow">Library</p>
+          <h1>Search approved church media</h1>
+          <p>Find photos, graphics, and ministry assets cleared for reuse.</p>
         </div>
         <div className="source-pill">
-          <span>Data source</span>
+          <span>Source</span>
           <strong>{result?.source.label || "Loading"}</strong>
         </div>
       </section>
 
-      <section className="library-safety-rail" aria-label="Current library safety mode">
-        <div>
-          <CheckCircle2 size={18} aria-hidden="true" />
-          <span>Approved media first</span>
-        </div>
-        <div>
-          <ShieldAlert size={18} aria-hidden="true" />
-          <span>Unapproved assets stay protected</span>
-        </div>
-        <div>
-          <Database size={18} aria-hidden="true" />
-          <span>Powered by ResourceSpace</span>
-        </div>
-      </section>
+      <section className="library-toolbar" aria-label="Library search and filters">
+        <form className="search-panel" onSubmit={submit}>
+          <label htmlFor="library-search">Search approved church media</label>
+          <div className="search-panel__row">
+            <Search aria-hidden="true" size={20} />
+            <input
+              id="library-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search Bible, worship, fellowship, flowers, youth..."
+              type="search"
+            />
+            <button type="submit">Search</button>
+          </div>
+        </form>
 
-      <form className="search-panel" onSubmit={submit}>
-        <label htmlFor="library-search">Search approved church media</label>
-        <div className="search-panel__row">
-          <Search aria-hidden="true" size={22} />
-          <input
-            id="library-search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search worship, Bible study, fellowship, flowers..."
-            type="search"
-          />
-          <button type="submit">Search</button>
+        <div className="library-toolbar__meta">
+          <div className="mini-stat">
+            <CheckCircle2 size={16} aria-hidden="true" />
+            <strong>{result?.counts.approved ?? "-"}</strong>
+            <span>approved</span>
+          </div>
+          <div className="mini-stat">
+            <Clock3 size={16} aria-hidden="true" />
+            <strong>{result?.counts.needsReview ?? "-"}</strong>
+            <span>review</span>
+          </div>
+          <div className="mini-stat mini-stat--safe">
+            <ShieldAlert size={16} aria-hidden="true" />
+            <span>Protected</span>
+          </div>
         </div>
-      </form>
 
-      <section className="filter-area" aria-label="Filters">
-        <div className="filter-area__label">
-          <SlidersHorizontal aria-hidden="true" size={16} />
-          Filters
-        </div>
-        <div className="chip-row">
-          {filterChips.map((filter) => (
+        <section className="filter-area" aria-label="Filters">
+          <div className="filter-area__label">
+            <SlidersHorizontal aria-hidden="true" size={16} />
+            Filters
+          </div>
+          <div className="chip-row">
+            {filterChips.map((filter) => (
+              <button
+                type="button"
+                key={filter}
+                className={`chip ${filters.includes(filter) ? "chip--active" : ""}`}
+                onClick={() => toggleFilter(filter)}
+                aria-pressed={filters.includes(filter)}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="sort-row" aria-label="Sort results">
+          <span>Sort</span>
+          {sortOptions.map((option) => (
             <button
               type="button"
-              key={filter}
-              className={`chip ${filters.includes(filter) ? "chip--active" : ""}`}
-              onClick={() => toggleFilter(filter)}
-              aria-pressed={filters.includes(filter)}
+              key={option}
+              className={sort === option ? "sort-row__active" : ""}
+              onClick={() => setSort(option)}
+              aria-pressed={sort === option}
             >
-              {filter}
+              {option}
             </button>
           ))}
-        </div>
+          <small>Approved assets shown first</small>
+        </section>
       </section>
-
-      <section className="sort-row" aria-label="Sort results">
-        <span>Sort</span>
-        {sortOptions.map((option) => (
-          <button
-            type="button"
-            key={option}
-            className={sort === option ? "sort-row__active" : ""}
-            onClick={() => setSort(option)}
-            aria-pressed={sort === option}
-          >
-            {option}
-          </button>
-        ))}
-        <small>Approved assets shown first</small>
-      </section>
-
-      <section className="stats-strip" aria-label="Media status summary">
-        <div>
-          <CheckCircle2 size={18} aria-hidden="true" />
-          <strong>{result?.counts.approved ?? "-"}</strong>
-          <span>approved</span>
-        </div>
-        <div>
-          <Clock3 size={18} aria-hidden="true" />
-          <strong>{result?.counts.needsReview ?? "-"}</strong>
-          <span>review</span>
-        </div>
-        <div>
-          <Search size={18} aria-hidden="true" />
-          <strong>{shownApproved}</strong>
-          <span>approved in view</span>
-        </div>
-      </section>
-
-      <div className="result-bar" aria-live="polite">
-        <strong>{loading ? "Loading results" : formatResultCount(sortedAssets.length, result?.total ?? 0)}</strong>
-        <span>{submittedQuery ? `Search: ${submittedQuery}` : "Approved assets shown first"}</span>
-        {filters.length ? <span>Filters: {filters.join(", ")}</span> : null}
-      </div>
 
       <section id="collections" className="collections-band" aria-label="Featured collections">
         {collectionCards.map((collection) => (
@@ -211,6 +192,12 @@ export function LibraryPage() {
           </button>
         ))}
       </section>
+
+      <div className="result-bar" aria-live="polite">
+        <strong>{loading ? "Loading results" : formatResultCount(sortedAssets.length, result?.total ?? 0)}</strong>
+        <span>{submittedQuery ? `Search: ${submittedQuery}` : `${shownApproved} approved assets in current view`}</span>
+        {filters.length ? <span>Filters: {filters.join(", ")}</span> : null}
+      </div>
 
       <section className="asset-grid-section" aria-label="Asset results">
         {loading ? <div className="empty-state">Loading media...</div> : null}

@@ -14,7 +14,7 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 
 - Photo-first library, not admin dashboard.
 - Warm white background, deep charcoal text, evergreen/navy accents.
-- Compact header, utility role switch, large search, filter chips, sort chips, curated album cards, and image grid high on page.
+- App-like shell with persistent navigation, utility role switch, large search, filter chips, sort chips, curated album cards, and image grid high on page.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
 - Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
@@ -122,12 +122,19 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 ## Current Library Pattern
 
-- Max shell width: 1320px.
+- App shell: sidebar on desktop, compact top navigation on tablet/mobile.
+- Main workspace uses available width instead of a centered document column.
 - Featured collections render as thumbnail album cards with count/date/scope signals.
 - Search result copy uses `Showing first 84 of 2,290 matching assets` style language.
-- Responsive media grid uses CSS columns: 4 columns desktop, 3 tablet landscape, 2 tablet/mobile landscape, 1 at 320px.
+- Responsive media grid uses CSS columns: 5 columns desktop, 3 tablet landscape, 2 tablet/mobile landscape, 1 at 320px.
 - Asset cards eager-load thumbnails in the local demo to avoid placeholder-heavy stakeholder screenshots.
 - Raw filenames are not mutated; a display helper normalizes titles such as `Copy Of Img 0625` to `Image 0625` while preserving original filename in detail metadata.
+
+## Workflow Screens
+
+- Upload uses a guided intake layout with Context, Rights, and Review step cards above the form.
+- Review uses a workbench layout: queue tabs, compact review rows, and a selected-asset inspector for source, risk, and ResourceSpace traceability.
+- Asset detail keeps a large preview and a right-side usage/download inspector, with approved copy and original/master restrictions separated.
 
 ## Anti-AI Checklist
 

@@ -35,14 +35,19 @@ export function ReviewPage() {
   const { role } = useDemoRole();
   const [data, setData] = useState<ReviewResponse | null>(null);
   const [message, setMessage] = useState("");
+  const [selectedId, setSelectedId] = useState("");
   const reviewer = canReview(role);
+  const selectedAsset = data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0];
 
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/review?role=${encodeURIComponent(role)}`)
       .then((response) => response.json())
       .then((body: ReviewResponse) => {
-        if (!cancelled) setData(body);
+        if (!cancelled) {
+          setData(body);
+          setSelectedId((current) => current || body.assets[0]?.id || "");
+        }
       });
     return () => {
       cancelled = true;
@@ -108,54 +113,83 @@ export function ReviewPage() {
 
       {message ? <div className="form-message">{message}</div> : null}
 
-      <div className="review-list">
-        {(data?.assets || []).slice(0, 24).map((asset) => {
-          const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
-          return (
-          <article className="review-row" key={asset.id}>
-            <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${displayTitle}`}>
-              {asset.thumbnail ? <img src={asset.thumbnail} alt={asset.thumbnailAlt} loading="eager" /> : <span>Preview unavailable</span>}
-              <span className="asset-card__type">{asset.mediaType}</span>
-            </Link>
-            <div className="review-row__actions">
-              <div className="review-row__heading">
-                <div>
-                  <h2>{displayTitle}</h2>
-                  <p>{asset.collection} · {sourceSummary(asset)}</p>
+      <section className="review-workbench">
+        <div className="review-list">
+          {(data?.assets || []).slice(0, 24).map((asset) => {
+            const displayTitle = normalizeAssetTitle(asset.title, asset.originalFilename, asset);
+            const selected = selectedAsset?.id === asset.id;
+            return (
+              <article className={`review-row ${selected ? "review-row--selected" : ""}`} key={asset.id}>
+                <button type="button" className="review-row__select" onClick={() => setSelectedId(asset.id)} aria-label={`Select ${displayTitle}`}>
+                  <span />
+                </button>
+                <Link href={`/assets/${asset.id}`} className="review-row__media" aria-label={`Open ${displayTitle}`}>
+                  {asset.thumbnail ? <img src={asset.thumbnail} alt={asset.thumbnailAlt} loading="eager" /> : <span>Preview unavailable</span>}
+                  <span className="asset-card__type">{asset.mediaType}</span>
+                </Link>
+                <div className="review-row__actions">
+                  <div className="review-row__heading">
+                    <div>
+                      <h2>{displayTitle}</h2>
+                      <p>{asset.collection} · {sourceSummary(asset)}</p>
+                    </div>
+                    <a href={`/assets/${asset.id}`} aria-label={`Open ${displayTitle} detail`}>
+                      <ExternalLink size={16} aria-hidden="true" />
+                    </a>
+                  </div>
+                  <div className="asset-card__chips">
+                    <StatusBadge status={asset.status} />
+                    <UsageBadge scope={asset.usageScope} />
+                    <span className="download-state">
+                      <Lock size={14} aria-hidden="true" />
+                      blocked
+                    </span>
+                  </div>
+                  <p>{asset.rightsNotes || "Review needed before reuse."}</p>
+                  <div className="risk-row">
+                    <span>{asset.peopleRisk}</span>
+                    <span>{asset.fileExtension?.toUpperCase() || asset.mediaType}</span>
+                    <span>{asset.status === "Needs Review" ? "Reviewer required" : asset.status}</span>
+                    <span>RS {asset.resourceSpaceId || asset.id}</span>
+                  </div>
+                  <div className="action-grid">
+                    {actions.map((action) => (
+                      <button key={action.backend} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
+                        {action.backend === "Do Not Use" ? <ShieldX size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <a href={`/assets/${asset.id}`} aria-label={`Open ${displayTitle} detail`}>
-                  <ExternalLink size={16} aria-hidden="true" />
-                </a>
-              </div>
-              <div className="asset-card__chips">
-                <StatusBadge status={asset.status} />
-                <UsageBadge scope={asset.usageScope} />
-                <span className="download-state">
-                  <Lock size={14} aria-hidden="true" />
-                  blocked
-                </span>
-              </div>
-              <p>{asset.rightsNotes || "Default import state. Human rights review required before use."}</p>
-              <div className="risk-row">
-                <span>{asset.peopleRisk}</span>
-                <span>{asset.fileExtension?.toUpperCase() || asset.mediaType}</span>
-                <span>{asset.collection}</span>
-                <span>{asset.status === "Needs Review" ? "Reviewer required" : asset.status}</span>
-                <span>RS {asset.resourceSpaceId || asset.id}</span>
-              </div>
-              <div className="action-grid">
-                {actions.map((action) => (
-                  <button key={action.backend} type="button" disabled={!reviewer} onClick={() => runAction(asset.id, action)}>
-                    {action.backend === "Do Not Use" ? <ShieldX size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
-                    {action.label}
-                  </button>
-                ))}
-              </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {selectedAsset ? (
+          <aside className="review-inspector" aria-label="Selected asset review summary">
+            <img src={selectedAsset.thumbnail} alt={selectedAsset.thumbnailAlt} />
+            <div>
+              <p className="eyebrow">Selected asset</p>
+              <h2>{normalizeAssetTitle(selectedAsset.title, selectedAsset.originalFilename, selectedAsset)}</h2>
             </div>
-          </article>
-          );
-        })}
-      </div>
+            <div className="asset-card__chips">
+              <StatusBadge status={selectedAsset.status} />
+              <UsageBadge scope={selectedAsset.usageScope} />
+            </div>
+            <dl>
+              <div><dt>Why review</dt><dd>{selectedAsset.rightsNotes || "Human rights review required before reuse."}</dd></div>
+              <div><dt>Source</dt><dd>{sourceSummary(selectedAsset)}</dd></div>
+              <div><dt>People/minors</dt><dd>{selectedAsset.peopleRisk || "Unknown"}</dd></div>
+              <div><dt>ResourceSpace</dt><dd>{selectedAsset.resourceSpaceId || selectedAsset.id}</dd></div>
+            </dl>
+            <Link href={`/assets/${selectedAsset.id}`} className="secondary-action">
+              <ExternalLink size={16} aria-hidden="true" />
+              Open detail
+            </Link>
+          </aside>
+        ) : null}
+      </section>
     </div>
   );
 }

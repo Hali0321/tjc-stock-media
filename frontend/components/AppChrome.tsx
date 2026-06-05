@@ -18,14 +18,14 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <>
-      <header className="app-header">
-        <div className="app-header__inner">
+    <div className="app-frame">
+      <aside className="app-sidebar" aria-label="TJC Stock Media navigation">
+        <div className="app-sidebar__top">
           <Link href="/" className="brand" aria-label="TJC Stock Media home">
             <span className="brand__mark">TJC</span>
             <span>
               <strong>TJC Stock Media</strong>
-              <small>Approved media for ministry teams</small>
+              <small>Ministry media library</small>
             </span>
           </Link>
           <nav className="nav" aria-label="Primary navigation">
@@ -44,8 +44,22 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
+        </div>
+        <div className="app-sidebar__bottom">
+          <Link href="/guide" className="help-link" aria-label="Open usage guide">
+            <HelpCircle aria-hidden="true" size={16} />
+            <span>Usage guide</span>
+          </Link>
+          <p>ResourceSpace backend. Google Shared Drive originals.</p>
+        </div>
+      </aside>
+      <section className="app-workspace">
+        <header className="topbar">
+          <div>
+            <span>Approved media for ministry teams</span>
+          </div>
           <div className="utility-cluster">
-            <Link href="/guide" className="help-link" aria-label="Open usage guide">
+            <Link href="/guide" className="help-link help-link--top" aria-label="Open usage guide">
               <HelpCircle aria-hidden="true" size={16} />
               <span>Guide</span>
             </Link>
@@ -58,14 +72,13 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               </select>
             </label>
           </div>
-        </div>
-        <div className="demo-note">Demo role switch - production roles will map to church access control later.</div>
-      </header>
-      <main>{children}</main>
-      <footer className="app-footer">
-        <Link href="/guide">Usage guide</Link>
-        <span>ResourceSpace remains the source of truth.</span>
-      </footer>
-    </>
+        </header>
+        <main>{children}</main>
+        <footer className="app-footer">
+          <Link href="/guide">Usage guide</Link>
+          <span>ResourceSpace remains backend/source of truth.</span>
+        </footer>
+      </section>
+    </div>
   );
 }

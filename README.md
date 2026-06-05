@@ -168,11 +168,12 @@ Normal users can only download approved use copies. Original/master files stay r
 Current UI redesign notes:
 
 - Primary navigation is `Library`, `Collections`, `Upload`, and `Review`; `Guide` moved to utility/footer access.
-- Library is photo-first with a wider 1320px shell, compact search/filter chips, clear result count copy, sort chips, curated collection album cards, and a 4/3/2/1 column responsive media grid.
+- The centered document-style shell has been replaced with an app-like sidebar plus top utility bar.
+- Library is photo-first with a full-width workspace, compact search/filter chips, clear result count copy, sort chips, curated collection album cards, and a 5/3/2/1 column responsive media grid.
 - Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
-- Upload remains a guided contributor intake. Review remains a role-gated workbench. Safe-download logic and ResourceSpace source-of-truth boundaries are unchanged.
+- Upload is a guided contributor intake. Review is a role-gated workbench with queue tabs and selected-asset inspector. Safe-download logic and ResourceSpace source-of-truth boundaries are unchanged.
 
 User-facing approval labels are warmer than backend values:
 

@@ -32,30 +32,32 @@ export function UploadPage() {
   }
 
   return (
-    <div className="page-shell page-shell--narrow">
-      <section className="form-intro">
-        <p className="eyebrow">Contributor intake</p>
-        <h1>Upload for review</h1>
-        <p>Uploads enter Needs Review / Do Not Publish. Reviewers approve before public or internal use.</p>
-      </section>
+    <div className="page-shell page-shell--workflow">
+      <div className="upload-hero">
+        <section className="form-intro">
+          <p className="eyebrow">Contributor intake</p>
+          <h1>Upload for review</h1>
+          <p>New media starts in review. A reviewer approves it before anyone can reuse it.</p>
+        </section>
 
-      <section className="intake-steps" aria-label="Upload workflow">
-        <div>
-          <UploadCloud size={18} aria-hidden="true" />
-          <strong>Submit context</strong>
-          <span>Event, ministry, people/minor risk, notes.</span>
-        </div>
-        <div>
-          <Clock3 size={18} aria-hidden="true" />
-          <strong>Needs Review</strong>
-          <span>Nothing becomes usable automatically.</span>
-        </div>
-        <div>
-          <CheckCircle2 size={18} aria-hidden="true" />
-          <strong>Approved copy</strong>
-          <span>Users download only approved use copies.</span>
-        </div>
-      </section>
+        <section className="intake-steps" aria-label="Upload workflow">
+          <div>
+            <UploadCloud size={18} aria-hidden="true" />
+            <strong>Context</strong>
+            <span>Event, ministry, source.</span>
+          </div>
+          <div>
+            <Clock3 size={18} aria-hidden="true" />
+            <strong>Rights</strong>
+            <span>People, minors, restrictions.</span>
+          </div>
+          <div>
+            <CheckCircle2 size={18} aria-hidden="true" />
+            <strong>Review</strong>
+            <span>Approval before reuse.</span>
+          </div>
+        </section>
+      </div>
 
       {!allowed ? (
         <div className="empty-state">This role can search approved media but cannot upload. Switch to Contributor, Reviewer, or DAM Admin for intake demo.</div>
