@@ -82,10 +82,10 @@ Future implementation requirements:
 | Plain upload file input | File preview workflow | Upload still enters Needs Review / Do Not Publish | Selected files can be removed before submit |
 | Soft review cards | Review cockpit rows + inspector | Evidence and pending-write state stay explicit | Mobile uses stacked cards without horizontal overflow |
 | Backend-ish status chips | StatusBadge / safety panels | Raw ResourceSpace status remains separate from portal reuse state | Status text never relies on color alone |
+| First-page-only Library results | LibraryPagination | Count truth now says `Showing X-Y of Z` and query/view/filter state is preserved | Previous/Next buttons have accessible labels and fit 320 px |
 
 ## Open Debt
 
-- Pagination/load more is still the highest-value component-system gap.
 - Review confirmation dialog should be added with focus trap and explicit pending-write copy.
 - Asset detail and review inspector tabs should become maintained components.
 - Upload preview should support drag state and safe thumbnails.

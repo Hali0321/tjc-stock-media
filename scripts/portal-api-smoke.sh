@@ -206,6 +206,14 @@ if (data.assets.length !== 1 || data.counts.rendered !== 1) {
 }
 ' "$BASE_URL/api/assets/search?role=Viewer&limit=-1"
 
+expect_json paginated-search-range '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.assets.length !== 5 || data.pagination?.rangeStart !== 6 || data.pagination?.rangeEnd !== 10 || data.pagination?.previousOffset !== 0 || data.pagination?.nextOffset !== 10) {
+  console.error(`FAIL: pagination range/offset incorrect: ${JSON.stringify(data.pagination)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&limit=5&offset=5"
+
 expect_json approved-rights-unknown-stays-review '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if ((data.counts?.rightsReview || 0) < 1 || (data.metadataHealth?.needsRights || 0) < 1) {
@@ -230,6 +238,24 @@ if (!first?.imageUrls?.card?.includes("role=Reviewer") || !first?.preview?.inclu
   process.exit(1);
 }
 ' "$BASE_URL/api/assets/search?role=Reviewer&view=needs-review&limit=5"
+
+expect_json viewer-payload-hides-original-metadata '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const asset = data.asset;
+const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "originalFilename", "checksumSha256", "fileSizeBytes"].filter((key) => asset && key in asset);
+if (leaked.length) {
+  console.error(`FAIL: Viewer asset payload leaked restricted metadata: ${leaked.join(", ")}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/367?role=Viewer"
+
+expect_json reviewer-payload-keeps-original-metadata '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!data.asset?.sourcePath || !data.asset?.originalFilename || !data.asset?.checksumSha256) {
+  console.error("FAIL: Reviewer asset payload lost audit/source metadata");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/367?role=Reviewer"
 
 expect_json people-unknown-saved-view '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

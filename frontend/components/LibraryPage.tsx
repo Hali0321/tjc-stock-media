@@ -6,10 +6,10 @@ import Link from "next/link";
 import { AssetCard } from "@/components/AssetCard";
 import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { LibraryPagination } from "@/components/LibraryPagination";
 import { SavedViewCard } from "@/components/SavedViewCard";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogSort, SearchResult, StockMediaAsset } from "@/lib/types";
-import { formatResultCount } from "@/lib/display";
 import { assetMetadataHealth } from "@/lib/asset-governance";
 import { cn } from "@/lib/ui";
 
@@ -95,6 +95,7 @@ export function LibraryPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pageOffset, setPageOffset] = useState(0);
   const [batchMessage, setBatchMessage] = useState("");
   const [collectionTitle, setCollectionTitle] = useState("");
   const [collectionAudience, setCollectionAudience] = useState("Internal ministry");
@@ -102,12 +103,12 @@ export function LibraryPage() {
   const [collectionOwner, setCollectionOwner] = useState("Ministry media");
 
   const apiUrl = useMemo(() => {
-    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: "84" });
+    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: "84", offset: String(pageOffset) });
     if (selectedView) params.set("view", selectedView);
     if (selectedCollection) params.set("collection", selectedCollection);
     filters.forEach((filter) => params.append("filter", filter));
     return `/api/assets/search?${params.toString()}`;
-  }, [role, submittedQuery, filters, selectedView, selectedCollection, sort]);
+  }, [role, submittedQuery, filters, selectedView, selectedCollection, sort, pageOffset]);
 
   useEffect(() => {
     if (!ready) return;
@@ -147,6 +148,7 @@ export function LibraryPage() {
       setSelectedCollection("");
       setQuery("");
       setSubmittedQuery("");
+      setPageOffset(0);
       return;
     }
     if (initialCollection) {
@@ -154,12 +156,14 @@ export function LibraryPage() {
       setSelectedCollection(initialCollection);
       setQuery("");
       setSubmittedQuery("");
+      setPageOffset(0);
       return;
     }
     if (initialQuery) {
       setSelectedView("");
       setQuery(initialQuery);
       setSubmittedQuery(initialQuery);
+      setPageOffset(0);
     }
   }, []);
 
@@ -198,11 +202,13 @@ export function LibraryPage() {
     setSelectedCollection("");
     setQuery(nextQuery);
     setSubmittedQuery(nextQuery);
+    setPageOffset(0);
     replaceLibraryViewParam();
   }
 
   function toggleFilter(filter: string) {
     setFilters((current) => (current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]));
+    setPageOffset(0);
   }
 
   function openSavedView(viewId: string) {
@@ -210,6 +216,7 @@ export function LibraryPage() {
     setSelectedCollection("");
     setQuery("");
     setSubmittedQuery("");
+    setPageOffset(0);
     replaceLibraryViewParam(viewId);
   }
 
@@ -219,6 +226,7 @@ export function LibraryPage() {
     setSubmittedQuery("");
     setQuery("");
     setFilters([]);
+    setPageOffset(0);
     replaceLibraryViewParam();
   }
 
@@ -231,6 +239,7 @@ export function LibraryPage() {
     setSelectedCollection(collectionId);
     setQuery(name);
     setSubmittedQuery("");
+    setPageOffset(0);
     replaceLibraryCollectionParam(collectionId);
   }
 
@@ -313,6 +322,7 @@ export function LibraryPage() {
   const activeCollection = result?.collections.find((collection) => collection.id === selectedCollection);
   const hasActiveSearch = Boolean(activeView || activeCollection || submittedQuery || filters.length);
   const visibleAssets = result?.assets || [];
+  const pagination = result?.pagination;
 
   return (
     <div className="dam-shell">
@@ -551,7 +561,13 @@ export function LibraryPage() {
 
             <div className="mb-3 grid gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
-                <strong className="font-semibold text-tjc-ink">{loading ? "Loading results" : formatResultCount(result?.assets.length ?? 0, result?.total ?? 0)}</strong>
+                <strong className="font-semibold text-tjc-ink">
+                  {loading
+                    ? "Loading results"
+                    : pagination && result?.total
+                      ? `Showing ${pagination.rangeStart.toLocaleString()}-${pagination.rangeEnd.toLocaleString()} of ${result.total.toLocaleString()} matching assets`
+                      : "No matching assets"}
+                </strong>
                 <span>Rendered {result?.counts.rendered ?? result?.assets.length ?? 0} / matching {result?.counts.matching ?? result?.total ?? 0} / role-visible {result?.counts.visibleToRole ?? 0}</span>
               </div>
               {activeView ? (
@@ -583,11 +599,35 @@ export function LibraryPage() {
             <section className="mb-3 flex flex-wrap items-center gap-2 text-sm text-tjc-muted" aria-label="Sort results">
               <span className="font-semibold text-tjc-ink">Sort</span>
               {sortOptions.map((option) => (
-                <button type="button" key={option} className={cn("min-h-9 rounded-md border border-tjc-line bg-white px-3 font-semibold text-[#3e4741] transition hover:bg-[#eef7f1] active:translate-y-px", sort === option && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")} onClick={() => setSort(option)} aria-pressed={sort === option}>
+                <button
+                  type="button"
+                  key={option}
+                  className={cn("min-h-9 rounded-md border border-tjc-line bg-white px-3 font-semibold text-[#3e4741] transition hover:bg-[#eef7f1] active:translate-y-px", sort === option && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
+                  onClick={() => {
+                    setSort(option);
+                    setPageOffset(0);
+                  }}
+                  aria-pressed={sort === option}
+                >
                   {option}
                 </button>
               ))}
             </section>
+
+            {pagination ? (
+              <div className="mb-3">
+                <LibraryPagination
+                  rangeStart={pagination.rangeStart}
+                  rangeEnd={pagination.rangeEnd}
+                  total={result?.total ?? 0}
+                  hasPrevious={pagination.hasPrevious}
+                  hasNext={pagination.hasNext}
+                  loading={loading}
+                  onPrevious={() => setPageOffset(pagination.previousOffset)}
+                  onNext={() => setPageOffset(pagination.nextOffset)}
+                />
+              </div>
+            ) : null}
 
             {loading ? <AssetGridSkeleton /> : null}
             {!loading && result?.assets.length === 0 ? (
@@ -612,6 +652,20 @@ export function LibraryPage() {
                 {visibleAssets.map((asset) => <AssetListRow key={asset.id} asset={asset} selected={selectedIds.includes(asset.id)} onToggle={() => toggleSelected(asset.id)} />)}
               </div>
             )}
+            {pagination && result?.total ? (
+              <div className="mt-3">
+                <LibraryPagination
+                  rangeStart={pagination.rangeStart}
+                  rangeEnd={pagination.rangeEnd}
+                  total={result.total}
+                  hasPrevious={pagination.hasPrevious}
+                  hasNext={pagination.hasNext}
+                  loading={loading}
+                  onPrevious={() => setPageOffset(pagination.previousOffset)}
+                  onNext={() => setPageOffset(pagination.nextOffset)}
+                />
+              </div>
+            ) : null}
           </section>
 
           <section id="collections" className="mt-6 scroll-mt-24" aria-label="Featured collections">

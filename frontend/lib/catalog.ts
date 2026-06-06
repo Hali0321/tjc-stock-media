@@ -613,7 +613,8 @@ export async function searchAssets({
   view,
   collection,
   sort,
-  limit = 72
+  limit = 72,
+  offset = 0
 }: {
   role: DemoRole;
   query: string;
@@ -622,9 +623,11 @@ export async function searchAssets({
   collection?: string;
   sort?: string;
   limit?: number;
+  offset?: number;
 }): Promise<SearchResult> {
   const { assets, status } = await getActiveMediaSource();
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 120) : 72;
+  const safeOffset = Number.isFinite(offset) ? Math.max(Math.trunc(offset), 0) : 0;
   const roleVisible = assets.filter((asset) => decideAccess(role, "viewAsset", asset).allowed);
   const intent = !view && !collection ? matchSearchIntent(query) : undefined;
   const selectedViewId = normalizeSavedViewId(view) || intent?.matchedView;
@@ -639,11 +642,24 @@ export async function searchAssets({
   const sorted = sortCatalogAssets(visible, sort);
 
   const counts = countAssetGovernance(roleVisible);
-  const rendered = sorted.slice(0, safeLimit).length;
+  const pagedAssets = sorted.slice(safeOffset, safeOffset + safeLimit);
+  const rendered = pagedAssets.length;
+  const rangeStart = sorted.length && rendered ? safeOffset + 1 : 0;
+  const rangeEnd = sorted.length && rendered ? safeOffset + rendered : 0;
 
   return {
-    assets: sorted.slice(0, safeLimit).map((asset) => assetWithRoleImageUrls(asset, role)),
+    assets: pagedAssets.map((asset) => assetWithRoleImageUrls(asset, role)),
     total: sorted.length,
+    pagination: {
+      offset: safeOffset,
+      limit: safeLimit,
+      rangeStart,
+      rangeEnd,
+      hasPrevious: safeOffset > 0,
+      hasNext: safeOffset + rendered < sorted.length,
+      previousOffset: Math.max(safeOffset - safeLimit, 0),
+      nextOffset: safeOffset + safeLimit
+    },
     source: status,
     counts: {
       ...counts,

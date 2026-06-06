@@ -24,6 +24,7 @@ The community library exposes many useful and many unsuitable categories. Review
 | Review cockpit rows | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Compact queue tabs, rows, blocker text, audit preview | Mobile switches to compact cards; no horizontal overflow | `frontend/components/ReviewPage.tsx` |
 | Status badges and banners | Implemented | Inconsistent chips and backend wording | Safety status must be clear and role-aware | Text plus color, muted warning/danger palette | Essential blockers never tooltip-only | `frontend/components/StatusBadge.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/AssetTrustPanel.tsx` |
 | Skeleton loaders | Implemented | Generic loading blocks | Loading should match final DAM surfaces | Calm shimmer and stable dimensions | `prefers-reduced-motion` disables animation | `frontend/app/globals.css`, page/component loading states |
+| Pagination | Implemented | First-page-only browsing | Large DAM search needs truthful ranges and preserved query/view/filter state | Compact operational nav with `Showing X-Y of Z`, disabled states, evergreen focus | Controls must stay reachable at 320 px and never imply infinite scroll | `frontend/components/LibraryPagination.tsx`, `frontend/components/LibraryPage.tsx`, `frontend/app/api/assets/search/route.ts` |
 
 ## Selected For Future Replacement
 
@@ -32,7 +33,6 @@ The community library exposes many useful and many unsuitable categories. Review
 | Maintained asset detail tabs | Defer | Chip-heavy detail sections | Current detail is safe and usable; tabs should be added in a focused accessibility pass with keyboard semantics. |
 | Maintained review inspector tabs | Defer | Dense inspector sections | Review logic is stable; tab extraction should not disturb evidence requirements or pending-write truth. |
 | Dialog/modals for review/download decisions | Defer | Inline confirmation/decision surfaces | Useful, but must add focus trap, escape handling, and honest ResourceSpace-write copy. |
-| Pagination/load more | Defer | Current first-page API cap | Important for large library browsing; needs API query-state preservation and count truth updates. |
 | Dropdown action menus | Defer | Secondary asset/collection/review actions | Do not hide critical safety status; implement only for secondary copy/open actions. |
 
 ## Rejected Patterns
@@ -77,7 +77,6 @@ Safety requirements before implementation:
 
 ## Remaining Component Debt
 
-- Add first-class `LibraryPagination` with `Showing X-Y of Z`, query preservation, and accessible controls.
 - Extract `FileUploadPanel` for drag/drop and image thumbnails once backend upload mode is clearer.
 - Extract `ReviewActionDialog` and `DownloadOptionsDialog` with focus trap and no fake ResourceSpace persistence.
 - Extract `AssetDetailTabs` and `ReviewInspectorTabs` with keyboard support.
