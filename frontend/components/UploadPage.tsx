@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldAlert, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
+import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
+import { UploadFileDropzone } from "@/components/UploadFileDropzone";
 import { canUpload } from "@/lib/permissions";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
@@ -20,12 +21,6 @@ const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
 
-function formatBytes(value: number) {
-  if (value >= 1024 * 1024 * 1024) return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
-}
-
 export function UploadPage() {
   const { role, ready } = useDemoRole();
   const [message, setMessage] = useState("");
@@ -42,6 +37,8 @@ export function UploadPage() {
     setMessage("");
     setReceipt(null);
     const form = new FormData(event.currentTarget);
+    form.delete("files");
+    selectedFiles.forEach((file) => form.append("files", file));
     form.set("role", role);
     const response = await fetch("/api/upload", { method: "POST", body: form });
     const body = await response.json();
@@ -57,11 +54,22 @@ export function UploadPage() {
   }
 
   function syncFileInput(nextFiles: File[]) {
-    if (!fileInputRef.current) return;
-    const transfer = new DataTransfer();
-    nextFiles.forEach((file) => transfer.items.add(file));
-    fileInputRef.current.files = transfer.files;
-    checkFiles(transfer.files);
+    if (fileInputRef.current && typeof DataTransfer !== "undefined") {
+      try {
+        const transfer = new DataTransfer();
+        nextFiles.forEach((file) => transfer.items.add(file));
+        fileInputRef.current.files = transfer.files;
+      } catch {
+        fileInputRef.current.value = "";
+      }
+    }
+    setSelectedFiles(nextFiles);
+    const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
+    setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+  }
+
+  function addDroppedFiles(files: File[]) {
+    syncFileInput([...selectedFiles, ...files]);
   }
 
   function removeFile(index: number) {
@@ -207,38 +215,14 @@ export function UploadPage() {
             <h2 className="text-base font-semibold">3. Files and tags</h2>
             <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
-          <label className={labelClass}>
-            Files
-            <input ref={fileInputRef} className="min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 py-2 text-sm font-medium file:mr-3 file:rounded-md file:border-0 file:bg-[#eef7f1] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-tjc-evergreen" name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
-          </label>
-          {selectedFiles.length ? (
-            <section className="mt-3 rounded-md border border-tjc-line bg-[#fbfcfa] p-3" aria-label="Selected file preview">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-tjc-ink">{selectedFiles.length} selected file{selectedFiles.length === 1 ? "" : "s"}</h3>
-                <button className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={clearFiles}>
-                  <Trash2 size={13} strokeWidth={1.8} aria-hidden="true" />
-                  Clear files
-                </button>
-              </div>
-              <div className="mt-2 grid gap-2">
-                {selectedFiles.map((file, index) => {
-                  const tooLarge = file.size > LARGE_MEDIA_BYTES;
-                  return (
-                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 py-2" key={`${file.name}-${file.size}-${index}`}>
-                      {tooLarge ? <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" /> : <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />}
-                      <span className="min-w-0">
-                        <strong className="block truncate text-xs font-semibold text-tjc-ink">{file.name}</strong>
-                        <span className="mt-0.5 block text-[11px] font-medium text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
-                      </span>
-                      <button className="grid h-8 w-8 place-items-center rounded-md text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={() => removeFile(index)} aria-label={`Remove ${file.name}`}>
-                        <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ) : null}
+          <UploadFileDropzone
+            inputRef={fileInputRef}
+            selectedFiles={selectedFiles}
+            onInputFiles={checkFiles}
+            onDropFiles={addDroppedFiles}
+            onRemove={removeFile}
+            onClear={clearFiles}
+          />
           <label className={`${labelClass} mt-4`}>
             Existing Google / ResourceSpace link
             <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
@@ -251,7 +235,7 @@ export function UploadPage() {
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
             <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
-          {largeWarning ? <div className="mt-4 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{largeWarning}</div> : null}
+          {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
           <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-tjc-line bg-[#f6faf7] p-3">
             <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <div>

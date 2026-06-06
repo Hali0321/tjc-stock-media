@@ -94,5 +94,5 @@ Future implementation requirements:
 
 ## Open Debt
 
-- Upload preview should support drag state and safe thumbnails.
+- Upload preview now supports drop/browse drag state; safe thumbnails remain deferred until real upload backend and preview policy are wired.
 - Download-options dialog remains deferred until derivative choices are richer; request-original/review/help dialogs are implemented.

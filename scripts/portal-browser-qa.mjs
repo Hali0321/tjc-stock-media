@@ -182,6 +182,16 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
+  if ((await page.getByText("Drop files here or browse").count()) < 1) failures.push("upload file dropzone: drop/browse affordance missing");
+  await page.getByText("Drop files here or browse").evaluate((node) => {
+    const label = node.closest("label");
+    if (!label) throw new Error("upload dropzone label missing");
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], "qa-drop.jpg", { type: "image/jpeg" }));
+    label.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+  });
+  if ((await page.getByLabel("Selected file preview").getByText("qa-drop.jpg").count()) < 1) failures.push("upload file dropzone: dropped file missing from preview");
+  await page.getByRole("button", { name: "Clear files" }).click();
   await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }]);
   if ((await page.getByLabel("Selected file preview").getByText("qa-photo.jpg").count()) < 1) failures.push("upload file preview: selected file missing");
   await page.getByRole("button", { name: "Clear files" }).click();
@@ -201,6 +211,16 @@ for (const width of qaViewports) {
   await page.getByRole("button", { name: "Submit intake" }).click();
   await page.waitForSelector("text=Intake received");
   if ((await page.getByText("Needs Review / Do Not Publish").count()) < 1) failures.push("upload contributor receipt: default review state missing");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Contributor", 320, 900);
+  await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
+  await page.getByLabel("Files").setInputFiles([{ name: "qa-mobile-photo-with-a-long-name.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }]);
+  if ((await page.getByLabel("Selected file preview").getByText("qa-mobile-photo-with-a-long-name.jpg").count()) < 1) failures.push("upload mobile file preview: selected file missing");
+  const mobileUploadOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+  if (mobileUploadOverflow) failures.push("upload mobile file preview: horizontal overflow after file selection");
   await context.close();
 }
 
