@@ -5,6 +5,7 @@ import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud
 import { InputWithTags } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { UploadFileDropzone } from "@/components/UploadFileDropzone";
+import { UploadIntakePacket } from "@/components/UploadIntakePacket";
 import { canUpload } from "@/lib/permissions";
 import { uploadTagSuggestions } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
@@ -259,20 +260,9 @@ export function UploadPage() {
           </div>
         </section>
 
-        <section className="dam-contact-sheet p-4 xl:col-span-3" aria-label="Ready to submit checklist">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-black">Reviewer handoff checklist</h2>
-              <p className="mt-1 text-sm font-semibold text-tjc-muted">Submission is stronger when every required evidence field is filled before intake.</p>
-            </div>
-            <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-3 py-2 text-xs font-semibold text-[#725216]">Status after submit: Needs Review / Do Not Publish</span>
-          </div>
-          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            {["Context present", "Source named", "People/minors answered", "Rights/restrictions noted"].map((item) => (
-              <span className="rounded-xl border border-tjc-line bg-white px-3 py-2 font-semibold text-[#4d554d]" key={item}>{item}</span>
-            ))}
-          </div>
-        </section>
+        <div className="xl:col-span-3">
+          <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} largeWarning={largeWarning} />
+        </div>
 
         <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 dam-button-primary px-5 text-base font-semibold transition active:translate-y-px xl:col-span-3" type="submit">
           <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />

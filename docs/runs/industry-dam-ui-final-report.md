@@ -48,7 +48,7 @@ Preserved constraints:
 | Library | Dashboard/card-wall hybrid | DAM command center with saved views, filters, pagination, count truth, dense contact sheet, and quick preview dialog | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/AssetQuickLookDialog.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/DisplayCard.tsx`, `frontend/components/LibraryPagination.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png`, `docs/screenshots/library-mobile-390.png`, `docs/screenshots/qa/library-quick-preview-desktop.png`, `docs/screenshots/qa/library-quick-preview-mobile-320.png` |
 | Collections | Generic cards | Album shelves with collection context and approval summaries | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx` | `docs/screenshots/collections-desktop.png` |
 | Asset Detail | Chip-heavy metadata dump | Split trust workspace with preview, “Can I use this?”, governance passport, reuse options, and tabs | `frontend/components/AssetDetailPage.tsx`, `frontend/components/AssetTrustPanel.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/asset-detail-desktop.png`, `docs/screenshots/detail-mobile-320.png`, `docs/screenshots/detail-mobile-390.png` |
-| Upload | Plain form | Contributor intake workflow with selected-file preview, tag input, evidence fields, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png` |
+| Upload | Plain form | Contributor intake workflow with selected-file preview, tag input, evidence fields, reviewer packet, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/UploadIntakePacket.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png`, `docs/screenshots/qa/upload-intake-packet-desktop.png`, `docs/screenshots/qa/upload-intake-packet-mobile-320.png` |
 | Review | Long generated list | Governance cockpit with visual triage board, media-led queue cards, queue tabs, sticky inspector, tabs, evidence checklist, dialog, and hold actions | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/review-desktop.png`, `docs/screenshots/review-mobile-320.png`, `docs/screenshots/review-mobile-390.png`, `docs/screenshots/qa/after-review-industry-pass-desktop.png`, `docs/screenshots/qa/after-review-industry-pass-mobile-320.png` |
 | Admin | Generic readiness page | Serious production readiness dashboard with blockers, field mapping coverage, and public portal gate | `frontend/components/AdminPage.tsx`, `frontend/components/StatusBanner.tsx` | `docs/screenshots/admin-desktop.png` |
 | Guide | Long stacked text | Cleaner operational guide with mobile-readable Do/Avoid blocks | `frontend/components/GuidePage.tsx` | `docs/screenshots/guide-desktop.png`, `docs/screenshots/guide-mobile-320.png` |
@@ -65,7 +65,7 @@ Preserved constraints:
 | Apple Tahoe Liquid Glass Button | Deferred | Too platform-specific; no production component |
 | Tabs | Implemented | `frontend/components/DamTabs.tsx`; Asset Detail and Review inspector; browser QA checks `aria-controls` targets |
 | Dialog | Implemented | `AssetQuickLookDialog`, `ReviewActionDialog`, `ReuseRequestDialog`; interaction screenshots for quick preview, request-original, and pending-write dialogs |
-| Image Upload Preview | Implemented | `UploadFileDropzone`; `docs/screenshots/qa/upload-selected-file-preview.png` |
+| Image Upload Preview | Implemented | `UploadFileDropzone`, `UploadIntakePacket`; `docs/screenshots/qa/upload-selected-file-preview.png`, `docs/screenshots/qa/upload-intake-packet-desktop.png` |
 | Input With Tags | Implemented | `InputWithTags`, `upload-tags`, `taxonomy`; non-canonical terms rejected by browser/API QA |
 | Pagination / Load More | Implemented | `LibraryPagination`; Review load-more gate; browser/API QA verifies ranges and queue behavior |
 | Dropdown Menu | Implemented | `DropdownActionMenu`, `AssetActionsMenu`; `docs/screenshots/qa/asset-actions-menu-open.png` |
@@ -95,10 +95,10 @@ Full component inventory: `docs/ui-system/component-inventory.md`.
 
 ### Upload Desktop
 
-- Improved: now reads as a guided intake workflow with selected-file preview, context, people/rights, tags, large-media handoff, and review-state framing.
+- Improved: now reads as a guided intake workflow with selected-file preview, context, people/rights, tags, reviewer packet, large-media handoff, and review-state framing.
 - Still weaker: desktop is still form-heavy by nature.
 - Acceptable for Tuesday demo: yes.
-- Remaining fix made: selected-file preview and Needs Review receipt verified.
+- Remaining fix made: added `UploadIntakePacket`; verified selected-file preview, `Needs Review / Do Not Publish`, and ResourceSpace write-mapping honesty at 1440 and 320 px.
 
 ### Review Desktop
 

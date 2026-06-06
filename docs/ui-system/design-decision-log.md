@@ -127,6 +127,32 @@ Verification:
 - Blocked Viewer quick preview had zero active download links.
 - `portal-api-smoke` and full `portal-browser-qa` passed after the change.
 
+## 2026-06-06 - Upload Reviewer Packet
+
+Decision: replace the static upload handoff checklist with a live reviewer packet summary so Upload feels like a serious DAM intake workflow instead of a plain form.
+
+Replacement:
+
+| Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
+|---|---|---|---|
+| Static four-item handoff checklist | `UploadIntakePacket` | Shows `Needs Review / Do Not Publish`, no-approval copy, and ResourceSpace write-mapping honesty before submit | Evidence cards stack cleanly at 320 px; no clipped controls or horizontal overflow |
+| File/tag context split across form controls only | Selected file and tag packet summary | Reinforces that tags are suggested taxonomy terms and files are intake evidence, not approved media | Summary remains text-first and does not depend on color alone |
+
+Code paths:
+
+- `frontend/components/UploadIntakePacket.tsx`
+- `frontend/components/UploadPage.tsx`
+
+Screenshot proof:
+
+- `docs/screenshots/qa/upload-intake-packet-desktop.png`
+- `docs/screenshots/qa/upload-intake-packet-mobile-320.png`
+
+Verification:
+
+- Browser proof confirmed packet, selected-file preview, `Needs Review / Do Not Publish`, and ResourceSpace write-mapping honesty at 1440 and 320 px.
+- `portal-api-smoke` and full `portal-browser-qa` passed after the change.
+
 ## 2026-06-06 - Review Cockpit Industry Pass
 
 Decision: replace the weakest remaining Review surface with a more visible media-review cockpit rather than adding more generic cards.
