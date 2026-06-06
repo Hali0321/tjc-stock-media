@@ -15,6 +15,7 @@ This report records the final evidence for the 21st.dev-inspired visual rebuild 
 | Safety checkpoint before broad visual refactor | `0ec41407cfaa015fcd0adfd9d233956d25b10097` |
 | Visual rebuild commit | `ab40d55984270150e7206ee29425435854de975d` |
 | Final report commit | `31ec627b917439ea56e9e61e2c3bc937cf022c6a` |
+| Collections album shelf pass | `074d844` |
 | Current status before final report edit | Clean after `ab40d55` |
 
 ## Scope Preserved
