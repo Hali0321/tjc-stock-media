@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Download, Lock, ShieldAlert } from "lucide-react";
+import { Download, Eye, Lock, ShieldAlert } from "lucide-react";
+import { AssetQuickLookDialog } from "@/components/AssetQuickLookDialog";
 import { MediaPreview } from "@/components/MediaPreview";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { assetPresentation, provenanceSummary } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
 
 export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
+  const [quickLookOpen, setQuickLookOpen] = useState(false);
   const display = assetPresentation(asset, role);
   const canDownload = display.download.approvedCopy.allowed;
   const source = provenanceSummary(asset, role);
@@ -22,15 +25,17 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
 
   return (
     <article className="group overflow-hidden rounded-[1rem] border border-[#becbc2] bg-[#111a17] shadow-[0_1px_0_rgba(255,255,255,.14)_inset,0_18px_52px_rgba(25,34,29,.12)] transition duration-200 hover:-translate-y-0.5 hover:border-[#7ca792] hover:shadow-[0_26px_70px_rgba(25,34,29,.2)]">
-      <Link href={`/assets/${asset.id}`} className="relative block aspect-[4/3] overflow-hidden bg-[#19231f]" aria-label={`Open ${display.title}`}>
-        <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(0,0,0,0)_44%,rgba(7,16,13,.72)),linear-gradient(135deg,rgba(255,255,255,.06),transparent_38%,rgba(6,63,57,.16))]" aria-hidden="true" />
-        <MediaPreview
-          src={display.image}
-          alt={asset.thumbnailAlt}
-          label={previewLabel}
-          detail={previewDetail}
-          imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]"
-        />
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#19231f]">
+        <Link href={`/assets/${asset.id}`} className="absolute inset-0 block" aria-label={`Open ${display.title}`}>
+          <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(0,0,0,0)_44%,rgba(7,16,13,.72)),linear-gradient(135deg,rgba(255,255,255,.06),transparent_38%,rgba(6,63,57,.16))]" aria-hidden="true" />
+          <MediaPreview
+            src={display.image}
+            alt={asset.thumbnailAlt}
+            label={previewLabel}
+            detail={previewDetail}
+            imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]"
+          />
+        </Link>
         <span className={cn(
           "absolute left-2 top-2 z-[2] max-w-[calc(100%-1rem)] rounded-full border px-2.5 py-1 text-[10px] font-black uppercase leading-none shadow-[0_10px_24px_rgba(7,16,13,.22)] backdrop-blur",
           canDownload && !hasWarnings ? "border-[#b7dfc8] bg-[#effbf3]/95 text-[#1f5d3b]" : "border-[#f0cf7d] bg-[#fff2cb]/95 text-[#704707]"
@@ -43,7 +48,17 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
             gated preview
           </span>
         ) : null}
-      </Link>
+        <button
+          className="absolute bottom-2 right-2 z-[2] inline-flex min-h-8 items-center gap-1.5 rounded-full border border-white/18 bg-[#111a17]/82 px-2.5 text-[11px] font-black text-white shadow-[0_12px_28px_rgba(7,16,13,.32)] backdrop-blur transition hover:bg-[#f2fff7] hover:text-tjc-evergreen focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px"
+          type="button"
+          onClick={() => setQuickLookOpen(true)}
+          aria-haspopup="dialog"
+          aria-label={`Quick preview ${display.title}`}
+        >
+          <Eye size={13} strokeWidth={1.9} aria-hidden="true" />
+          Preview
+        </button>
+      </div>
       <div className="grid gap-2.5 border-t border-white/10 bg-[linear-gradient(180deg,#17211d,#111a17)] p-3 text-white">
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="min-w-0">
@@ -70,6 +85,7 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
           <span className="block">{asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : "ResourceSpace export"}</span>
         </div>
       </div>
+      <AssetQuickLookDialog asset={asset} role={role} open={quickLookOpen} onClose={() => setQuickLookOpen(false)} />
     </article>
   );
 }

@@ -100,6 +100,33 @@ Future implementation requirements:
 - Upload preview now supports drop/browse drag state; safe thumbnails remain deferred until real upload backend and preview policy are wired.
 - Download-options dialog remains deferred until derivative choices are richer; request-original/review/help dialogs are implemented.
 
+## 2026-06-06 - Library Quick Preview Dialog
+
+Decision: add a real Library quick preview dialog so the main contact sheet has visible 21st.dev-style dialog interaction, not only route navigation.
+
+Replacement:
+
+| Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
+|---|---|---|---|
+| Asset cards only opened full detail route | `AssetQuickLookDialog` | Uses the same role-aware preview and download decisions as detail; blocked Viewer assets show no active `/api/download` link | Focus trap, Escape/outside close, return focus, no clipped controls at 320 px |
+| Contact sheet hid trust context until detail page | Quick preview governance pane | Shows raw status, usage scope, reuse state, blockers, source, review line, and metadata confidence without changing ResourceSpace truth | Dialog scrolls internally on mobile and keeps the page from horizontal overflow |
+
+Code paths:
+
+- `frontend/components/AssetQuickLookDialog.tsx`
+- `frontend/components/AssetCard.tsx`
+
+Screenshot proof:
+
+- `docs/screenshots/qa/library-quick-preview-desktop.png`
+- `docs/screenshots/qa/library-quick-preview-mobile-320.png`
+
+Verification:
+
+- Browser proof confirmed quick preview opens at 1440 and 320 px.
+- Blocked Viewer quick preview had zero active download links.
+- `portal-api-smoke` and full `portal-browser-qa` passed after the change.
+
 ## 2026-06-06 - Review Cockpit Industry Pass
 
 Decision: replace the weakest remaining Review surface with a more visible media-review cockpit rather than adding more generic cards.

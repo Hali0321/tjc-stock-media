@@ -45,7 +45,7 @@ Preserved constraints:
 | Area | Old weak pattern | New reference-inspired pattern | Code paths | Screenshot evidence |
 |---|---|---|---|---|
 | App chrome / nav | Basic bordered route strip | Restrained Tubelight-style workflow nav plus utility command/guide/admin controls | `frontend/components/AppChrome.tsx`, `frontend/components/AppNav.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png` |
-| Library | Dashboard/card-wall hybrid | DAM command center with saved views, filters, pagination, count truth, and dense contact sheet | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/DisplayCard.tsx`, `frontend/components/LibraryPagination.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png`, `docs/screenshots/library-mobile-390.png` |
+| Library | Dashboard/card-wall hybrid | DAM command center with saved views, filters, pagination, count truth, dense contact sheet, and quick preview dialog | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/AssetQuickLookDialog.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/DisplayCard.tsx`, `frontend/components/LibraryPagination.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png`, `docs/screenshots/library-mobile-390.png`, `docs/screenshots/qa/library-quick-preview-desktop.png`, `docs/screenshots/qa/library-quick-preview-mobile-320.png` |
 | Collections | Generic cards | Album shelves with collection context and approval summaries | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx` | `docs/screenshots/collections-desktop.png` |
 | Asset Detail | Chip-heavy metadata dump | Split trust workspace with preview, “Can I use this?”, governance passport, reuse options, and tabs | `frontend/components/AssetDetailPage.tsx`, `frontend/components/AssetTrustPanel.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/asset-detail-desktop.png`, `docs/screenshots/detail-mobile-320.png`, `docs/screenshots/detail-mobile-390.png` |
 | Upload | Plain form | Contributor intake workflow with selected-file preview, tag input, evidence fields, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png` |
@@ -64,7 +64,7 @@ Preserved constraints:
 | Liquid Glass Button | Partial inspiration only | Primary action depth in CSS and workflow buttons; no glass over safety labels |
 | Apple Tahoe Liquid Glass Button | Deferred | Too platform-specific; no production component |
 | Tabs | Implemented | `frontend/components/DamTabs.tsx`; Asset Detail and Review inspector; browser QA checks `aria-controls` targets |
-| Dialog | Implemented | `ReviewActionDialog`, `ReuseRequestDialog`; interaction screenshots for request-original and pending-write dialogs |
+| Dialog | Implemented | `AssetQuickLookDialog`, `ReviewActionDialog`, `ReuseRequestDialog`; interaction screenshots for quick preview, request-original, and pending-write dialogs |
 | Image Upload Preview | Implemented | `UploadFileDropzone`; `docs/screenshots/qa/upload-selected-file-preview.png` |
 | Input With Tags | Implemented | `InputWithTags`, `upload-tags`, `taxonomy`; non-canonical terms rejected by browser/API QA |
 | Pagination / Load More | Implemented | `LibraryPagination`; Review load-more gate; browser/API QA verifies ranges and queue behavior |
@@ -84,7 +84,7 @@ Full component inventory: `docs/ui-system/component-inventory.md`.
 - Improved: changed from unstyled/repetitive admin layout into dense DAM contact sheet with saved views, filters, count truth, overlays, and intentional restricted states.
 - Still weaker: many demo assets remain placeholder/restricted because real derivatives are incomplete.
 - Acceptable for Tuesday demo: yes.
-- Remaining fix made: refreshed browser QA and preserved no-preview states as intentional policy states.
+- Remaining fix made: added `AssetQuickLookDialog` for contact-sheet inspection; blocked Viewer quick preview has zero active download links.
 
 ### Asset Detail Desktop
 
