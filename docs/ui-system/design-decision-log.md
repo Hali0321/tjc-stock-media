@@ -27,6 +27,7 @@ Accepted patterns:
 - File upload preview for contributor confidence.
 - Review cockpit row/list pattern for governance.
 - Accessible tabs for Asset Detail trust sections and Review inspector sections.
+- Request dialogs for original access, review request, and media coworker help.
 - Badges/banners/tooltips for safety clarity, with essential warnings visible in primary UI.
 - Skeleton loaders that match final layout.
 
@@ -84,6 +85,7 @@ Future implementation requirements:
 | Soft review cards | Review cockpit rows + inspector | Evidence and pending-write state stay explicit | Mobile uses stacked cards without horizontal overflow |
 | One long review inspector list | Shared `DamTabs` inspector panels | Checklist, metadata, rights, history, and pending writes remain explicit without burying action evidence | Real tab semantics, arrow-key movement, and horizontal mobile scroll |
 | Asset detail `aria-pressed` section buttons | Shared `DamTabs` detail panels | Use, Source, Review, Files, and Related stay separated as trust record sections | Real tab semantics and keyboard movement replace loose buttons |
+| Direct request `mailto:` links | Focused `ReuseRequestDialog` | Original/master access and review requests clearly do not change ResourceSpace status or pending writes | Focus-trapped dialog, Escape/cancel, and explicit email-draft action |
 | Backend-ish status chips | StatusBadge / safety panels | Raw ResourceSpace status remains separate from portal reuse state | Status text never relies on color alone |
 | First-page-only Library results | LibraryPagination | Count truth now says `Showing X-Y of Z` and query/view/filter state is preserved | Previous/Next buttons have accessible labels and fit 320 px |
 | Immediate review action POST | ReviewActionDialog confirmation | Reviewers must see pending-write, not-final-ResourceSpace semantics before queueing | Focus trap, Escape/cancel, and initial confirm focus are implemented |
@@ -91,4 +93,4 @@ Future implementation requirements:
 ## Open Debt
 
 - Upload preview should support drag state and safe thumbnails.
-- Download/request-original dialogs should be added with focus trap and no fake ResourceSpace persistence.
+- Download-options dialog remains deferred until derivative choices are richer; request-original/review/help dialogs are implemented.

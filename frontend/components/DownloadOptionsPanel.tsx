@@ -1,15 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { Download, FileLock2, Image as ImageIcon, Mail, Square, View } from "lucide-react";
+import { ReuseRequestDialog } from "@/components/ReuseRequestDialog";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
 import { downloadState } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
 
+type RequestKind = "original" | "review" | "coworker";
+
 export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
+  const [requestKind, setRequestKind] = useState<RequestKind | null>(null);
   const state = downloadState(asset, role);
   const health = assetMetadataHealth(asset);
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
+  const assetTitle = asset.title || asset.resourceSpaceId || asset.id;
+  const resourceSpaceId = asset.resourceSpaceId || asset.id;
+  const requestLinks: Record<RequestKind, string> = {
+    original: `mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(assetTitle)}&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0ARequest:%20Original/master access%0AReason:%20`,
+    review: `mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(assetTitle)}&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0ARaw status: ${encodeURIComponent(asset.status)}%0APortal state: ${encodeURIComponent(state.reuse.label)}%0AReason:%20`,
+    coworker: `mailto:media@tjc.org?subject=TJC Stock Media asset question&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0AAsset: ${encodeURIComponent(assetTitle)}%0AQuestion:%20`
+  };
   const options = [
     { label: "Web image", detail: "Good for website articles and newsletters.", icon: ImageIcon, available: state.approvedCopy.allowed },
     { label: "Slide / presentation", detail: "Dedicated slide derivative can be configured. Current approved copy is available.", icon: View, available: false },
@@ -66,19 +78,32 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
         </div>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-        <a className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(asset.title)}`}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request original access
-        </a>
-        <a className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(asset.title)}&body=ResourceSpace ID: ${encodeURIComponent(asset.resourceSpaceId || asset.id)}%0AReason:%20`}>
+        </button>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request review
-        </a>
-        <a className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="mailto:media@tjc.org?subject=TJC Stock Media asset question">
+        </button>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Ask media coworker
-        </a>
+        </button>
       </div>
+      {requestKind ? (
+        <ReuseRequestDialog
+          open={Boolean(requestKind)}
+          kind={requestKind}
+          assetTitle={assetTitle}
+          resourceSpaceId={resourceSpaceId}
+          rawStatus={asset.status}
+          portalReuseState={state.reuse.label}
+          blockers={state.reuse.blockers.map((blocker) => blocker.label)}
+          mailtoHref={requestLinks[requestKind]}
+          onCancel={() => setRequestKind(null)}
+        />
+      ) : null}
     </section>
   );
 }

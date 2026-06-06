@@ -35,12 +35,12 @@ The community library exposes many useful and many unsuitable categories. Review
 | Pagination | Implemented | First-page-only browsing | Large DAM search needs truthful ranges and preserved query/view/filter state | Compact operational nav with `Showing X-Y of Z`, disabled states, evergreen focus | Controls must stay reachable at 320 px and never imply infinite scroll | `frontend/components/LibraryPagination.tsx`, `frontend/components/LibraryPage.tsx`, `frontend/app/api/assets/search/route.ts` |
 | Review confirmation dialog | Implemented | Immediate review action POST after checklist | Reviewer must explicitly confirm pending-write semantics before queueing action | Focus-trapped dialog, pending-not-final copy, no decorative glass | Escape/cancel available; confirmation button gets initial focus | `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReviewPage.tsx` |
 | Accessible DAM tabs | Implemented | Chip-style tab buttons and one long review inspector list | Asset Detail and Review need focused task panels without hiding safety facts | Shared evergreen segmented tabs, real `tablist`/`tab`/`tabpanel`, arrow-key roving focus | Horizontal scroll at 320 px, selected state uses text and border/background | `frontend/components/DamTabs.tsx`, `frontend/components/AssetDetailPage.tsx`, `frontend/components/ReviewPage.tsx` |
+| Request dialogs | Implemented | Raw `mailto:` links for original/review/help requests | Users should see original-access and review-request implications before leaving the portal | Focus-trapped white dialog, explicit no-fake-persistence copy, email draft only | Escape/cancel available; does not change ResourceSpace or pending writes | `frontend/components/ReuseRequestDialog.tsx`, `frontend/components/DownloadOptionsPanel.tsx` |
 
 ## Selected For Future Replacement
 
 | Pattern | Status | Replacement target | Why deferred |
 |---|---|---|---|
-| Download/request dialogs | Defer | Inline download/request surfaces | Review confirmation exists; download/request original dialogs still need focus trap and safety copy. |
 | Dropdown action menus | Defer | Secondary asset/collection/review actions | Do not hide critical safety status; implement only for secondary copy/open actions. |
 
 ## Rejected Patterns
@@ -86,6 +86,6 @@ Safety requirements before implementation:
 ## Remaining Component Debt
 
 - Extract `FileUploadPanel` for drag/drop and image thumbnails once backend upload mode is clearer.
-- Add `DownloadOptionsDialog` / request-original dialog with focus trap and no fake ResourceSpace persistence.
+- Add a dedicated download-options dialog only if approved derivative choices become richer; request dialogs are now implemented.
 - Consider extracting richer `AssetDetailTabs` / `ReviewInspectorTabs` panel composition if the panels keep growing; base tab behavior now lives in `DamTabs`.
 - Keep component styling unified; reject any imported 21st.dev component that cannot be fully restyled into the TJC DAM system.

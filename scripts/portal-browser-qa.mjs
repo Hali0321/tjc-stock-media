@@ -231,6 +231,11 @@ for (const width of qaViewports) {
   if ((await page.getByText("Original filename").count()) < 1) failures.push("asset detail tabs: Files panel missing original filename row");
   await page.getByRole("tab", { name: "Files", exact: true }).press("ArrowRight");
   if ((await page.getByRole("heading", { name: "Related", exact: true }).count()) < 1) failures.push("asset detail tabs: ArrowRight did not open Related panel");
+  await page.getByRole("button", { name: "Request original access", exact: true }).click();
+  if ((await page.getByRole("dialog", { name: "Request original access" }).count()) < 1) failures.push("request original dialog: dialog did not open");
+  if ((await page.getByText("This request does not grant access automatically.").count()) < 1) failures.push("request original dialog: safety copy missing");
+  if ((await page.getByText("ResourceSpace status, portal reuse state, and pending review writes do not change here.").count()) < 1) failures.push("request original dialog: no-fake-persistence copy missing");
+  await page.getByRole("button", { name: "Close request dialog" }).click();
   await context.close();
 }
 
