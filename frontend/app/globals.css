@@ -4,7 +4,7 @@
 @source "../lib";
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-tjc-ink: #20221f;
   --color-tjc-muted: #687068;
@@ -37,7 +37,7 @@ body {
   overflow-x: hidden;
   background: #f7f8f6;
   color: #20221f;
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -158,6 +158,14 @@ textarea:focus-visible {
 
 .dam-focus-row {
   min-height: 2.75rem;
+}
+
+.tubelight-nav {
+  scrollbar-width: none;
+}
+
+.tubelight-nav::-webkit-scrollbar {
+  display: none;
 }
 
 @media (min-width: 768px) {

@@ -236,17 +236,20 @@ Current search and collection behavior:
 Current UI and workflow notes:
 
 - Primary navigation is `Library`, `Collections`, `Upload`, and `Review`; `Guide` moved to utility/footer access.
-- The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Geist via `next/font/google`, and existing `lucide-react` icons.
+- Navigation now uses a maintained `AppNav` component with a restrained Tubelight-inspired active surface for the four primary workflows; command palette, Guide, ResourceSpace, and Admin links remain utility/role-aware.
+- `Cmd/Ctrl+K` opens a command palette for library search, saved DAM views, collection jumps, review queues, ResourceSpace ID lookup, upload intake, guide, and admin diagnostics.
+- The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Inter + Noto Sans TC via `next/font/google`, and existing `lucide-react` icons.
 - Review includes isolated GSAP motion for desktop reviewer workflow only; reduced-motion disables the pin/scale effects.
 - Library is now a DAM command workspace, not a hero page: compact search, use-case buttons, source/safety strip, operational saved views, compact collection rail, filters, and real asset results high on the page.
 - Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
 - Assets without exported preview derivatives show honest `Preview pending` or `Preview unavailable` states instead of broken thumbnails. This is a ResourceSpace/export readiness signal, not fake media.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
-- Upload is a guided contributor intake with required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
+- Upload is a guided contributor intake with selected-file preview, type/size display, remove/clear controls, required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
 - Review is a role-gated workbench with queue tabs, selected-asset inspector, required checklist, audit preview, and pending write result copy.
 - `/admin` is DAM Admin-only and shows current data source, API read/write readiness, required field refs, pending write queue, role matrix, and production blockers.
 - Safe-download logic uses the portal reuse policy, not raw ResourceSpace approval alone.
+- Theme toggle is deferred until dark-mode safety labels and contrast can be fully designed and verified.
 
 User-facing approval labels are warmer than backend values:
 
@@ -257,7 +260,7 @@ User-facing approval labels are warmer than backend values:
 - `Do Not Use` appears as `Do not publish externally`
 - `Possible Minors` appears as `Contains children/youth`
 
-Latest browser QA checked 1440, 1280, 1024, 768, 390, and 320 px with no horizontal page overflow. Role/API checks confirmed Viewer downloads for non-portal-ready assets return 403, `website hero` maps to 67 assets, `public safe` maps to 0 portal-ready assets, Sabbath collection returns 23 assets, review evidence failures return 400, valid review evidence queues a 202 pending write, and Contributor source-link intake succeeds with fileCount 0 when required review context is present. The durable QA report is `docs/screenshots/qa/browser-qa-report.json`; generated PNG screenshots are ignored by Git.
+Latest browser QA checked 1440, 1280, 1024, 768, 390, and 320 px with no horizontal page overflow. Role/API checks confirmed Viewer downloads for non-portal-ready assets return 403, `website hero` maps to 67 assets, `public safe` maps to 0 portal-ready assets, Sabbath collection returns 23 assets, review evidence failures return 400, valid review evidence queues a 202 pending write, command palette opens the Website hero saved view, upload preview shows selected files before submit, and Contributor source-link intake succeeds with fileCount 0 when required review context is present. The durable QA report is `docs/screenshots/qa/browser-qa-report.json`; generated PNG screenshots are ignored by Git.
 
 ## HEIC Policy
 

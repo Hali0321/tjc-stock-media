@@ -261,9 +261,18 @@ const intentDefinitions = [
   { view: "archive-only", confidence: "exact" as const, terms: ["archive"] }
 ];
 
-function normalizeViewId(view?: string) {
+export function normalizeSavedViewId(view?: string) {
   if (!view) return undefined;
   return viewAliases.get(view) || view;
+}
+
+export function isKnownSavedViewId(view?: string) {
+  const normalized = normalizeSavedViewId(view);
+  return Boolean(normalized && savedViewDefinitions.some((item) => item.id === normalized));
+}
+
+export function isKnownCollectionId(collection?: string) {
+  return Boolean(collection && collectionDefinitions.some((item) => item.id === collection));
 }
 
 function matchSearchIntent(query: string) {
@@ -604,7 +613,8 @@ export async function searchAssets({
   view,
   collection,
   sort,
-  limit = 72
+  limit = 72,
+  offset = 0
 }: {
   role: DemoRole;
   query: string;
@@ -613,12 +623,14 @@ export async function searchAssets({
   collection?: string;
   sort?: string;
   limit?: number;
+  offset?: number;
 }): Promise<SearchResult> {
   const { assets, status } = await getActiveMediaSource();
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 120) : 72;
+  const safeOffset = Number.isFinite(offset) ? Math.max(Math.trunc(offset), 0) : 0;
   const roleVisible = assets.filter((asset) => decideAccess(role, "viewAsset", asset).allowed);
   const intent = !view && !collection ? matchSearchIntent(query) : undefined;
-  const selectedViewId = normalizeViewId(view) || intent?.matchedView;
+  const selectedViewId = normalizeSavedViewId(view) || intent?.matchedView;
   const selectedView = savedViewDefinitions.find((item) => item.id === selectedViewId);
   const selectedCollection = collectionDefinitions.find((item) => item.id === collection);
   const effectiveQuery = intent?.matchedView ? "" : query;
@@ -630,11 +642,24 @@ export async function searchAssets({
   const sorted = sortCatalogAssets(visible, sort);
 
   const counts = countAssetGovernance(roleVisible);
-  const rendered = sorted.slice(0, safeLimit).length;
+  const pagedAssets = sorted.slice(safeOffset, safeOffset + safeLimit);
+  const rendered = pagedAssets.length;
+  const rangeStart = sorted.length && rendered ? safeOffset + 1 : 0;
+  const rangeEnd = sorted.length && rendered ? safeOffset + rendered : 0;
 
   return {
-    assets: sorted.slice(0, safeLimit).map((asset) => assetWithRoleImageUrls(asset, role)),
+    assets: pagedAssets.map((asset) => assetWithRoleImageUrls(asset, role)),
     total: sorted.length,
+    pagination: {
+      offset: safeOffset,
+      limit: safeLimit,
+      rangeStart,
+      rangeEnd,
+      hasPrevious: safeOffset > 0,
+      hasNext: safeOffset + rendered < sorted.length,
+      previousOffset: Math.max(safeOffset - safeLimit, 0),
+      nextOffset: safeOffset + safeLimit
+    },
     source: status,
     counts: {
       ...counts,

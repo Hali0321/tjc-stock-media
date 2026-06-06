@@ -16,10 +16,12 @@ const requiredShots = [
   { name: "upload-desktop.png", path: "/upload", role: "Contributor", width: 1440, height: 1000 },
   { name: "review-desktop.png", path: "/review", role: "Reviewer", width: 1440, height: 1000 },
   { name: "guide-desktop.png", path: "/guide", role: "Viewer", width: 1440, height: 1000 },
+  { name: "admin-desktop.png", path: "/admin", role: "DAM Admin", width: 1440, height: 1000 },
   { name: "library-mobile-320.png", path: "/", role: "Viewer", width: 320, height: 900 },
   { name: "detail-mobile-320.png", path: "/assets/368", role: "Viewer", width: 320, height: 900 },
   { name: "review-mobile-320.png", path: "/review", role: "Reviewer", width: 320, height: 900 },
-  { name: "upload-mobile-320.png", path: "/upload", role: "Contributor", width: 320, height: 900 }
+  { name: "upload-mobile-320.png", path: "/upload", role: "Contributor", width: 320, height: 900 },
+  { name: "guide-mobile-320.png", path: "/guide", role: "Viewer", width: 320, height: 900 }
 ];
 
 const qaViewports = [1440, 1280, 1024, 768, 390, 320];
@@ -148,8 +150,25 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Viewer", 1440, 1000);
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
+  if ((await page.getByLabel("Command search").count()) === 0) {
+    await page.locator('button[aria-label="Open command palette"]:visible').first().click();
+  }
+  await page.getByLabel("Command search").fill("website hero");
+  await page.keyboard.press("Enter");
+  await page.waitForURL(/view=website-hero/, { timeout: 10000 });
+  if (!page.url().includes("view=website-hero")) failures.push("command palette: website hero did not open stable view");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
+  await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }]);
+  if ((await page.getByLabel("Selected file preview").getByText("qa-photo.jpg").count()) < 1) failures.push("upload file preview: selected file missing");
+  await page.getByRole("button", { name: "Clear files" }).click();
   await page.getByLabel("Title").fill("Browser QA intake");
   await page.getByLabel("Event name").fill("Sabbath media QA");
   await page.getByLabel("Event date").fill("2026-06-06");
@@ -177,6 +196,8 @@ for (const width of qaViewports) {
     await page.getByLabel(label).check();
   }
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
+  await page.waitForSelector("text=Queue pending review write");
+  await page.getByRole("button", { name: "Queue pending review write" }).click();
   await page.waitForSelector("text=ResourceSpace API write mapping is not configured yet");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
   await context.close();

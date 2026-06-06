@@ -1,23 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ExternalLink, FolderOpen, HelpCircle, Search, Settings2, ShieldCheck, UploadCloud } from "lucide-react";
+import { ExternalLink, HelpCircle } from "lucide-react";
+import { AppNav } from "@/components/AppNav";
+import { CommandPalette } from "@/components/CommandPalette";
 import { roles } from "@/lib/permissions";
 import { useDemoRole } from "@/components/RoleProvider";
-import { cn } from "@/lib/ui";
-
-const nav = [
-  { href: "/", label: "Library", icon: Search },
-  { href: "/collections", label: "Collections", icon: FolderOpen },
-  { href: "/upload", label: "Upload", icon: UploadCloud },
-  { href: "/review", label: "Review", icon: ShieldCheck },
-  { href: "/admin", label: "Admin", icon: Settings2, adminOnly: true }
-];
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const { role, setRole } = useDemoRole();
-  const pathname = usePathname();
 
   return (
     <div className="min-h-[100dvh] w-full overflow-x-hidden bg-tjc-bg text-tjc-ink">
@@ -38,28 +29,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <nav className="flex min-w-0 flex-wrap items-center gap-1 md:justify-center" aria-label="Primary navigation">
-            {nav.filter((item) => !("adminOnly" in item) || role === "DAM Admin").map((item) => {
-              const Icon = item.icon;
-              const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold text-[#3f4741] transition hover:bg-[#f3f6f2] hover:text-tjc-evergreen active:translate-y-px",
-                    isActive && "bg-[#edf4f0] text-tjc-evergreen"
-                  )}
-                  title={item.label}
-                >
-                  <Icon aria-hidden="true" size={16} strokeWidth={1.8} />
-                  <span className="max-[350px]:sr-only">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          <AppNav role={role} />
 
           <div className="flex min-w-0 items-center justify-end gap-2">
+            <CommandPalette />
             <Link href="/guide" className="hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:inline-flex" aria-label="Open usage guide">
               <HelpCircle aria-hidden="true" size={16} strokeWidth={1.8} />
               <span>Guide</span>

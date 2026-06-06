@@ -17,11 +17,26 @@ export function imageUrlForRole(url: string | undefined, role?: DemoRole) {
   return `${pathname}?${params.toString()}${hash}`;
 }
 
+function assetMetadataForRole(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
+  if (decideAccess(role, "viewOriginalMetadata", asset).allowed) return asset;
+  const {
+    checksumSha256: _checksumSha256,
+    fileSizeBytes: _fileSizeBytes,
+    masterDrivePath: _masterDrivePath,
+    originalFilename: _originalFilename,
+    sourceAlbumPath: _sourceAlbumPath,
+    sourcePath: _sourcePath,
+    ...safeAsset
+  } = asset;
+  return safeAsset;
+}
+
 export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
+  const roleSafeAsset = assetMetadataForRole(asset, role);
   const reuseDecision = buildReuseDecision(asset);
   if (!canPreviewAsset(asset, role)) {
     return {
-      ...asset,
+      ...roleSafeAsset,
       reuseDecision,
       thumbnail: "",
       preview: undefined,
@@ -29,7 +44,7 @@ export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): 
     };
   }
   return {
-    ...asset,
+    ...roleSafeAsset,
     reuseDecision,
     thumbnail: imageUrlForRole(asset.thumbnail, role) || asset.thumbnail,
     preview: imageUrlForRole(asset.preview, role),

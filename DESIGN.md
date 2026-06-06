@@ -15,8 +15,10 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 - Photo-first library, not admin dashboard.
 - Warm white background, deep charcoal text, evergreen/navy accents.
 - Tailwind v4 utility system with a small global token/base layer.
-- Geist variable sans via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
+- Inter plus Noto Sans TC fallback via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
 - App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, collection entry points, filter controls, sort controls, and asset contact sheet high on page.
+- Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review is implemented as maintained `AppNav`. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
+- Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, review queues, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
 - Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
@@ -31,6 +33,10 @@ Reference patterns, adapted without copying:
 - PhotoShelter: contributor/reviewer/user role separation.
 - Notion Gallery: calm cards, simple tags, approachable metadata.
 - Airbnb: warm, human, photo-led trust.
+
+Reference accountability lives in `docs/runs/final-product-critique.md`. Each source group is mapped to maintained components, rejected ideas, screenshot evidence, code paths, and remaining debt. This prevents the reference list from becoming a moodboard with no implementation proof.
+
+The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
 Avoided:
 
@@ -119,7 +125,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Card radius | mostly 6-8px; larger rounding avoided on workflow surfaces |
 | Chip radius | compact rounded rectangles; pills used sparingly |
 | Shadow | very soft image shadow only |
-| Typography | Geist variable sans, compact app hierarchy, no giant marketing landing hero |
+| Typography | Inter + Noto Sans TC fallback, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
 | Motion | GSAP only in review workbench; disabled under reduced-motion |
 
@@ -140,6 +146,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 ## Workflow Screens
 
 - Upload uses a guided intake workflow with Context, People and rights, Files and tags, required-field markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt copy.
+- Upload previews selected files before submit, shows type/size, flags files over 100 MB for Shared Drive Incoming, and lets contributors remove/clear selected files.
 - Review uses a professional workbench layout: compact governance metrics, queue tabs, dense review rows, smaller workflow actions, selected-asset inspector, evidence checklist, audit preview, pending write state, and desktop-only GSAP motion skipped for reduced-motion users.
 - Guide is a searchable secondary usage guide with download decision rows and Do/Avoid blocks.
 - Asset detail is the trust record. On mobile, title/reuse state/blockers/download decision render before preview/related assets. Approved copy and original/master restrictions stay separated.
@@ -149,7 +156,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 - `npm run typecheck`: passed on 2026-06-06 during final DAM UI pass.
 - Production browser QA refreshed Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px, plus responsive QA at 1280, 1024, 768, 390, and 320px, with no horizontal page overflow.
 - Role safety API checks remain server-owned: blocked Viewer downloads return 403, missing review evidence returns 400, valid review evidence queues a 202 pending write, and upload intake does not fake file counts.
-- Latest browser QA had zero failures, zero warnings, and zero console errors; expected 400/403 denials were recorded as safety checks.
+- Latest browser QA includes command palette and upload file-preview checks. Expected 400/403 denials are recorded as safety checks.
 - Refreshed screenshot set lives under `docs/screenshots/`.
 
 ## Anti-AI Checklist
@@ -162,3 +169,4 @@ Current UI tokens live in `frontend/app/globals.css`.
 - No meaningless decorative icons.
 - No over-polished empty dashboard.
 - No broken-image placeholders; no-preview export gaps are labeled.
+- Theme toggle deferred: dark mode needs a full safety-label contrast pass before enabling.

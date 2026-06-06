@@ -43,6 +43,12 @@ export function assetIsBlocked(asset: StockMediaAsset) {
   return asset.status === "Do Not Use" || asset.usageScope === "Do Not Use";
 }
 
+export function assetHasCompatibleUsageScope(asset: StockMediaAsset) {
+  if (asset.status === "Approved Public") return asset.usageScope === "Public" || asset.usageScope === "Public and Internal";
+  if (asset.status === "Approved Internal") return asset.usageScope === "Internal" || asset.usageScope === "Public and Internal";
+  return false;
+}
+
 export function assetIsUnsafeForReuse(asset?: StockMediaAsset) {
   return Boolean(
     asset &&
@@ -54,6 +60,22 @@ export function assetIsUnsafeForReuse(asset?: StockMediaAsset) {
 
 export function assetHasChildrenYouthRisk(asset: StockMediaAsset) {
   return asset.peopleRisk === "Possible minors" || /minor|children|youth/i.test(asset.sensitiveContext || "");
+}
+
+export function assetHasSensitiveContext(asset: StockMediaAsset) {
+  const text = [
+    asset.sensitiveContext,
+    asset.rightsNotes,
+    ...(asset.tags || []),
+    ...(asset.tjcTerms || []),
+    ...(asset.usageTerms || [])
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (!text.trim()) return false;
+  return /sensitive|sacrament|communion|footwashing|baptism|children|youth|minor|privacy|consent concern|do not publish/.test(text);
 }
 
 export function assetHasSourceProvenance(asset: StockMediaAsset) {
@@ -134,8 +156,7 @@ export function assetHasRenditionGap(asset: StockMediaAsset) {
 }
 
 export function assetIsPortalReady(asset: StockMediaAsset) {
-  const health = assetMetadataHealth(asset);
-  return asset.status === "Approved Public" && health.missing.length === 0 && !assetHasChildrenYouthRisk(asset) && !assetHasRenditionGap(asset);
+  return asset.status === "Approved Public" && assetPortalBlockers(asset).length === 0;
 }
 
 export function assetNeedsStaleApprovalReview(asset: StockMediaAsset, now: Date | number = new Date()) {
@@ -148,12 +169,17 @@ export function assetNeedsStaleApprovalReview(asset: StockMediaAsset, now: Date 
 
 export function assetPortalBlockers(asset: StockMediaAsset) {
   const blockers: string[] = [];
+  if (assetIsBlocked(asset)) blockers.push("Do not use");
+  if (assetIsArchiveOnly(asset)) blockers.push("Archive only");
   if (asset.status !== "Approved Public") blockers.push("Not Approved Public");
   if (!asset.peopleRisk || asset.peopleRisk === "Unknown") blockers.push("People/minors unknown");
   if (assetHasChildrenYouthRisk(asset)) blockers.push("Children/youth review required");
   if (assetNeedsSourceReview(asset)) blockers.push("Source not traceable");
   if (assetNeedsRightsReview(asset)) blockers.push("Rights/consent unclear");
+  if (!assetHasCompatibleUsageScope(asset)) blockers.push("Usage scope not public-ready");
+  if (!assetReviewComplete(asset)) blockers.push("Reviewer/date missing");
   if (assetHasRenditionGap(asset)) blockers.push("Approved derivatives missing");
+  if (assetHasSensitiveContext(asset)) blockers.push("Sensitive context review required");
   if (assetNeedsStaleApprovalReview(asset)) blockers.push("Approval is stale");
   return blockers;
 }

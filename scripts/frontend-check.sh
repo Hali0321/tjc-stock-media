@@ -54,4 +54,10 @@ if rg -n "comfyui|three.js|new Comfy|@react-three|three/examples" frontend Makef
   exit 1
 fi
 
+if rg -n 'Prefer assets marked `Approved Public`|Approved Public \| Safe for public|Approved Public means usable' docs README.md CONTEXT.md DESIGN.md HANDOFF.md STAKEHOLDER_DEMO.md scripts --glob '!scripts/frontend-check.sh' >/tmp/tjc-raw-status-drift.txt; then
+  echo "FAIL: raw ResourceSpace status is described as portal reuse permission"
+  cat /tmp/tjc-raw-status-drift.txt
+  exit 1
+fi
+
 echo "Frontend check complete."

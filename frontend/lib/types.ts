@@ -319,6 +319,16 @@ export type DamReadinessResult = {
 export type SearchResult = {
   assets: StockMediaAsset[];
   total: number;
+  pagination: {
+    offset: number;
+    limit: number;
+    rangeStart: number;
+    rangeEnd: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+    previousOffset: number;
+    nextOffset: number;
+  };
   source: MediaSourceStatus;
   counts: {
     rawTotal: number;

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
+import { FormEvent, useMemo, useRef, useState } from "react";
+import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldAlert, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canUpload } from "@/lib/permissions";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
@@ -20,11 +20,19 @@ const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
 
+function formatBytes(value: number) {
+  if (value >= 1024 * 1024 * 1024) return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
+}
+
 export function UploadPage() {
   const { role, ready } = useDemoRole();
   const [message, setMessage] = useState("");
   const [largeWarning, setLargeWarning] = useState("");
   const [receipt, setReceipt] = useState<UploadReceipt | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const allowed = ready && canUpload(role);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -42,8 +50,28 @@ export function UploadPage() {
   }
 
   function checkFiles(files: FileList | null) {
-    const hasLarge = Array.from(files || []).some((file) => file.size > LARGE_MEDIA_BYTES);
+    const nextFiles = Array.from(files || []);
+    setSelectedFiles(nextFiles);
+    const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
     setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+  }
+
+  function syncFileInput(nextFiles: File[]) {
+    if (!fileInputRef.current) return;
+    const transfer = new DataTransfer();
+    nextFiles.forEach((file) => transfer.items.add(file));
+    fileInputRef.current.files = transfer.files;
+    checkFiles(transfer.files);
+  }
+
+  function removeFile(index: number) {
+    syncFileInput(selectedFiles.filter((_, fileIndex) => fileIndex !== index));
+  }
+
+  function clearFiles() {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setSelectedFiles([]);
+    setLargeWarning("");
   }
 
   if (!ready) {
@@ -181,8 +209,36 @@ export function UploadPage() {
           </div>
           <label className={labelClass}>
             Files
-            <input className="min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 py-2 text-sm font-medium file:mr-3 file:rounded-md file:border-0 file:bg-[#eef7f1] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-tjc-evergreen" name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
+            <input ref={fileInputRef} className="min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 py-2 text-sm font-medium file:mr-3 file:rounded-md file:border-0 file:bg-[#eef7f1] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-tjc-evergreen" name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
           </label>
+          {selectedFiles.length ? (
+            <section className="mt-3 rounded-md border border-tjc-line bg-[#fbfcfa] p-3" aria-label="Selected file preview">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-tjc-ink">{selectedFiles.length} selected file{selectedFiles.length === 1 ? "" : "s"}</h3>
+                <button className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={clearFiles}>
+                  <Trash2 size={13} strokeWidth={1.8} aria-hidden="true" />
+                  Clear files
+                </button>
+              </div>
+              <div className="mt-2 grid gap-2">
+                {selectedFiles.map((file, index) => {
+                  const tooLarge = file.size > LARGE_MEDIA_BYTES;
+                  return (
+                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 py-2" key={`${file.name}-${file.size}-${index}`}>
+                      {tooLarge ? <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" /> : <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />}
+                      <span className="min-w-0">
+                        <strong className="block truncate text-xs font-semibold text-tjc-ink">{file.name}</strong>
+                        <span className="mt-0.5 block text-[11px] font-medium text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
+                      </span>
+                      <button className="grid h-8 w-8 place-items-center rounded-md text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={() => removeFile(index)} aria-label={`Remove ${file.name}`}>
+                        <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
           <label className={`${labelClass} mt-4`}>
             Existing Google / ResourceSpace link
             <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />

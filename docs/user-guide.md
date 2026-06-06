@@ -8,9 +8,10 @@ ResourceSpace is the front door for finding and requesting safe-to-use church me
 
 1. Open the church ResourceSpace link.
 2. Search by normal words such as `Bible`, `worship`, `fellowship`, `MVP`, `baptism`, or `background`.
-3. Prefer assets marked `Approved Public` or `Approved Internal`.
-4. Download approved use copies only.
-5. If an asset is `Needs Review`, do not publish it.
+3. Prefer assets marked `Portal Ready` for public reuse or `Internal Ready` for ministry-only reuse.
+4. Treat `Approved Public` and `Approved Internal` as ResourceSpace status, not automatic download permission.
+5. Download approved use copies only when the portal shows download access.
+6. If an asset is `Needs Review`, `Needs portal review`, or blocked by source/rights/people review, do not publish it.
 
 ## Upload
 
@@ -41,4 +42,3 @@ Use Shared Drive Incoming or give the files to the DAM admin. The file will stil
 ## Ask For Help
 
 Ask the DAM admin for upload/import issues. Ask the appointed reviewer for approval and rights questions.
-
