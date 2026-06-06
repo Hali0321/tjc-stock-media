@@ -6,7 +6,7 @@ import { InputWithTags } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { UploadFileDropzone } from "@/components/UploadFileDropzone";
 import { canUpload } from "@/lib/permissions";
-import { canonicalTags } from "@/lib/taxonomy";
+import { uploadTagSuggestions } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 type UploadReceipt = {
@@ -238,7 +238,7 @@ export function UploadPage() {
               onChange={setSuggestedTags}
               required
               placeholder="Bible, fellowship, welcome, youth..."
-              suggestions={[...canonicalTags.visibleTags, ...canonicalTags.tjcTerms]}
+              suggestions={uploadTagSuggestions}
               helperText="Use existing visible-content or TJC terms. Reviewers approve final taxonomy before ResourceSpace updates."
             />
           </div>

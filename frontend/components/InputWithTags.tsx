@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { X } from "lucide-react";
+import { canonicalizeUploadTags, parseUploadTags, serializeUploadTags, uniqueTags } from "@/lib/upload-tags";
 import { cn } from "@/lib/ui";
 
 type InputWithTagsProps = {
@@ -15,23 +16,6 @@ type InputWithTagsProps = {
   helperText?: string;
 };
 
-function parseTags(value: string) {
-  return value
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
-
-function uniqueTags(tags: string[]) {
-  const seen = new Set<string>();
-  return tags.filter((tag) => {
-    const key = tag.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 export function InputWithTags({ name, label, value, onChange, suggestions, placeholder, required, helperText }: InputWithTagsProps) {
   const id = useId();
   const helperId = `${id}-helper`;
@@ -39,9 +23,8 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
   const inputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
-  const tags = useMemo(() => uniqueTags(parseTags(value)), [value]);
+  const tags = useMemo(() => uniqueTags(parseUploadTags(value)), [value]);
   const canonicalSuggestions = useMemo(() => uniqueTags(suggestions), [suggestions]);
-  const canonicalLookup = useMemo(() => new Map(canonicalSuggestions.map((suggestion) => [suggestion.toLowerCase(), suggestion])), [canonicalSuggestions]);
   const normalizedSuggestions = useMemo(
     () => canonicalSuggestions.filter((suggestion) => !tags.some((tag) => tag.toLowerCase() === suggestion.toLowerCase())).slice(0, 10),
     [canonicalSuggestions, tags]
@@ -56,15 +39,14 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
   }, [required, tags.length]);
 
   function commitTags(nextTags: string[]) {
-    onChange(uniqueTags(nextTags).join(", "));
+    onChange(serializeUploadTags(nextTags));
     setError("");
   }
 
   function addTags(rawValue: string) {
-    const parsed = parseTags(rawValue);
+    const parsed = parseUploadTags(rawValue);
     if (!parsed.length) return;
-    const accepted = parsed.map((tag) => canonicalLookup.get(tag.toLowerCase())).filter((tag): tag is string => Boolean(tag));
-    const rejected = parsed.filter((tag) => !canonicalLookup.has(tag.toLowerCase()));
+    const { accepted, rejected } = canonicalizeUploadTags(parsed, canonicalSuggestions);
     if (accepted.length) commitTags([...tags, ...accepted]);
     if (rejected.length) {
       setError(`${rejected.join(", ")} ${rejected.length === 1 ? "is" : "are"} not in the current taxonomy. Add new wording to intake notes for reviewer consideration.`);
