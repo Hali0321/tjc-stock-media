@@ -17,6 +17,28 @@ This pass replaced the remaining dark/gradient dashboard direction with a lighte
 
 Mobile proof captured in this pass showed no horizontal overflow at 320, 390, or 768 px: `scrollWidth` equaled viewport width for Library and Collections QA screenshots.
 
+## 2026-06-06 Visual-To-Code Mockup Continuation
+
+This continuation applied the latest generated mockup direction to the real app rather than adding more concept files:
+
+- Shared tokens now use a warmer off-white canvas, softer hairline borders, deeper evergreen accent, rounder controls, and lower shadow weight. Code: `frontend/app/globals.css`.
+- Library now has a desktop saved-view/browse rail and right filter drawer rhythm so the contact sheet reads like a DAM workspace instead of a dashboard. Code: `frontend/components/LibraryPage.tsx`.
+- Collections album rows now use compact thumbnail rails and a selected collection inspector with hero preview-pending treatment, stable ID/source/count/date facts, and one primary `Open Library results` action. Code: `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx`.
+- Upload now has an autosave checkpoint surface, selected-file count, three workflow panels, and a bottom action bar with Save draft, Clear all, and Submit for review. Code: `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`.
+- Review now uses `Overview / Metadata / Usage / AI Insights / Pending write` inspector tabs, a queue toolbar, contact-sheet triage, and the existing evidence-gated action dialog/hold controls. Code: `frontend/components/ReviewPage.tsx`, `scripts/portal-browser-qa.mjs`.
+- Asset Detail now includes a safe `ImageComparisonPanel` for role-safe display derivative vs approved-copy availability. It never exposes restricted originals. Code: `frontend/components/ImageComparisonPanel.tsx`, `frontend/components/AssetDetailPage.tsx`.
+- Admin and Guide were tightened toward the mockup direction: readiness score panel with progress bar, clearer source/read/write cards, editorial guide icons, and top-right uncertainty callout. Code: `frontend/components/AdminPage.tsx`, `frontend/components/GuidePage.tsx`.
+
+Screenshot evidence refreshed locally:
+
+- `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png`, `docs/screenshots/library-mobile-390.png`
+- `docs/screenshots/collections-desktop.png`, `docs/screenshots/collections-mobile-320.png`, `docs/screenshots/collections-mobile-390.png`
+- `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png`
+- `docs/screenshots/review-desktop.png`, `docs/screenshots/review-mobile-320.png`, `docs/screenshots/review-mobile-390.png`
+- `docs/screenshots/asset-detail-desktop.png`, `docs/screenshots/detail-mobile-320.png`, `docs/screenshots/detail-mobile-390.png`
+- `docs/screenshots/admin-desktop.png`, `docs/screenshots/admin-mobile-390.png`
+- `docs/screenshots/guide-desktop.png`, `docs/screenshots/guide-mobile-320.png`, `docs/screenshots/guide-mobile-390.png`
+
 ## Sources Reviewed
 
 - 21st.dev community components: `https://21st.dev/community/components`
@@ -47,7 +69,7 @@ The community library exposes many useful and many unsuitable categories. Review
 | Input with tags | Implemented | Plain comma-only suggested-tags field | Suggested tags should be easy to add while staying tied to existing taxonomy/export terms | Compact chips, suggestion buttons, evergreen focus, hidden canonical-only serialized form value | Uses `canonicalTags` through `upload-tags`; typed non-canonical terms are rejected with guidance to add new wording to intake notes; reviewers still approve final taxonomy before ResourceSpace write | `frontend/components/InputWithTags.tsx`, `frontend/components/UploadPage.tsx`, `frontend/lib/upload-tags.ts`, `frontend/lib/taxonomy.ts`, `frontend/app/api/upload/route.ts` |
 | Review visual triage board | Implemented | Review opened directly into records without a media-first scan layer | Reviewers need to scan risk visually before opening record details | Light contact-sheet board, thumbnail-led buttons, first-risk label, no preview bypass | Responsive grid keeps focusable controls in viewport at 320/768/1440 px | `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewPage.tsx` |
 | Review cockpit queue cards | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Media-led records with ResourceSpace ID, raw status, usage badge, risk callout, next check, and quiet secondary detail action | Mobile stacks into readable review cards; no horizontal overflow; selected state uses text/border/background | `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewPage.tsx` |
-| Collection shelf inspector | Implemented | Collections page looked like a metric header plus generic album cards | Collections should feel like PhotoShelter/Brandfolder album browsing with selected album evidence, stable IDs, approval summary, source, range, and Library handoff | Light album rows, quiet preview rails, white trust facts; no fake media; preview-pending state is intentional | Hover/focus selection works; 320 px stacks album rows then inspector; no horizontal overflow | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx` |
+| Collection shelf inspector | Implemented | Collections page looked like a metric header plus generic album cards | Collections should feel like PhotoShelter/Brandfolder album browsing with selected album evidence, stable IDs, approval summary, source, range, and Library handoff | Light album rows, quiet thumbnail rails, white trust facts; no fake media; preview-pending state is intentional | Hover/focus selection works; 320 px stacks album rows then inspector; no horizontal overflow | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx` |
 | Review cockpit rows | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Compact queue tabs, cards, blocker text, audit preview | Mobile switches to compact cards; no horizontal overflow | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewTriageStrip.tsx` |
 | Review load-more gate | Implemented | Rendering up to 80 review rows at once | Reviewers still get a dense queue, but mobile reaches inspector/actions sooner | Shows first 24 loaded rows, exact loaded/total copy, evergreen load-more button | Preserves selected row visibility and avoids hiding review status | `frontend/components/ReviewPage.tsx` |
 | Banner | Implemented | Inline warnings competing with metadata chips | Operational warnings need high signal without becoming decorative | Muted info/warning/danger surfaces, text-first labels, no glass | Important safety copy appears in the banner body, not only color or tooltip | `frontend/components/StatusBanner.tsx`, `frontend/components/ReviewPage.tsx`, `frontend/components/UploadPage.tsx` |
@@ -60,6 +82,7 @@ The community library exposes many useful and many unsuitable categories. Review
 | Liquid Glass Button | Evaluated / deferred | None | Flashy glass treatment did not fit the calm church DAM direction | Primary actions use solid evergreen styling instead | Avoids contrast loss and component-showcase behavior | No production component |
 | Apple Tahoe Liquid Glass Button | Evaluated / deferred | None | Alternate primary-action inspiration, but too platform-specific for this church DAM | Deferred beyond subtle highlight treatment | Would need complete contrast verification before use | No production component |
 | Accessible DAM tabs | Implemented | Chip-style tab buttons and one long review inspector list | Asset Detail and Review need focused task panels without hiding safety facts | Shared evergreen segmented tabs, real `tablist`/`tab`/`tabpanel`, arrow-key roving focus | Horizontal scroll at 320 px, selected state uses text and border/background | `frontend/components/DamTabs.tsx`, `frontend/components/AssetDetailPage.tsx`, `frontend/components/ReviewPage.tsx` |
+| Safe derivative comparison panel | Implemented | Asset detail had no visual derivative/approved-copy comparison area | Asset Detail should show approved copy availability without exposing originals | Role-safe preview only, original/master hidden label, accessible range control | True original-vs-derivative slider stays deferred until safe paired ResourceSpace derivatives exist | `frontend/components/ImageComparisonPanel.tsx`, `frontend/components/AssetDetailPage.tsx` |
 | Request dialogs | Implemented | Raw `mailto:` links for original/review/help requests | Users should see original-access and review-request implications before leaving the portal | Focus-trapped white dialog, explicit no-fake-persistence copy, email draft only | Escape/cancel available; does not change ResourceSpace or pending writes | `frontend/components/ReuseRequestDialog.tsx`, `frontend/components/DownloadOptionsPanel.tsx` |
 | Dropdown action menus | Implemented for Asset Detail and Review inspector secondary actions | Standalone ResourceSpace admin link and scattered copy/open actions | Keeps copy ResourceSpace ID, copy portal link, and DAM Admin ResourceSpace open action quiet without hiding safety decisions | White menu, evergreen focus, no glass; action labels include context | Viewer/Reviewer cannot see ResourceSpace admin action; Escape/outside close supported | `frontend/components/DropdownActionMenu.tsx`, `frontend/components/AssetActionsMenu.tsx`, `frontend/components/AssetDetailPage.tsx`, `frontend/components/ReviewPage.tsx` |
 
@@ -76,13 +99,13 @@ The community library exposes many useful and many unsuitable categories. Review
 | Theme toggle | Defer | Dark mode requires a full safety-label contrast pass before release. |
 | Apple Tahoe Liquid Glass Button | Defer | Too platform-specific and easy to overuse; current primary actions already gained restrained depth without weakening status readability. |
 
-## Image Comparison Slider
+## Image Comparison Slider / Safe Comparison Panel
 
 Reference: `https://21st.dev/community/components/thanh/image-comparison-slider/default`
 
-Status: deferred.
+Status: safe comparison panel implemented; true before/after original-vs-derivative slider deferred.
 
-Reason: the pattern could help compare original/master against approved derivative, uncropped source against approved web crop, or current portal preview against approved downloadable copy. Current ResourceSpace export does not guarantee safe paired derivative images, and the portal must not expose restricted originals to Viewers. Implementing now would either fake the comparison or risk weakening preview/download policy.
+Reason: the pattern can help compare original/master against approved derivative, uncropped source against approved web crop, or current portal preview against approved downloadable copy. Current ResourceSpace export does not guarantee safe paired derivative images, and the portal must not expose restricted originals to Viewers. This pass implemented `ImageComparisonPanel` as a safe role-aware derivative availability panel using only the same role-safe preview source; restricted originals remain hidden.
 
 Future location:
 
@@ -92,7 +115,8 @@ Future location:
 
 Future code path:
 
-- `frontend/components/ImageComparisonReviewPanel.tsx`
+- Implemented now: `frontend/components/ImageComparisonPanel.tsx`
+- Future richer reviewer/admin slider: `frontend/components/ImageComparisonReviewPanel.tsx`
 
 Safety requirements before implementation:
 

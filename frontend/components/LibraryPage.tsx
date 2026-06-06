@@ -97,6 +97,68 @@ function AssetListRow({
   );
 }
 
+function LibrarySavedRail({
+  shortcuts,
+  visibleUseCases,
+  selectedView,
+  onOpenView,
+  onOpenUseCase
+}: {
+  shortcuts: NonNullable<SearchResult["savedViews"]>;
+  visibleUseCases: Array<(typeof useCaseButtons)[number]>;
+  selectedView: string;
+  onOpenView: (id: string) => void;
+  onOpenUseCase: (item: (typeof useCaseButtons)[number]) => void;
+}) {
+  return (
+    <aside className="hidden min-w-0 xl:block" aria-label="Saved views and browse shortcuts">
+      <div className="sticky top-24 grid gap-4">
+        <section className="dam-soft-card p-3">
+          <div className="mb-3">
+            <h2 className="text-sm font-black text-tjc-evergreen">Saved views</h2>
+            <p className="mt-1 text-xs font-semibold leading-snug text-tjc-muted">Church media cuts backed by ResourceSpace metadata.</p>
+          </div>
+          <div className="grid gap-1.5">
+            {shortcuts.slice(0, 9).map((view) => (
+              <button
+                key={view.id}
+                type="button"
+                className={cn(
+                  "grid min-h-12 grid-cols-[1fr_auto] items-center gap-2 rounded-2xl px-3 text-left text-sm transition hover:bg-[#f1f7f3] active:translate-y-px",
+                  selectedView === view.id ? "bg-[#e6f0eb] text-tjc-evergreen shadow-[inset_3px_0_0_#0f3d2e]" : "text-[#3f4a43]"
+                )}
+                onClick={() => onOpenView(view.id)}
+                aria-pressed={selectedView === view.id}
+              >
+                <span className="min-w-0">
+                  <strong className="block truncate font-black">{view.label}</strong>
+                  <span className="line-clamp-1 text-xs font-semibold text-tjc-muted">{view.reason}</span>
+                </span>
+                <span className="rounded-full border border-[#d9e3dc] bg-white px-2 py-0.5 text-xs font-black tabular-nums text-tjc-evergreen">{view.count}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+        <section className="rounded-[1.4rem] border border-[#dde6df] bg-[#f8faf8] p-3">
+          <h2 className="text-sm font-black text-tjc-evergreen">Browse</h2>
+          <div className="mt-3 grid gap-1.5">
+            {visibleUseCases.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className="min-h-10 rounded-full px-3 text-left text-sm font-black text-[#3f4a43] transition hover:bg-white hover:text-tjc-evergreen active:translate-y-px"
+                onClick={() => onOpenUseCase(item)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+    </aside>
+  );
+}
+
 export function LibraryPage() {
   const { role, ready } = useDemoRole();
   const [query, setQuery] = useState("");
@@ -492,7 +554,7 @@ export function LibraryPage() {
         </div>
       </details>
 
-      <section className="mt-4" aria-label="Saved DAM views">
+      <section className="mt-4 xl:hidden" aria-label="Saved DAM views">
         <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-sm font-black text-tjc-evergreen">Saved DAM views</h2>
@@ -510,7 +572,14 @@ export function LibraryPage() {
         </div>
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]" aria-label="Library controls and results">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_20rem]" aria-label="Library controls and results">
+        <LibrarySavedRail
+          shortcuts={shortcuts}
+          visibleUseCases={visibleUseCases}
+          selectedView={selectedView}
+          onOpenView={openSavedView}
+          onOpenUseCase={openUseCase}
+        />
         <div className="min-w-0">
           <section className="min-w-0" aria-label="Asset results">
             <section className="mb-3 grid gap-3 dam-contact-sheet p-3" aria-label="Selection and batch actions">

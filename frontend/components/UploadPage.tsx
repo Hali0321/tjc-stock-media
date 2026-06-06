@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
+import { CheckCircle2, Clock3, FileCheck2, FolderInput, RotateCcw, Save, ShieldCheck, UploadCloud } from "lucide-react";
 import { InputWithTags } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
@@ -87,6 +87,10 @@ export function UploadPage() {
     setLargeWarning("");
   }
 
+  function saveDraftNotice() {
+    setMessage("Draft capture is local-only in this demo. Files still need Submit for review before server intake.");
+  }
+
   if (!ready) {
     return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
   }
@@ -137,12 +141,18 @@ export function UploadPage() {
         </div>
       </section>
 
-      <StatusBanner className="mt-4" tone="info" title="Submitted media stays blocked">
-        Every file enters Needs Review / Do Not Publish. No public download is created until reviewer evidence is complete.
-      </StatusBanner>
+      <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+        <StatusBanner tone="info" title="Autosave checkpoint">
+          Context, rights, files, and tags are reviewed together. Submitted media stays Needs Review / Do Not Publish until reviewer evidence is complete.
+        </StatusBanner>
+        <div className="grid content-center rounded-[1.35rem] border border-[#d7e1d9] bg-white px-4 py-3 text-sm shadow-[0_10px_28px_rgba(25,34,29,.035)]">
+          <strong className="text-tjc-ink">{selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected</strong>
+          <span className="text-xs font-semibold text-tjc-muted">Review visibility: blocked by default</span>
+        </div>
+      </div>
 
       <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_27rem]" onSubmit={submit}>
-        <section className="rounded-lg border border-[#d4ded7] bg-white p-4 min-w-0 self-start">
+        <section className="dam-soft-card min-w-0 self-start p-4">
           <div className="mb-4">
             <h2 className="text-lg font-black">1. Context</h2>
             <p className="text-sm font-semibold text-tjc-muted">Help reviewers understand where this media came from.</p>
@@ -171,7 +181,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="rounded-lg border border-[#d4ded7] bg-white p-4 self-start">
+        <section className="dam-soft-card self-start p-4">
           <div className="mb-4">
             <h2 className="text-lg font-black">2. People and rights</h2>
             <p className="text-sm font-semibold text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
@@ -219,7 +229,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="rounded-lg border border-[#d4ded7] bg-white p-4 min-w-0 self-start">
+        <section className="dam-soft-card min-w-0 self-start p-4">
           <div className="mb-4">
             <h2 className="text-lg font-black">3. Files and tags</h2>
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
@@ -269,10 +279,30 @@ export function UploadPage() {
           <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} largeWarning={largeWarning} />
         </div>
 
-        <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 dam-button-primary px-5 text-base font-semibold transition active:translate-y-px xl:col-span-3" type="submit">
-          <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
-          Submit intake
-        </button>
+        <section className="sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:grid-cols-[1fr_auto] xl:col-span-3" aria-label="Upload actions">
+          <div className="grid content-center">
+            <strong className="text-sm font-black text-tjc-ink">Submit for reviewer intake</strong>
+            <span className="text-xs font-semibold text-tjc-muted">No upload bypasses review. Approved copies are created only after reviewer decision.</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
+              <Save size={15} strokeWidth={1.8} aria-hidden="true" />
+              Save draft
+            </button>
+            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
+              clearFiles();
+              setSuggestedTags("");
+              setMessage("File selection and suggested tags cleared.");
+            }}>
+              <RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" />
+              Clear all
+            </button>
+            <button className="inline-flex min-h-11 min-w-[12rem] items-center justify-center gap-2 dam-button-primary px-5 text-base font-black transition active:translate-y-px" type="submit" aria-label="Submit intake">
+              <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
+              Submit for review
+            </button>
+          </div>
+        </section>
         {message ? <div className="rounded-xl border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
 
         {receipt ? (

@@ -42,16 +42,16 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 
 ## Current Portal Product Surface
 
-- **Library**: find and reuse workspace with compact search, stable saved views, filters, count truth, collection entry points, and contact-sheet asset records.
+- **Library**: find and reuse workspace with compact search, desktop saved-view/browse rail, quiet right filter drawer, count truth, collection entry points, pagination, and contact-sheet asset records.
 - **Command palette**: `Cmd/Ctrl+K` utility for search, stable saved views, collections, upload, review queues, ResourceSpace ID lookup, guide, and admin diagnostics.
-- **Collections**: album-oriented browsing by stable collection ID. Sabbath language is used instead of Sunday language.
-- **Asset detail**: trust record for raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors confidence, files, related assets, and download/original restrictions.
+- **Collections**: album-oriented browsing by stable collection ID, compact thumbnail rails, selected collection inspector, source/count/date facts, and one `Open Library results` action. Sabbath language is used instead of Sunday language.
+- **Asset detail**: trust record for raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors confidence, files, safe derivative comparison panel, related assets, and download/original restrictions.
 - **Request dialog**: focused dialog for original access, review request, or media coworker help. It opens an email draft only; it does not update ResourceSpace, approve reuse, grant original access, or create a pending review write.
-- **Upload**: contributor intake workflow. New media remains blocked as `Needs Review / Do Not Publish` until review.
+- **Upload**: contributor intake workflow with autosave checkpoint, selected-file count, selected-file preview/remove controls, taxonomy tag input, reviewer packet, and bottom action bar. New media remains blocked as `Needs Review / Do Not Publish` until review.
 - **Upload preview**: selected files are previewed as filename/type/size evidence; large video/audio over 100 MB is routed to Shared Drive Incoming guidance.
-- **Review**: governance workbench with queue tabs, risk/missing metadata triage, inspector tabs, required checklist, note field, audit preview, local pending-write queue, and a load-more gate for long queues.
+- **Review**: governance workbench with queue tabs, queue toolbar, risk/missing metadata triage, contact-sheet strip, `Overview / Metadata / Usage / AI Insights / Pending write` inspector tabs, required checklist, note field, audit preview, local pending-write queue, and a load-more gate for long queues.
 - **Review load-more gate**: explicit `Show more review items` control that keeps mobile reviewers near the inspector/action area without changing review queue truth.
-- **Guide**: secondary searchable help for Do/Avoid rules, download decisions, children/youth, source/credit, and large-media intake.
+- **Guide**: secondary searchable editorial help with anchor nav, uncertainty callout, row icons, Do/Avoid rules, download decisions, children/youth, source/credit, and large-media intake.
 - **No-preview state**: if ResourceSpace export lacks a derivative for the current role, the portal labels the tile as `Preview pending` or `Preview unavailable`; it does not invent or commit media.
 
 ## Current LM Photos Completion Source

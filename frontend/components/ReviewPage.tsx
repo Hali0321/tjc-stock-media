@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
+import { Archive, Database, ExternalLink, FileWarning, Info, LayoutGrid, List, Lock, ShieldCheck, ShieldX, SlidersHorizontal, Users } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
@@ -76,7 +76,7 @@ const governanceCards = [
   { key: "archiveCandidates", label: "Archive candidates", icon: Archive }
 ] as const;
 
-const reviewInspectorTabs = ["Checklist", "Metadata", "Rights", "History", "Pending write"] as const;
+const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Pending write"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
 const reviewRowsPageSize = 24;
 const highRiskActionIds = new Set(["archive-only", "do-not-publish"]);
@@ -143,7 +143,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   const [reviewNote, setReviewNote] = useState("");
   const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
-  const [activeInspectorTab, setActiveInspectorTab] = useState<ReviewInspectorTab>("Checklist");
+  const [activeInspectorTab, setActiveInspectorTab] = useState<ReviewInspectorTab>("Overview");
   const [visibleReviewCount, setVisibleReviewCount] = useState(reviewRowsPageSize);
   const [submittingReview, setSubmittingReview] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
@@ -377,10 +377,33 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             <ReviewTriageStrip assets={data.assets} role={role} selectedId={selectedAsset?.id} onSelect={setSelectedId} />
           ) : null}
 
-          <div className="min-w-0 overflow-hidden rounded-[.9rem] border border-[#b9c9bf] bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#f6faf6] px-3 py-2 text-sm">
-            <strong className="font-semibold text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
-            {activeQueueSummary ? <span className="text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
+          <div className="min-w-0 overflow-hidden rounded-[1.35rem] border border-[#b9c9bf] bg-white shadow-[0_12px_34px_rgba(25,34,29,.035)]">
+          <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-3 py-3 text-sm lg:grid-cols-[1fr_auto]">
+            <div className="min-w-0">
+              <strong className="font-black text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
+              {activeQueueSummary ? <span className="mt-1 block text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
+              <button className="inline-flex min-h-9 items-center gap-2 rounded-full border border-tjc-line bg-white px-3 text-xs font-black text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button">
+                <SlidersHorizontal size={14} strokeWidth={1.8} aria-hidden="true" />
+                Filters
+              </button>
+              <select className="min-h-9 rounded-full border border-tjc-line bg-white px-3 text-xs font-black text-[#3f4a43]" aria-label="Triage action" defaultValue="triage">
+                <option value="triage">Triage</option>
+                <option value="rights">Rights first</option>
+                <option value="source">Missing source</option>
+              </select>
+              <select className="min-h-9 rounded-full border border-tjc-line bg-white px-3 text-xs font-black text-[#3f4a43]" aria-label="Sort review queue" defaultValue="risk">
+                <option value="risk">Risk first</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+              </select>
+              <span className="inline-flex rounded-full border border-tjc-line bg-white p-1" aria-label="Review view mode">
+                <button className="grid h-8 w-8 place-items-center rounded-full bg-[#e6f0eb] text-tjc-evergreen" type="button" aria-label="Grid queue view"><LayoutGrid size={14} strokeWidth={1.8} aria-hidden="true" /></button>
+                <button className="grid h-8 w-8 place-items-center rounded-full text-tjc-muted" type="button" aria-label="List queue view"><List size={14} strokeWidth={1.8} aria-hidden="true" /></button>
+              </span>
+            </div>
           </div>
           <div className="hidden grid-cols-[7.25rem_minmax(14rem,1.15fr)_minmax(15rem,1fr)_minmax(13rem,.9fr)] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
             <span>Preview</span>
@@ -425,7 +448,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             </div>
             <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" />
 
-            <section id={damTabPanelId("review-inspector", "Checklist")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Checklist")} className="border-t border-tjc-line pt-3" aria-label="Review action area" hidden={activeInspectorTab !== "Checklist"}>
+            <section id={damTabPanelId("review-inspector", "Overview")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Overview")} className="border-t border-tjc-line pt-3" aria-label="Review action area" hidden={activeInspectorTab !== "Overview"}>
                 <h3 className="text-sm font-semibold text-tjc-evergreen">Action evidence</h3>
                 <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
                   Review note
@@ -486,7 +509,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 </dl>
             </section>
 
-            <section id={damTabPanelId("review-inspector", "Rights")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Rights")} hidden={activeInspectorTab !== "Rights"}>
+            <section id={damTabPanelId("review-inspector", "Usage")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Usage")} hidden={activeInspectorTab !== "Usage"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>
@@ -498,10 +521,11 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 </dl>
             </section>
 
-            <section id={damTabPanelId("review-inspector", "History")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "History")} hidden={activeInspectorTab !== "History"}>
+            <section id={damTabPanelId("review-inspector", "AI Insights")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "AI Insights")} hidden={activeInspectorTab !== "AI Insights"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{selectedAsset.reviewer || "Not reviewed"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Reviewed date</dt><dd className={factDescClass}>{selectedAsset.reviewedDate || "Pending"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>AI enrichment signal</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? "Suggested metadata needs reviewer confirmation before write." : "Exported fields look complete; reviewer evidence still required for action."}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Last exported state</dt><dd className={factDescClass}>Read from ResourceSpace metadata export. Local pending writes are shown separately.</dd></div>
                 </dl>

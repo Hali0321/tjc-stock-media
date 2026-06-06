@@ -7,6 +7,7 @@ import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { AssetTrustPanel } from "@/components/AssetTrustPanel";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DownloadOptionsPanel } from "@/components/DownloadOptionsPanel";
+import { ImageComparisonPanel } from "@/components/ImageComparisonPanel";
 import { MediaPreview } from "@/components/MediaPreview";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
@@ -112,6 +113,7 @@ export function AssetDetailPage({ id }: { id: string }) {
   const canOpenResourceSpace = decideAccess(role, "viewResourceSpaceAdminLink", asset).allowed;
   const preview = detailImageUrl(asset, role);
   const passport = assetGovernancePassport(asset);
+  const thumbnailStrip = [asset, ...related].slice(0, 5);
 
   return (
     <div className="dam-shell">
@@ -121,7 +123,7 @@ export function AssetDetailPage({ id }: { id: string }) {
       </Link>
       <section className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(420px,.8fr)]">
         <div className="order-1 min-w-0 xl:order-1">
-          <div className="grid min-h-[28rem] place-items-center overflow-hidden rounded-lg border border-[#cfd7d1] bg-white p-3">
+          <div className="grid min-h-[28rem] place-items-center overflow-hidden rounded-[1.45rem] border border-[#cfd7d1] bg-white p-3 shadow-[0_14px_36px_rgba(25,34,29,.04)]">
             <MediaPreview
               src={preview}
               alt={asset.thumbnailAlt}
@@ -130,6 +132,21 @@ export function AssetDetailPage({ id }: { id: string }) {
               className="min-h-[20rem] px-4"
               imgClassName="!h-auto max-h-[72dvh] !w-auto max-w-full rounded !object-contain shadow-[0_8px_24px_rgba(32,34,31,.14)]"
             />
+          </div>
+          <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5" aria-label="Asset thumbnail strip">
+            {thumbnailStrip.map((item, index) => {
+              const imageUrl = index === 0 ? preview : collectionImageUrl(item, role);
+              return (
+                <Link
+                  href={index === 0 ? `/assets/${asset.id}` : `/assets/${item.id}`}
+                  key={`${item.id}-${index}`}
+                  className={cn("grid h-16 min-w-0 place-items-center overflow-hidden rounded-2xl border bg-white transition hover:border-[#9fb8ae]", index === 0 ? "border-[#0f3d2e] shadow-[inset_0_0_0_2px_#e6f0eb]" : "border-[#d6dfd8]")}
+                  aria-label={index === 0 ? "Current asset preview" : `Open related asset ${assetPresentation(item, role).title}`}
+                >
+                  <MediaPreview src={imageUrl} alt={item.thumbnailAlt} imgClassName="h-full w-full object-cover" className="px-1" />
+                </Link>
+              );
+            })}
           </div>
           <section className="mt-4 rounded-lg border border-[#cfd7d1] bg-white p-3" aria-label="Related assets">
             <div className="mb-3">
@@ -156,6 +173,12 @@ export function AssetDetailPage({ id }: { id: string }) {
             {display.download.reuse.summary}
           </StatusBanner>
           <AssetTrustPanel asset={asset} role={role} />
+          <ImageComparisonPanel
+            safePreview={preview}
+            alt={asset.thumbnailAlt}
+            approvedCopyAllowed={display.download.approvedCopy.allowed}
+            originalHidden
+          />
           <section className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Governance passport">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>

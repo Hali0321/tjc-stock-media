@@ -279,8 +279,8 @@ for (const width of qaViewports) {
   await page.getByRole("tab", { name: "Metadata", exact: true }).click();
   if ((await page.getByText("Raw ResourceSpace status").count()) < 1) failures.push("review inspector tabs: Metadata panel missing raw status");
   await page.getByRole("tab", { name: "Metadata", exact: true }).press("ArrowRight");
-  if ((await page.getByText("People/minors").count()) < 1) failures.push("review inspector tabs: ArrowRight did not open Rights panel");
-  await page.getByRole("tab", { name: "Checklist", exact: true }).click();
+  if ((await page.getByText("People/minors").count()) < 1) failures.push("review inspector tabs: ArrowRight did not open Usage panel");
+  await page.getByRole("tab", { name: "Overview", exact: true }).click();
   await page.getByLabel("Review note").fill("Browser QA confirms source, rights, people, derivative, and sensitive context evidence.");
   for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
     await page.getByLabel(label).check();

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight, CheckCircle2, FolderOpen, ShieldAlert } from "lucide-react";
+import { MediaPreview } from "@/components/MediaPreview";
 import type { CatalogCollection } from "@/lib/types";
 
 type CollectionShelfInspectorProps = {
@@ -27,8 +28,26 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
   const hasPeopleWarning = Boolean(collection.peopleWarning);
 
   return (
-    <section className="rounded-md border border-[#d4ded7] bg-white p-4" aria-label={`${collection.name} collection inspector`}>
+    <section className="rounded-[1.45rem] border border-[#d4ded7] bg-white p-4 shadow-[0_12px_30px_rgba(25,34,29,.035)]" aria-label={`${collection.name} collection inspector`}>
       <div className="grid gap-4">
+        <div className="overflow-hidden rounded-[1.2rem] border border-[#d6e0d8] bg-[#f6f8f5]" aria-hidden="true">
+          {collection.images.length ? (
+            <div className="grid grid-cols-[1.5fr_1fr] gap-1.5 p-1.5">
+              <span className="row-span-2 block aspect-[4/3] overflow-hidden rounded-[1rem] bg-[#eef3ef]">
+                <MediaPreview src={collection.images[0]?.src} alt="" imgClassName="h-full w-full object-cover" />
+              </span>
+              {collection.images.slice(1, 3).map((image, index) => (
+                <span className="block aspect-[4/3] overflow-hidden rounded-[.85rem] bg-[#eef3ef]" key={`${image.src}-${index}`}>
+                  <MediaPreview src={image.src} alt="" imgClassName="h-full w-full object-cover" />
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="grid min-h-40 place-items-center p-4 text-center text-sm font-semibold text-tjc-muted">
+              Preview export pending
+            </div>
+          )}
+        </div>
         <div>
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[.08em] text-tjc-muted">
             <span>Selected collection</span>

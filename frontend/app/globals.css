@@ -8,11 +8,11 @@
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-tjc-ink: #171b19;
   --color-tjc-muted: #5a635f;
-  --color-tjc-bg: #f1f3ef;
+  --color-tjc-bg: #f7f4ef;
   --color-tjc-panel: #ffffff;
-  --color-tjc-line: #cfd7d1;
-  --color-tjc-evergreen: #063f39;
-  --color-tjc-evergreen-2: #092f2c;
+  --color-tjc-line: #dde3de;
+  --color-tjc-evergreen: #0f3d2e;
+  --color-tjc-evergreen-2: #062d24;
   --color-tjc-gold: #9a650e;
   --color-tjc-blue: #19516c;
   --color-tjc-red: #9a2f2d;
@@ -35,7 +35,7 @@ body {
   min-height: 100%;
   margin: 0;
   overflow-x: hidden;
-  background: #f5f6f2;
+  background: #f7f4ef;
   color: #171b19;
   font-family: var(--font-inter), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -95,7 +95,7 @@ textarea:focus-visible {
   inset: 0;
   z-index: 0;
   display: block;
-  opacity: .24;
+  opacity: .16;
   mix-blend-mode: multiply;
   background-image:
     linear-gradient(rgba(23,27,25,.025) 1px, transparent 1px),
@@ -107,7 +107,7 @@ textarea:focus-visible {
   position: relative;
   overflow: hidden;
   border-radius: .625rem;
-  background: #e8ece6;
+  background: #e9eee9;
 }
 
 .skeleton::after {
@@ -132,16 +132,16 @@ textarea:focus-visible {
 }
 
 .dam-panel {
-  border: 1px solid rgba(204, 213, 207, .94);
-  border-radius: 1rem;
+  border: 1px solid rgba(221, 227, 222, .96);
+  border-radius: 1.25rem;
   background: rgba(255, 255, 255, .94);
-  box-shadow: 0 1px 0 rgba(255,255,255,.88) inset, 0 22px 60px rgba(25,34,29,.08);
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 16px 40px rgba(25,34,29,.045);
 }
 
 .dam-panel-muted {
-  border: 1px solid rgba(207, 215, 209, .92);
-  border-radius: .9rem;
-  background: #f8faf6;
+  border: 1px solid rgba(221, 227, 222, .94);
+  border-radius: 1.1rem;
+  background: #f8faf8;
 }
 
 .dam-kicker {
@@ -168,21 +168,21 @@ textarea:focus-visible {
 }
 
 .dam-card {
-  border: 1px solid rgba(204, 213, 207, .96);
-  border-radius: .9rem;
+  border: 1px solid rgba(221, 227, 222, .96);
+  border-radius: 1.15rem;
   background: rgba(255,255,255,.96);
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 18px 46px rgba(25,34,29,.065);
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 14px 34px rgba(25,34,29,.04);
 }
 
 .dam-lift {
-  border: 1px solid rgba(187, 201, 191, .96);
-  border-radius: .6rem;
+  border: 1px solid rgba(209, 216, 212, .96);
+  border-radius: 1rem;
   background: #fff;
 }
 
 .dam-workbench {
-  border: 1px solid rgba(188, 202, 194, .98);
-  border-radius: .75rem;
+  border: 1px solid rgba(209, 216, 212, .98);
+  border-radius: 1.1rem;
   background: #fff;
 }
 
@@ -196,26 +196,26 @@ textarea:focus-visible {
 
 .dam-card-quiet {
   border: 1px solid rgba(216, 223, 213, .92);
-  border-radius: .75rem;
+  border-radius: 1rem;
   background: rgba(250,251,248,.92);
 }
 
 .dam-control {
-  border: 1px solid rgba(188, 202, 194, .98);
-  border-radius: .75rem;
+  border: 1px solid rgba(209, 216, 212, .98);
+  border-radius: 999px;
   background: rgba(255,255,255,.96);
   box-shadow: inset 0 -1px 0 rgba(23,27,25,.035);
 }
 
 .dam-button-primary {
-  border: 1px solid #063f39;
-  border-radius: .55rem;
-  background: #063f39;
+  border: 1px solid #0f3d2e;
+  border-radius: 999px;
+  background: #0f3d2e;
   color: white;
 }
 
 .dam-button-primary:hover {
-  background: #0b554c;
+  background: #062d24;
 }
 
 .dam-risk-warn {
@@ -253,9 +253,20 @@ textarea:focus-visible {
 }
 
 .dam-app-header {
-  border-bottom: 1px solid rgba(207, 215, 209, .9);
+  border-bottom: 1px solid rgba(221, 227, 222, .92);
   background: rgba(250, 251, 249, .86);
   backdrop-filter: blur(18px);
+}
+
+.dam-soft-card {
+  border: 1px solid rgba(221, 227, 222, .96);
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 12px 30px rgba(25, 34, 29, .035);
+}
+
+.dam-pill {
+  border-radius: 999px;
 }
 
 .dam-brand-mark {

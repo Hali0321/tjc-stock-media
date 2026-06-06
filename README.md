@@ -147,6 +147,16 @@ Open TJC Stock Media portal:
 
 `http://localhost:3008`
 
+## Current Frontend State
+
+Latest UI pass: 2026-06-06 visual-to-code continuation.
+
+The portal now uses a warm-neutral DAM system with rounded workflow navigation, `Cmd/Ctrl+K` command palette, Library saved-view rail, DAM contact sheet, album-style Collections, contributor Upload intake with selected-file preview and bottom action bar, Review governance workbench, Asset Detail trust record with safe derivative comparison panel, calm Admin diagnostics, and editorial Guide rows.
+
+Safety remains unchanged: ResourceSpace is still source of truth, Google Shared Drive keeps master originals, pending review writes are local/not final, uploads stay `Needs Review / Do Not Publish`, unsafe Viewer downloads remain blocked, and original/master access remains restricted.
+
+Refreshed screenshots live under `docs/screenshots/`, including desktop plus 320/390 mobile captures. Latest `portal-browser-qa` checked 15 routes across 1440/1280/1024/768/390/320 with zero failures, zero warnings, and zero console errors.
+
 Current local prototype login:
 
 - URL: `http://localhost:8088`

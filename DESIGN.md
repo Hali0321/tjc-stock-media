@@ -13,10 +13,10 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 ## Visual Direction
 
 - Photo-first library, not admin dashboard.
-- Warm white background, deep charcoal text, evergreen/navy accents.
+- Warm off-white background, deep charcoal text, evergreen accent, sage selected states, restrained amber/red safety states.
 - Tailwind v4 utility system with a small global token/base layer.
 - Inter plus Noto Sans TC fallback via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
-- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, collection entry points, filter controls, sort controls, and asset contact sheet high on page.
+- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, Library saved-view rail, collection entry points, filter drawer, sort controls, and asset contact sheet high on page.
 - Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review is implemented as maintained `AppNav`. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
 - Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
@@ -62,7 +62,7 @@ Reference accountability lives in `docs/runs/final-product-critique.md`. Each so
 
 The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
-Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DisplayCard`, `StatusBanner`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, and `UploadFileDropzone`. Image Comparison Slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions. Theme Toggle and Apple Tahoe Liquid Glass Button remain deferred; Liquid Glass Button is used only as restrained primary-action inspiration, not as full glass UI.
+Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DisplayCard`, `StatusBanner`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, `UploadFileDropzone`, and `ImageComparisonPanel`. The safe comparison panel is implemented with role-safe previews only; a true original-vs-approved derivative slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions. Theme Toggle and Apple Tahoe Liquid Glass Button remain deferred; Liquid Glass Button is used only as restrained primary-action inspiration, not as full glass UI.
 
 Avoided:
 
@@ -140,11 +140,11 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 | Token | Value / rule |
 |---|---|
-| Background | neutral off-white `#f7f8f6`; no beige/yellow dashboard treatment |
+| Background | warm off-white `#f7f4ef`; no dark gradient or beige/yellow dashboard treatment |
 | Surface | white with restrained borders; minimal shadow |
-| Text | deep charcoal `#20221f` |
-| Muted text | gray-green `#687068` |
-| Accent | deep evergreen `#123f3a` |
+| Text | deep charcoal `#171b19` |
+| Muted text | gray-green `#5a635f` |
+| Accent | deep evergreen `#0f3d2e` |
 | Secondary accent | calm navy `#1f4f73` |
 | Approved for church-wide use | restrained green |
 | Internal ministry use only | navy/blue |
@@ -152,9 +152,9 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Archive only | muted purple/gray |
 | Do not publish externally | muted red |
 | Spacing scale | 4px rhythm, mostly 8/12/16/24px |
-| Card radius | mostly 6-8px; larger rounding avoided on workflow surfaces |
-| Chip radius | compact rounded rectangles; pills used sparingly |
-| Shadow | very soft image shadow only |
+| Card radius | mostly 12-24px depending surface; rounder controls without childish bubble UI |
+| Chip radius | compact rounded pills for controls and tags |
+| Shadow | minimal soft lift only; no fake-premium heavy shadow |
 | Typography | Inter + Noto Sans TC fallback, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
 | Motion | GSAP only in review workbench; disabled under reduced-motion |

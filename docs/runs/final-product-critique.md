@@ -22,6 +22,7 @@ This pass was not a backend rewrite. It preserved:
 | 5 | Detail and review sections still used loose tab-like controls or one long inspector list. | Added maintained `DamTabs` with real tab semantics and arrow-key behavior for Asset Detail and Review inspector panels. |
 | 6 | Original access and review-help actions were raw email links with little safety context. | Added `ReuseRequestDialog` so requests are clearly email drafts only and do not change ResourceSpace or pending writes. |
 | 7 | Review mobile still felt endless because the queue rendered too many rows before progressive disclosure. | Added a 24-row load-more gate with exact loaded/total copy and preserved selected-row visibility. |
+| 8 | Latest mockups still wanted a softer, rounder, more explicit DAM workflow surface. | Added warmer tokens, Library saved-view rail, Collections thumbnail rails/inspector hero, Upload bottom action bar, Review toolbar/tabs, Asset Detail safe comparison panel, Admin readiness progress, and editorial Guide icons/callout. |
 
 ## Final Product Read
 
@@ -36,10 +37,12 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 - Counts distinguish rendered, matching, visible-to-role, approved, pending review, rights review, children/youth, and archive.
 - Collections use album-style cards and stable collection IDs; Sabbath wording is preserved.
 - Upload preview shows selected files, type/size, large-media handoff warning, and remove/clear controls before submit.
+- Library desktop now uses a saved-view/browse rail and right filter panel so search results read as a real DAM contact sheet instead of a dashboard card stack.
 
 ## Trust
 
 - Asset detail is the trust record: raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors, metadata confidence, files, tags, and related assets.
+- Asset detail includes a safe derivative comparison panel. It shows only role-safe previews and approved-copy availability; original/master remains hidden.
 - Mobile detail shows title, reuse state, blockers, and download decision before preview/related assets.
 - Unknown people/minors and rights states tell users a reviewer should confirm before public use.
 - ResourceSpace approval is shown separately from portal reuse.
@@ -60,6 +63,7 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 ## Visual System
 
 - Removed giant hero blocks, oversized cards, heavy font weights, pale green wash, repeated dashboard cards, and broken-image-looking thumbnails.
+- Current palette is warm off-white, white operational surfaces, hairline stone borders, deep evergreen accents, restrained amber/red states, rounder controls, and reduced shadow weight.
 - Added restrained Tubelight-inspired workflow nav as maintained `AppNav`, without turning navigation into decoration.
 - Contact-sheet asset cards use compact status, title, collection/source, usage, and blocked/download state.
 - No-preview derivatives are labeled as `Preview pending` or `Preview unavailable`.
@@ -69,7 +73,7 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 
 | Reference/source | Used where | Implemented components | Rejected ideas | Reason | Screenshot evidence | Code paths | Remaining debt |
 |---|---|---|---|---|---|---|---|
-| 21st.dev | App shell, command access, operational cards, upload dropzone/preview, tag input, pagination, review/admin summaries, tabs, dialogs, secondary action dropdowns, restrained primary-action depth, and high-risk action confirmation | `AppNav`, `CommandPalette`, `SavedViewCard`, `LibraryPagination`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `ReviewActionDialog`, `ReuseRequestDialog`, `UploadFileDropzone`, `StatusBanner`, compact health/status cards | Full glassmorphism, hero components, pricing blocks, particles, component showcase | Workflow components helped real DAM tasks; decorative components would weaken safety clarity | `library-desktop.png`, `asset-detail-desktop.png`, `upload-desktop.png`, `review-desktop.png`, `admin-desktop.png`, `command-palette-open.png`, `review-hold-to-confirm.png` | `frontend/components/AppNav.tsx`, `frontend/components/CommandPalette.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/LibraryPagination.tsx`, `frontend/components/DamTabs.tsx`, `frontend/components/DropdownActionMenu.tsx`, `frontend/components/AssetActionsMenu.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/InputWithTags.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReuseRequestDialog.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/StatusBanner.tsx`, `frontend/components/UploadPage.tsx`, `frontend/components/AdminPage.tsx` | Download-options dialog remains deferred until derivative choices are richer. Theme toggle deferred pending safety contrast pass. Apple Tahoe liquid glass treatment deferred beyond subtle primary-action highlights. |
+| 21st.dev | App shell, command access, operational cards, upload dropzone/preview, tag input, pagination, review/admin summaries, tabs, dialogs, secondary action dropdowns, restrained primary-action depth, high-risk action confirmation, and safe derivative comparison | `AppNav`, `CommandPalette`, `SavedViewCard`, `LibraryPagination`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `ReviewActionDialog`, `ReuseRequestDialog`, `UploadFileDropzone`, `StatusBanner`, `ImageComparisonPanel`, compact health/status cards | Full glassmorphism, hero components, pricing blocks, particles, component showcase, true original/derivative slider for Viewer | Workflow components helped real DAM tasks; decorative components would weaken safety clarity | `library-desktop.png`, `asset-detail-desktop.png`, `upload-desktop.png`, `review-desktop.png`, `admin-desktop.png`, `command-palette-open.png`, `review-hold-to-confirm.png` | `frontend/components/AppNav.tsx`, `frontend/components/CommandPalette.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/LibraryPagination.tsx`, `frontend/components/DamTabs.tsx`, `frontend/components/DropdownActionMenu.tsx`, `frontend/components/AssetActionsMenu.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/InputWithTags.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReuseRequestDialog.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/StatusBanner.tsx`, `frontend/components/ImageComparisonPanel.tsx`, `frontend/components/UploadPage.tsx`, `frontend/components/AdminPage.tsx` | Download-options dialog remains deferred until derivative choices are richer. Theme toggle deferred pending safety contrast pass. True original/derivative slider waits for safe paired ResourceSpace derivatives. |
 | Dribbble DAM references | Library density, collections, review workbench, admin diagnostics | Contact-sheet grid, filter sidebar, collection album cards, Grid/List controls, dense review rows | Oversized dashboard cards and generic analytics panels | DAM browsing needs media density and triage speed, not decorative dashboard rhythm | `library-desktop.png`, `collections-desktop.png`, `review-desktop.png` | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/FilterSidebar.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/ReviewPage.tsx` | True table-view metadata density can still be deepened later; Grid/List controls exist now. |
 | Awwwards | Asset detail image treatment, restrained visual polish, Guide readability | Large preview/detail trust layout, minimal contextual UI | Cinematic heroes, flashy scroll motion, portfolio storytelling | Restraint improved media inspection; storytelling would slow ministry workflows | `asset-detail-desktop.png`, `detail-mobile-320.png`, `guide-desktop.png` | `frontend/components/AssetDetailPage.tsx`, `frontend/components/MediaPreview.tsx`, `frontend/components/GuidePage.tsx` | Dedicated zoom/inspection dialog remains deferred. |
 | CodePen upload/gallery patterns | Contributor intake and preview behavior | Drop/browse upload target, selected-file preview, file type/size, remove/clear, large-media warning | Pure decorative uploader and masonry-lightbox-first browsing | Upload dropzone was useful; lightbox-first gallery would hide DAM metadata and safety state | `upload-desktop.png`, `upload-mobile-320.png` | `frontend/components/UploadFileDropzone.tsx`, `frontend/components/UploadPage.tsx`, `frontend/app/api/upload/route.ts` | Safe image thumbnails can be added when real upload backend/policy is wired. |
@@ -109,7 +113,7 @@ Rejected or deferred:
 
 | Component/pattern | Status | Reason |
 |---|---|---|
-| Image Comparison Slider | Deferred | Useful for reviewer/admin derivative comparison, but current export lacks safe paired derivative/original previews. Must not expose restricted originals to Viewer. Future path: `frontend/components/ImageComparisonReviewPanel.tsx`. |
+| Image Comparison Slider | Safe panel implemented / true slider deferred | `ImageComparisonPanel` now shows role-safe derivative availability on Asset Detail. True reviewer/admin before-after comparison waits for safe paired derivative/original previews. Must not expose restricted originals to Viewer. Future path: `frontend/components/ImageComparisonReviewPanel.tsx`. |
 | Theme toggle | Deferred | Dark mode needs full safety-label contrast verification before release. |
 | Download options dialog | Deferred | Request dialogs are implemented; a richer derivative download dialog waits until production derivative presets exist. |
 | Floating quick-action dock | Deferred | Risks duplicating primary nav and crowding mobile. |
@@ -127,16 +131,24 @@ Chrome-backed screenshot capture refreshed:
 
 - `docs/screenshots/library-desktop.png`
 - `docs/screenshots/library-mobile-320.png`
+- `docs/screenshots/library-mobile-390.png`
 - `docs/screenshots/asset-detail-desktop.png`
 - `docs/screenshots/detail-mobile-320.png`
+- `docs/screenshots/detail-mobile-390.png`
 - `docs/screenshots/upload-desktop.png`
 - `docs/screenshots/upload-mobile-320.png`
+- `docs/screenshots/upload-mobile-390.png`
 - `docs/screenshots/review-desktop.png`
 - `docs/screenshots/review-mobile-320.png`
+- `docs/screenshots/review-mobile-390.png`
 - `docs/screenshots/guide-desktop.png`
 - `docs/screenshots/guide-mobile-320.png`
+- `docs/screenshots/guide-mobile-390.png`
 - `docs/screenshots/collections-desktop.png`
+- `docs/screenshots/collections-mobile-320.png`
+- `docs/screenshots/collections-mobile-390.png`
 - `docs/screenshots/admin-desktop.png`
+- `docs/screenshots/admin-mobile-390.png`
 
 Measured browser QA:
 
@@ -152,7 +164,7 @@ Measured browser QA:
 - `make frontend-check`: pass after clean `.next` rebuild.
 - `make demo-check`: pass.
 - `make smoke`: pass with Docker daemon / ResourceSpace container warnings only.
-- `make launch-readiness`: pass with warnings for `.env` placeholders and 11 GiB free disk.
+- `make launch-readiness`: pass with warnings for `.env` placeholders and 13 GiB free disk.
 - `git diff --check`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass with zero failures, zero warnings, and zero console errors.

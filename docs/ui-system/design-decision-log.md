@@ -2,6 +2,33 @@
 
 Last updated: 2026-06-06
 
+## 2026-06-06 - Visual-To-Code Mockup Continuation
+
+Decision: apply the latest generated mockup direction directly to the production UI, with ResourceSpace safety unchanged.
+
+Replacement summary:
+
+| Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
+|---|---|---|---|
+| Horizontal saved-view cards above Library results | Desktop saved-view/browse rail plus right filter drawer | Saved views still use stable API view IDs and count truth | Main results appear quickly; mobile keeps horizontal saved views to avoid cramped sidebars |
+| Collections card rows with weak preview geometry | Wider album rows with lead thumbnail rail and selected inspector hero preview-pending state | No fake thumbnails; collection approval remains navigation context, not reuse permission | Browser QA confirms no horizontal overflow at 320/390/768 |
+| Upload form ended in one full-width submit button | Autosave checkpoint, file count surface, and bottom action bar | Submit still routes to server intake; all uploads remain Needs Review / Do Not Publish | Buttons keep 44px targets and remain accessible at 320/390 |
+| Review inspector used old Checklist/Rights wording | Overview / Metadata / Usage / AI Insights / Pending write tabs | Evidence checklist, note, dialog, pending-write truth, and hold actions are unchanged | QA script updated to verify requested tab names and arrow-key panel movement |
+| Asset detail lacked derivative comparison area | Safe `ImageComparisonPanel` | Uses role-safe display derivative only; original/master stays hidden | Range control is keyboard reachable; no mobile overflow |
+| Admin readiness card was too plain | Readiness panel with progress bar and source/read/write cards | Does not claim production readiness; blockers remain visible | Cards stack cleanly on mobile |
+| Guide rows were text-only | Editorial row icons plus top-right uncertainty callout | Safety guidance remains visible text, not tooltip-only | Anchor menu remains desktop; content stacks on mobile |
+
+Verification:
+
+- `npm --prefix frontend run typecheck`: pass.
+- `npm --prefix frontend run build`: pass.
+- `make frontend-check`: pass when run alone. A previous parallel run collided with another `next build` cache rename and was rerun successfully.
+- `make demo-check`: pass.
+- `make smoke`: pass with Docker/ResourceSpace/MariaDB not running warnings only.
+- `make launch-readiness`: pass with `.env` placeholder and 13 GiB free disk warnings.
+- `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
+- `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass, 15 pages, 1440/1280/1024/768/390/320, zero failures, zero warnings, zero console errors.
+
 ## 2026-06-06 - 21st.dev Scouting Pass
 
 Decision: use 21st.dev as a component scouting source, not as a drop-in visual system.
@@ -58,17 +85,18 @@ no decorative motion that weakens workflow
 
 Reference: `https://21st.dev/community/components/thanh/image-comparison-slider/default`
 
-Decision: defer.
+Decision: implement a safe comparison panel now; defer true original-vs-approved derivative slider.
 
 Rationale:
 
 - Potentially valuable for comparing approved derivative vs restricted original, approved crop vs source crop, or portal preview vs approved downloadable copy.
-- Not safe to implement until ResourceSpace derivative policy and preview permissions provide a trustworthy paired-image source.
-- Current implementation would either use fake placeholders or risk exposing restricted original/master media.
+- Not safe to implement a true before/after slider until ResourceSpace derivative policy and preview permissions provide a trustworthy paired-image source.
+- A safe `ImageComparisonPanel` now appears on Asset Detail. It uses only the role-safe display derivative and labels the original/master as hidden.
 
 Future implementation requirements:
 
-- Build `frontend/components/ImageComparisonReviewPanel.tsx`.
+- Keep current safe panel at `frontend/components/ImageComparisonPanel.tsx`.
+- Build future richer reviewer/admin-only `frontend/components/ImageComparisonReviewPanel.tsx`.
 - Use only in reviewer/admin context unless both sides are explicitly public-safe.
 - Gate both images through existing preview/access decisions.
 - Render clear `Preview restricted` / `Original restricted` states.

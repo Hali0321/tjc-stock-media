@@ -19,7 +19,7 @@ make frontend-check
 make demo-check
 ```
 
-Latest local QA captured the required screenshots under `docs/screenshots/` from `http://127.0.0.1:3008` and checked 1440 px desktop plus 320 px mobile browser widths with no horizontal page overflow. Full browser QA also covered 1280, 1024, 768, 390, and 320 px with zero failures, zero warnings, and zero console errors.
+Latest local QA captured the required screenshots under `docs/screenshots/` from `http://127.0.0.1:3008`, including desktop plus 320/390 mobile screenshots for Library, Collections, Upload, Review, Asset Detail, Guide, and Admin where requested. Full browser QA covered 1440, 1280, 1024, 768, 390, and 320 px with zero failures, zero warnings, zero console errors, and zero network failures.
 
 The current frontend shell is the final dense ministry DAM UI:
 
@@ -29,12 +29,14 @@ The current frontend shell is the final dense ministry DAM UI:
 - Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
 - Command palette: `Cmd/Ctrl+K` for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, Guide, and Admin diagnostics.
-- Library: compact command bar, early search, use-case shortcuts, saved views, filters, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
-- Collections: album-style records opened by stable collection ID, including Sabbath wording.
+- Library: compact command bar, early search, desktop saved-view/browse rail, use-case shortcuts, right filter panel, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
+- Collections: album-style records opened by stable collection ID, compact thumbnail rails, selected collection inspector, `Open Library results` action, and Sabbath wording.
 - Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.
-- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets. Use/Source/Review/Files/Related use maintained `DamTabs`. Secondary copy/open actions use maintained `DropdownActionMenu` / `AssetActionsMenu`; the ResourceSpace source-of-truth link remains DAM Admin only.
-- Upload: guided three-step intake with maintained dropzone/selected-file preview, taxonomy-backed `InputWithTags`, type/size display, remove/clear controls, required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
-- Review: queue tabs, compact decision rows, selected-asset inspector tabs, evidence checklist, note field, audit preview, pending write state, explicit load-more gate for long queues, secondary inspector actions via maintained `AssetActionsMenu`, hold-and-release controls for archive/do-not-publish decisions, and desktop-only GSAP motion disabled by reduced-motion.
+- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, safe derivative comparison panel, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets. Use/Source/Review/Files/Related use maintained `DamTabs`. Secondary copy/open actions use maintained `DropdownActionMenu` / `AssetActionsMenu`; the ResourceSpace source-of-truth link remains DAM Admin only.
+- Upload: guided three-step intake with autosave checkpoint, maintained dropzone/selected-file preview, taxonomy-backed `InputWithTags`, type/size display, remove/clear controls, required evidence markers, reviewer handoff packet, large-media guidance, bottom action bar, and blocked-until-review receipt.
+- Review: queue tabs, queue toolbar, compact decision rows, selected-asset `Overview / Metadata / Usage / AI Insights / Pending write` inspector tabs, evidence checklist, note field, audit preview, pending write state, explicit load-more gate for long queues, secondary inspector actions via maintained `AssetActionsMenu`, hold-and-release controls for archive/do-not-publish decisions, and desktop-only GSAP motion disabled by reduced-motion.
+- Admin: production readiness console with left admin sidebar, readiness progress panel, source/read/write cards, launch gate, integration tables, pending blockers, field mapping coverage, vocabulary, and portal gate.
+- Guide: editorial usage guide with anchor nav, uncertainty callout, row icons, Do/Avoid columns, and media coworker callout.
 
 ## Architecture
 

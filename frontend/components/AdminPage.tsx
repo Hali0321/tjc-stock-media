@@ -205,7 +205,7 @@ export function AdminPage() {
           <h1 className="mt-2 text-3xl font-black text-tjc-ink md:text-4xl">Production readiness</h1>
           <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Operational truth for ResourceSpace read/write status, download safety, launch blockers, and field coverage.</p>
         </div>
-        <div className="grid content-center gap-3 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+        <div className="grid content-center gap-3 rounded-[1.45rem] border border-[#d6dfd8] bg-white p-4 shadow-[0_14px_34px_rgba(25,34,29,.04)]">
           <div>
             <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
               <Gauge size={19} strokeWidth={1.8} aria-hidden="true" />
@@ -213,6 +213,9 @@ export function AdminPage() {
             </div>
             <strong className="mt-1 block text-4xl font-black tabular-nums text-tjc-ink">{data.score}%</strong>
             <span className="mt-1 block text-sm font-semibold text-tjc-muted">{data.assetCount.toLocaleString()} assets checked from {data.source.label}</span>
+            <span className="mt-3 block h-2 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
+              <span className={cn("block h-full rounded-full", scoreTone(data.score) === "ok" ? "bg-[#2f7d55]" : scoreTone(data.score) === "info" ? "bg-[#5a7f95]" : "bg-[#d64545]")} style={{ width: `${Math.max(3, Math.min(data.score, 100))}%` }} />
+            </span>
           </div>
           <button className="inline-flex min-h-9 w-fit items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportReadinessCsv}>
             <Download size={15} strokeWidth={1.8} aria-hidden="true" />
@@ -244,23 +247,23 @@ export function AdminPage() {
         <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
       </section>
 
-      <section className="mt-4 grid gap-5 border-y border-[#d6dfd8] py-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
-        <div>
+      <section className="mt-4 grid gap-3 border-y border-[#d6dfd8] py-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
+        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
           <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{data.source.label}</strong>
           <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{data.source.detail}</p>
         </div>
-        <div>
+        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
           <span className="text-xs font-semibold uppercase text-tjc-muted">API read configured</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{readBridge?.ready ? "yes" : "no"}</strong>
           <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{readBridge?.detail || "Read bridge unavailable."}</p>
         </div>
-        <div>
+        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
           <span className="text-xs font-semibold uppercase text-tjc-muted">API write configured</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{writeMapping?.ready ? "yes" : "no"}</strong>
           <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{writeMapping?.detail || "Write mapping unavailable."}</p>
         </div>
-        <div>
+        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
           <span className="text-xs font-semibold uppercase text-tjc-muted">Required field refs</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{requiredFieldRefsPresent} present / {Math.max(0, requiredFields.length - requiredFieldRefsPresent)} missing</strong>
           <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Pending review write queue: {pendingQueue?.detail || "none"}</p>
