@@ -2,7 +2,7 @@
 
 North Star: a TJC user can find a rights-safe asset for a real communication need in under 60 seconds.
 
-This repo sets up a local ResourceSpace DAM prototype and a TJC-facing Next.js portal for True Jesus Church stock media. Google Shared Drive remains the master copy. ResourceSpace is the librarian: intake, tags, search, rights review, and approved downloads. The Next.js portal is the friendly search/upload/review surface for stakeholders and ministry users.
+This repo sets up a local ResourceSpace DAM prototype and a TJC-facing Next.js portal for True Jesus Church stock media. Google Shared Drive remains the master-original warehouse. ResourceSpace is the source of truth for assets, metadata, search, rights review, and approval fields. The Next.js portal is the friendly search/upload/review surface for stakeholders and ministry users; it does not replace ResourceSpace or become a second DAM.
 
 ```text
 Legacy sources
@@ -23,7 +23,54 @@ DAM index / tags / search / review / downloads
 Metadata exports + approved sample exports back to Shared Drive
 Controlled launch target: church PC/NAS + Cloudflare Access + fresh install/restore.
 Approved Public/Internal folders are delivery shelves, not the archive.
+Portal-ready reuse is computed separately from raw ResourceSpace approval.
 ```
+
+## Clone And Local Setup
+
+Teammates can clone this repo and work from it normally:
+
+```bash
+git clone https://github.com/Hali0321/tjc-stock-media.git
+cd tjc-stock-media
+```
+
+Create a local environment file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Start the ResourceSpace stack:
+
+```bash
+make up
+make smoke
+```
+
+Start the portal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+By default the portal runs at `http://localhost:3008`. If that port is busy, run a different port:
+
+```bash
+npx next dev --port 3018
+```
+
+Local-only files are intentionally not committed:
+
+- `.env`
+- `.runtime/` ResourceSpace filestore, database, exports, backups, pending review writes
+- imported church media files
+- generated PNG screenshots
+- `frontend/node_modules/` and `.next/`
+
+This means a fresh clone has the full project code, docs, scripts, Docker config, ResourceSpace helpers, and portal frontend, but each teammate still needs their own local runtime data or metadata export.
 
 ## Launch Plan
 
@@ -56,7 +103,9 @@ Current import status:
 
 - ResourceSpace collection: `MVP 2024 - First Batch`
 - Imported active resources: 181
-- Review state: 181 approved and published for the MVP 2024 prototype batch
+- Raw ResourceSpace review state: 181 approved and published for the MVP 2024 prototype batch
+- Portal reuse state: 0 portal-ready until rights, people/minors, reviewer/date, and derivative evidence pass policy
+- Batch approved with blockers: 181
 - Files with stored binaries: 181
 - HEIC result: 18 originals preserved, 2 previewed natively, 16 have attached JPG derivative alternatives for preview/use
 - HEIC front preview: derivative JPG thumbnails promoted for ResourceSpace cards while original HEIC files remain preserved
@@ -113,15 +162,17 @@ If you rebuild from scratch and see the ResourceSpace setup page, use:
 
 Do not demo "ResourceSpace is running." Demo the product behavior:
 
-1. Search `Bible`, `Plant`, `Fountain`, `MVP 2024`, `Approved Public`.
+1. Search `Bible`, `Plant`, `Fountain`, `MVP 2024`, `website hero`, and `public safe`.
 2. Open a result.
-3. Show source path, tags, approval label, usage scope, and notes.
+3. Show raw ResourceSpace status separately from portal reuse state.
 4. Explain every new import starts as `Needs Review / Do Not Publish`.
-5. Show MVP 2024 resources are now displayed as `Approved for church-wide use`.
-6. Show `Reviewed By`, `Reviewed Date`, and `Public and Internal` usage scope.
-7. Export metadata CSV.
-8. Copy approved sample back to Shared Drive.
-9. Show original source files remain untouched.
+5. Explain `Approved Public` means ResourceSpace-approved, not automatically portal-reusable.
+6. Show current batch-approved assets as `Needs portal review` when rights/people/derivative evidence is incomplete.
+7. Show Viewer download blocked for non-portal-ready assets.
+8. Show Reviewer actions require note and checklist, then queue a pending write rather than faking ResourceSpace persistence.
+9. Show Sabbath collection navigation uses a stable collection ID and returns 23 assets.
+10. Show `/admin` diagnostics for data source, API read/write config, field refs, pending queue, and launch blockers.
+11. Show original source files remain untouched.
 
 ## Commands
 
@@ -144,6 +195,8 @@ make launch-readiness # local launch documentation/config guardrail check
 make frontend-dev # run Next.js portal locally at http://localhost:3008
 make frontend-check # typecheck/build frontend and scan for media/secrets/runtime files
 make demo-check # frontend checks plus demo/doc guardrails
+make portal-api-smoke # API contract smoke for access/search/review/upload/admin
+make portal-browser-qa # Playwright browser QA across desktop/tablet/mobile
 make down            # stop local containers
 ```
 
@@ -161,21 +214,38 @@ Current data source priority:
 2. Latest local ResourceSpace metadata CSV export under `.runtime/exports`.
 3. Temporary safe fallback data only if ResourceSpace data is unavailable.
 
-Current Mac reference uses exported ResourceSpace metadata for search/detail/review queue and a dev-only thumbnail proxy for individual ResourceSpace preview derivatives. Approval writes are intentionally read-only until ResourceSpace API field mapping is configured. The route refuses fake persistence instead of creating a second approval database.
+Current Mac reference uses exported ResourceSpace metadata for search/detail/review queue and a dev-only thumbnail proxy for individual ResourceSpace preview derivatives. Review decisions are queued locally under `.runtime/pending-review-writes/` until ResourceSpace API write field mapping is configured. Pending writes are operational retry/audit records, not final ResourceSpace truth.
 
-Normal users can only download approved use copies. Original/master files stay restricted.
+Normal users can only download portal-ready approved use copies. Original/master files stay restricted.
 
-Current UI redesign notes:
+Current portal governance model:
+
+- `Approved Public`: raw ResourceSpace status. It is traceability, not automatic public-safe reuse.
+- `Portal Ready`: computed state. Source/provenance, rights/consent, people/minors, reviewer/date, usage scope, and derivative checks all pass.
+- `Batch Approved With Blockers`: ResourceSpace-approved asset missing one or more portal reuse requirements. User-facing label: `Needs portal review`.
+- `Pending Review Write`: local queued review decision that has not yet been written to ResourceSpace.
+
+Current search and collection behavior:
+
+- `website hero`, `hero`, `banner`, and `header` map to `view=website-hero`.
+- `public safe` and `safe for web` map to `view=portal-ready`, not raw approved assets.
+- `children`, `youth`, and `minors` map to the children/youth review queue.
+- `needs review` and `review` map to the review queue.
+- Sabbath collection navigation uses `collection=sabbath` and currently returns 23 assets.
+
+Current UI and workflow notes:
 
 - Primary navigation is `Library`, `Collections`, `Upload`, and `Review`; `Guide` moved to utility/footer access.
-- The centered document-style shell has been replaced with an app-like sidebar plus top utility bar.
 - The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Geist via `next/font/google`, and existing `lucide-react` icons.
 - Review includes isolated GSAP motion for desktop reviewer workflow only; reduced-motion disables the pin/scale effects.
 - Library is now a DAM command workspace, not a hero page: compact search, use-case buttons, source/safety strip, operational saved views, compact collection rail, filters, and real asset results high on the page.
 - Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
-- Upload is a guided contributor intake. Review is a role-gated workbench with queue tabs and selected-asset inspector. Safe-download logic and ResourceSpace source-of-truth boundaries are unchanged.
+- Upload is a guided contributor intake with required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
+- Review is a role-gated workbench with queue tabs, selected-asset inspector, required checklist, audit preview, and pending write result copy.
+- `/admin` is DAM Admin-only and shows current data source, API read/write readiness, required field refs, pending write queue, role matrix, and production blockers.
+- Safe-download logic uses the portal reuse policy, not raw ResourceSpace approval alone.
 
 User-facing approval labels are warmer than backend values:
 
@@ -186,20 +256,7 @@ User-facing approval labels are warmer than backend values:
 - `Do Not Use` appears as `Do not publish externally`
 - `Possible Minors` appears as `Contains children/youth`
 
-Latest UI QA screenshots, refreshed from the production Next server:
-
-- `docs/screenshots/library-desktop.png`
-- `docs/screenshots/collections-desktop.png`
-- `docs/screenshots/asset-detail-desktop.png`
-- `docs/screenshots/upload-desktop.png`
-- `docs/screenshots/review-desktop.png`
-- `docs/screenshots/guide-desktop.png`
-- `docs/screenshots/library-mobile-320.png`
-- `docs/screenshots/detail-mobile-320.png`
-- `docs/screenshots/review-mobile-320.png`
-- `docs/screenshots/upload-mobile-320.png`
-
-Latest browser QA checked 1440, 1280, 1024, 768, 390, and 320 px with no horizontal page overflow. Role/API checks confirmed unsafe Viewer download 403, Viewer review/upload 403, Reviewer write action 409 when ResourceSpace API write config is missing, and Contributor upload intake 200 with empty file placeholders ignored. The visual target is Google Photos / Apple Photos simplicity, Brandfolder asset safety, PhotoShelter role-aware browsing, Notion gallery calm, Frontify usage guidance, and a warm TJC ministry tone.
+Latest browser QA checked 1440, 1280, 1024, 768, 390, and 320 px with no horizontal page overflow. Role/API checks confirmed Viewer downloads for non-portal-ready assets return 403, `website hero` maps to 67 assets, `public safe` maps to 0 portal-ready assets, Sabbath collection returns 23 assets, review evidence failures return 400, valid review evidence queues a 202 pending write, and Contributor source-link intake succeeds with fileCount 0 when required review context is present. The durable QA report is `docs/screenshots/qa/browser-qa-report.json`; generated PNG screenshots are ignored by Git.
 
 ## HEIC Policy
 
