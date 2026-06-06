@@ -72,7 +72,7 @@ export function ReviewActionDialog({
     <div className="fixed inset-0 z-50 grid place-items-center bg-[#20221f]/38 p-3 backdrop-blur-[2px]" role="presentation" onMouseDown={onCancel}>
       <section
         ref={dialogRef}
-        className="w-full max-w-2xl overflow-hidden rounded-lg border border-tjc-line bg-white shadow-[0_18px_60px_rgba(32,34,31,.24)]"
+        className="w-full max-w-2xl overflow-hidden dam-card shadow-[0_18px_60px_rgba(32,34,31,.24)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-action-title"
@@ -92,7 +92,7 @@ export function ReviewActionDialog({
         </div>
 
         <div className="grid gap-3 p-4">
-          <div className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 sm:grid-cols-2">
+          <div className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 sm:grid-cols-2">
             <div>
               <span className="text-xs font-semibold uppercase text-tjc-muted">Asset</span>
               <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
@@ -120,7 +120,7 @@ export function ReviewActionDialog({
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <section className="rounded-md border border-tjc-line bg-white p-3" aria-label="Evidence checklist summary">
+            <section className="dam-card p-3" aria-label="Evidence checklist summary">
               <h3 className="text-sm font-semibold text-tjc-evergreen">Evidence confirmed</h3>
               <ul className="mt-2 grid gap-1.5 text-sm text-[#4d554d]">
                 {checklistSummary.map((item) => (
@@ -131,7 +131,7 @@ export function ReviewActionDialog({
                 ))}
               </ul>
             </section>
-            <section className="rounded-md border border-tjc-line bg-white p-3" aria-label="Current blockers">
+            <section className="dam-card p-3" aria-label="Current blockers">
               <h3 className="text-sm font-semibold text-tjc-evergreen">Current blockers</h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {blockers.length ? (
@@ -145,19 +145,19 @@ export function ReviewActionDialog({
             </section>
           </div>
 
-          <section className="rounded-md border border-tjc-line bg-[#fbfcfa] p-3" aria-label="Review note preview">
+          <section className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-3" aria-label="Review note preview">
             <h3 className="text-sm font-semibold text-tjc-evergreen">Review note</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-[#4d554d]">{note}</p>
           </section>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-tjc-line bg-[#fbfcfa] px-4 py-3">
-          <button className="inline-flex min-h-10 items-center rounded-md border border-tjc-line bg-white px-4 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={onCancel}>
+          <button className="inline-flex min-h-10 items-center rounded-xl border border-tjc-line bg-white px-4 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={onCancel}>
             Cancel
           </button>
           <button
             ref={confirmRef}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-10 items-center gap-2 dam-button-primary px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
             type="button"
             onClick={onConfirm}
             disabled={submitting}

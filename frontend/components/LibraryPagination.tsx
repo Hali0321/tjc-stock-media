@@ -30,13 +30,13 @@ export function LibraryPagination({
   const rangeText = total ? `Showing ${rangeStart.toLocaleString()}-${rangeEnd.toLocaleString()} of ${totalText}` : "No matching assets";
 
   return (
-    <nav className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5" aria-label="Asset result pagination">
+    <nav className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#d8dfd5] bg-white/95 px-3 py-2.5 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Asset result pagination">
       <strong className="text-sm font-semibold text-tjc-ink">{loading ? "Loading results" : rangeText}</strong>
       <div className="flex items-center gap-2">
         <button
           type="button"
           className={cn(
-            "inline-flex min-h-9 items-center gap-1.5 rounded-md border border-tjc-line px-3 text-sm font-semibold transition",
+            "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-tjc-line px-3 text-sm font-semibold transition",
             disabledPrevious ? "cursor-not-allowed bg-[#f6f7f5] text-[#8b958d]" : "bg-white text-tjc-evergreen hover:bg-[#eef7f1] active:translate-y-px"
           )}
           onClick={onPrevious}
@@ -48,7 +48,7 @@ export function LibraryPagination({
         <button
           type="button"
           className={cn(
-            "inline-flex min-h-9 items-center gap-1.5 rounded-md border border-tjc-line px-3 text-sm font-semibold transition",
+            "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-tjc-line px-3 text-sm font-semibold transition",
             disabledNext ? "cursor-not-allowed bg-[#f6f7f5] text-[#8b958d]" : "bg-white text-tjc-evergreen hover:bg-[#eef7f1] active:translate-y-px"
           )}
           onClick={onNext}

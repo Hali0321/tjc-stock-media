@@ -9,7 +9,7 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
   const downloadable = display.download.approvedCopy.allowed;
   const hasWarnings = display.confidence.some((item) => item.tone === "warn");
   return (
-    <section className="rounded-md border border-tjc-line bg-white p-3 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Trust summary">
+    <section className="dam-card p-3" aria-label="Trust summary">
       <div className="mb-3">
         <h2 className="text-base font-semibold">Can I use this?</h2>
         <p className="mt-1 text-sm leading-snug text-tjc-muted">Approval, scope, rights, people/minors, and source confidence.</p>
@@ -19,8 +19,8 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
         <UsageBadge scope={asset.usageScope} />
       </div>
       <div className={cn(
-        "mb-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border p-3",
-        downloadable && !hasWarnings ? "border-[#b7dac7] bg-[#eff9f3] text-[#25553b]" : "border-[#ead6a8] bg-[#fff7e5] text-[#73531a]"
+        "mb-4 grid grid-cols-[auto_1fr] gap-3 rounded-xl border p-3",
+        downloadable && !hasWarnings ? "dam-risk-ok" : "dam-risk-warn"
       )}>
         {downloadable && !hasWarnings ? <CheckCircle2 size={20} strokeWidth={1.8} aria-hidden="true" /> : <ShieldAlert size={20} strokeWidth={1.8} aria-hidden="true" />}
         <div>
@@ -40,7 +40,7 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
         {display.confidence.map((item) => (
           <div key={item.key} className="flex items-center justify-between gap-3 text-sm">
             <span className="font-medium text-[#4d554d]">{item.label}</span>
-            <span className={cn("rounded-md px-2 py-1 text-xs font-semibold", item.tone === "ok" ? "bg-[#edf8f1] text-[#22563a]" : "bg-[#fff7e5] text-[#725216]")}>{item.state}</span>
+            <span className={cn("rounded-lg px-2 py-1 text-xs font-semibold", item.tone === "ok" ? "bg-[#edf8f1] text-[#22563a]" : "bg-[#fff7e5] text-[#725216]")}>{item.state}</span>
           </div>
         ))}
       </div>

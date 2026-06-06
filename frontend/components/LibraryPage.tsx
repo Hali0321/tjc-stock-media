@@ -63,7 +63,7 @@ function AssetListRow({
   const health = assetMetadataHealth(asset);
   return (
     <article className={cn("grid gap-3 border-b border-tjc-line bg-white px-3 py-2.5 last:border-b-0 lg:grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem]", selected && "bg-[#f4fbf7]")}>
-      <label className="grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-white" aria-label={`Select ${asset.title}`}>
+      <label className="grid h-9 w-9 place-items-center rounded-xl border border-tjc-line bg-white" aria-label={`Select ${asset.title}`}>
         <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selected} onChange={onToggle} />
       </label>
       <Link href={`/assets/${asset.id}`} className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
@@ -73,8 +73,8 @@ function AssetListRow({
         <Link href={`/assets/${asset.id}`} className="line-clamp-2 font-semibold leading-tight text-tjc-ink hover:text-tjc-evergreen">{asset.title}</Link>
         <p className="mt-1 truncate text-sm text-tjc-muted">{asset.collection}</p>
       </div>
-      <span className="rounded-md border border-tjc-line bg-white px-2 py-1 text-xs font-semibold text-[#4d554d]">{asset.status}</span>
-      <span className="rounded-md border border-tjc-line bg-white px-2 py-1 text-xs font-semibold text-[#4d554d]">{asset.usageScope}</span>
+      <span className="rounded-xl border border-tjc-line bg-white px-2 py-1 text-xs font-semibold text-[#4d554d]">{asset.status}</span>
+      <span className="rounded-xl border border-tjc-line bg-white px-2 py-1 text-xs font-semibold text-[#4d554d]">{asset.usageScope}</span>
       <span className="truncate text-sm text-tjc-muted">{asset.reviewer && asset.reviewedDate ? `${asset.reviewer} / ${asset.reviewedDate}` : "Review pending"}</span>
       <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", healthTone(health.score))}>{health.score}% {health.state}</span>
     </article>
@@ -326,7 +326,7 @@ export function LibraryPage() {
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Library workspace">
+      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Library workspace">
         <div className="min-w-0">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -336,13 +336,13 @@ export function LibraryPage() {
               </p>
             </div>
             {hasActiveSearch ? (
-              <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef5f1] active:translate-y-px" type="button" onClick={clearSearchState}>
+              <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef5f1] active:translate-y-px" type="button" onClick={clearSearchState}>
                 <X size={15} strokeWidth={1.8} aria-hidden="true" />
                 Reset
               </button>
             ) : null}
           </div>
-          <form className="mt-4 grid gap-2 rounded-md border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
+          <form className="mt-4 grid gap-2 rounded-2xl border border-[#c8d8cc] bg-white/95 p-2 shadow-[0_16px_40px_rgba(49,60,52,.08)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={20} strokeWidth={1.8} />
             <label className="sr-only" htmlFor="library-search">Search approved media</label>
             <input
@@ -354,14 +354,14 @@ export function LibraryPage() {
               name="q"
               type="search"
             />
-            <button className="min-h-10 rounded-md bg-tjc-evergreen px-5 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px" type="submit">Search</button>
+            <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search</button>
           </form>
           <div className="mt-3 flex max-w-full min-w-0 flex-wrap gap-2 pb-1" aria-label="Use-case shortcuts">
             {visibleUseCases.map((item) => (
               <button
                 key={item.label}
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1] active:translate-y-px"
+                className="inline-flex min-h-9 items-center rounded-full border border-[#cbd8ce] bg-white/88 px-3 text-sm font-semibold text-[#3f4a43] shadow-[0_1px_0_rgba(255,255,255,.85)_inset] transition hover:border-[#8fb2a5] hover:bg-[#eef7f1] active:translate-y-px"
                 onClick={() => openUseCase(item)}
               >
                 {item.label}
@@ -370,7 +370,7 @@ export function LibraryPage() {
           </div>
         </div>
 
-        <div className="dam-panel grid min-w-0 content-start gap-3 p-3">
+        <div className="dam-lift grid min-w-0 content-start gap-3 p-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Source and count truth</span>
@@ -380,13 +380,13 @@ export function LibraryPage() {
             <Database className="shrink-0 text-tjc-evergreen" size={19} strokeWidth={1.8} aria-hidden="true" />
           </div>
           <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold text-tjc-ink sm:hidden" aria-label="Mobile catalog summary">
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
               {result?.counts.approved ?? "-"} approved
             </span>
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
               {result?.counts.rightsReview ?? "-"} rights
             </span>
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
               {result?.counts.visibleToRole ?? "-"} visible
             </span>
           </div>
@@ -401,7 +401,7 @@ export function LibraryPage() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <div className="grid min-h-16 content-center rounded-md border border-tjc-line bg-[#fbfcfa] p-2" key={item.label}>
+                <div className="grid min-h-16 content-center rounded-xl border border-[#d6e0d6] bg-[#f8fbf7] p-2 shadow-[0_1px_0_rgba(255,255,255,.9)_inset]" key={item.label}>
                   <Icon className="text-tjc-evergreen" size={14} strokeWidth={1.8} aria-hidden="true" />
                   <strong className="mt-1 text-lg font-semibold tabular-nums text-tjc-ink">{item.value}</strong>
                   <span className="text-[11px] font-medium leading-tight text-tjc-muted">{item.label}</span>
@@ -418,13 +418,13 @@ export function LibraryPage() {
 	        </div>
 	      ) : null}
 
-	      <details className="mt-3 hidden rounded-md border border-tjc-line bg-white/88 md:block">
+	      <details className="mt-3 hidden rounded-2xl border border-[#d1ddd2] bg-white/88 shadow-[0_12px_32px_rgba(49,60,52,.045)] md:block">
         <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-tjc-evergreen">
           <span>Production signals</span>
           <span className="text-xs font-medium text-tjc-muted">Metadata health, operational signals, search gaps</span>
         </summary>
         <div className="grid gap-3 border-t border-tjc-line p-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)_minmax(20rem,.6fr)]" aria-label="Production DAM health">
-        <div className="grid gap-2 rounded-md border border-tjc-line bg-white p-3">
+        <div className="grid gap-2 rounded-xl border border-tjc-line bg-white p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-semibold text-tjc-evergreen">Metadata health</h2>
@@ -441,14 +441,14 @@ export function LibraryPage() {
               ["Needs usage", result?.metadataHealth.needsUsage],
               ["Review pending", result?.metadataHealth.reviewPending]
             ].map(([label, value]) => (
-              <div className="rounded-md border border-tjc-line bg-[#fbfcfa] p-2" key={label}>
+              <div className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-2" key={label}>
                 <strong className="block text-lg font-semibold tabular-nums text-tjc-ink">{value ?? "-"}</strong>
                 <span className="text-[11px] font-medium text-tjc-muted">{label}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="rounded-md border border-tjc-line bg-white p-3">
+        <div className="rounded-xl border border-tjc-line bg-white p-3">
           <h2 className="text-sm font-semibold text-tjc-evergreen">Operational signals</h2>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {(result?.operationalInsights || []).slice(0, 6).map((insight) => {
@@ -471,11 +471,11 @@ export function LibraryPage() {
             })}
           </div>
         </div>
-        <div className="rounded-md border border-tjc-line bg-white p-3">
+        <div className="rounded-xl border border-tjc-line bg-white p-3">
           <h2 className="text-sm font-semibold text-tjc-evergreen">Search gaps</h2>
           <div className="mt-2 grid gap-2">
             {(result?.zeroResultInsights || []).slice(0, 3).map((insight) => (
-              <button key={insight.query} type="button" className="grid rounded-md border border-tjc-line bg-[#fbfcfa] p-2 text-left text-xs transition hover:bg-[#eef7f1]" onClick={() => insight.savedViewId && openSavedView(insight.savedViewId)}>
+              <button key={insight.query} type="button" className="grid rounded-xl border border-tjc-line bg-[#fbfcfa] p-2 text-left text-xs transition hover:bg-[#eef7f1]" onClick={() => insight.savedViewId && openSavedView(insight.savedViewId)}>
                 <span className="font-semibold text-tjc-ink">{insight.query}: raw {insight.rawCount} / mapped {insight.savedViewCount}</span>
                 <span className="mt-1 text-tjc-muted">{insight.recommendation}</span>
               </button>
@@ -485,10 +485,10 @@ export function LibraryPage() {
         </div>
       </details>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]" aria-label="Library controls and results">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[17rem_minmax(0,1fr)]" aria-label="Library controls and results">
         <aside className="order-2 grid min-w-0 gap-4 xl:order-1 xl:sticky xl:top-24 xl:self-start">
-          <section className="min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white" aria-label="Saved DAM views">
-            <div className="border-b border-tjc-line px-3 py-3">
+          <section className="min-w-0 overflow-hidden dam-lift" aria-label="Saved DAM views">
+            <div className="border-b border-tjc-line bg-[#f8fbf7] px-3 py-3">
               <h2 className="text-sm font-semibold text-tjc-evergreen">Saved DAM views</h2>
               <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Operational shortcuts backed by ResourceSpace export fields.</p>
             </div>
@@ -499,7 +499,7 @@ export function LibraryPage() {
             </div>
           </section>
           <div className="xl:hidden">
-            <button className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen" type="button" onClick={() => setFiltersOpen((value) => !value)}>
+            <button className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen" type="button" onClick={() => setFiltersOpen((value) => !value)}>
               <SlidersHorizontal size={16} strokeWidth={1.8} aria-hidden="true" />
               {filtersOpen ? "Hide filters" : "Show filters"}
             </button>
@@ -511,10 +511,10 @@ export function LibraryPage() {
 
         <div className="order-1 min-w-0 xl:order-2">
           <section className="min-w-0" aria-label="Asset results">
-            <section className="mb-3 grid gap-3 rounded-md border border-tjc-line bg-white p-2.5" aria-label="Selection and batch actions">
+            <section className="mb-3 grid gap-3 dam-section-bar p-2.5" aria-label="Selection and batch actions">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={selectVisibleAssets}>
+                  <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={selectVisibleAssets}>
                     <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
                     {selectedIds.length ? "Clear selection" : "Select visible"}
                   </button>
@@ -534,33 +534,33 @@ export function LibraryPage() {
               {selectedIds.length ? (
                 <div className="grid gap-3 border-t border-tjc-line pt-3">
                   <div className="flex flex-wrap gap-2">
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportCsv}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportCsv}>
                       <FileDown size={15} strokeWidth={1.8} aria-hidden="true" />
                       Export CSV
                     </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("request-review")}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("request-review")}>
                       <ShieldAlert size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview review
                     </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("mark-internal")}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("mark-internal")}>
                       <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview internal
                     </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("archive")}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("archive")}>
                       <Archive size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview archive
                     </button>
                   </div>
-                  <form className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,1fr)_11rem_10rem_minmax(9rem,.7fr)_auto]" onSubmit={createCollectionDraft}>
-                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionTitle} onChange={(event) => setCollectionTitle(event.target.value)} placeholder="Collection name" aria-label="Collection name" />
-                    <select className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionAudience} onChange={(event) => setCollectionAudience(event.target.value)} aria-label="Collection audience">
+                  <form className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,1fr)_11rem_10rem_minmax(9rem,.7fr)_auto]" onSubmit={createCollectionDraft}>
+                    <input className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionTitle} onChange={(event) => setCollectionTitle(event.target.value)} placeholder="Collection name" aria-label="Collection name" />
+                    <select className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionAudience} onChange={(event) => setCollectionAudience(event.target.value)} aria-label="Collection audience">
                       <option>Private draft</option>
                       <option>Internal ministry</option>
                       <option>Public-approved portal</option>
                     </select>
-                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" type="date" value={collectionExpiry} onChange={(event) => setCollectionExpiry(event.target.value)} aria-label="Expiry date" />
-                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionOwner} onChange={(event) => setCollectionOwner(event.target.value)} placeholder="Owner" aria-label="Collection owner" />
-                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-3 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 disabled:opacity-50" type="submit" disabled={!contributor}>
+                    <input className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" type="date" value={collectionExpiry} onChange={(event) => setCollectionExpiry(event.target.value)} aria-label="Expiry date" />
+                    <input className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionOwner} onChange={(event) => setCollectionOwner(event.target.value)} placeholder="Owner" aria-label="Collection owner" />
+                    <button className="inline-flex min-h-9 items-center justify-center gap-2 dam-button-primary px-3 text-sm font-semibold transition disabled:opacity-50" type="submit" disabled={!contributor}>
                       <FolderPlus size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview draft
                     </button>
@@ -570,7 +570,7 @@ export function LibraryPage() {
               ) : null}
             </section>
 
-            <div className="mb-3 grid gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
+            <div className="mb-3 grid gap-2 rounded-xl border border-[#d8dfd5] bg-[#fbfcfa] px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="font-semibold text-tjc-ink">
                   {loading
@@ -607,13 +607,13 @@ export function LibraryPage() {
               </div>
             </div>
 
-            <section className="mb-3 flex flex-wrap items-center gap-2 text-sm text-tjc-muted" aria-label="Sort results">
+            <section className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#eef3ee] p-2 text-sm text-tjc-muted" aria-label="Sort results">
               <span className="font-semibold text-tjc-ink">Sort</span>
               {sortOptions.map((option) => (
                 <button
                   type="button"
                   key={option}
-                  className={cn("min-h-9 rounded-md border border-tjc-line bg-white px-3 font-semibold text-[#3e4741] transition hover:bg-[#eef7f1] active:translate-y-px", sort === option && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
+                  className={cn("min-h-9 rounded-xl border border-tjc-line bg-white px-3 font-semibold text-[#3e4741] transition hover:bg-[#eef7f1] active:translate-y-px", sort === option && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
                   onClick={() => {
                     setSort(option);
                     setPageOffset(0);
@@ -642,13 +642,13 @@ export function LibraryPage() {
 
             {loading ? <AssetGridSkeleton /> : null}
             {!loading && result?.assets.length === 0 ? (
-              <div className="rounded-md border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
+              <div className="rounded-xl border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
             ) : null}
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              <div className="dam-workbench grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {visibleAssets.map((asset) => (
                   <div className="relative" key={asset.id}>
-                    <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-tjc-line bg-white/92 shadow-sm" aria-label={`Select ${asset.title}`}>
+                    <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-xl border border-tjc-line bg-white/92 shadow-sm" aria-label={`Select ${asset.title}`}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
                     </label>
                     <AssetCard asset={asset} role={role} />

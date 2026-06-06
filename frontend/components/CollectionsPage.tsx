@@ -87,7 +87,7 @@ export function CollectionsPage() {
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Collections workspace">
+      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Collections workspace">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
             <FolderOpen size={17} strokeWidth={1.8} aria-hidden="true" />
@@ -97,7 +97,7 @@ export function CollectionsPage() {
           <p className="mt-1 max-w-[72ch] text-sm leading-relaxed text-tjc-muted">
             Browse Sabbath, study, seasonal, welcome, fellowship, and web/slide albums using live ResourceSpace export metadata.
           </p>
-          <form className="mt-4 grid gap-2 rounded-md border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
+          <form className="mt-4 grid gap-2 rounded-2xl border border-[#c8d8cc] bg-white/95 p-2 shadow-[0_16px_40px_rgba(49,60,52,.08)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={20} strokeWidth={1.8} />
             <label className="sr-only" htmlFor="collection-search">Search collections</label>
             <input
@@ -109,10 +109,10 @@ export function CollectionsPage() {
               name="q"
               type="search"
             />
-            <button className="min-h-10 rounded-md bg-tjc-evergreen px-5 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px" type="submit">Search</button>
+            <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search</button>
           </form>
           {submittedQuery ? (
-            <button className="mt-2 inline-flex min-h-8 items-center rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
+            <button className="mt-2 inline-flex min-h-8 items-center rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
               setQuery("");
               setSubmittedQuery("");
             }}>
@@ -121,7 +121,7 @@ export function CollectionsPage() {
           ) : null}
         </div>
 
-        <div className="grid min-w-0 content-start gap-3 rounded-md border border-tjc-line bg-white p-3">
+        <div className="grid min-w-0 content-start gap-3 dam-lift p-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Collection truth</span>
@@ -148,7 +148,7 @@ export function CollectionsPage() {
             })}
           </div>
           {strongestCollection ? (
-            <button className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-left transition hover:bg-[#eef7f1]" type="button" onClick={() => openCollection(strongestCollection)}>
+            <button className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 text-left transition hover:bg-[#eef7f1]" type="button" onClick={() => openCollection(strongestCollection)}>
               <span className="min-w-0">
                 <span className="block text-xs font-semibold uppercase tracking-[.08em] text-tjc-muted">Largest album</span>
                 <strong className="mt-1 block truncate text-sm font-semibold text-tjc-ink">{strongestCollection.name}</strong>
@@ -168,12 +168,12 @@ export function CollectionsPage() {
 
       <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]" aria-label="Collection album grid">
         <div className="min-w-0">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 dam-section-bar px-3 py-2.5">
             <div>
               <h2 className="text-sm font-semibold text-tjc-evergreen">Album shelves</h2>
               <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Counts, dates, source, approval summary, and people/minors warning come from current export metadata.</p>
             </div>
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2.5 py-1.5 text-xs font-semibold text-tjc-muted">
+            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2.5 py-1.5 text-xs font-semibold text-tjc-muted">
               {loading ? "Loading albums" : `${collections.length} shown`}
             </span>
           </div>
@@ -185,9 +185,9 @@ export function CollectionsPage() {
             </div>
           ) : null}
           {!loading && !collections.length ? (
-            <div className="rounded-md border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No collections match this search.</div>
+            <div className="rounded-xl border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No collections match this search.</div>
           ) : null}
-          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="dam-workbench grid gap-3 p-2 md:grid-cols-2 2xl:grid-cols-3">
             {collections.map((collection) => (
               <CollectionAlbumCard
                 key={collection.id}
@@ -206,10 +206,10 @@ export function CollectionsPage() {
         </div>
 
         <aside className="grid min-w-0 gap-3 lg:sticky lg:top-24 lg:self-start" aria-label="Collection governance">
-          <section className="rounded-md border border-tjc-line bg-white p-3">
+          <section className="dam-lift p-3">
             <h2 className="text-sm font-semibold text-tjc-evergreen">Before sharing an album</h2>
             <div className="mt-3 grid gap-2 text-sm text-[#4e5a52]">
-              <div className="rounded-md border border-tjc-line bg-[#fbfcfa] p-2">
+              <div className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-2">
                 <strong className="block text-tjc-ink">Approval summary is not a shortcut</strong>
                 <span className="mt-1 block text-xs leading-relaxed text-tjc-muted">Open the Library result before reuse; unknown people, rights, or source fields still need reviewer confirmation.</span>
               </div>
@@ -223,7 +223,7 @@ export function CollectionsPage() {
               </div>
             </div>
           </section>
-          <section className="rounded-md border border-tjc-line bg-white p-3">
+          <section className="dam-lift p-3">
             <h2 className="text-sm font-semibold text-tjc-evergreen">Use-case shortcuts</h2>
             <div className="mt-2 grid gap-2">
               {[
@@ -232,7 +232,7 @@ export function CollectionsPage() {
                 ["Newsletter", "newsletter"],
                 ["No people", "no-people"]
               ].map(([label, view]) => (
-                <button key={view} type="button" className="flex min-h-9 items-center justify-between gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1]" onClick={() => router.push(`/?view=${view}`)}>
+                <button key={view} type="button" className="flex min-h-9 items-center justify-between gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1]" onClick={() => router.push(`/?view=${view}`)}>
                   {label}
                   <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
                 </button>

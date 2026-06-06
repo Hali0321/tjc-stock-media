@@ -36,7 +36,7 @@ function pillarIcon(pillar: DamReadinessItem["pillar"]) {
 
 function MetricTile({ label, value }: { label: string; value?: number }) {
   return (
-    <div className="grid min-h-20 content-center rounded-lg border border-tjc-line bg-white/82 p-3">
+    <div className="grid min-h-20 content-center dam-card p-3">
       <strong className="text-xl font-semibold tabular-nums text-tjc-ink">{(value ?? 0).toLocaleString()}</strong>
       <span className="mt-1 text-xs font-medium leading-tight text-tjc-muted">{label}</span>
     </div>
@@ -46,7 +46,7 @@ function MetricTile({ label, value }: { label: string; value?: number }) {
 function AdminLoadingState() {
   return (
     <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
-      <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+      <section className="dam-card p-5">
         <span className="text-sm font-semibold text-tjc-evergreen">DAM Admin</span>
         <h1 className="mt-2 text-2xl font-semibold md:text-3xl">Loading production diagnostics</h1>
         <p className="mt-2 max-w-[72ch] text-sm leading-relaxed text-tjc-muted">
@@ -54,7 +54,7 @@ function AdminLoadingState() {
         </p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div className="rounded-md border border-tjc-line bg-[#fbfcfa] p-3" key={index}>
+            <div className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-3" key={index}>
               <div className="skeleton h-4 w-24 rounded" />
               <div className="skeleton mt-3 h-8 w-16 rounded" />
             </div>
@@ -98,7 +98,7 @@ export function AdminPage() {
   if (role !== "DAM Admin") {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">DAM Admin</span>
           <h1 className="mt-2 text-3xl font-semibold">Admin cockpit requires DAM Admin role</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Field mapping, portal readiness, vocabulary control, stale approvals, and duplicate cleanup are admin-only.</p>
@@ -143,13 +143,13 @@ export function AdminPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
+      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">DAM Admin</span>
           <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Production readiness</h1>
           <p className="mt-2 max-w-[78ch] text-base leading-relaxed text-tjc-muted">Command center for find, trust, review, share, and govern quality across the ResourceSpace-backed archive.</p>
         </div>
-        <div className={cn("grid content-center rounded-lg border p-4", toneClass(scoreTone(data.score)))}>
+        <div className={cn("grid content-center rounded-2xl border p-4 shadow-[0_18px_44px_rgba(49,60,52,.08)]", toneClass(scoreTone(data.score)))}>
           <div className="flex items-center gap-2">
             <Gauge size={20} strokeWidth={1.8} aria-hidden="true" />
             <span className="text-sm font-semibold">Readiness score</span>
@@ -163,7 +163,7 @@ export function AdminPage() {
         </div>
       </section>
 
-      <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
+      <section className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#d7dfd5] bg-[#f8fbf7] p-2 md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
         <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
         <MetricTile label="Portal ready" value={data.metrics.portalReady} />
         <MetricTile label="Needs review" value={data.metrics.needsReview} />
@@ -176,7 +176,7 @@ export function AdminPage() {
         <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
       </section>
 
-      <section className="mt-4 grid gap-2 rounded-lg border border-tjc-line bg-white/82 p-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
+      <section className="mt-4 grid gap-2 dam-lift p-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
         <div>
           <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{data.source.label}</strong>
@@ -203,7 +203,7 @@ export function AdminPage() {
         {data.readiness.map((item) => {
           const Icon = pillarIcon(item.pillar);
           return (
-            <article className="rounded-lg border border-tjc-line bg-white/82 p-3" key={item.id}>
+            <article className="dam-lift p-3" key={item.id}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Icon size={17} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
@@ -215,7 +215,7 @@ export function AdminPage() {
               <p className="mt-1 text-sm leading-relaxed text-tjc-muted">{item.detail}</p>
               <p className="mt-3 text-sm font-semibold text-[#3f4a43]">{item.action}</p>
               {item.savedViewId ? (
-                <Link className="mt-3 inline-flex min-h-9 items-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/?view=${encodeURIComponent(item.savedViewId)}`}>
+                <Link className="mt-3 inline-flex min-h-9 items-center rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/?view=${encodeURIComponent(item.savedViewId)}`}>
                   Open queue
                 </Link>
               ) : null}
@@ -225,14 +225,14 @@ export function AdminPage() {
       </section>
 
       <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]" aria-label="Admin work plan">
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-4">
+        <section className="dam-lift p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><ListChecks size={18} strokeWidth={1.8} aria-hidden="true" /> Action backlog</h2>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             {data.actionBacklog.map((item) => (
               <Link
                 key={item.id}
                 href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-                className="grid gap-3 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 transition hover:bg-[#f4f8f5]"
+                className="grid gap-3 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 transition hover:-translate-y-0.5 hover:border-[#9fb8ae] hover:bg-[#f4f8f5] hover:shadow-[0_14px_34px_rgba(49,60,52,.07)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -247,11 +247,11 @@ export function AdminPage() {
           </div>
         </section>
 
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-4">
+        <section className="dam-lift p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Lock size={18} strokeWidth={1.8} aria-hidden="true" /> Integration readiness</h2>
           <div className="mt-3 grid gap-2">
             {data.integrationReadiness.map((item) => (
-              <div className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3" key={item.id}>
+              <div className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3" key={item.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <strong className="text-sm font-semibold text-tjc-ink">{item.label}</strong>
@@ -267,7 +267,7 @@ export function AdminPage() {
       </section>
 
       <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]">
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="ResourceSpace field mapping">
+        <section className="dam-lift p-4" aria-label="ResourceSpace field mapping">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-xl font-semibold"><Database size={18} strokeWidth={1.8} aria-hidden="true" /> Field mapping coverage</h2>
@@ -276,7 +276,7 @@ export function AdminPage() {
           </div>
           <div className="grid gap-2">
             {requiredFields.map((field) => (
-              <div className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,.7fr)_minmax(12rem,.8fr)_minmax(10rem,1fr)_5rem]" key={field.key}>
+              <div className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,.7fr)_minmax(12rem,.8fr)_minmax(10rem,1fr)_5rem]" key={field.key}>
                 <strong className="text-sm text-tjc-ink">{field.label}</strong>
                 <code className="truncate rounded bg-white px-2 py-1 text-xs text-tjc-muted">{field.resourceSpaceField}</code>
                 <span className="h-2 self-center overflow-hidden rounded-full bg-[#e2e8df]">
@@ -286,7 +286,7 @@ export function AdminPage() {
               </div>
             ))}
           </div>
-          <details className="mt-3 rounded-md border border-tjc-line bg-[#fbfcfa] p-3">
+          <details className="mt-3 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3">
             <summary className="cursor-pointer text-sm font-semibold text-tjc-evergreen">Optional fields</summary>
             <div className="mt-3 grid gap-2">
               {optionalFields.map((field) => (
@@ -300,7 +300,7 @@ export function AdminPage() {
           </details>
         </section>
 
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Controlled vocabulary">
+        <section className="dam-lift p-4" aria-label="Controlled vocabulary">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Tags size={18} strokeWidth={1.8} aria-hidden="true" /> Vocabulary control</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {data.vocabulary.map((term) => (
@@ -321,7 +321,7 @@ export function AdminPage() {
         </section>
       </section>
 
-      <section className="mt-4 rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Portal policy">
+      <section className="mt-4 dam-lift p-4" aria-label="Portal policy">
         <h2 className="flex items-center gap-2 text-xl font-semibold"><Share2 size={18} strokeWidth={1.8} aria-hidden="true" /> Public portal gate</h2>
         <div className="mt-3 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
           {data.portalPolicy.map((policy) => (

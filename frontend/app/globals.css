@@ -7,10 +7,10 @@
   --font-sans: var(--font-inter), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-tjc-ink: #20221f;
-  --color-tjc-muted: #687068;
-  --color-tjc-bg: #f7f8f6;
-  --color-tjc-panel: #fbfcfa;
-  --color-tjc-line: #d7ddd5;
+  --color-tjc-muted: #5f6962;
+  --color-tjc-bg: #f4f6f2;
+  --color-tjc-panel: #ffffff;
+  --color-tjc-line: #d8dfd5;
   --color-tjc-evergreen: #123f3a;
   --color-tjc-evergreen-2: #0f332f;
   --color-tjc-gold: #8a6426;
@@ -35,7 +35,9 @@ body {
   min-height: 100%;
   margin: 0;
   overflow-x: hidden;
-  background: #f7f8f6;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.78), rgba(244,246,242,.9) 22rem),
+    #f4f6f2;
   color: #20221f;
   font-family: var(--font-inter), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -92,7 +94,7 @@ textarea:focus-visible {
 .skeleton {
   position: relative;
   overflow: hidden;
-  border-radius: .375rem;
+  border-radius: .625rem;
   background: #e8ece6;
 }
 
@@ -114,19 +116,20 @@ textarea:focus-visible {
 .dam-shell {
   width: min(100%, 1760px);
   margin-inline: auto;
-  padding: 1rem .75rem 2rem;
+  padding: 1rem .75rem 2.75rem;
 }
 
 .dam-panel {
-  border: 1px solid #d7ddd5;
-  border-radius: .5rem;
-  background: rgba(255, 255, 255, .9);
+  border: 1px solid rgba(216, 223, 213, .94);
+  border-radius: .75rem;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 1px 0 rgba(32,34,31,.04), 0 18px 48px rgba(49,60,52,.055);
 }
 
 .dam-panel-muted {
-  border: 1px solid #d7ddd5;
-  border-radius: .5rem;
-  background: #fbfcfa;
+  border: 1px solid rgba(216, 223, 213, .92);
+  border-radius: .75rem;
+  background: #fafbf8;
 }
 
 .dam-kicker {
@@ -138,9 +141,9 @@ textarea:focus-visible {
 }
 
 .dam-page-title {
-  font-size: clamp(1.35rem, 1.2rem + .75vw, 2rem);
-  line-height: 1.15;
-  font-weight: 680;
+  font-size: clamp(1.5rem, 1.18rem + 1.05vw, 2.35rem);
+  line-height: 1.08;
+  font-weight: 740;
   letter-spacing: 0;
   color: #20221f;
 }
@@ -150,6 +153,82 @@ textarea:focus-visible {
   line-height: 1.2rem;
   font-weight: 700;
   color: #123f3a;
+}
+
+.dam-card {
+  border: 1px solid rgba(216, 223, 213, .96);
+  border-radius: .75rem;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 1px 0 rgba(32,34,31,.04), 0 14px 34px rgba(49,60,52,.045);
+}
+
+.dam-lift {
+  border: 1px solid rgba(196, 211, 199, .9);
+  border-radius: .9rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,251,248,.95)),
+    #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 20px 54px rgba(49,60,52,.08);
+}
+
+.dam-workbench {
+  border: 1px solid rgba(199, 213, 202, .95);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.82), rgba(244,247,243,.92)),
+    repeating-linear-gradient(0deg, rgba(18,63,58,.026) 0, rgba(18,63,58,.026) 1px, transparent 1px, transparent 32px),
+    #f5f7f3;
+  box-shadow: 0 18px 54px rgba(49,60,52,.07);
+}
+
+.dam-section-bar {
+  border: 1px solid rgba(216, 223, 213, .95);
+  border-radius: .8rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.97), rgba(250,252,249,.94));
+  box-shadow: 0 1px 0 rgba(255,255,255,.85) inset, 0 10px 28px rgba(49,60,52,.045);
+}
+
+.dam-card-quiet {
+  border: 1px solid rgba(216, 223, 213, .92);
+  border-radius: .75rem;
+  background: rgba(250,251,248,.92);
+}
+
+.dam-control {
+  border: 1px solid rgba(198, 211, 200, .98);
+  border-radius: .625rem;
+  background: rgba(255,255,255,.94);
+  box-shadow: inset 0 -1px 0 rgba(32,34,31,.025);
+}
+
+.dam-button-primary {
+  border-radius: .625rem;
+  background: linear-gradient(180deg, #155047, #103a35);
+  color: white;
+  box-shadow: 0 10px 22px rgba(18,63,58,.18);
+}
+
+.dam-button-primary:hover {
+  background: linear-gradient(180deg, #185a50, #123f3a);
+}
+
+.dam-risk-warn {
+  border-color: #e1c77f;
+  background: #fff7df;
+  color: #6d4b0d;
+}
+
+.dam-risk-danger {
+  border-color: #e0aaa5;
+  background: #fff0ee;
+  color: #7d2d2a;
+}
+
+.dam-risk-ok {
+  border-color: #a9d0ba;
+  background: #ecf8f1;
+  color: #22563a;
 }
 
 .dam-subtle {
@@ -170,7 +249,7 @@ textarea:focus-visible {
 
 @media (min-width: 768px) {
   .dam-shell {
-    padding: 1.25rem 1.25rem 2.5rem;
+    padding: 1.5rem 1.5rem 3rem;
   }
 }
 

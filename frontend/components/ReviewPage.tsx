@@ -299,12 +299,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   if (!reviewer) {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
           <h1 className="mt-2 text-3xl font-semibold">Review workbench requires reviewer access</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
         </section>
-        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-lg border border-tjc-line bg-white/76 p-5">
+        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
           <ShieldCheck size={28} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
           <div>
             <h2 className="text-xl font-semibold">What reviewers check</h2>
@@ -318,13 +318,13 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
+      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
           <h1 className="mt-2 dam-page-title">Review workbench</h1>
           <p className="mt-2 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
-        <div className="rounded-md border border-tjc-line bg-white p-3">
+        <div className="dam-lift p-4">
           <span className="text-sm font-semibold text-tjc-muted">Current queue</span>
           <strong className="mt-1 block text-2xl font-semibold tabular-nums">{data?.assets.length ?? "-"} shown</strong>
           <span className="text-sm text-tjc-muted">{activeQueueSummary ? `loaded ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
@@ -347,11 +347,11 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
       ) : null}
 
-      <section className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
+      <section className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#d7dfd5] bg-[#f8fbf7] p-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
         {governanceCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div className="grid min-h-16 content-center rounded-md border border-tjc-line bg-white p-2.5 shadow-[0_1px_0_rgba(32,34,31,.04)]" key={card.key}>
+            <div className="grid min-h-16 content-center rounded-xl border border-[#dbe4d9] bg-white p-2.5 shadow-[0_1px_0_rgba(255,255,255,.9)_inset]" key={card.key}>
               <Icon size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
               <strong className="mt-1 text-lg font-semibold tabular-nums">{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
               <span className="text-xs font-medium text-tjc-muted">{card.label}</span>
@@ -360,12 +360,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         })}
       </section>
 
-      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 pb-2" aria-label="Review queues">
+      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 rounded-2xl bg-[#edf3ee] p-2" aria-label="Review queues">
         {(data?.queues || []).map((queue) => (
           <button
             key={queue.id}
             type="button"
-            className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
+            className={cn("inline-flex min-h-9 items-center gap-2 rounded-full border border-[#cbd8ce] bg-white px-3 text-sm font-semibold text-[#3f4a43] shadow-[0_1px_0_rgba(255,255,255,.85)_inset] transition hover:border-[#8fb2a5] hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#8fb2a5] bg-[#e1f2e9] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]")}
             onClick={() => selectQueue(queue.id)}
             aria-pressed={activeQueue === queue.id}
           >
@@ -378,8 +378,8 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
-        <div className="order-2 min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white xl:order-1">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#fbfcfa] px-3 py-2 text-sm">
+        <div className="order-2 min-w-0 overflow-hidden dam-lift xl:order-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#f6faf6] px-3 py-2 text-sm">
             <strong className="font-semibold text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
             {activeQueueSummary ? <span className="text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
           </div>
@@ -397,7 +397,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               const risks = reviewRiskFlags(asset);
               const missing = missingReviewFields(asset);
               return (
-                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-2.5 last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#f5fbf7]")} key={asset.id}>
+                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-3 transition hover:bg-[#f8fbf8] last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#edf7f2] shadow-[inset_4px_0_0_#123f3a]")} key={asset.id}>
                   <Link href={`/assets/${asset.id}`} className="review-media-reveal group block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]" aria-label={`Open ${display.title}`}>
                     <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
                   </Link>
@@ -414,7 +414,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                     <span>{asset.rightsNotes || "Review needed before reuse."}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 text-xs font-medium text-[#5d665f]">
-                    {risks.slice(0, 4).map((flag) => <span className="rounded-md border border-[#ead6a8] bg-[#fff7e5] px-2 py-1 text-[#725216]" key={flag}>{flag}</span>)}
+                    {risks.slice(0, 2).map((flag) => <span className="rounded-md border border-[#ead6a8] bg-[#fff7e5] px-2 py-1 text-[#725216]" key={flag}>{flag}</span>)}
                     <span className="rounded-md bg-[#f1f4ef] px-2 py-1">{missing.length ? `Missing: ${missing.join(", ")}` : "Required fields present"}</span>
                     <span className="rounded-md bg-[#f1f4ef] px-2 py-1">RS {asset.resourceSpaceId || asset.id}</span>
                   </div>
@@ -427,7 +427,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                     >
                       Inspect
                     </button>
-                    <Link className="inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/assets/${asset.id}`}>
+                    <Link className="inline-flex min-h-8 items-center justify-center gap-1 rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/assets/${asset.id}`}>
                       <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />
                       Detail
                     </Link>
@@ -439,7 +439,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </div>
           {data && visibleReviewCount < data.assets.length ? (
             <div className="border-t border-tjc-line bg-[#fbfcfa] p-3">
-              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + reviewRowsPageSize, data.assets.length))}>
+              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + reviewRowsPageSize, data.assets.length))}>
                 Show more review items
               </button>
             </div>
@@ -447,7 +447,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid gap-3 self-start rounded-md border border-tjc-line bg-white p-3 shadow-[0_10px_24px_rgba(32,34,31,.07)] xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
+          <aside className="order-1 grid gap-3 self-start dam-lift p-3 xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
             <div className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
               <MediaPreview src={selectedPreview} alt={selectedAsset.thumbnailAlt} className="px-3" loading="eager" />
             </div>
@@ -461,13 +461,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             </div>
             <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" />
 
-            {activeInspectorTab === "Checklist" ? (
-              <section id={damTabPanelId("review-inspector", "Checklist")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Checklist")} className="border-t border-tjc-line pt-3" aria-label="Review action area">
+            <section id={damTabPanelId("review-inspector", "Checklist")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Checklist")} className="border-t border-tjc-line pt-3" aria-label="Review action area" hidden={activeInspectorTab !== "Checklist"}>
                 <h3 className="text-sm font-semibold text-tjc-evergreen">Action evidence</h3>
                 <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
                   Review note
                   <textarea
-                    className="min-h-24 rounded-md border border-tjc-line bg-white p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
+                    className="min-h-24 dam-card p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
                     value={reviewNote}
                     onChange={(event) => setReviewNote(event.target.value)}
                     placeholder="Record what was checked and why this action is appropriate..."
@@ -476,7 +475,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 </label>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Review checklist">
                   {checklistLabels.map(([field, label]) => (
-                    <label className="flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43]" key={field}>
+                    <label className="flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43] shadow-[0_1px_0_rgba(255,255,255,.85)_inset]" key={field}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={checklist[field]} onChange={() => toggleChecklist(field)} />
                       {label}
                     </label>
@@ -502,7 +501,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                       );
                     }
                     return (
-                      <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
+                      <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
                         {icon}
                         {action.label}
                       </button>
@@ -510,11 +509,9 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   })}
                 </div>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
-              </section>
-            ) : null}
+            </section>
 
-            {activeInspectorTab === "Metadata" ? (
-              <section id={damTabPanelId("review-inspector", "Metadata")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Metadata")}>
+            <section id={damTabPanelId("review-inspector", "Metadata")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Metadata")} hidden={activeInspectorTab !== "Metadata"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Raw ResourceSpace status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Portal reuse state</dt><dd className={factDescClass}>{selectedAsset.reuseDecision ? `${selectedAsset.reuseDecision.label} - ${selectedAsset.reuseDecision.summary}` : "Computed by TJC Stock Media policy"}</dd></div>
@@ -523,11 +520,9 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <div className={factItemClass}><dt className={factTermClass}>Usage scope</dt><dd className={factDescClass}>{selectedAsset.usageScope}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Missing fields</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? missingReviewFields(selectedAsset).join(", ") : "Required fields present"}</dd></div>
                 </dl>
-              </section>
-            ) : null}
+            </section>
 
-            {activeInspectorTab === "Rights" ? (
-              <section id={damTabPanelId("review-inspector", "Rights")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Rights")}>
+            <section id={damTabPanelId("review-inspector", "Rights")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Rights")} hidden={activeInspectorTab !== "Rights"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>
@@ -537,11 +532,9 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <div className={factItemClass}><dt className={factTermClass}>Usage guidance</dt><dd className={factDescClass}>{selectedAsset.usageGuidance || "Missing"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Review notes</dt><dd className={factDescClass}>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
                 </dl>
-              </section>
-            ) : null}
+            </section>
 
-            {activeInspectorTab === "History" ? (
-              <section id={damTabPanelId("review-inspector", "History")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "History")}>
+            <section id={damTabPanelId("review-inspector", "History")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "History")} hidden={activeInspectorTab !== "History"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{selectedAsset.reviewer || "Not reviewed"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Reviewed date</dt><dd className={factDescClass}>{selectedAsset.reviewedDate || "Pending"}</dd></div>
@@ -549,21 +542,18 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <div className={factItemClass}><dt className={factTermClass}>Last exported state</dt><dd className={factDescClass}>Read from ResourceSpace metadata export. Local pending writes are shown separately.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
-              </section>
-            ) : null}
+            </section>
 
-            {activeInspectorTab === "Pending write" ? (
-              <section id={damTabPanelId("review-inspector", "Pending write")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Pending write")}>
+            <section id={damTabPanelId("review-inspector", "Pending write")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Pending write")} hidden={activeInspectorTab !== "Pending write"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Pending write</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Write mode</dt><dd className={factDescClass}>Pending local queue only until ResourceSpace API field mapping is configured.</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>ResourceSpace truth</dt><dd className={factDescClass}>Raw status remains {selectedAsset.status}. Pending review write is not final ResourceSpace persistence.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
-              </section>
-            ) : null}
+            </section>
             <div className="grid gap-2">
-              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-3 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px">
+              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 items-center justify-center gap-2 dam-button-primary px-3 text-sm font-semibold transition active:translate-y-px">
                 <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
                 Open detail
               </Link>

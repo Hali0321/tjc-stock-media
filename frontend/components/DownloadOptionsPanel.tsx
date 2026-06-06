@@ -29,7 +29,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   ];
 
   return (
-    <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Download approved copy">
+    <section className="min-w-0 dam-card p-3 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Download approved copy">
       <div className="mb-3">
         <h2 className="text-base font-semibold">Reuse safely</h2>
         <p className="mt-1 text-sm leading-snug text-tjc-muted">{state.panelLabel}</p>
@@ -64,7 +64,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
               {row}
             </a>
           ) : (
-            <button key={option.label} className={cn("grid min-h-16 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-tjc-line bg-white p-2.5 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#ead6a8] bg-[#fff8e8] text-[#73531a]")} type="button" disabled>
+            <button key={option.label} className={cn("grid min-h-16 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-xl border border-tjc-line bg-white p-2.5 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#ead6a8] bg-[#fff8e8] text-[#73531a]")} type="button" disabled>
               {row}
             </button>
           );
@@ -78,15 +78,15 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
         </div>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 dam-card px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request original access
         </button>
-        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 dam-card px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request review
         </button>
-        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 dam-card px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Ask media coworker
         </button>

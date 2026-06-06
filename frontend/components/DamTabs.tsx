@@ -60,9 +60,9 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
             type="button"
             role="tab"
             aria-selected={selected}
-            aria-controls={selected || mountedPanels ? damTabPanelId(idPrefix, tab) : undefined}
+            aria-controls={damTabPanelId(idPrefix, tab)}
             tabIndex={selected ? 0 : -1}
-            className={cn("inline-flex min-h-9 max-w-full items-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#46534b] transition hover:bg-[#eef7f1] active:translate-y-px", selected && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]")}
+            className={cn("inline-flex min-h-9 max-w-full items-center rounded-lg border border-tjc-line bg-white px-3 text-sm font-semibold text-[#46534b] transition hover:bg-[#eef7f1] active:translate-y-px", selected && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]")}
             onClick={() => onChange(tab)}
           >
             {tab}

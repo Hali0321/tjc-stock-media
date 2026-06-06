@@ -78,7 +78,7 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
       <input type="hidden" name={name} value={serialized} />
       <div
         className={cn(
-          "min-w-0 rounded-md border border-tjc-line bg-white p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#0f4f45]",
+          "min-w-0 rounded-xl border border-tjc-line bg-white p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#0f4f45]",
           !serialized && "border-[#ead6a8]"
         )}
       >
@@ -114,7 +114,7 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
         <div className="flex flex-wrap gap-1.5" aria-label={`${label} suggestions`}>
           {normalizedSuggestions.map((suggestion) => (
             <button
-              className="min-h-11 rounded-md border border-tjc-line bg-[#fbfcfa] px-3 text-xs font-semibold text-[#4d554d] transition hover:bg-[#eef7f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f4f45] sm:min-h-8 sm:px-2"
+              className="min-h-11 rounded-xl border border-tjc-line bg-[#fbfcfa] px-3 text-xs font-semibold text-[#4d554d] transition hover:bg-[#eef7f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f4f45] sm:min-h-8 sm:px-2"
               type="button"
               key={suggestion}
               onClick={() => {

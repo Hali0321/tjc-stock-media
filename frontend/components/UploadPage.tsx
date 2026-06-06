@@ -19,7 +19,7 @@ type UploadReceipt = {
   reviewWarnings?: string[];
 };
 
-const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
+const inputClass = "min-h-10 w-full min-w-0 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
 
@@ -92,12 +92,12 @@ export function UploadPage() {
   if (!allowed) {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="min-w-0 rounded-md border border-tjc-line bg-white p-5">
+        <section className="min-w-0 dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
           <h1 className="mt-2 dam-page-title">Upload is for Contributors</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
         </section>
-        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-md border border-tjc-line bg-white p-5">
+        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
           <UploadCloud size={30} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
           <div>
             <h2 className="text-xl font-semibold">Contribution flow</h2>
@@ -125,7 +125,7 @@ export function UploadPage() {
           ].map((step) => {
             const Icon = step.icon;
             return (
-              <div className="rounded-md border border-tjc-line bg-white p-3" key={step.title}>
+              <div className="dam-card p-3" key={step.title}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
                 <strong className="mt-2 block font-semibold">{step.title}</strong>
                 <span className="mt-1 block text-sm text-tjc-muted">{step.body}</span>
@@ -136,7 +136,7 @@ export function UploadPage() {
       </section>
 
       <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_24rem]" onSubmit={submit}>
-        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
+        <section className="min-w-0 self-start rounded-xl border border-tjc-line bg-white p-4">
           <div className="mb-4">
             <h2 className="text-base font-semibold">1. Context</h2>
             <p className="text-sm text-tjc-muted">Help reviewers understand where this media came from.</p>
@@ -165,7 +165,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="self-start rounded-md border border-tjc-line bg-white p-4">
+        <section className="self-start rounded-xl border border-tjc-line bg-white p-4">
           <div className="mb-4">
             <h2 className="text-base font-semibold">2. People and rights</h2>
             <p className="text-sm text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
@@ -209,11 +209,11 @@ export function UploadPage() {
           </label>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Consent/restrictions {requiredHint}</span>
-            <textarea className="min-h-28 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
+            <textarea className="min-h-28 w-full min-w-0 dam-card p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
           </label>
         </section>
 
-        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
+        <section className="min-w-0 self-start rounded-xl border border-tjc-line bg-white p-4">
           <div className="mb-4">
             <h2 className="text-base font-semibold">3. Files and tags</h2>
             <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
@@ -244,7 +244,7 @@ export function UploadPage() {
           </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
-            <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
+            <textarea className="min-h-24 w-full min-w-0 dam-card p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
           {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
           <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-tjc-line bg-[#f6faf7] p-3">
@@ -259,7 +259,7 @@ export function UploadPage() {
           </div>
         </section>
 
-        <section className="rounded-md border border-tjc-line bg-[#fbfcfa] p-4 xl:col-span-3" aria-label="Ready to submit checklist">
+        <section className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-4 xl:col-span-3" aria-label="Ready to submit checklist">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Reviewer handoff checklist</h2>
@@ -269,16 +269,16 @@ export function UploadPage() {
           </div>
           <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
             {["Context present", "Source named", "People/minors answered", "Rights/restrictions noted"].map((item) => (
-              <span className="rounded-md border border-tjc-line bg-white px-3 py-2 font-semibold text-[#4d554d]" key={item}>{item}</span>
+              <span className="rounded-xl border border-tjc-line bg-white px-3 py-2 font-semibold text-[#4d554d]" key={item}>{item}</span>
             ))}
           </div>
         </section>
 
-        <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-5 text-base font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px xl:col-span-3" type="submit">
+        <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 dam-button-primary px-5 text-base font-semibold transition active:translate-y-px xl:col-span-3" type="submit">
           <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
           Submit intake
         </button>
-        {message ? <div className="rounded-md border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
+        {message ? <div className="rounded-xl border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
 
         {receipt ? (
           <section className="grid gap-4 rounded-md border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto] xl:col-span-3" aria-label="Upload receipt">

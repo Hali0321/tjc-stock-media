@@ -73,8 +73,8 @@ export function GuidePage() {
   }, [query]);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-3 py-5 md:px-5">
-      <section className="border-b border-tjc-line pb-4">
+    <div className="mx-auto max-w-[1180px] px-3 py-5 md:px-5">
+      <section className="dam-workbench p-4 md:p-5">
         <span className="text-sm font-semibold text-tjc-evergreen">Usage guide</span>
         <h1 className="mt-2 dam-page-title">Use approved media with care</h1>
         <p className="mt-2 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
@@ -82,7 +82,7 @@ export function GuidePage() {
         </p>
         <label className="mt-4 grid max-w-xl gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
           Search guide
-          <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-md border border-tjc-line bg-white px-3">
+          <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-xl border border-tjc-line bg-white px-3">
             <Search size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <input
               id="guide-search"
@@ -96,7 +96,7 @@ export function GuidePage() {
         </label>
       </section>
 
-      <section className="mt-4 rounded-md border border-tjc-line bg-white p-4" aria-label="Download decision guide">
+      <section className="mt-4 dam-lift p-4" aria-label="Download decision guide">
         <h2 className="text-base font-semibold">Before downloading</h2>
         <div className="mt-3 grid gap-2">
           {decisionRows.map(([need, action]) => (
@@ -110,10 +110,10 @@ export function GuidePage() {
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {visibleBlocks.map((block) => (
-          <section className="rounded-md border border-tjc-line bg-white p-3" key={block.title}>
+          <section className="dam-lift p-4" key={block.title}>
             <h2 className="text-base font-semibold">{block.title}</h2>
             <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="mt-3 grid gap-2">
               <div className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-sm text-[#24583d]">
                 <strong className="block font-semibold">Do</strong>
                 <span className="mt-1 block leading-relaxed">{block.doText}</span>
@@ -128,7 +128,7 @@ export function GuidePage() {
       </div>
 
       {!visibleBlocks.length ? (
-        <div className="mt-4 rounded-md border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
+        <div className="mt-4 rounded-xl border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
       ) : null}
 
       <section className="mt-4 rounded-md border border-[#cbd8e4] bg-[#f2f7fb] p-4 text-[#52677a]">
