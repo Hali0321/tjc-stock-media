@@ -375,11 +375,22 @@ export function LibraryPage() {
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Source and count truth</span>
               <strong className="mt-1 block text-sm font-semibold text-tjc-ink">{result?.source.label || "Loading source"}</strong>
-              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{result?.source.detail || "Loading ResourceSpace source state."}</p>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-tjc-muted sm:line-clamp-none">{result?.source.detail || "Loading ResourceSpace source state."}</p>
             </div>
             <Database className="shrink-0 text-tjc-evergreen" size={19} strokeWidth={1.8} aria-hidden="true" />
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Catalog summary">
+          <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold text-tjc-ink sm:hidden" aria-label="Mobile catalog summary">
+            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+              {result?.counts.approved ?? "-"} approved
+            </span>
+            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+              {result?.counts.rightsReview ?? "-"} rights
+            </span>
+            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+              {result?.counts.visibleToRole ?? "-"} visible
+            </span>
+          </div>
+          <div className="hidden grid-cols-3 gap-2 sm:grid sm:grid-cols-6" aria-label="Catalog summary">
             {[
               { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "approved" },
               { icon: Clock3, value: result?.counts.needsReview ?? "-", label: "review" },
@@ -407,7 +418,7 @@ export function LibraryPage() {
 	        </div>
 	      ) : null}
 
-	      <details className="mt-3 rounded-md border border-tjc-line bg-white/88">
+	      <details className="mt-3 hidden rounded-md border border-tjc-line bg-white/88 md:block">
         <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-tjc-evergreen">
           <span>Production signals</span>
           <span className="text-xs font-medium text-tjc-muted">Metadata health, operational signals, search gaps</span>

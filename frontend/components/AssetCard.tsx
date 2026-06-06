@@ -15,11 +15,21 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
   const confidence = display.confidence.filter((item) => item.tone === "warn").slice(0, 1);
   const hasWarnings = confidence.length > 0;
   const quickLabel = display.download.reuse.label || confidence[0]?.state || display.quickLabel || asset.mediaType;
+  const previewLabel = display.image ? "Preview pending" : "Preview restricted";
+  const previewDetail = display.image
+    ? undefined
+    : display.download.reuse.blockers[0]?.label || display.download.approvedCopy.reason || "Reviewer-only until reuse checks pass.";
 
   return (
     <article className="group overflow-hidden rounded-md border border-tjc-line bg-white transition duration-150 hover:border-[#9fb8ae]">
       <Link href={`/assets/${asset.id}`} className="relative block aspect-[4/3] overflow-hidden bg-[#eef1ed]" aria-label={`Open ${display.title}`}>
-        <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]" />
+        <MediaPreview
+          src={display.image}
+          alt={asset.thumbnailAlt}
+          label={previewLabel}
+          detail={previewDetail}
+          imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]"
+        />
         <span className={cn(
           "absolute left-2 top-2 max-w-[calc(100%-1rem)] rounded bg-white/92 px-2 py-1 text-[11px] font-semibold leading-none shadow-[0_1px_0_rgba(32,34,31,.08)]",
           canDownload && !hasWarnings ? "text-[#22563a]" : "text-[#725216]"

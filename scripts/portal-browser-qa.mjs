@@ -279,5 +279,19 @@ const report = {
 };
 
 fs.writeFileSync(path.resolve("docs/screenshots/qa/browser-qa-report.json"), JSON.stringify(report, null, 2));
-console.log(JSON.stringify(report, null, 2));
+console.log(
+  JSON.stringify({
+    checkedAt: report.checkedAt,
+    pages: report.pages,
+    viewports: report.viewports,
+    screenshots: report.screenshots.length,
+    failures: report.failures.length,
+    consoleErrors: report.consoleErrors.length,
+    networkFailures: report.networkFailures.length,
+    warnings: report.warnings.length,
+    expectedDeniedConsole: report.expectedDeniedConsole.length,
+    report: "docs/screenshots/qa/browser-qa-report.json"
+  })
+);
 if (failures.length || consoleErrors.length || networkFailures.length) process.exit(1);
+process.exit(0);
