@@ -47,6 +47,8 @@ expect_code 403 blocked-approved-download-viewer "$BASE_URL/api/download/368?rol
 expect_code 400 malformed-asset-detail "$BASE_URL/api/assets/%2E%2E644?role=Reviewer"
 expect_code 400 malformed-thumbnail "$BASE_URL/api/assets/thumbnail/%2E%2E644?variant=detail&role=Reviewer"
 expect_code 400 malformed-download "$BASE_URL/api/download/%2E%2E368?role=Viewer"
+expect_code 400 unknown-saved-view "$BASE_URL/api/assets/search?role=Viewer&view=../../admin"
+expect_code 400 unknown-collection "$BASE_URL/api/assets/search?role=Viewer&collection=../../admin"
 
 expect_code 400 bad-review-action \
   -X POST -H 'Content-Type: application/json' \

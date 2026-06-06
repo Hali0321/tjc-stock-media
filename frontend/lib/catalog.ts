@@ -261,9 +261,18 @@ const intentDefinitions = [
   { view: "archive-only", confidence: "exact" as const, terms: ["archive"] }
 ];
 
-function normalizeViewId(view?: string) {
+export function normalizeSavedViewId(view?: string) {
   if (!view) return undefined;
   return viewAliases.get(view) || view;
+}
+
+export function isKnownSavedViewId(view?: string) {
+  const normalized = normalizeSavedViewId(view);
+  return Boolean(normalized && savedViewDefinitions.some((item) => item.id === normalized));
+}
+
+export function isKnownCollectionId(collection?: string) {
+  return Boolean(collection && collectionDefinitions.some((item) => item.id === collection));
 }
 
 function matchSearchIntent(query: string) {
@@ -618,7 +627,7 @@ export async function searchAssets({
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 120) : 72;
   const roleVisible = assets.filter((asset) => decideAccess(role, "viewAsset", asset).allowed);
   const intent = !view && !collection ? matchSearchIntent(query) : undefined;
-  const selectedViewId = normalizeViewId(view) || intent?.matchedView;
+  const selectedViewId = normalizeSavedViewId(view) || intent?.matchedView;
   const selectedView = savedViewDefinitions.find((item) => item.id === selectedViewId);
   const selectedCollection = collectionDefinitions.find((item) => item.id === collection);
   const effectiveQuery = intent?.matchedView ? "" : query;

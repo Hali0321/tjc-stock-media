@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeRole } from "@/lib/permissions";
-import { searchAssets } from "@/lib/catalog";
+import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { normalizeTextField } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,12 @@ export async function GET(request: NextRequest) {
   const collection = normalizeTextField(params.get("collection"), "", 80) || undefined;
   const sort = normalizeTextField(params.get("sort"), "", 40) || undefined;
   const limit = normalizeLimit(params.get("limit"));
+  if (view && !isKnownSavedViewId(view)) {
+    return NextResponse.json({ error: "Unknown saved view.", view }, { status: 400 });
+  }
+  if (collection && !isKnownCollectionId(collection)) {
+    return NextResponse.json({ error: "Unknown collection.", collection }, { status: 400 });
+  }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit });
   return NextResponse.json(result);
 }
