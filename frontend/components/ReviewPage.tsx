@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { HoldReleaseButton } from "@/components/HoldReleaseButton";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -551,12 +552,11 @@ export function ReviewPage() {
                 <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
                 Open detail
               </Link>
-              {data?.resourceSpaceUrls[selectedAsset.id] ? (
-                <a className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={data.resourceSpaceUrls[selectedAsset.id]} target="_blank" rel="noreferrer">
-                  <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
-                  ResourceSpace
-                </a>
-              ) : null}
+              <AssetActionsMenu
+                asset={selectedAsset}
+                resourceSpaceUrl={data?.resourceSpaceUrls[selectedAsset.id] || null}
+                canOpenResourceSpace={Boolean(data?.resourceSpaceUrls[selectedAsset.id])}
+              />
             </div>
             <div className="grid grid-cols-[auto_1fr] gap-2 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]">
               <Info size={16} strokeWidth={1.8} aria-hidden="true" />

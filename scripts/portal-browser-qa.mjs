@@ -229,6 +229,10 @@ for (const width of qaViewports) {
   await page.goto(`${base}/review`, { waitUntil: "networkidle" });
   if ((await page.getByText("Showing 24 of").count()) < 1) failures.push("review queue load more: initial 24-row limit missing");
   if ((await page.getByRole("button", { name: "Show more review items" }).count()) < 1) failures.push("review queue load more: button missing");
+  await page.getByRole("button", { name: "Asset actions" }).click();
+  if ((await page.getByRole("menuitem", { name: /Copy ResourceSpace ID/ }).count()) < 1) failures.push("review asset actions menu: copy ResourceSpace ID missing");
+  if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) > 0) failures.push("review asset actions menu: Reviewer can see ResourceSpace admin action");
+  await page.keyboard.press("Escape");
   await page.getByRole("tab", { name: "Metadata", exact: true }).click();
   if ((await page.getByText("Raw ResourceSpace status").count()) < 1) failures.push("review inspector tabs: Metadata panel missing raw status");
   await page.getByRole("tab", { name: "Metadata", exact: true }).press("ArrowRight");
@@ -245,6 +249,14 @@ for (const width of qaViewports) {
   await page.getByRole("button", { name: "Queue pending review write" }).click();
   await page.waitForSelector("text=ResourceSpace API write mapping is not configured yet");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("DAM Admin", 1440, 1000);
+  await page.goto(`${base}/review`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Asset actions" }).click();
+  if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) < 1) failures.push("review asset actions menu: DAM Admin ResourceSpace action missing");
   await context.close();
 }
 
