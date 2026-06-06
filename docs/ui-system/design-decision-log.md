@@ -30,7 +30,7 @@ Accepted patterns:
 - Accessible tabs for Asset Detail trust sections and Review inspector sections.
 - Request dialogs for original access, review request, and media coworker help.
 - Badges/banners/tooltips for safety clarity, with essential warnings visible in primary UI.
-- Skeleton loaders that match final layout.
+- Animated Loading Skeleton-style loaders that match final layout.
 
 Rejected patterns:
 

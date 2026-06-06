@@ -44,14 +44,14 @@ export function CollectionAlbumCard({
   return (
     <button
       type="button"
-      className="group grid overflow-hidden rounded-2xl border border-[#cfd9cf] bg-white text-left shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_18px_44px_rgba(49,60,52,.075)] transition duration-200 hover:-translate-y-0.5 hover:border-[#8fb2a5] hover:shadow-[0_26px_64px_rgba(49,60,52,.13)] active:translate-y-px"
+      className="group grid overflow-hidden rounded-[1.1rem] border border-[#becbc2] bg-white text-left shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_20px_54px_rgba(25,34,29,.09)] transition duration-200 hover:-translate-y-0.5 hover:border-[#7fa996] hover:shadow-[0_28px_72px_rgba(25,34,29,.15)] active:translate-y-px"
       onClick={onOpen}
       onPointerMove={scrubPreview}
       onPointerLeave={() => setActiveIndex(0)}
       aria-label={`Browse ${name}`}
     >
-      <span className="grid grid-cols-[7.5rem_1fr] gap-1.5 border-b border-tjc-line bg-[linear-gradient(135deg,#e8f0e9,#f8faf7)] p-2">
-        <span className="grid aspect-[4/3] place-items-center overflow-hidden rounded-xl bg-white shadow-[inset_0_0_0_1px_rgba(255,255,255,.8)]">
+      <span className="grid grid-cols-[8.5rem_1fr] gap-1.5 border-b border-[#cdd8d0] bg-[#111a17] p-2">
+        <span className="grid aspect-[4/3] place-items-center overflow-hidden rounded-xl bg-[#19231f] shadow-[inset_0_0_0_1px_rgba(255,255,255,.08)]">
           {activeImage ? (
             <MediaPreview src={activeImage.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
           ) : (
@@ -63,7 +63,7 @@ export function CollectionAlbumCard({
         </span>
         <span className="grid min-w-0 grid-cols-4 gap-1" aria-hidden="true">
           {(images.length ? images.slice(0, 4) : []).map((image, index) => (
-            <span className="grid min-h-12 place-items-center overflow-hidden rounded-lg bg-white" key={`${image.src}-${index}`}>
+            <span className="grid min-h-12 place-items-center overflow-hidden rounded-lg bg-[#19231f] ring-1 ring-white/10" key={`${image.src}-${index}`}>
               <MediaPreview src={image.src} alt="" />
             </span>
           ))}

@@ -41,7 +41,7 @@ Dribbble DAM density
 
 Reference patterns, adapted without copying:
 
-- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, loading skeletons, upload dropzone/preview, pagination, maintained tabs, review confirmation dialog, request dialogs, secondary action dropdowns, and hold-and-release buttons for high-risk review decisions.
+- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, Animated Loading Skeleton-style loading states, upload dropzone/preview, pagination, maintained tabs, review confirmation dialog, request dialogs, secondary action dropdowns, restrained liquid-glass primary-action depth, and hold-and-release buttons for high-risk review decisions.
 - Dribbble DAM references: dense thumbnail grid, left filter/sidebar rhythm, asset detail panel, table/list toggle, and review/admin information density.
 - Awwwards references: clean photographic hierarchy, image-first detail view, restrained white/evergreen polish, and mobile filter behavior without cinematic storytelling.
 - CodePen interaction references: upload drag/preview/remove states and gallery filtering ideas adapted to DAM reuse states.
@@ -62,7 +62,7 @@ Reference accountability lives in `docs/runs/final-product-critique.md`. Each so
 
 The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
-Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, and `UploadFileDropzone`. Image Comparison Slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions.
+Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DisplayCard`, `StatusBanner`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, and `UploadFileDropzone`. Image Comparison Slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions. Theme Toggle and Apple Tahoe Liquid Glass Button remain deferred; Liquid Glass Button is used only as restrained primary-action inspiration, not as full glass UI.
 
 Avoided:
 

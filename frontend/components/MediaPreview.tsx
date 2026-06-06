@@ -39,10 +39,10 @@ export function MediaPreview({
   }
 
   return (
-    <div className={cn("grid h-full w-full place-items-center bg-[radial-gradient(circle_at_24%_18%,rgba(255,255,255,.9),transparent_32%),linear-gradient(135deg,#eef2ed_0%,#eef2ed_46%,#dfe7df_46%,#dfe7df_50%,#eef2ed_50%)] p-3 text-center text-tjc-muted", className)}>
-      <span className="grid max-w-[20rem] justify-items-center gap-2 rounded-xl border border-white/70 bg-white/45 px-3 py-3 shadow-[0_1px_0_rgba(32,34,31,.04)] backdrop-blur-[1px]">
-        <ImageIcon size={24} strokeWidth={1.8} aria-hidden="true" />
-        <strong className="text-[11px] font-bold uppercase tracking-[.08em] text-[#536058]">{label}</strong>
+    <div className={cn("dam-preview-grid grid h-full w-full place-items-center p-3 text-center text-tjc-muted", className)}>
+      <span className="grid max-w-[22rem] justify-items-center gap-2 rounded-2xl border border-white/75 bg-white/62 px-4 py-3 shadow-[0_12px_34px_rgba(25,34,29,.08)] backdrop-blur-[2px]">
+        <ImageIcon size={24} strokeWidth={1.9} aria-hidden="true" />
+        <strong className="text-[11px] font-black uppercase tracking-[.1em] text-[#4f5c55]">{label}</strong>
         {detail ? <span className="max-w-[28rem] text-sm font-medium leading-snug text-tjc-muted">{detail}</span> : null}
       </span>
     </div>

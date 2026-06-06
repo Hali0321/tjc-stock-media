@@ -50,7 +50,7 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
   }
 
   return (
-    <div className={cn("flex flex-wrap gap-1", className)} role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown}>
+    <div className={cn("flex max-w-full flex-wrap gap-1 rounded-2xl border border-[#c5d1c9] bg-[#edf2ee] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,.8)]", className)} role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown}>
       {tabs.map((tab) => {
         const selected = active === tab;
         return (
@@ -62,7 +62,7 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
             aria-selected={selected}
             aria-controls={damTabPanelId(idPrefix, tab)}
             tabIndex={selected ? 0 : -1}
-            className={cn("inline-flex min-h-9 max-w-full items-center rounded-lg border border-tjc-line bg-white px-3 text-sm font-semibold text-[#46534b] transition hover:bg-[#eef7f1] active:translate-y-px", selected && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]")}
+            className={cn("inline-flex min-h-10 max-w-full items-center rounded-xl border border-transparent px-3 text-sm font-black text-[#46534b] transition hover:bg-white/78 active:translate-y-px", selected && "border-[#8fbda8] bg-white text-tjc-evergreen shadow-[0_10px_24px_rgba(25,34,29,.08),inset_0_1px_0_rgba(255,255,255,.95)]")}
             onClick={() => onChange(tab)}
           >
             {tab}

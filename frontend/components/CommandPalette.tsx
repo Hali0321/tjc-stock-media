@@ -170,13 +170,13 @@ export function CommandPalette() {
     <>
       <button
         type="button"
-        className="hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:inline-flex"
+        className="hidden min-h-10 items-center gap-2 rounded-xl border border-[#b9c8bf] bg-[#fcfefd] px-3 text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_12px_30px_rgba(25,34,29,.07)] transition hover:bg-[#eef7f1] active:translate-y-px md:inline-flex"
         onClick={openPalette}
         aria-label="Open command palette"
       >
         <Search size={16} strokeWidth={1.8} aria-hidden="true" />
         <span>Command</span>
-        <kbd className="rounded border border-tjc-line bg-[#f7f8f6] px-1.5 py-0.5 text-[11px] font-semibold text-tjc-muted">⌘K</kbd>
+        <kbd className="rounded-md border border-[#c7d2ca] bg-[#f4f7f4] px-1.5 py-0.5 text-[11px] font-black text-tjc-muted">⌘K</kbd>
       </button>
       <button
         type="button"
@@ -187,20 +187,20 @@ export function CommandPalette() {
         <Search size={16} strokeWidth={1.8} aria-hidden="true" />
       </button>
       {open ? (
-        <div className="fixed inset-0 z-50 bg-[#20221f]/28 p-3 backdrop-blur-[2px]" role="presentation" onMouseDown={closePalette}>
+        <div className="fixed inset-0 z-50 bg-[#07100d]/36 p-3 backdrop-blur-[5px]" role="presentation" onMouseDown={closePalette}>
           <section
             ref={dialogRef}
-            className="mx-auto mt-16 w-full max-w-2xl overflow-hidden rounded-lg border border-tjc-line bg-white shadow-[0_18px_60px_rgba(32,34,31,.22)]"
+            className="mx-auto mt-16 w-full max-w-3xl overflow-hidden rounded-[1.15rem] border border-[#9fb4a8] bg-[#fbfdfb] shadow-[0_30px_100px_rgba(7,16,13,.32),0_1px_0_rgba(255,255,255,.95)_inset]"
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-tjc-line px-3 py-2">
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-[#c7d3cb] bg-white px-4 py-3">
               <Search size={18} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />
               <input
                 ref={inputRef}
-                className="min-h-11 min-w-0 bg-transparent text-base font-medium text-tjc-ink placeholder:text-[#7d877f]"
+                className="min-h-12 min-w-0 bg-transparent text-lg font-semibold text-tjc-ink placeholder:text-[#7d877f]"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={onInputKeyDown}
@@ -211,7 +211,7 @@ export function CommandPalette() {
                 aria-expanded={open}
                 role="combobox"
               />
-              <button className="grid h-9 w-9 place-items-center rounded-md text-tjc-muted hover:bg-[#f3f6f2]" type="button" onClick={closePalette} aria-label="Close command palette">
+              <button className="grid h-10 w-10 place-items-center rounded-xl text-tjc-muted hover:bg-[#f3f6f2]" type="button" onClick={closePalette} aria-label="Close command palette">
                 <X size={16} strokeWidth={1.8} aria-hidden="true" />
               </button>
             </div>
@@ -227,19 +227,19 @@ export function CommandPalette() {
                         key={command.id}
                         id={`command-option-${command.id}`}
                         className={cn(
-                          "grid min-h-14 grid-cols-[auto_1fr] items-center gap-3 rounded-md px-3 py-2 text-left transition hover:bg-[#f3f6f2] focus-visible:bg-[#f3f6f2]",
-                          selected ? "bg-[#eef7f1] ring-1 ring-[#a7cbbd]" : ""
+                          "grid min-h-16 grid-cols-[auto_1fr] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
+                          selected ? "bg-[#e7f5ec] ring-1 ring-[#8fbda8] shadow-[inset_4px_0_0_#063f39]" : ""
                         )}
                         role="option"
                         aria-selected={selected}
                         onClick={() => runCommand(command)}
                         onMouseEnter={() => setSelectedIndex(index)}
                       >
-                        <span className="grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-[#fbfcfa] text-tjc-evergreen">
+                        <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#c5d0c8] bg-white text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">
                           <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
                         </span>
                         <span className="min-w-0">
-                          <strong className="block truncate text-sm font-semibold text-tjc-ink">{command.label}</strong>
+                          <strong className="block truncate text-sm font-black text-tjc-ink">{command.label}</strong>
                           <span className="mt-0.5 block truncate text-xs font-medium text-tjc-muted">{command.hint}</span>
                         </span>
                       </button>
@@ -250,7 +250,7 @@ export function CommandPalette() {
                 <div className="p-8 text-center text-sm font-medium text-tjc-muted">No matching commands.</div>
               )}
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-tjc-line bg-[#fbfcfa] px-3 py-2 text-xs font-medium text-tjc-muted">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#c7d3cb] bg-[#f5f8f5] px-4 py-2.5 text-xs font-semibold text-tjc-muted">
               <span>Enter opens first result. Esc closes.</span>
               <span>ResourceSpace writes remain pending until field mapping is configured.</span>
             </div>

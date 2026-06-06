@@ -6,7 +6,11 @@ Checked on 2026-06-06.
 
 ## Git State
 
-Start of proof phase had existing modified frontend files and screenshot report output from the visual rebuild. End state still contains the visual rebuild changes, refreshed QA screenshots, and this handoff/readiness documentation. No commit was created.
+Start of visual rebuild branch: `f4362287cc4070c6e18111717b5802b7b4ead159`.
+
+Safety checkpoint before broad UI refactor: `0ec41407cfaa015fcd0adfd9d233956d25b10097`.
+
+End state contains the visual rebuild changes, refreshed QA screenshots, and this handoff/readiness documentation. Final commit hash should be read from `git rev-parse HEAD` after the commit is created.
 
 Current notable paths:
 
@@ -149,7 +153,7 @@ Deferred. The 21st.dev Image Comparison Slider is real, but this pass did not di
 - Derivative presets and safe paired derivatives are incomplete.
 - Backup/restore ownership and production run cadence need signoff.
 - `.env` still contains placeholder values.
-- Local free disk reported 13 GiB, below the 20 GiB readiness threshold.
+- Local free disk reported 11 GiB, below the 20 GiB readiness threshold.
 - Docker daemon was unavailable during smoke check, so local ResourceSpace/MariaDB runtime was not verified live.
 
 ## What Hali Should Test Monday

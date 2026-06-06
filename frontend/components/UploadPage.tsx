@@ -110,12 +110,12 @@ export function UploadPage() {
   }
 
   return (
-    <div className="dam-shell max-w-[1520px]">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 lg:grid-cols-[minmax(0,1fr)_36rem]">
+    <div className="dam-shell max-w-[1600px]">
+      <section className="dam-studio grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,1fr)_38rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
           <h1 className="mt-2 dam-page-title">Upload for review</h1>
-          <p className="mt-2 max-w-[64ch] text-sm leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
+          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3" aria-label="Upload workflow">
           {[
@@ -125,21 +125,21 @@ export function UploadPage() {
           ].map((step) => {
             const Icon = step.icon;
             return (
-              <div className="dam-card p-3" key={step.title}>
+              <div className="dam-inspector p-3" key={step.title}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-                <strong className="mt-2 block font-semibold">{step.title}</strong>
-                <span className="mt-1 block text-sm text-tjc-muted">{step.body}</span>
+                <strong className="mt-2 block font-black">{step.title}</strong>
+                <span className="mt-1 block text-sm font-semibold text-tjc-muted">{step.body}</span>
               </div>
             );
           })}
         </div>
       </section>
 
-      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_24rem]" onSubmit={submit}>
-        <section className="min-w-0 self-start rounded-xl border border-tjc-line bg-white p-4">
+      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_27rem]" onSubmit={submit}>
+        <section className="dam-inspector min-w-0 self-start p-4">
           <div className="mb-4">
-            <h2 className="text-base font-semibold">1. Context</h2>
-            <p className="text-sm text-tjc-muted">Help reviewers understand where this media came from.</p>
+            <h2 className="text-lg font-black">1. Context</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Help reviewers understand where this media came from.</p>
           </div>
           <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Title {requiredHint}</span>
@@ -165,10 +165,10 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="self-start rounded-xl border border-tjc-line bg-white p-4">
+        <section className="dam-inspector self-start p-4">
           <div className="mb-4">
-            <h2 className="text-base font-semibold">2. People and rights</h2>
-            <p className="text-sm text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
+            <h2 className="text-lg font-black">2. People and rights</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
@@ -213,10 +213,10 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="min-w-0 self-start rounded-xl border border-tjc-line bg-white p-4">
+        <section className="dam-inspector min-w-0 self-start p-4">
           <div className="mb-4">
-            <h2 className="text-base font-semibold">3. Files and tags</h2>
-            <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
+            <h2 className="text-lg font-black">3. Files and tags</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
           <UploadFileDropzone
             inputRef={fileInputRef}
@@ -247,7 +247,7 @@ export function UploadPage() {
             <textarea className="min-h-24 w-full min-w-0 dam-card p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
           {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
-          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-tjc-line bg-[#f6faf7] p-3">
+          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#c9d6ce] bg-[#f6faf7] p-3">
             <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <div>
               <strong className="block font-semibold">Large media intake</strong>
@@ -259,11 +259,11 @@ export function UploadPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-4 xl:col-span-3" aria-label="Ready to submit checklist">
+        <section className="dam-contact-sheet p-4 xl:col-span-3" aria-label="Ready to submit checklist">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-base font-semibold">Reviewer handoff checklist</h2>
-              <p className="mt-1 text-sm text-tjc-muted">Submission is stronger when every required evidence field is filled before intake.</p>
+              <h2 className="text-lg font-black">Reviewer handoff checklist</h2>
+              <p className="mt-1 text-sm font-semibold text-tjc-muted">Submission is stronger when every required evidence field is filled before intake.</p>
             </div>
             <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-3 py-2 text-xs font-semibold text-[#725216]">Status after submit: Needs Review / Do Not Publish</span>
           </div>

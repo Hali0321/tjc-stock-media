@@ -8,8 +8,10 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
+import { DisplayCard } from "@/components/DisplayCard";
 import { HoldReleaseButton } from "@/components/HoldReleaseButton";
 import { useDemoRole } from "@/components/RoleProvider";
+import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { MediaPreview } from "@/components/MediaPreview";
@@ -318,49 +320,39 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
+      <section className="dam-studio grid gap-5 p-4 md:p-5 xl:grid-cols-[minmax(0,1fr)_30rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
           <h1 className="mt-2 dam-page-title">Review workbench</h1>
-          <p className="mt-2 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
+          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
-        <div className="dam-lift p-4">
-          <span className="text-sm font-semibold text-tjc-muted">Current queue</span>
-          <strong className="mt-1 block text-2xl font-semibold tabular-nums">{data?.assets.length ?? "-"} shown</strong>
-          <span className="text-sm text-tjc-muted">{activeQueueSummary ? `loaded ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
+        <div className="dam-dark-panel p-4">
+          <span className="text-sm font-black text-white/68">Current queue</span>
+          <strong className="mt-1 block text-4xl font-black tracking-[-.03em] tabular-nums text-white">{data?.assets.length ?? "-"} shown</strong>
+          <span className="mt-2 block text-sm font-semibold text-white/58">{activeQueueSummary ? `loaded ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
         </div>
 	      </section>
 
 	      {error ? (
-	        <div className="mt-4 rounded-lg border border-[#e5b7b5] bg-[#fff0ef] p-3 text-sm font-semibold text-[#7d2d2a]" role="status">
-	          {error}
-	        </div>
+	        <StatusBanner className="mt-4" tone="critical" title="Review queue did not load">{error}</StatusBanner>
 	      ) : null}
 
 	      {data?.source.readOnly ? (
-        <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
-          <Database size={18} strokeWidth={1.8} aria-hidden="true" />
-          <div>
-            <strong className="block font-semibold">Review queue is reading ResourceSpace export.</strong>
-            <span className="text-sm">Review action is ready, but ResourceSpace API write mapping is not configured yet. Actions stay server-routed until field mapping is live.</span>
-          </div>
-        </div>
+        <StatusBanner className="mt-3" tone="info" title="Review queue is reading ResourceSpace export" icon={Database}>
+          Review action is ready, but ResourceSpace API write mapping is not configured yet. Actions stay server-routed until field mapping is live.
+        </StatusBanner>
       ) : null}
 
-      <section className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#d7dfd5] bg-[#f8fbf7] p-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
+      <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
         {governanceCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div className="grid min-h-16 content-center rounded-xl border border-[#dbe4d9] bg-white p-2.5 shadow-[0_1px_0_rgba(255,255,255,.9)_inset]" key={card.key}>
-              <Icon size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-              <strong className="mt-1 text-lg font-semibold tabular-nums">{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
-              <span className="text-xs font-medium text-tjc-muted">{card.label}</span>
-            </div>
+            <DisplayCard key={card.key} icon={Icon} label={card.label} value={data?.governance[card.key] ?? "-"} tone={card.key === "pendingReview" || card.key === "rightsReview" ? "warn" : "info"} />
           );
         })}
       </section>
 
-      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 rounded-2xl bg-[#edf3ee] p-2" aria-label="Review queues">
+      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 rounded-2xl border border-[#c5d1c9] bg-[#edf3ee] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" aria-label="Review queues">
         {(data?.queues || []).map((queue) => (
           <button
             key={queue.id}
@@ -378,7 +370,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
-        <div className="order-2 min-w-0 overflow-hidden dam-lift xl:order-1">
+        <div className="order-2 min-w-0 overflow-hidden dam-contact-sheet xl:order-1">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#f6faf6] px-3 py-2 text-sm">
             <strong className="font-semibold text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
             {activeQueueSummary ? <span className="text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
@@ -397,7 +389,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               const risks = reviewRiskFlags(asset);
               const missing = missingReviewFields(asset);
               return (
-                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-3 transition hover:bg-[#f8fbf8] last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#edf7f2] shadow-[inset_4px_0_0_#123f3a]")} key={asset.id}>
+                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-3 transition hover:bg-[#f8fbf8] last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#e5f3ea] shadow-[inset_6px_0_0_#063f39]")} key={asset.id}>
                   <Link href={`/assets/${asset.id}`} className="review-media-reveal group block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]" aria-label={`Open ${display.title}`}>
                     <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
                   </Link>
@@ -447,13 +439,13 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid gap-3 self-start dam-lift p-3 xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
-            <div className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
+          <aside className="order-1 grid gap-3 self-start dam-inspector p-3 xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
+            <div className="block aspect-[4/3] overflow-hidden rounded-2xl bg-[#111a17] shadow-[0_18px_48px_rgba(25,34,29,.15)]">
               <MediaPreview src={selectedPreview} alt={selectedAsset.thumbnailAlt} className="px-3" loading="eager" />
             </div>
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Selected asset</span>
-              <h2 className="mt-1 text-lg font-semibold leading-tight">{assetPresentation(selectedAsset, role).title}</h2>
+              <h2 className="mt-1 text-xl font-black leading-tight">{assetPresentation(selectedAsset, role).title}</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={selectedAsset.status} />

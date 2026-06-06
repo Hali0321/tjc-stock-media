@@ -57,8 +57,8 @@ export function UploadFileDropzone({
     >
       <label
         className={cn(
-          "grid min-h-52 cursor-pointer place-items-center rounded-2xl border border-dashed border-[#b8c7bb] bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,.95),transparent_30%),linear-gradient(180deg,#ffffff,#f4f8f4)] p-6 text-center shadow-[0_18px_48px_rgba(49,60,52,.08),inset_0_0_0_1px_rgba(255,255,255,.75)] transition focus-within:border-[#0f4f45] focus-within:ring-2 focus-within:ring-[#9bc5b5]",
-          dragging && "scale-[1.01] border-[#76b49d] bg-[#eef7f1] shadow-[0_22px_56px_rgba(18,63,58,.13),inset_0_0_0_1px_rgba(18,63,58,.18)]"
+          "grid min-h-64 cursor-pointer place-items-center rounded-[1.15rem] border border-dashed border-[#85a898] bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,.18),transparent_32%),linear-gradient(180deg,#17211d,#111a17)] p-6 text-center text-white shadow-[0_26px_72px_rgba(7,16,13,.18),inset_0_1px_0_rgba(255,255,255,.12)] transition focus-within:border-[#9bd2b3] focus-within:ring-2 focus-within:ring-[#9bc5b5]",
+          dragging && "scale-[1.01] border-[#9bd2b3] bg-[#102d28] shadow-[0_30px_78px_rgba(6,63,57,.22),inset_0_0_0_1px_rgba(155,210,179,.25)]"
         )}
         onDragEnter={(event) => handleDrag(event, true)}
         onDragOver={(event) => handleDrag(event, true)}
@@ -66,11 +66,11 @@ export function UploadFileDropzone({
         onDrop={handleDrop}
       >
         <span className="grid justify-items-center gap-2">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl border border-[#c9d8cc] bg-white text-tjc-evergreen shadow-[0_12px_24px_rgba(18,63,58,.10)]">
+          <span className="grid h-16 w-16 place-items-center rounded-2xl border border-white/16 bg-white/10 text-white shadow-[0_14px_30px_rgba(0,0,0,.18)]">
             <UploadCloud size={25} strokeWidth={1.8} aria-hidden="true" />
           </span>
-          <span className="text-base font-bold text-tjc-ink">{dragging ? "Release to add files" : "Drop files here or browse"}</span>
-          <span id="upload-file-help" className="max-w-[28rem] text-xs leading-relaxed text-tjc-muted">
+          <span className="text-lg font-black text-white">{dragging ? "Release to add files" : "Drop files here or browse"}</span>
+          <span id="upload-file-help" className="max-w-[28rem] text-sm font-semibold leading-relaxed text-white/62">
             Photos, graphics, documents, video, and audio still enter Needs Review / Do Not Publish. Large media uses Shared Drive Incoming.
           </span>
         </span>
@@ -87,7 +87,7 @@ export function UploadFileDropzone({
       </label>
 
       {selectedFiles.length ? (
-        <section className="rounded-2xl border border-[#d8dfd5] bg-white p-3 shadow-[0_1px_0_rgba(32,34,31,.04),0_16px_38px_rgba(49,60,52,.06)]" aria-label="Selected file preview">
+        <section className="rounded-2xl border border-[#b8c8bf] bg-white p-3 shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_18px_48px_rgba(25,34,29,.1)]" aria-label="Selected file preview">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-tjc-ink">{selectedFiles.length} selected file{selectedFiles.length === 1 ? "" : "s"}</h3>
             <button className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={onClear}>
@@ -99,7 +99,7 @@ export function UploadFileDropzone({
             {selectedFiles.map((file, index) => {
               const tooLarge = file.size > LARGE_MEDIA_BYTES;
               return (
-                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] px-3 py-2.5" key={`${file.name}-${file.size}-${index}`}>
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-xl border border-[#c9d5cd] bg-[#fbfcfa] px-3 py-3 shadow-[0_1px_0_rgba(255,255,255,.9)_inset]" key={`${file.name}-${file.size}-${index}`}>
                   {tooLarge ? <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" /> : <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />}
                   <span className="min-w-0">
                     <strong className="block truncate text-xs font-semibold text-tjc-ink">{file.name}</strong>

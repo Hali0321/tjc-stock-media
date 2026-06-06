@@ -117,7 +117,7 @@ If the current ResourceSpace export lacks a usable preview derivative for the ro
 ## Deferred UI Items
 
 - Theme toggle is intentionally deferred. Dark mode needs a full contrast/safety-label pass before it can be enabled without weakening approval, warning, blocked, people/minors, or pending-write clarity.
-- Load-more/pagination beyond the current API cap remains a follow-up; current browser QA still verifies count truth and responsive layout.
+- Library pagination is implemented with preserved search/view/filter/sort state and exact `Showing X-Y of Z` copy. Richer collection/detail pagination remains a follow-up only if those views need deeper browsing.
 
 ## Remaining Before Church PC/NAS
 

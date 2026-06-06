@@ -5,9 +5,11 @@ import { Archive, CheckCircle2, Clock3, Database, FileDown, FolderPlus, LayoutGr
 import Link from "next/link";
 import { AssetCard } from "@/components/AssetCard";
 import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
+import { DisplayCard } from "@/components/DisplayCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { LibraryPagination } from "@/components/LibraryPagination";
 import { SavedViewCard } from "@/components/SavedViewCard";
+import { StatusBanner } from "@/components/StatusBanner";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogSort, SearchResult, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
@@ -326,13 +328,13 @@ export function LibraryPage() {
 
   return (
     <div className="dam-shell">
-      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Library workspace">
+      <section className="dam-studio grid gap-5 p-3 md:p-5 xl:grid-cols-[minmax(0,1fr)_34rem]" aria-label="Library workspace">
         <div className="min-w-0">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="dam-page-title">Library</h1>
-              <p className="mt-1 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
-                Find approved media by ministry need, collection, people risk, date, status, and TJC terms.
+              <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
+                Find, trust, and reuse ministry media from a ResourceSpace-backed contact sheet.
               </p>
             </div>
             {hasActiveSearch ? (
@@ -342,19 +344,19 @@ export function LibraryPage() {
               </button>
             ) : null}
           </div>
-          <form className="mt-4 grid gap-2 rounded-2xl border border-[#c8d8cc] bg-white/95 p-2 shadow-[0_16px_40px_rgba(49,60,52,.08)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
-            <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={20} strokeWidth={1.8} />
+          <form className="mt-5 grid gap-2 rounded-[1.15rem] border border-[#b8c8bf] bg-white p-2.5 shadow-[0_22px_60px_rgba(25,34,29,.12),0_1px_0_rgba(255,255,255,.95)_inset] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
+            <Search aria-hidden="true" className="ml-1 mt-2.5 text-tjc-evergreen" size={22} strokeWidth={1.9} />
             <label className="sr-only" htmlFor="library-search">Search approved media</label>
             <input
               id="library-search"
-              className="min-h-10 min-w-0 bg-transparent px-1 text-base text-tjc-ink placeholder:text-[#7f8a82]"
+              className="min-h-12 min-w-0 bg-transparent px-1 text-lg font-semibold text-tjc-ink placeholder:text-[#7f8a82]"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search Bible, fellowship, baptism, flowers, no people, website hero..."
               name="q"
               type="search"
             />
-            <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search</button>
+            <button className="min-h-12 dam-button-primary px-6 text-sm font-black transition active:translate-y-px" type="submit">Search</button>
           </form>
           <div className="mt-3 flex max-w-full min-w-0 flex-wrap gap-2 pb-1" aria-label="Use-case shortcuts">
             {visibleUseCases.map((item) => (
@@ -370,14 +372,14 @@ export function LibraryPage() {
           </div>
         </div>
 
-        <div className="dam-lift grid min-w-0 content-start gap-3 p-3">
+        <div className="dam-dark-panel grid min-w-0 content-start gap-4 p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-sm font-semibold text-tjc-evergreen">Source and count truth</span>
-              <strong className="mt-1 block text-sm font-semibold text-tjc-ink">{result?.source.label || "Loading source"}</strong>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-tjc-muted sm:line-clamp-none">{result?.source.detail || "Loading ResourceSpace source state."}</p>
+              <span className="text-sm font-black text-white">Source and count truth</span>
+              <strong className="mt-1 block text-sm font-semibold text-white/78">{result?.source.label || "Loading source"}</strong>
+              <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-white/56 sm:line-clamp-none">{result?.source.detail || "Loading ResourceSpace source state."}</p>
             </div>
-            <Database className="shrink-0 text-tjc-evergreen" size={19} strokeWidth={1.8} aria-hidden="true" />
+            <Database className="shrink-0 text-white/70" size={20} strokeWidth={1.9} aria-hidden="true" />
           </div>
           <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold text-tjc-ink sm:hidden" aria-label="Mobile catalog summary">
             <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
@@ -392,30 +394,21 @@ export function LibraryPage() {
           </div>
           <div className="hidden grid-cols-3 gap-2 sm:grid sm:grid-cols-6" aria-label="Catalog summary">
             {[
-              { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "approved" },
-              { icon: Clock3, value: result?.counts.needsReview ?? "-", label: "review" },
-              { icon: ShieldAlert, value: result?.counts.rightsReview ?? "-", label: "rights" },
-              { icon: Users, value: result?.counts.childrenYouth ?? "-", label: "youth" },
-              { icon: Archive, value: result?.counts.archive ?? "-", label: "archive" },
-              { icon: Database, value: result?.counts.visibleToRole ?? "-", label: "role-visible" }
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div className="grid min-h-16 content-center rounded-xl border border-[#d6e0d6] bg-[#f8fbf7] p-2 shadow-[0_1px_0_rgba(255,255,255,.9)_inset]" key={item.label}>
-                  <Icon className="text-tjc-evergreen" size={14} strokeWidth={1.8} aria-hidden="true" />
-                  <strong className="mt-1 text-lg font-semibold tabular-nums text-tjc-ink">{item.value}</strong>
-                  <span className="text-[11px] font-medium leading-tight text-tjc-muted">{item.label}</span>
-                </div>
-              );
-            })}
+              { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "approved", tone: "ok" as const },
+              { icon: Clock3, value: result?.counts.needsReview ?? "-", label: "review", tone: "warn" as const },
+              { icon: ShieldAlert, value: result?.counts.rightsReview ?? "-", label: "rights", tone: "warn" as const },
+              { icon: Users, value: result?.counts.childrenYouth ?? "-", label: "youth", tone: "info" as const },
+              { icon: Archive, value: result?.counts.archive ?? "-", label: "archive", tone: "info" as const },
+              { icon: Database, value: result?.counts.visibleToRole ?? "-", label: "visible", tone: "dark" as const }
+            ].map((item) => (
+              <DisplayCard key={item.label} icon={item.icon} value={item.value} label={item.label} tone={item.tone} />
+            ))}
           </div>
         </div>
 	      </section>
 
 	      {error ? (
-	        <div className="mt-4 rounded-lg border border-[#e5b7b5] bg-[#fff0ef] p-3 text-sm font-semibold text-[#7d2d2a]" role="status">
-	          {error}
-	        </div>
+	        <StatusBanner className="mt-4" tone="critical" title="Library did not load">{error}</StatusBanner>
 	      ) : null}
 
 	      <details className="mt-3 hidden rounded-2xl border border-[#d1ddd2] bg-white/88 shadow-[0_12px_32px_rgba(49,60,52,.045)] md:block">
@@ -485,15 +478,15 @@ export function LibraryPage() {
         </div>
       </details>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[17rem_minmax(0,1fr)]" aria-label="Library controls and results">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[21rem_minmax(0,1fr)]" aria-label="Library controls and results">
         <aside className="order-2 grid min-w-0 gap-4 xl:order-1 xl:sticky xl:top-24 xl:self-start">
-          <section className="min-w-0 overflow-hidden dam-lift" aria-label="Saved DAM views">
-            <div className="border-b border-tjc-line bg-[#f8fbf7] px-3 py-3">
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Saved DAM views</h2>
-              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Operational shortcuts backed by ResourceSpace export fields.</p>
+          <section className="min-w-0 overflow-hidden dam-inspector p-3" aria-label="Saved DAM views">
+            <div className="pb-3">
+              <h2 className="text-sm font-black text-tjc-evergreen">Saved DAM views</h2>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">Display-card shortcuts backed by ResourceSpace export fields.</p>
             </div>
-            <div className="grid max-w-full min-w-0 gap-2 p-2 sm:grid-cols-2 lg:block lg:p-0">
-              {shortcuts.slice(0, 10).map((view) => (
+            <div className="grid max-w-full min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              {shortcuts.slice(0, 12).map((view) => (
                 <SavedViewCard key={view.id} view={view} active={selectedView === view.id} onOpen={() => openSavedView(view.id)} />
               ))}
             </div>
@@ -511,7 +504,7 @@ export function LibraryPage() {
 
         <div className="order-1 min-w-0 xl:order-2">
           <section className="min-w-0" aria-label="Asset results">
-            <section className="mb-3 grid gap-3 dam-section-bar p-2.5" aria-label="Selection and batch actions">
+            <section className="mb-3 grid gap-3 dam-contact-sheet p-3" aria-label="Selection and batch actions">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={selectVisibleAssets}>
@@ -570,7 +563,7 @@ export function LibraryPage() {
               ) : null}
             </section>
 
-            <div className="mb-3 grid gap-2 rounded-xl border border-[#d8dfd5] bg-[#fbfcfa] px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
+            <div className="mb-3 grid gap-2 rounded-2xl border border-[#c8d5cd] bg-[#fbfcfa] px-3 py-3 text-sm font-semibold text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.85)_inset]" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="font-semibold text-tjc-ink">
                   {loading
@@ -607,7 +600,7 @@ export function LibraryPage() {
               </div>
             </div>
 
-            <section className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#eef3ee] p-2 text-sm text-tjc-muted" aria-label="Sort results">
+            <section className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-[#e9f0eb] p-2 text-sm text-tjc-muted" aria-label="Sort results">
               <span className="font-semibold text-tjc-ink">Sort</span>
               {sortOptions.map((option) => (
                 <button
@@ -645,10 +638,10 @@ export function LibraryPage() {
               <div className="rounded-xl border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
             ) : null}
             {viewMode === "grid" ? (
-              <div className="dam-workbench grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              <div className="dam-contact-sheet grid grid-cols-2 gap-2 p-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {visibleAssets.map((asset) => (
                   <div className="relative" key={asset.id}>
-                    <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-xl border border-tjc-line bg-white/92 shadow-sm" aria-label={`Select ${asset.title}`}>
+                    <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-xl border border-white/70 bg-white/92 shadow-[0_10px_22px_rgba(7,16,13,.14)]" aria-label={`Select ${asset.title}`}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
                     </label>
                     <AssetCard asset={asset} role={role} />
