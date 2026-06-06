@@ -2,9 +2,11 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
+import { InputWithTags } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { UploadFileDropzone } from "@/components/UploadFileDropzone";
 import { canUpload } from "@/lib/permissions";
+import { canonicalTags } from "@/lib/taxonomy";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 type UploadReceipt = {
@@ -27,6 +29,7 @@ export function UploadPage() {
   const [largeWarning, setLargeWarning] = useState("");
   const [receipt, setReceipt] = useState<UploadReceipt | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [suggestedTags, setSuggestedTags] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const allowed = ready && canUpload(role);
 
@@ -227,10 +230,18 @@ export function UploadPage() {
             Existing Google / ResourceSpace link
             <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
           </label>
-          <label className={`${labelClass} mt-4`}>
-            <span className="flex items-center justify-between gap-2">Suggested tags {requiredHint}</span>
-            <input className={inputClass} name="tags" placeholder="Bible, fellowship, welcome, youth..." required />
-          </label>
+          <div className="mt-4">
+            <InputWithTags
+              name="tags"
+              label="Suggested tags"
+              value={suggestedTags}
+              onChange={setSuggestedTags}
+              required
+              placeholder="Bible, fellowship, welcome, youth..."
+              suggestions={[...canonicalTags.visibleTags, ...canonicalTags.tjcTerms]}
+              helperText="Use existing visible-content or TJC terms. Reviewers approve final taxonomy before ResourceSpace updates."
+            />
+          </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
             <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />

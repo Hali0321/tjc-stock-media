@@ -249,7 +249,7 @@ Current UI and workflow notes:
 - Asset detail and Review inspector use maintained `DamTabs` with real tab semantics, arrow-key movement, and verified `aria-controls` targets.
 - Request original access, request review, and ask-media-coworker actions open `ReuseRequestDialog` first. The dialog explains that email drafts do not grant original access, update ResourceSpace, or create pending writes.
 - Review uses `HoldReleaseButton` for high-risk `Archive only` and `Do not publish externally` decisions after evidence is complete, so accidental clicks do not queue those pending writes.
-- Upload is a guided contributor intake with maintained `UploadFileDropzone`, selected-file preview, type/size display, remove/clear controls, required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
+- Upload is a guided contributor intake with maintained `UploadFileDropzone`, taxonomy-backed `InputWithTags`, selected-file preview, type/size display, remove/clear controls, required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
 - Review is a role-gated workbench with queue tabs, selected-asset inspector, required checklist, audit preview, pending write result copy, and an explicit `Show more review items` gate so mobile is not forced through all loaded queue rows at once.
 - `/admin` is DAM Admin-only and shows current data source, API read/write readiness, required field refs, pending write queue, role matrix, and production blockers.
 - Safe-download logic uses the portal reuse policy, not raw ResourceSpace approval alone.

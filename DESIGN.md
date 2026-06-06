@@ -62,7 +62,7 @@ Reference accountability lives in `docs/runs/final-product-critique.md`. Each so
 
 The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
-Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, and `UploadFileDropzone`. Image Comparison Slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions.
+Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, and `UploadFileDropzone`. Image Comparison Slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions.
 
 Avoided:
 

@@ -74,6 +74,23 @@ async function newRolePage(role, width, height) {
   return { page, context };
 }
 
+async function openCommandPalette(page) {
+  const commandSearch = page.getByLabel("Command search", { exact: true });
+  const trigger = page.locator('button[aria-label="Open command palette"]:visible').first();
+  await trigger.waitFor({ state: "visible", timeout: 10000 });
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    if (await commandSearch.isVisible().catch(() => false)) return commandSearch;
+    if (attempt % 2 === 0) {
+      await trigger.click();
+    } else {
+      await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
+    }
+    await page.waitForTimeout(350);
+  }
+  await commandSearch.waitFor({ state: "visible", timeout: 10000 });
+  return commandSearch;
+}
+
 async function inspectPage(page, expected) {
   return page.evaluate((expectedPage) => {
     const doc = document.documentElement;
@@ -160,16 +177,13 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await page.goto(base, { waitUntil: "networkidle" });
-  await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
-  if ((await page.getByLabel("Command search").count()) === 0) {
-    await page.locator('button[aria-label="Open command palette"]:visible').first().click();
-  }
-  await page.getByLabel("Command search").fill("website hero");
-  const firstActiveCommand = await page.getByLabel("Command search").getAttribute("aria-activedescendant");
+  const commandSearch = await openCommandPalette(page);
+  await commandSearch.fill("website hero");
+  const firstActiveCommand = await commandSearch.getAttribute("aria-activedescendant");
   await page.keyboard.press("ArrowDown");
-  const secondActiveCommand = await page.getByLabel("Command search").getAttribute("aria-activedescendant");
+  const secondActiveCommand = await commandSearch.getAttribute("aria-activedescendant");
   await page.keyboard.press("ArrowUp");
-  const restoredActiveCommand = await page.getByLabel("Command search").getAttribute("aria-activedescendant");
+  const restoredActiveCommand = await commandSearch.getAttribute("aria-activedescendant");
   if (!firstActiveCommand || !secondActiveCommand || firstActiveCommand === secondActiveCommand || restoredActiveCommand !== firstActiveCommand) {
     failures.push("command palette: arrow-key selection did not update active command");
   }
@@ -182,11 +196,8 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await page.goto(base, { waitUntil: "networkidle" });
-  await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
-  if ((await page.getByLabel("Command search").count()) === 0) {
-    await page.locator('button[aria-label="Open command palette"]:visible').first().click();
-  }
-  await page.getByLabel("Command search").fill("children youth");
+  const commandSearch = await openCommandPalette(page);
+  await commandSearch.fill("children youth");
   await page.keyboard.press("Enter");
   await page.waitForURL(/queue=children-youth/, { timeout: 10000 });
   const activeChildrenQueue = page.getByRole("button", { name: /Children\/Youth/ });
@@ -231,7 +242,10 @@ for (const width of qaViewports) {
   await page.getByLabel("Suggested approval direction").selectOption("Likely internal ministry use only");
   await page.getByLabel("Consent/restrictions").fill("No consent restrictions; no people visible.");
   await page.getByLabel("Existing Google / ResourceSpace link").fill("https://drive.google.com/example");
-  await page.getByLabel("Suggested tags").fill("qa, sabbath");
+  if ((await page.getByLabel("Suggested tags suggestions", { exact: true }).getByRole("button", { name: "Bible" }).count()) < 1) failures.push("upload tag input: taxonomy suggestions missing");
+  await page.getByLabel("Suggested tags", { exact: true }).fill("qa, sabbath");
+  await page.keyboard.press("Enter");
+  if ((await page.getByRole("button", { name: "Remove qa" }).count()) < 1) failures.push("upload tag input: typed tag chip missing");
   await page.getByLabel("Intake notes").fill("Browser QA no-file intake with source link only.");
   await page.getByRole("button", { name: "Submit intake" }).click();
   await page.waitForSelector("text=Intake received");

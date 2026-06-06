@@ -33,7 +33,7 @@ The current frontend shell is the final dense ministry DAM UI:
 - Collections: album-style records opened by stable collection ID, including Sabbath wording.
 - Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.
 - Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets. Use/Source/Review/Files/Related use maintained `DamTabs`. Secondary copy/open actions use maintained `DropdownActionMenu` / `AssetActionsMenu`; the ResourceSpace source-of-truth link remains DAM Admin only.
-- Upload: guided three-step intake with maintained dropzone/selected-file preview, type/size display, remove/clear controls, required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
+- Upload: guided three-step intake with maintained dropzone/selected-file preview, taxonomy-backed `InputWithTags`, type/size display, remove/clear controls, required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
 - Review: queue tabs, compact decision rows, selected-asset inspector tabs, evidence checklist, note field, audit preview, pending write state, explicit load-more gate for long queues, secondary inspector actions via maintained `AssetActionsMenu`, hold-and-release controls for archive/do-not-publish decisions, and desktop-only GSAP motion disabled by reduced-motion.
 
 ## Architecture
