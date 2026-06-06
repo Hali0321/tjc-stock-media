@@ -160,6 +160,14 @@ for (const width of qaViewports) {
     await page.locator('button[aria-label="Open command palette"]:visible').first().click();
   }
   await page.getByLabel("Command search").fill("website hero");
+  const firstActiveCommand = await page.getByLabel("Command search").getAttribute("aria-activedescendant");
+  await page.keyboard.press("ArrowDown");
+  const secondActiveCommand = await page.getByLabel("Command search").getAttribute("aria-activedescendant");
+  await page.keyboard.press("ArrowUp");
+  const restoredActiveCommand = await page.getByLabel("Command search").getAttribute("aria-activedescendant");
+  if (!firstActiveCommand || !secondActiveCommand || firstActiveCommand === secondActiveCommand || restoredActiveCommand !== firstActiveCommand) {
+    failures.push("command palette: arrow-key selection did not update active command");
+  }
   await page.keyboard.press("Enter");
   await page.waitForURL(/view=website-hero/, { timeout: 10000 });
   if (!page.url().includes("view=website-hero")) failures.push("command palette: website hero did not open stable view");

@@ -89,5 +89,4 @@ Future implementation requirements:
 
 - Asset detail and review inspector tabs should become maintained components.
 - Upload preview should support drag state and safe thumbnails.
-- Command palette should add arrow-key selection and stronger dialog focus management.
 - Download/request-original dialogs should be added with focus trap and no fake ResourceSpace persistence.

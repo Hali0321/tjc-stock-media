@@ -86,7 +86,7 @@ Selected patterns:
 | 21st.dev pattern/category | Status | Replaced old pattern | Why it fits TJC Stock Media | Style normalization | Code paths | Screenshot evidence |
 |---|---|---|---|---|---|---|
 | Tubelight Navbar | Implemented | Inline primary nav | Clarifies Library, Collections, Upload, Review as core workflows | Evergreen active surface, subtle border, low motion, role-aware Admin | `frontend/components/AppNav.tsx`, `frontend/components/AppChrome.tsx` | `library-desktop.png`, `library-mobile-320.png` |
-| Command palette / menus | Implemented | Slow manual route and saved-view switching | Speeds asset search, saved views, collection jumps, review queues, ResourceSpace IDs | White dialog shell, evergreen icons, no neon/glass showcase | `frontend/components/CommandPalette.tsx` | `library-desktop.png` |
+| Command palette / menus | Implemented | Slow manual route and saved-view switching | Speeds asset search, saved views, collection jumps, review queues, ResourceSpace IDs | White dialog shell, evergreen icons, Arrow/Home/End selection, focus trap, no neon/glass showcase | `frontend/components/CommandPalette.tsx` | `library-desktop.png` |
 | Display cards | Implemented selectively | Oversized generic dashboard cards | Good for saved views, review metrics, admin health, metadata confidence | Compact white operational cards, no asset-grid use | `frontend/components/SavedViewCard.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/AdminPage.tsx`, `frontend/components/ReviewPage.tsx` | `library-desktop.png`, `collections-desktop.png`, `admin-desktop.png` |
 | File upload preview | Implemented | Plain file input | Contributors can see selected file, type, size, large-media warning, remove/clear | Neutral upload panel, review-blocked receipt copy | `frontend/components/UploadPage.tsx` | `upload-desktop.png`, `upload-mobile-320.png` |
 | Review table/list cockpit | Implemented | Long soft review card list | Reviewers can triage blockers, raw status, pending writes, and evidence quickly | Dense rows, sticky inspector, readable warnings | `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
@@ -145,7 +145,7 @@ Measured browser QA:
 - `git diff --check`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass with zero failures, zero warnings, and zero console errors.
-- Browser QA now includes command palette and upload file-preview checks.
+- Browser QA now includes command palette, command arrow-key selection, and upload file-preview checks.
 
 ## Current Blockers
 

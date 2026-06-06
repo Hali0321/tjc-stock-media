@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, FileSearch, FolderOpen, HelpCircle, Search, Settings2, ShieldAlert, ShieldCheck, UploadCloud, X } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -37,7 +37,10 @@ export function CommandPalette() {
   const { role } = useDemoRole();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const lastActiveRef = useRef<HTMLElement | null>(null);
   const reviewer = role === "Reviewer" || role === "DAM Admin";
 
   const visibleCommands = useMemo(() => {
@@ -73,35 +76,90 @@ export function CommandPalette() {
     return base.slice(0, 9);
   }, [query, reviewer, role]);
 
+  const openPalette = useCallback(() => {
+    lastActiveRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setOpen(true);
+  }, []);
+
+  const closePalette = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    setSelectedIndex(0);
+    window.setTimeout(() => lastActiveRef.current?.focus(), 0);
+  }, []);
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const isCommand = event.metaKey || event.ctrlKey;
       if (isCommand && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setOpen(true);
+        openPalette();
       }
-      if (event.key === "Escape") setOpen(false);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [openPalette]);
 
   useEffect(() => {
     if (!open) return;
     const id = window.setTimeout(() => inputRef.current?.focus(), 0);
-    return () => window.clearTimeout(id);
-  }, [open]);
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") closePalette();
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button, input, [tabindex]:not([tabindex="-1"])'))
+        .filter((item) => !item.hasAttribute("disabled") && item.tabIndex !== -1);
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closePalette, open]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    setSelectedIndex((current) => Math.min(current, Math.max(visibleCommands.length - 1, 0)));
+  }, [visibleCommands.length]);
+
+  useEffect(() => {
+    if (!open) return;
+    document.getElementById(`command-option-${visibleCommands[selectedIndex]?.id}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, selectedIndex, visibleCommands]);
 
   function runCommand(command: Command) {
-    setOpen(false);
-    setQuery("");
+    closePalette();
     router.push(command.href);
   }
 
   function onInputKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" && visibleCommands[0]) {
+    if (event.key === "ArrowDown") {
       event.preventDefault();
-      runCommand(visibleCommands[0]);
+      setSelectedIndex((current) => Math.min(current + 1, Math.max(visibleCommands.length - 1, 0)));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSelectedIndex((current) => Math.max(current - 1, 0));
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setSelectedIndex(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setSelectedIndex(Math.max(visibleCommands.length - 1, 0));
+    } else if (event.key === "Enter" && visibleCommands[selectedIndex]) {
+      event.preventDefault();
+      runCommand(visibleCommands[selectedIndex]);
     }
   }
 
@@ -110,7 +168,7 @@ export function CommandPalette() {
       <button
         type="button"
         className="hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:inline-flex"
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         aria-label="Open command palette"
       >
         <Search size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -120,14 +178,15 @@ export function CommandPalette() {
       <button
         type="button"
         className="inline-grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-white text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:hidden"
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         aria-label="Open command palette"
       >
         <Search size={16} strokeWidth={1.8} aria-hidden="true" />
       </button>
       {open ? (
-        <div className="fixed inset-0 z-50 bg-[#20221f]/28 p-3 backdrop-blur-[2px]" role="presentation" onMouseDown={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-[#20221f]/28 p-3 backdrop-blur-[2px]" role="presentation" onMouseDown={closePalette}>
           <section
+            ref={dialogRef}
             className="mx-auto mt-16 w-full max-w-2xl overflow-hidden rounded-lg border border-tjc-line bg-white shadow-[0_18px_60px_rgba(32,34,31,.22)]"
             role="dialog"
             aria-modal="true"
@@ -144,22 +203,34 @@ export function CommandPalette() {
                 onKeyDown={onInputKeyDown}
                 placeholder="Search Bible, open Website hero, jump to Review..."
                 aria-label="Command search"
+                aria-activedescendant={visibleCommands[selectedIndex] ? `command-option-${visibleCommands[selectedIndex].id}` : undefined}
+                aria-controls="command-results"
+                aria-expanded={open}
+                role="combobox"
               />
-              <button className="grid h-9 w-9 place-items-center rounded-md text-tjc-muted hover:bg-[#f3f6f2]" type="button" onClick={() => setOpen(false)} aria-label="Close command palette">
+              <button className="grid h-9 w-9 place-items-center rounded-md text-tjc-muted hover:bg-[#f3f6f2]" type="button" onClick={closePalette} aria-label="Close command palette">
                 <X size={16} strokeWidth={1.8} aria-hidden="true" />
               </button>
             </div>
             <div className="max-h-[60dvh] overflow-y-auto p-2">
               {visibleCommands.length ? (
-                <div className="grid gap-1">
-                  {visibleCommands.map((command) => {
+                <div className="grid gap-1" id="command-results" role="listbox" aria-label="Command results">
+                  {visibleCommands.map((command, index) => {
                     const Icon = command.icon;
+                    const selected = index === selectedIndex;
                     return (
                       <button
                         type="button"
                         key={command.id}
-                        className="grid min-h-14 grid-cols-[auto_1fr] items-center gap-3 rounded-md px-3 py-2 text-left transition hover:bg-[#f3f6f2] focus-visible:bg-[#f3f6f2]"
+                        id={`command-option-${command.id}`}
+                        className={cn(
+                          "grid min-h-14 grid-cols-[auto_1fr] items-center gap-3 rounded-md px-3 py-2 text-left transition hover:bg-[#f3f6f2] focus-visible:bg-[#f3f6f2]",
+                          selected ? "bg-[#eef7f1] ring-1 ring-[#a7cbbd]" : ""
+                        )}
+                        role="option"
+                        aria-selected={selected}
                         onClick={() => runCommand(command)}
+                        onMouseEnter={() => setSelectedIndex(index)}
                       >
                         <span className="grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-[#fbfcfa] text-tjc-evergreen">
                           <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
