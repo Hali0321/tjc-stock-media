@@ -218,6 +218,8 @@ for (const width of qaViewports) {
   for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
     await page.getByLabel(label).check();
   }
+  if ((await page.getByRole("button", { name: "Hold to queue Archive only", exact: true }).count()) < 1) failures.push("review high-risk action: archive hold button missing");
+  if ((await page.getByRole("button", { name: "Hold to queue Do not publish externally", exact: true }).count()) < 1) failures.push("review high-risk action: do-not-publish hold button missing");
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
   await page.waitForSelector("text=Queue pending review write");
   await page.getByRole("button", { name: "Queue pending review write" }).click();

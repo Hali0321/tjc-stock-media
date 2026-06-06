@@ -6,6 +6,7 @@ import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
+import { HoldReleaseButton } from "@/components/HoldReleaseButton";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
@@ -72,6 +73,7 @@ const governanceCards = [
 const reviewInspectorTabs = ["Checklist", "Metadata", "Rights", "History", "Pending write"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
 const reviewRowsPageSize = 24;
+const highRiskActionIds = new Set(["archive-only", "do-not-publish"]);
 
 const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
 const factTermClass = "text-xs font-semibold text-tjc-evergreen";
@@ -467,9 +469,25 @@ export function ReviewPage() {
                 <div className="mt-2 grid gap-2">
                   {reviewActions.map((action) => {
                     const missing = missingEvidenceFor(action);
+                    const title = missing.length ? `Missing: ${missing.join(", ")}` : "Review evidence and queue pending write";
+                    const icon = action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />;
+                    if (highRiskActionIds.has(action.id)) {
+                      return (
+                        <HoldReleaseButton
+                          key={action.id}
+                          disabled={!reviewer || missing.length > 0}
+                          title={missing.length ? title : `Hold to queue ${action.label}`}
+                          ariaLabel={`Hold to queue ${action.label}`}
+                          onComplete={() => requestAction(action)}
+                        >
+                          {icon}
+                          Hold to queue {action.label}
+                        </HoldReleaseButton>
+                      );
+                    }
                     return (
-                      <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={missing.length ? `Missing: ${missing.join(", ")}` : "Review evidence and queue pending write"} onClick={() => requestAction(action)}>
-                        {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
+                      <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
+                        {icon}
                         {action.label}
                       </button>
                     );
