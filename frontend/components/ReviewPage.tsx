@@ -71,6 +71,7 @@ const governanceCards = [
 
 const reviewInspectorTabs = ["Checklist", "Metadata", "Rights", "History", "Pending write"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
+const reviewRowsPageSize = 24;
 
 const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
 const factTermClass = "text-xs font-semibold text-tjc-evergreen";
@@ -130,6 +131,7 @@ export function ReviewPage() {
   const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
   const [activeInspectorTab, setActiveInspectorTab] = useState<ReviewInspectorTab>("Checklist");
+  const [visibleReviewCount, setVisibleReviewCount] = useState(reviewRowsPageSize);
   const [submittingReview, setSubmittingReview] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
@@ -165,6 +167,7 @@ export function ReviewPage() {
   const activeQueueSummary = data?.queues.find((queue) => queue.id === activeQueue);
   const selectedPendingWrite = selectedAsset ? data?.pendingWrites[selectedAsset.id] : undefined;
   const selectedPreview = selectedAsset ? detailImageUrl(selectedAsset, role) : undefined;
+  const visibleReviewAssets = useMemo(() => (data?.assets || []).slice(0, visibleReviewCount), [data?.assets, visibleReviewCount]);
 
   useEffect(() => {
     setReviewNote("");
@@ -172,6 +175,18 @@ export function ReviewPage() {
     setPendingAction(null);
     setAuditPreview(null);
   }, [activeQueue, selectedId]);
+
+  useEffect(() => {
+    setVisibleReviewCount(reviewRowsPageSize);
+  }, [activeQueue, role]);
+
+  useEffect(() => {
+    if (!data?.assets.length || !selectedId) return;
+    const selectedIndex = data.assets.findIndex((asset) => asset.id === selectedId);
+    if (selectedIndex >= visibleReviewCount) {
+      setVisibleReviewCount(Math.min(data.assets.length, Math.max(reviewRowsPageSize, selectedIndex + 1)));
+    }
+  }, [data?.assets, selectedId, visibleReviewCount]);
 
   function missingEvidenceFor(action: ReviewAction) {
     const required: Array<keyof ReviewEvidenceChecklist> = [
@@ -294,7 +309,7 @@ export function ReviewPage() {
         <div className="rounded-md border border-tjc-line bg-white p-3">
           <span className="text-sm font-semibold text-tjc-muted">Current queue</span>
           <strong className="mt-1 block text-2xl font-semibold tabular-nums">{data?.assets.length ?? "-"} shown</strong>
-          <span className="text-sm text-tjc-muted">{activeQueueSummary ? `first ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
+          <span className="text-sm text-tjc-muted">{activeQueueSummary ? `loaded ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
         </div>
 	      </section>
 
@@ -346,6 +361,10 @@ export function ReviewPage() {
 
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
         <div className="order-2 min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white xl:order-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#fbfcfa] px-3 py-2 text-sm">
+            <strong className="font-semibold text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
+            {activeQueueSummary ? <span className="text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
+          </div>
           <div className="hidden grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
             <span>Preview</span>
             <span>Asset</span>
@@ -354,7 +373,7 @@ export function ReviewPage() {
             <span>Action</span>
           </div>
           <div className="grid">
-            {(data?.assets || []).slice(0, 80).map((asset) => {
+            {visibleReviewAssets.map((asset) => {
               const display = assetPresentation(asset, role);
               const selected = selectedAsset?.id === asset.id;
               const risks = reviewRiskFlags(asset);
@@ -400,6 +419,13 @@ export function ReviewPage() {
             })}
             {data && !data.assets.length ? <div className="p-8 text-tjc-muted">No assets in this queue.</div> : null}
           </div>
+          {data && visibleReviewCount < data.assets.length ? (
+            <div className="border-t border-tjc-line bg-[#fbfcfa] p-3">
+              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + reviewRowsPageSize, data.assets.length))}>
+                Show more review items
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {selectedAsset ? (

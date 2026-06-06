@@ -21,6 +21,7 @@ This pass was not a backend rewrite. It preserved:
 | 4 | Remaining limitation is ResourceSpace/export derivative readiness and production mapping, not UI polish or safety logic. | Refreshed screenshots and documented no-preview state as a data readiness signal. |
 | 5 | Detail and review sections still used loose tab-like controls or one long inspector list. | Added maintained `DamTabs` with real tab semantics and arrow-key behavior for Asset Detail and Review inspector panels. |
 | 6 | Original access and review-help actions were raw email links with little safety context. | Added `ReuseRequestDialog` so requests are clearly email drafts only and do not change ResourceSpace or pending writes. |
+| 7 | Review mobile still felt endless because the queue rendered too many rows before progressive disclosure. | Added a 24-row load-more gate with exact loaded/total copy and preserved selected-row visibility. |
 
 ## Final Product Read
 
@@ -92,6 +93,7 @@ Selected patterns:
 | Display cards | Implemented selectively | Oversized generic dashboard cards | Good for saved views, review metrics, admin health, metadata confidence | Compact white operational cards, no asset-grid use | `frontend/components/SavedViewCard.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/AdminPage.tsx`, `frontend/components/ReviewPage.tsx` | `library-desktop.png`, `collections-desktop.png`, `admin-desktop.png` |
 | File upload preview | Implemented | Plain file input | Contributors can see selected file, type, size, large-media warning, remove/clear | Neutral upload panel, review-blocked receipt copy | `frontend/components/UploadPage.tsx` | `upload-desktop.png`, `upload-mobile-320.png` |
 | Review table/list cockpit | Implemented | Long soft review card list | Reviewers can triage blockers, raw status, pending writes, and evidence quickly | Dense rows, sticky inspector, readable warnings | `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
+| Review load-more | Implemented | Rendering up to 80 review rows at once | Keeps the governance queue dense without making mobile feel endless | Shows first 24 loaded rows with exact copy and an explicit load-more action | `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
 | Tabs | Implemented | Asset detail loose buttons and long review inspector fact list | Gives Use/Source/Review/Files/Related and Checklist/Metadata/Rights/History/Pending write stable, keyboard-friendly task sections | Shared `DamTabs`, evergreen active state, real `tablist`/`tab`/`tabpanel`, arrow-key movement | `frontend/components/DamTabs.tsx`, `frontend/components/AssetDetailPage.tsx`, `frontend/components/ReviewPage.tsx` | `asset-detail-desktop.png`, `review-desktop.png`, mobile screenshots after refresh |
 | Dialog / modal | Implemented for review actions | Immediate action POST after checklist | Confirmation step makes local pending-write semantics explicit before any queued review action | Focus-trapped white shell, evergreen confirm action, no decorative glass, Escape/cancel supported | `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
 | Request dialogs | Implemented | Raw `mailto:` request links | Original access, review request, and media coworker help now explain that email drafts do not grant access or update ResourceSpace | Focus-trapped white shell, explicit no-fake-persistence copy, role/status context visible | `frontend/components/ReuseRequestDialog.tsx`, `frontend/components/DownloadOptionsPanel.tsx` | `asset-detail-desktop.png`, `detail-mobile-320.png` |
@@ -149,7 +151,7 @@ Measured browser QA:
 - `git diff --check`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass with zero failures, zero warnings, and zero console errors.
-- Browser QA now includes command palette, command arrow-key selection, upload file-preview checks, Review inspector tab checks, Asset Detail tab checks, tab `aria-controls` target checks, and request-original dialog safety-copy checks.
+- Browser QA now includes command palette, command arrow-key selection, upload file-preview checks, Review inspector tab checks, Asset Detail tab checks, tab `aria-controls` target checks, request-original dialog safety-copy checks, and review load-more checks.
 
 ## Current Blockers
 
