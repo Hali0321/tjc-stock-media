@@ -1,3 +1,8 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
+
 const guideBlocks = [
   {
     title: "How to search",
@@ -57,18 +62,42 @@ const decisionRows = [
 ];
 
 export function GuidePage() {
+  const [query, setQuery] = useState("");
+  const visibleBlocks = useMemo(() => {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return guideBlocks;
+    return guideBlocks.filter((block) => {
+      const haystack = `${block.title} ${block.body} ${block.doText} ${block.avoidText}`.toLowerCase();
+      return terms.every((term) => haystack.includes(term));
+    });
+  }, [query]);
+
   return (
     <div className="mx-auto max-w-[1280px] px-3 py-5 md:px-5">
       <section className="border-b border-tjc-line pb-4">
         <span className="text-sm font-semibold text-tjc-evergreen">Usage guide</span>
-        <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Use approved media with care</h1>
-        <p className="mt-2 max-w-[68ch] text-base leading-relaxed text-tjc-muted">
+        <h1 className="mt-2 dam-page-title">Use approved media with care</h1>
+        <p className="mt-2 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
           Quick rules for searching, checking approval, downloading copies, and knowing when to ask a reviewer.
         </p>
+        <label className="mt-4 grid max-w-xl gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
+          Search guide
+          <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-md border border-tjc-line bg-white px-3">
+            <Search size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
+            <input
+              id="guide-search"
+              className="min-h-10 min-w-0 bg-transparent text-sm font-medium placeholder:text-[#7f8a82]"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search children, source, public, original..."
+              type="search"
+            />
+          </span>
+        </label>
       </section>
 
-      <section className="mt-4 rounded-lg border border-tjc-line bg-white/82 p-4" aria-label="Download decision guide">
-        <h2 className="text-xl font-semibold">Before downloading</h2>
+      <section className="mt-4 rounded-md border border-tjc-line bg-white p-4" aria-label="Download decision guide">
+        <h2 className="text-base font-semibold">Before downloading</h2>
         <div className="mt-3 grid gap-2">
           {decisionRows.map(([need, action]) => (
             <div className="grid gap-2 border-b border-tjc-line px-1 py-3 last:border-b-0 md:grid-cols-[18rem_1fr]" key={need}>
@@ -80,9 +109,9 @@ export function GuidePage() {
       </section>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {guideBlocks.map((block) => (
-          <section className="rounded-lg border border-tjc-line bg-white/78 p-4" key={block.title}>
-            <h2 className="text-lg font-semibold">{block.title}</h2>
+        {visibleBlocks.map((block) => (
+          <section className="rounded-md border border-tjc-line bg-white p-3" key={block.title}>
+            <h2 className="text-base font-semibold">{block.title}</h2>
             <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <div className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-sm text-[#24583d]">
@@ -98,8 +127,12 @@ export function GuidePage() {
         ))}
       </div>
 
-      <section className="mt-4 rounded-lg border border-[#cbd8e4] bg-[#f2f7fb] p-4 text-[#52677a]">
-        <h2 className="text-lg font-semibold text-[#27435b]">Ask a media coworker</h2>
+      {!visibleBlocks.length ? (
+        <div className="mt-4 rounded-md border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
+      ) : null}
+
+      <section className="mt-4 rounded-md border border-[#cbd8e4] bg-[#f2f7fb] p-4 text-[#52677a]">
+        <h2 className="text-base font-semibold text-[#27435b]">Ask a media coworker</h2>
         <p className="mt-2 text-sm leading-relaxed">
           If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
         </p>

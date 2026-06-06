@@ -86,18 +86,18 @@ export function CollectionsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1760px] px-3 py-4 md:px-5 md:py-5">
+    <div className="dam-shell">
       <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Collections workspace">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
             <FolderOpen size={17} strokeWidth={1.8} aria-hidden="true" />
             Albums and ministry contexts
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-tjc-ink md:text-3xl">Collections</h1>
+          <h1 className="mt-2 dam-page-title">Collections</h1>
           <p className="mt-1 max-w-[72ch] text-sm leading-relaxed text-tjc-muted">
             Browse Sabbath, study, seasonal, welcome, fellowship, and web/slide albums using live ResourceSpace export metadata.
           </p>
-          <form className="mt-4 grid gap-2 rounded-lg border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
+          <form className="mt-4 grid gap-2 rounded-md border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={20} strokeWidth={1.8} />
             <label className="sr-only" htmlFor="collection-search">Search collections</label>
             <input
@@ -121,7 +121,7 @@ export function CollectionsPage() {
           ) : null}
         </div>
 
-        <div className="grid min-w-0 content-start gap-3 rounded-lg border border-tjc-line bg-white/78 p-3">
+        <div className="grid min-w-0 content-start gap-3 rounded-md border border-tjc-line bg-white p-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Collection truth</span>
@@ -168,7 +168,7 @@ export function CollectionsPage() {
 
       <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]" aria-label="Collection album grid">
         <div className="min-w-0">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-tjc-line bg-white/82 px-3 py-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5">
             <div>
               <h2 className="text-sm font-semibold text-tjc-evergreen">Album shelves</h2>
               <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Counts, dates, source, approval summary, and people/minors warning come from current export metadata.</p>
@@ -185,7 +185,7 @@ export function CollectionsPage() {
             </div>
           ) : null}
           {!loading && !collections.length ? (
-            <div className="rounded-lg border border-tjc-line bg-white/76 p-8 text-sm text-tjc-muted">No collections match this search.</div>
+            <div className="rounded-md border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No collections match this search.</div>
           ) : null}
           <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
             {collections.map((collection) => (
@@ -206,7 +206,7 @@ export function CollectionsPage() {
         </div>
 
         <aside className="grid min-w-0 gap-3 lg:sticky lg:top-24 lg:self-start" aria-label="Collection governance">
-          <section className="rounded-lg border border-tjc-line bg-white/82 p-3">
+          <section className="rounded-md border border-tjc-line bg-white p-3">
             <h2 className="text-sm font-semibold text-tjc-evergreen">Before sharing an album</h2>
             <div className="mt-3 grid gap-2 text-sm text-[#4e5a52]">
               <div className="rounded-md border border-tjc-line bg-[#fbfcfa] p-2">
@@ -223,7 +223,7 @@ export function CollectionsPage() {
               </div>
             </div>
           </section>
-          <section className="rounded-lg border border-tjc-line bg-white/82 p-3">
+          <section className="rounded-md border border-tjc-line bg-white p-3">
             <h2 className="text-sm font-semibold text-tjc-evergreen">Use-case shortcuts</h2>
             <div className="mt-2 grid gap-2">
               {[

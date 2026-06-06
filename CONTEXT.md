@@ -40,6 +40,16 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - Count: 181 image files
 - Goal: prove search, tags, review, metadata export, and approved-copy workflow.
 
+## Current Portal Product Surface
+
+- **Library**: find and reuse workspace with compact search, stable saved views, filters, count truth, collection entry points, and contact-sheet asset records.
+- **Collections**: album-oriented browsing by stable collection ID. Sabbath language is used instead of Sunday language.
+- **Asset detail**: trust record for raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors confidence, files, related assets, and download/original restrictions.
+- **Upload**: contributor intake workflow. New media remains blocked as `Needs Review / Do Not Publish` until review.
+- **Review**: governance workbench with queue tabs, risk/missing metadata triage, inspector, required checklist, note field, audit preview, and local pending-write queue.
+- **Guide**: secondary searchable help for Do/Avoid rules, download decisions, children/youth, source/credit, and large-media intake.
+- **No-preview state**: if ResourceSpace export lacks a derivative for the current role, the portal labels the tile as `Preview pending` or `Preview unavailable`; it does not invent or commit media.
+
 ## Current LM Photos Completion Source
 
 - Source ZIP folder: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Incoming/lm-photo`

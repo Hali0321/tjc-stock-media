@@ -31,9 +31,9 @@ const contributorShortcutIds = new Set([...viewerShortcutIds, "internal-ministry
 
 function AssetGridSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" aria-hidden="true">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" aria-hidden="true">
       {Array.from({ length: 15 }).map((_, index) => (
-        <div key={index} className={cn("skeleton w-full", index % 4 === 0 ? "h-72" : index % 3 === 0 ? "h-60" : "h-64")} />
+        <div key={index} className={cn("skeleton w-full", index % 4 === 0 ? "h-48" : index % 3 === 0 ? "h-44" : "h-[11.5rem]")} />
       ))}
     </div>
   );
@@ -62,12 +62,12 @@ function AssetListRow({
 }) {
   const health = assetMetadataHealth(asset);
   return (
-    <article className={cn("grid gap-3 border-b border-tjc-line bg-white/78 px-3 py-3 last:border-b-0 lg:grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem]", selected && "bg-[#f4fbf7]")}>
+    <article className={cn("grid gap-3 border-b border-tjc-line bg-white px-3 py-2.5 last:border-b-0 lg:grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem]", selected && "bg-[#f4fbf7]")}>
       <label className="grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-white" aria-label={`Select ${asset.title}`}>
         <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selected} onChange={onToggle} />
       </label>
-      <Link href={`/assets/${asset.id}`} className="grid aspect-[4/3] place-items-center rounded-md bg-[#e8eee8] p-1">
-        <img className="h-auto max-h-16 w-auto max-w-full rounded object-contain" src={asset.thumbnail} alt={asset.thumbnailAlt} loading="lazy" />
+      <Link href={`/assets/${asset.id}`} className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
+        <img className="h-full w-full object-cover" src={asset.thumbnail} alt={asset.thumbnailAlt} loading="lazy" />
       </Link>
       <div className="min-w-0">
         <Link href={`/assets/${asset.id}`} className="line-clamp-2 font-semibold leading-tight text-tjc-ink hover:text-tjc-evergreen">{asset.title}</Link>
@@ -315,12 +315,12 @@ export function LibraryPage() {
   const visibleAssets = result?.assets || [];
 
   return (
-    <div className="mx-auto w-full max-w-[1760px] px-3 py-4 md:px-5 md:py-5">
+    <div className="dam-shell">
       <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Library workspace">
         <div className="min-w-0">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-semibold text-tjc-ink md:text-3xl">Library</h1>
+              <h1 className="dam-page-title">Library</h1>
               <p className="mt-1 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
                 Find approved media by ministry need, collection, people risk, date, status, and TJC terms.
               </p>
@@ -332,7 +332,7 @@ export function LibraryPage() {
               </button>
             ) : null}
           </div>
-          <form className="mt-4 grid gap-2 rounded-lg border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
+          <form className="mt-4 grid gap-2 rounded-md border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={20} strokeWidth={1.8} />
             <label className="sr-only" htmlFor="library-search">Search approved media</label>
             <input
@@ -360,7 +360,7 @@ export function LibraryPage() {
           </div>
         </div>
 
-          <div className="grid min-w-0 content-start gap-3 rounded-lg border border-tjc-line bg-white/74 p-3">
+        <div className="dam-panel grid min-w-0 content-start gap-3 p-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Source and count truth</span>
@@ -397,8 +397,13 @@ export function LibraryPage() {
 	        </div>
 	      ) : null}
 
-	      <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)_minmax(20rem,.6fr)]" aria-label="Production DAM health">
-        <div className="grid gap-2 rounded-lg border border-tjc-line bg-white/82 p-3">
+	      <details className="mt-3 rounded-md border border-tjc-line bg-white/88">
+        <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-tjc-evergreen">
+          <span>Production signals</span>
+          <span className="text-xs font-medium text-tjc-muted">Metadata health, operational signals, search gaps</span>
+        </summary>
+        <div className="grid gap-3 border-t border-tjc-line p-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)_minmax(20rem,.6fr)]" aria-label="Production DAM health">
+        <div className="grid gap-2 rounded-md border border-tjc-line bg-white p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-semibold text-tjc-evergreen">Metadata health</h2>
@@ -422,7 +427,7 @@ export function LibraryPage() {
             ))}
           </div>
         </div>
-        <div className="rounded-lg border border-tjc-line bg-white/82 p-3">
+        <div className="rounded-md border border-tjc-line bg-white p-3">
           <h2 className="text-sm font-semibold text-tjc-evergreen">Operational signals</h2>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {(result?.operationalInsights || []).slice(0, 6).map((insight) => {
@@ -445,7 +450,7 @@ export function LibraryPage() {
             })}
           </div>
         </div>
-        <div className="rounded-lg border border-tjc-line bg-white/82 p-3">
+        <div className="rounded-md border border-tjc-line bg-white p-3">
           <h2 className="text-sm font-semibold text-tjc-evergreen">Search gaps</h2>
           <div className="mt-2 grid gap-2">
             {(result?.zeroResultInsights || []).slice(0, 3).map((insight) => (
@@ -456,11 +461,12 @@ export function LibraryPage() {
             ))}
           </div>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]" aria-label="Library controls and results">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]" aria-label="Library controls and results">
         <aside className="order-2 grid min-w-0 gap-4 xl:order-1 xl:sticky xl:top-24 xl:self-start">
-          <section className="min-w-0 overflow-hidden rounded-lg border border-tjc-line bg-white/82" aria-label="Saved DAM views">
+          <section className="min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white" aria-label="Saved DAM views">
             <div className="border-b border-tjc-line px-3 py-3">
               <h2 className="text-sm font-semibold text-tjc-evergreen">Saved DAM views</h2>
               <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Operational shortcuts backed by ResourceSpace export fields.</p>
@@ -484,7 +490,7 @@ export function LibraryPage() {
 
         <div className="order-1 min-w-0 xl:order-2">
           <section className="min-w-0" aria-label="Asset results">
-            <section className="mb-3 grid gap-3 rounded-lg border border-tjc-line bg-white/82 p-3" aria-label="Selection and batch actions">
+            <section className="mb-3 grid gap-3 rounded-md border border-tjc-line bg-white p-2.5" aria-label="Selection and batch actions">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={selectVisibleAssets}>
@@ -543,7 +549,7 @@ export function LibraryPage() {
               ) : null}
             </section>
 
-            <div className="mb-3 grid gap-2 rounded-lg border border-tjc-line bg-white/82 px-3 py-3 text-sm text-tjc-muted" aria-live="polite">
+            <div className="mb-3 grid gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="font-semibold text-tjc-ink">{loading ? "Loading results" : formatResultCount(result?.assets.length ?? 0, result?.total ?? 0)}</strong>
                 <span>Rendered {result?.counts.rendered ?? result?.assets.length ?? 0} / matching {result?.counts.matching ?? result?.total ?? 0} / visible {result?.counts.visibleToRole ?? 0}</span>
@@ -585,13 +591,13 @@ export function LibraryPage() {
 
             {loading ? <AssetGridSkeleton /> : null}
             {!loading && result?.assets.length === 0 ? (
-              <div className="rounded-lg border border-tjc-line bg-white/76 p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
+              <div className="rounded-md border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
             ) : null}
             {viewMode === "grid" ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {visibleAssets.map((asset) => (
                   <div className="relative" key={asset.id}>
-                    <label className="absolute left-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-tjc-line bg-white/92 shadow-sm" aria-label={`Select ${asset.title}`}>
+                    <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-tjc-line bg-white/92 shadow-sm" aria-label={`Select ${asset.title}`}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
                     </label>
                     <AssetCard asset={asset} role={role} />

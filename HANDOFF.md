@@ -19,20 +19,21 @@ make frontend-check
 make demo-check
 ```
 
-Latest local QA captured the required screenshots under `docs/screenshots/` from the production Next server and checked 1440 px desktop plus 320 px mobile browser widths with no horizontal page overflow. The screenshots have no Next dev badge.
+Latest local QA captured the required screenshots under `docs/screenshots/` from `http://127.0.0.1:3008` and checked 1440 px desktop plus 320 px mobile browser widths with no horizontal page overflow. Full browser QA also covered 1280, 1024, 768, 390, and 320 px with zero failures, zero warnings, and zero console errors.
 
-The current frontend shell is the redesigned ministry media-library UI:
+The current frontend shell is the final dense ministry DAM UI:
 
-- Desktop uses an app-like sidebar plus top utility bar rather than the old centered demo header.
+- Desktop uses compact top navigation plus role utility controls.
 - Styling is Tailwind v4 with a small global token/base layer, Geist via `next/font/google`, and `lucide-react` icons.
 - Main nav: Library, Collections, Upload, Review.
 - Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
-- Library: compact DAM command center, early search, use-case shortcuts, operational saved views, compact collection rail, filters, sort chips, clear result count, and photo-first asset grid.
-- Asset cards: short status, usage label, display-normalized title, one tag, download/blocked signal, provenance on hover/focus.
-- Asset detail: usage guidance, source/review/technical provenance, approved copy separated from original/master restriction.
-- Upload: guided three-step intake.
-- Review: queue tabs, compact decision rows, selected-asset inspector, and desktop-only GSAP pin/scale motion disabled by reduced-motion.
+- Library: compact command bar, early search, use-case shortcuts, saved views, filters, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
+- Collections: album-style records opened by stable collection ID, including Sabbath wording.
+- Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.
+- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets.
+- Upload: guided three-step intake with required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
+- Review: queue tabs, compact decision rows, selected-asset inspector, evidence checklist, note field, audit preview, pending write state, and desktop-only GSAP motion disabled by reduced-motion.
 
 ## Architecture
 
@@ -73,20 +74,21 @@ Viewer cannot download unsafe assets.
 
 Contributor can submit upload intake but cannot approve.
 
-Reviewer/DAM Admin can open review queue. Review actions go through `/api/review`; if ResourceSpace API write config is missing, the route refuses fake persistence and tells the user to use ResourceSpace admin.
+Reviewer/DAM Admin can open review queue. Review actions go through `/api/review`. Missing evidence returns `400`. Valid evidence queues a local pending-write record and returns `202 pending-write` until ResourceSpace API write mapping is configured. Pending writes are not final ResourceSpace truth.
 
-Latest checked behavior on 2026-06-05:
+Latest checked behavior on 2026-06-06:
 
 | Check | Result |
 |---|---|
-| Viewer download for unsafe asset `644` | 403 blocked |
-| Viewer unsafe detail asset `644` | cannot view |
-| Reviewer unsafe detail asset `644` | visible for review, no active download link |
+| Viewer download for blocked candidate asset `367` | 403 blocked |
+| Viewer blocked detail asset `367` | visible as preview/detail candidate, no active download link |
+| Reviewer blocked detail asset `367` | visible for review, no active download link |
 | Viewer review POST | 403 blocked |
-| Reviewer review POST without ResourceSpace API write config | 409 honest blocker |
+| Reviewer review POST without note/checklist | 400 missing evidence |
+| Reviewer review POST with valid evidence | 202 local pending write |
 | Viewer upload POST | 403 blocked |
-| Contributor upload intake POST | 200 validated; empty browser file placeholders ignored |
-| Reviewer unsafe detail page | no active `/api/download` links |
+| Contributor source-link intake POST | validated; empty browser file placeholders ignored and fileCount stays 0 |
+| Blocked asset detail page | no active `/api/download` links for Viewer |
 
 Reviewer action labels are user-facing, but map to backend workflow values:
 
@@ -106,6 +108,8 @@ Needs Review, Searchable Archive, Possible Minors, and Do Not Use assets return 
 ## Thumbnail Safety
 
 The frontend uses `/api/assets/thumbnail/:id` to resolve a ResourceSpace derivative for a specific asset ID. It never exposes the whole filestore directory and never copies thumbnails into Git.
+
+If the current ResourceSpace export lacks a usable preview derivative for the role, the portal shows `Preview pending` or `Preview unavailable` and keeps the reuse decision governed by policy. It does not fabricate thumbnails.
 
 ## Remaining Before Church PC/NAS
 

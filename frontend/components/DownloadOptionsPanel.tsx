@@ -17,9 +17,9 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   ];
 
   return (
-    <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-4 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Download approved copy">
+    <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Download approved copy">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold">Reuse safely</h2>
+        <h2 className="text-base font-semibold">Reuse safely</h2>
         <p className="mt-1 text-sm leading-snug text-tjc-muted">{state.panelLabel}</p>
       </div>
       {state.approvedCopy.allowed && health.missing.length ? (
@@ -48,17 +48,17 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             </>
           );
           return option.available ? (
-            <a key={option.label} className="grid min-h-[4.7rem] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-[#acd2be] bg-[#edf8f1] p-3 text-[#24583d] transition hover:bg-[#e4f4eb] active:translate-y-px" href={downloadHref}>
+            <a key={option.label} className="grid min-h-16 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-[#acd2be] bg-[#edf8f1] p-2.5 text-[#24583d] transition hover:bg-[#e4f4eb] active:translate-y-px" href={downloadHref}>
               {row}
             </a>
           ) : (
-            <button key={option.label} className={cn("grid min-h-[4.7rem] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-tjc-line bg-white/72 p-3 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#ead6a8] bg-[#fff8e8] text-[#73531a]")} type="button" disabled>
+            <button key={option.label} className={cn("grid min-h-16 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-tjc-line bg-white p-2.5 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#ead6a8] bg-[#fff8e8] text-[#73531a]")} type="button" disabled>
               {row}
             </button>
           );
         })}
       </div>
-      <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#6f511c]">
+      <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#6f511c]">
         <FileLock2 size={18} strokeWidth={1.8} aria-hidden="true" />
         <div>
           <strong className="block font-semibold">Original/master restricted</strong>

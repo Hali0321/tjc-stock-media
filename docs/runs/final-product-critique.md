@@ -1,113 +1,102 @@
-# Final Product Critique - 2026-06-05
+# Final Product Critique - 2026-06-06
 
 ## Scope
 
-Deep product rebuild and QA pass for the Next.js TJC Stock Media portal at `http://localhost:3008`.
+Final DAM product UI pass for the Next.js TJC Stock Media portal at `http://localhost:3008`.
 
-Preserved architecture:
+This pass was not a backend rewrite. It preserved:
 
-- ResourceSpace remains source of truth for assets, metadata, workflow state, review notes, permissions, and download eligibility.
-- Google Shared Drive remains master-original warehouse.
-- Portal remains a church-facing search, upload-intake, review, guide, and approved-copy download surface.
-- No second DAM database, fake approval persistence, client-side ResourceSpace API key, source-media mutation, committed media, or master-original exposure was added.
+- ResourceSpace as source of truth for assets, metadata, workflow state, review notes, permissions, and download eligibility.
+- Google Shared Drive as master-original warehouse.
+- Portal as the church-facing search, upload-intake, review, guide, and approved-copy download surface.
+- No second DAM database, fake approval persistence, client-side ResourceSpace API key, source-media mutation, committed media, or master-original exposure.
 
 ## Loop Summary
 
-| Loop | Score | Main critique | Result |
-|---|---:|---|---|
-| 1 | 7.4 | Interface still felt rounded, card-heavy, and dashboard-like. | Rebuilt shell, asset records, saved views, counts, and confidence states. |
-| 2 | 8.6 | Search shortcuts and mobile order still slowed real DAM work. | Saved views now use real logic; upload, review, guide, and detail were rebuilt. |
-| 3 | 9.2 | Remaining risk is production honesty, not visual slop. | Results appear quickly, counts are honest, final browser QA passed. |
+| Loop | Product critique | Fix |
+|---|---|---|
+| 1 | Screens still felt too soft and card-heavy; Library buried results under operational panels. | Tightened global surface, app chrome, asset cards, saved views, collection cards, and Library density. |
+| 2 | Detail mobile put preview/related assets before trust answer; upload cards stretched with empty space; no-preview assets looked like broken thumbnails. | Reordered mobile detail, tightened upload sections, added explicit `Preview pending` / `Preview unavailable` states. |
+| 3 | Remaining limitation is ResourceSpace/export derivative readiness, not UI polish or safety logic. | Refreshed screenshots and documented no-preview state as a data readiness signal. |
 
 ## Final Product Read
 
-The app now feels like a calm ministry DAM workspace rather than a styled landing dashboard. It is denser, sharper, more media-led, and more honest about approval, rights, source, and write-mapping limits.
+The portal now reads as a mature internal DAM workflow product rather than a landing page or decorative gallery. It is denser, more operational, more media-first where derivatives exist, and more honest where ResourceSpace export data is incomplete.
 
 ## Find
 
-- Search stays first and uses the requested placeholder.
-- Use-case shortcuts use saved-view logic for Website hero, Slides, Newsletter, Social, No people, Internal only, Recently approved, and reviewer-only Needs review.
-- Library shows count truth: rendered, matching, visible-to-role, approved, pending review, rights review, children/youth, archive.
-- Results appear in first viewport on desktop and quickly on 320px mobile.
-- Collections remain as album records with image strips, counts, ministry/source, date range, and approval summary.
+- Search is first on Library with ministry/use-case placeholder text.
+- Saved views use stable view IDs for Website hero, Slides, Newsletter, Social, No people, Internal ready, Recently approved, Needs review, and related workflow queues.
+- Results appear high on desktop and mobile.
+- Counts distinguish rendered, matching, visible-to-role, approved, pending review, rights review, children/youth, and archive.
+- Collections use album-style cards and stable collection IDs; Sabbath wording is preserved.
 
 ## Trust
 
-- Asset detail is now a trust record: approval, scope, source/provenance, reviewer/date, people/minors, rights, and confidence states.
-- Unknown people/minors fields say `Unknown - reviewer should confirm before public use`.
-- Approved assets no longer inflate rights-review counts when approval notes exist.
-- Unsafe assets remain blocked for Viewer role and visible only to reviewer/admin roles.
+- Asset detail is the trust record: raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors, metadata confidence, files, tags, and related assets.
+- Mobile detail shows title, reuse state, blockers, and download decision before preview/related assets.
+- Unknown people/minors and rights states tell users a reviewer should confirm before public use.
+- ResourceSpace approval is shown separately from portal reuse.
 
 ## Reuse
 
-- Download panel separates Web image, Slide/presentation derivative, Social square derivative, Approved copy, Request original access, and Original/master restricted.
-- Dedicated derivatives are described honestly when not configured.
-- Approved asset `368` downloads for Viewer through `/api/download/368?role=Viewer`.
-- Unsafe asset `644` stays blocked for Viewer and Reviewer downloads.
+- Download panel separates Web image, Slide/presentation, Social square, Request original access, Request review, and Original/master restricted.
+- Non-portal-ready assets show no active `/api/download` links for Viewer.
+- Asset `367` remains blocked for Viewer download with `403`.
+- Original/master files remain restricted.
 
 ## Govern
 
-- Review page is now a workbench: metrics, queue tabs, triage rows, selected inspector, action area, metadata/risk flags, and audit preview.
-- Review actions remain server-routed and return: `Review action is ready, but ResourceSpace API write mapping is not configured yet.`
-- Reviewer can view review-needed asset `644`; Viewer cannot.
+- Review is a compact workbench with governance metrics, queue tabs, dense rows, selected-asset inspector, evidence checklist, note field, action buttons, audit preview, ResourceSpace link, and pending-write messaging.
+- Missing checklist/note fails with `400`.
+- Valid evidence queues a local pending-write record and returns `202`; it does not claim ResourceSpace is updated.
 
 ## Visual System
 
-- Replaced sidebar-heavy admin chrome with compact product header.
-- Reduced font weight, radius, green/cream dominance, pills, and card repetition.
-- Asset cards are media records with preview, status, title, collection, usage, and one allowed action.
-- Mobile order now prioritizes search and results before saved-view management.
+- Removed giant hero blocks, oversized cards, heavy font weights, pale green wash, repeated dashboard cards, and broken-image-looking thumbnails.
+- Contact-sheet asset cards use compact status, title, collection/source, usage, and blocked/download state.
+- No-preview derivatives are labeled as `Preview pending` or `Preview unavailable`.
+- Guide is searchable secondary help with compact Do/Avoid rules.
 
 ## Browser QA Evidence
 
-Chrome-channel Playwright checks passed:
-
-- Library desktop loaded 84 article cards with no horizontal overflow.
-- Website hero saved view returned 67 matching assets.
-- `Bible` search returned 23 matching assets.
-- Approved asset detail showed download panel and approved copy.
-- `/api/download/368?role=Viewer` returned `200`.
-- `/api/assets/644?role=Viewer` returned `403`.
-- `/api/assets/644?role=Reviewer` returned `200`.
-- `/api/download/644?role=Reviewer` returned `403`.
-- Review Viewer state was blocked.
-- Review Reviewer state showed workbench and write-mapping blocker.
-- Viewports 1440, 1280, 1024, 768, 390, and 320 had no horizontal overflow.
-
-## Refreshed Screenshots
+Chrome-backed screenshot capture refreshed:
 
 - `docs/screenshots/library-desktop.png`
-- `docs/screenshots/collections-desktop.png`
-- `docs/screenshots/asset-detail-desktop.png`
-- `docs/screenshots/upload-desktop.png`
-- `docs/screenshots/review-desktop.png`
-- `docs/screenshots/guide-desktop.png`
 - `docs/screenshots/library-mobile-320.png`
+- `docs/screenshots/asset-detail-desktop.png`
 - `docs/screenshots/detail-mobile-320.png`
-- `docs/screenshots/review-mobile-320.png`
+- `docs/screenshots/upload-desktop.png`
 - `docs/screenshots/upload-mobile-320.png`
+- `docs/screenshots/review-desktop.png`
+- `docs/screenshots/review-mobile-320.png`
+- `docs/screenshots/guide-desktop.png`
+- `docs/screenshots/guide-mobile-320.png`
+- `docs/screenshots/collections-desktop.png`
+
+Measured browser QA:
+
+- 1440 px and 320 px screenshots had no horizontal page overflow.
+- Library, detail, upload, review, guide, and collections rendered at expected routes.
+- Viewer detail for asset `367` had zero active `/api/download` links.
+- Review mobile and desktop had no horizontal overflow.
 
 ## Checks
 
-- `make frontend-check`: pass
-- `make demo-check`: pass
-- `make smoke`: pass with Docker daemon / ResourceSpace container warnings only
-- `make launch-readiness`: pass with warnings for `.env` placeholders and 19 GiB free disk
-- `npm run typecheck`: pass
-- `npm run build`: pass
-- `git diff --check`: pass
+- `npm run typecheck`: pass.
+- `npm run build`: pass.
+- `make frontend-check`: pass after clean `.next` rebuild.
+- `make demo-check`: pass.
+- `make smoke`: pass with Docker daemon / ResourceSpace container warnings only.
+- `make launch-readiness`: pass with warnings for `.env` placeholders and 16 GiB free disk.
+- `git diff --check`: pass.
+- `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
+- `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass with zero failures, zero warnings, and zero console errors.
 
-## Final Labels
-
-- Stakeholder demo ready
-- MVP workflow ready
-- Production blocked by ResourceSpace write mapping
-- Production blocked by real auth
-- Production blocked by hosting/access/backup ownership
-
-## Remaining Blockers
+## Current Blockers
 
 - ResourceSpace API write mapping is not configured.
-- Demo role switch must become real access control.
+- Demo role switch must become real church access control.
 - Production host, access allowlist, backup schedule, and restore ownership remain external.
 - Production derivative policy still needs approved presets for web, slide, social, and approved copy.
+- Current ResourceSpace export lacks preview derivatives for many first-batch assets; UI handles this honestly but product readiness improves when derivatives are exported/configured.

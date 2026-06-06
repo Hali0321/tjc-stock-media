@@ -169,7 +169,7 @@ Do not demo "ResourceSpace is running." Demo the product behavior:
 5. Explain `Approved Public` means ResourceSpace-approved, not automatically portal-reusable.
 6. Show current batch-approved assets as `Needs portal review` when rights/people/derivative evidence is incomplete.
 7. Show Viewer download blocked for non-portal-ready assets.
-8. Show Reviewer actions require note and checklist, then queue a pending write rather than faking ResourceSpace persistence.
+8. Show Reviewer actions require note and checklist, then queue a `Pending Review Write` rather than faking ResourceSpace persistence.
 9. Show Sabbath collection navigation uses a stable collection ID and returns 23 assets.
 10. Show `/admin` diagnostics for data source, API read/write config, field refs, pending queue, and launch blockers.
 11. Show original source files remain untouched.
@@ -240,6 +240,7 @@ Current UI and workflow notes:
 - Review includes isolated GSAP motion for desktop reviewer workflow only; reduced-motion disables the pin/scale effects.
 - Library is now a DAM command workspace, not a hero page: compact search, use-case buttons, source/safety strip, operational saved views, compact collection rail, filters, and real asset results high on the page.
 - Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
+- Assets without exported preview derivatives show honest `Preview pending` or `Preview unavailable` states instead of broken thumbnails. This is a ResourceSpace/export readiness signal, not fake media.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
 - Upload is a guided contributor intake with required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.

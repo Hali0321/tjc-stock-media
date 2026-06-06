@@ -16,7 +16,7 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 - Warm white background, deep charcoal text, evergreen/navy accents.
 - Tailwind v4 utility system with a small global token/base layer.
 - Geist variable sans via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
-- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, compact album rail, filter controls, sort controls, and image grid high on page.
+- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, collection entry points, filter controls, sort controls, and asset contact sheet high on page.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
 - Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
@@ -104,8 +104,8 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 | Token | Value / rule |
 |---|---|
-| Background | warm white `#f7f8f4`; no beige/yellow dashboard treatment |
-| Surface | white or translucent white; minimal borders and soft depth |
+| Background | neutral off-white `#f7f8f6`; no beige/yellow dashboard treatment |
+| Surface | white with restrained borders; minimal shadow |
 | Text | deep charcoal `#20221f` |
 | Muted text | gray-green `#687068` |
 | Accent | deep evergreen `#123f3a` |
@@ -116,8 +116,8 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Archive only | muted purple/gray |
 | Do not publish externally | muted red |
 | Spacing scale | 4px rhythm, mostly 8/12/16/24px |
-| Card radius | 16-28px for app panels; image cards tighter inside panels |
-| Chip radius | 999px pills |
+| Card radius | mostly 6-8px; larger rounding avoided on workflow surfaces |
+| Chip radius | compact rounded rectangles; pills used sparingly |
 | Shadow | very soft image shadow only |
 | Typography | Geist variable sans, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
@@ -125,31 +125,31 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 ## Current Library Pattern
 
-- App shell: sidebar on desktop, compact top navigation on tablet/mobile.
+- App shell: compact top navigation with a single demo role selector. Library uses a left saved-view/filter rail on desktop and stacked controls on mobile.
 - Mobile at 320px uses icon-first primary nav with accessible labels so controls fit without horizontal page overflow.
 - Main workspace is bounded to a wide app canvas so ultra-wide monitors do not stretch controls.
-- Library attention area is a compact DAM command center: Find / Trust / Reuse / Govern, search, use-case buttons, source/safety, and operational counters.
+- Library attention area is a compact DAM command bar: search, use-case buttons, source/count truth, and collapsible production signals.
 - Saved DAM views are compact action cards with count and purpose, not long documentation cards.
 - Featured collections render as compact album thumbnail collages with count/date/scope signals, avoiding oversized low-resolution derivatives.
 - Search result copy uses `Showing first 84 of 2,290 matching assets` style language.
-- Responsive media grid uses CSS columns: 5 columns desktop, 3 tablet landscape, 2 tablet/mobile landscape, 1 at 320px.
-- Asset cards eager-load thumbnails in the local demo to avoid placeholder-heavy stakeholder screenshots.
+- Responsive media grid uses contact-sheet columns: up to 6 wide desktop, 4-5 standard desktop, 3 tablet, and 2 at mobile widths.
+- Assets without exported preview derivatives show `Preview pending`/`Preview unavailable` states instead of broken-image placeholders. This is honest data readiness, not fabricated media.
 - Raw filenames are not mutated; a display helper normalizes titles such as `Copy Of Img 0625` to `Image 0625` while preserving original filename in detail metadata.
-- Final 320px Library QA measured search at 286px, asset results at 798px, no horizontal overflow, and no visible clipped controls.
+- Final 320px Library QA shows search and results without horizontal overflow or clipped controls.
 
 ## Workflow Screens
 
-- Upload uses a lighter guided intake layout with Context, People and rights, and Files and tags.
-- Review uses a professional workbench layout: compact governance metrics, queue tabs, tighter review rows, smaller workflow actions, a selected-asset inspector for source/risk/ResourceSpace traceability, and desktop-only GSAP pin/scale motion that is skipped for reduced-motion users.
-- Guide is an actionable usage guide with download decision rows and Do/Avoid blocks.
-- Asset detail keeps a large preview and a right-side usage/download inspector, with approved copy and original/master restrictions separated.
+- Upload uses a guided intake workflow with Context, People and rights, Files and tags, required-field markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt copy.
+- Review uses a professional workbench layout: compact governance metrics, queue tabs, dense review rows, smaller workflow actions, selected-asset inspector, evidence checklist, audit preview, pending write state, and desktop-only GSAP motion skipped for reduced-motion users.
+- Guide is a searchable secondary usage guide with download decision rows and Do/Avoid blocks.
+- Asset detail is the trust record. On mobile, title/reuse state/blockers/download decision render before preview/related assets. Approved copy and original/master restrictions stay separated.
 
 ## Latest QA Evidence
 
-- `npm run typecheck`: passed on 2026-06-05.
-- `npm run build`: passed on 2026-06-05 after a clean `.next` rebuild.
-- Production browser QA covered Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px. Library was also checked at 1280, 1024, 768, 390, and 320px with no horizontal page overflow.
-- Role safety API checks: unsafe Viewer download 403; Viewer review/upload 403; Reviewer write action 409 when ResourceSpace API write config is missing; Contributor upload intake 200.
+- `npm run typecheck`: passed on 2026-06-06 during final DAM UI pass.
+- Production browser QA refreshed Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px, plus responsive QA at 1280, 1024, 768, 390, and 320px, with no horizontal page overflow.
+- Role safety API checks remain server-owned: blocked Viewer downloads return 403, missing review evidence returns 400, valid review evidence queues a 202 pending write, and upload intake does not fake file counts.
+- Latest browser QA had zero failures, zero warnings, and zero console errors; expected 400/403 denials were recorded as safety checks.
 - Refreshed screenshot set lives under `docs/screenshots/`.
 
 ## Anti-AI Checklist
@@ -161,4 +161,4 @@ Current UI tokens live in `frontend/app/globals.css`.
 - No copied stock assets.
 - No meaningless decorative icons.
 - No over-polished empty dashboard.
-- No repeated placeholder-only cards in first viewport.
+- No broken-image placeholders; no-preview export gaps are labeled.

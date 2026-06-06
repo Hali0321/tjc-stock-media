@@ -8,6 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
+import { MediaPreview } from "@/components/MediaPreview";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { missingReviewFields, reviewActions, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, ReviewEvidenceChecklist, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
@@ -138,6 +139,7 @@ export function ReviewPage() {
   const selectedAsset = useMemo(() => data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0], [data?.assets, selectedId]);
   const activeQueueSummary = data?.queues.find((queue) => queue.id === activeQueue);
   const selectedPendingWrite = selectedAsset ? data?.pendingWrites[selectedAsset.id] : undefined;
+  const selectedPreview = selectedAsset ? detailImageUrl(selectedAsset, role) : undefined;
 
   useEffect(() => {
     setReviewNote("");
@@ -238,14 +240,14 @@ export function ReviewPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
+    <div className="dam-shell">
       <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Review workbench</h1>
-          <p className="mt-2 max-w-[78ch] text-base leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
+          <h1 className="mt-2 dam-page-title">Review workbench</h1>
+          <p className="mt-2 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
-        <div className="rounded-lg border border-tjc-line bg-white/82 p-3">
+        <div className="rounded-md border border-tjc-line bg-white p-3">
           <span className="text-sm font-semibold text-tjc-muted">Current queue</span>
           <strong className="mt-1 block text-2xl font-semibold tabular-nums">{data?.assets.length ?? "-"} shown</strong>
           <span className="text-sm text-tjc-muted">{activeQueueSummary ? `first ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
@@ -259,7 +261,7 @@ export function ReviewPage() {
 	      ) : null}
 
 	      {data?.source.readOnly ? (
-        <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-4 text-[#27435b]">
+        <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
           <Database size={18} strokeWidth={1.8} aria-hidden="true" />
           <div>
             <strong className="block font-semibold">Review queue is reading ResourceSpace export.</strong>
@@ -268,13 +270,13 @@ export function ReviewPage() {
         </div>
       ) : null}
 
-      <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
+      <section className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
         {governanceCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div className="grid min-h-20 content-center rounded-lg border border-tjc-line bg-white/82 p-3 shadow-[0_1px_0_rgba(32,34,31,.04)]" key={card.key}>
+            <div className="grid min-h-16 content-center rounded-md border border-tjc-line bg-white p-2.5 shadow-[0_1px_0_rgba(32,34,31,.04)]" key={card.key}>
               <Icon size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-              <strong className="mt-1 text-xl font-semibold tabular-nums">{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
+              <strong className="mt-1 text-lg font-semibold tabular-nums">{data?.governance[card.key]?.toLocaleString() ?? "-"}</strong>
               <span className="text-xs font-medium text-tjc-muted">{card.label}</span>
             </div>
           );
@@ -299,7 +301,7 @@ export function ReviewPage() {
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
-        <div className="min-w-0 overflow-hidden rounded-lg border border-tjc-line bg-white/74">
+        <div className="min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white">
           <div className="hidden grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
             <span>Preview</span>
             <span>Asset</span>
@@ -314,19 +316,19 @@ export function ReviewPage() {
               const risks = reviewRiskFlags(asset);
               const missing = missingReviewFields(asset);
               return (
-                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-3 last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#f5fbf7]")} key={asset.id}>
-                  <Link href={`/assets/${asset.id}`} className="review-media-reveal group grid aspect-[4/3] place-items-center overflow-hidden rounded-md bg-[#e8eee8] p-1.5" aria-label={`Open ${display.title}`}>
-                    {display.image ? <img className="h-auto max-h-full w-auto max-w-full rounded object-contain shadow-[0_4px_12px_rgba(32,34,31,.14)] transition duration-500 group-hover:scale-[1.025]" src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : <span className="text-sm text-tjc-muted">Preview unavailable</span>}
+                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-2.5 last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#f5fbf7]")} key={asset.id}>
+                  <Link href={`/assets/${asset.id}`} className="review-media-reveal group block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]" aria-label={`Open ${display.title}`}>
+                    <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
                   </Link>
                   <div className="min-w-0">
-                    <h2 className="line-clamp-2 text-base font-semibold leading-tight">{display.title}</h2>
+                    <h2 className="line-clamp-2 text-sm font-semibold leading-tight">{display.title}</h2>
                     <p className="mt-1 grid gap-1 text-sm text-tjc-muted"><span className="truncate">{asset.collection}</span><span className="truncate">{sourceSummary(asset)}</span></p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <StatusBadge status={asset.status} />
                       <UsageBadge scope={asset.usageScope} />
                     </div>
                   </div>
-                  <div className="text-sm leading-relaxed text-[#4d554d]">
+                  <div className="text-sm leading-snug text-[#4d554d]">
                     <strong className="block font-semibold text-tjc-ink">{risks[0] || "Standard review"}</strong>
                     <span>{asset.rightsNotes || "Review needed before reuse."}</span>
                   </div>
@@ -357,19 +359,19 @@ export function ReviewPage() {
         </div>
 
         {selectedAsset ? (
-          <aside className="grid gap-3 self-start rounded-lg border border-tjc-line bg-white/86 p-3 shadow-[0_12px_28px_rgba(32,34,31,.08)] xl:sticky xl:top-24" aria-label="Selected asset review summary">
-            <div className="grid aspect-[4/3] place-items-center rounded-md bg-[#e8eee8] p-3">
-              <img className="h-auto max-h-56 w-auto max-w-full rounded-md object-contain shadow-[0_5px_16px_rgba(32,34,31,.14)]" src={detailImageUrl(selectedAsset, role)} alt={selectedAsset.thumbnailAlt} />
+          <aside className="grid gap-3 self-start rounded-md border border-tjc-line bg-white p-3 shadow-[0_10px_24px_rgba(32,34,31,.07)] xl:sticky xl:top-24" aria-label="Selected asset review summary">
+            <div className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
+              <MediaPreview src={selectedPreview} alt={selectedAsset.thumbnailAlt} className="px-3" loading="eager" />
             </div>
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Selected asset</span>
-              <h2 className="mt-1 text-xl font-semibold">{assetPresentation(selectedAsset, role).title}</h2>
+              <h2 className="mt-1 text-lg font-semibold leading-tight">{assetPresentation(selectedAsset, role).title}</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={selectedAsset.status} />
               <UsageBadge scope={selectedAsset.usageScope} />
             </div>
-            <dl className="grid gap-3">
+            <dl className="grid gap-2">
               <div className={factItemClass}><dt className={factTermClass}>Raw ResourceSpace status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>

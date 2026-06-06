@@ -16,8 +16,9 @@ type UploadReceipt = {
   reviewWarnings?: string[];
 };
 
-const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 font-medium text-tjc-ink placeholder:text-[#858f87]";
+const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
+const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
 
 export function UploadPage() {
   const { role, ready } = useDemoRole();
@@ -52,12 +53,12 @@ export function UploadPage() {
   if (!allowed) {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="min-w-0 rounded-md border border-tjc-line bg-white p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 text-3xl font-semibold">Upload is for Contributors</h1>
+          <h1 className="mt-2 dam-page-title">Upload is for Contributors</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
         </section>
-        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-lg border border-tjc-line bg-white/76 p-5">
+        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-md border border-tjc-line bg-white p-5">
           <UploadCloud size={30} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
           <div>
             <h2 className="text-xl font-semibold">Contribution flow</h2>
@@ -70,12 +71,12 @@ export function UploadPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1520px] px-3 py-5 md:px-5">
+    <div className="dam-shell max-w-[1520px]">
       <section className="grid gap-4 border-b border-tjc-line pb-4 lg:grid-cols-[minmax(0,1fr)_36rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Upload for review</h1>
-          <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
+          <h1 className="mt-2 dam-page-title">Upload for review</h1>
+          <p className="mt-2 max-w-[64ch] text-sm leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3" aria-label="Upload workflow">
           {[
@@ -85,7 +86,7 @@ export function UploadPage() {
           ].map((step) => {
             const Icon = step.icon;
             return (
-              <div className="rounded-lg border border-tjc-line bg-white/76 p-3" key={step.title}>
+              <div className="rounded-md border border-tjc-line bg-white p-3" key={step.title}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
                 <strong className="mt-2 block font-semibold">{step.title}</strong>
                 <span className="mt-1 block text-sm text-tjc-muted">{step.body}</span>
@@ -95,44 +96,44 @@ export function UploadPage() {
         </div>
       </section>
 
-      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(22rem,.82fr)]" onSubmit={submit}>
-        <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-5">
+      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_24rem]" onSubmit={submit}>
+        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold">Context</h2>
+            <h2 className="text-base font-semibold">1. Context</h2>
             <p className="text-sm text-tjc-muted">Help reviewers understand where this media came from.</p>
           </div>
           <label className={labelClass}>
-            Title
+            <span className="flex items-center justify-between gap-2">Title {requiredHint}</span>
             <input className={inputClass} name="title" placeholder="Bible study fellowship photos" required />
           </label>
           <label className={`${labelClass} mt-4`}>
-            Event name
+            <span className="flex items-center justify-between gap-2">Event name {requiredHint}</span>
             <input className={inputClass} name="eventName" placeholder="MVP worship workshop" required />
           </label>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
-              Event date
+              <span className="flex items-center justify-between gap-2">Event date {requiredHint}</span>
               <input className={inputClass} name="eventDate" type="date" defaultValue={today} required />
             </label>
             <label className={labelClass}>
-              Ministry/team
+              <span className="flex items-center justify-between gap-2">Ministry/team {requiredHint}</span>
               <input className={inputClass} name="ministry" placeholder="Internet Ministry" required />
             </label>
           </div>
           <label className={`${labelClass} mt-4`}>
-            Source / photographer
+            <span className="flex items-center justify-between gap-2">Source / photographer {requiredHint}</span>
             <input className={inputClass} name="source" placeholder="lm.photo@tjc.org, volunteer name, or Shared Drive folder" required />
           </label>
         </section>
 
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="self-start rounded-md border border-tjc-line bg-white p-4">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold">People and rights</h2>
+            <h2 className="text-base font-semibold">2. People and rights</h2>
             <p className="text-sm text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
-              People visible
+              <span className="flex items-center justify-between gap-2">People visible {requiredHint}</span>
               <select className={inputClass} name="peopleVisible" defaultValue="Unknown" required>
                 <option>Unknown</option>
                 <option>No</option>
@@ -140,7 +141,7 @@ export function UploadPage() {
               </select>
             </label>
             <label className={labelClass}>
-              Children/youth visible
+              <span className="flex items-center justify-between gap-2">Children/youth visible {requiredHint}</span>
               <select className={inputClass} name="minorsVisible" defaultValue="Unknown" required>
                 <option>Unknown</option>
                 <option>No</option>
@@ -149,7 +150,7 @@ export function UploadPage() {
             </label>
           </div>
           <label className={`${labelClass} mt-4`}>
-            Usage rights
+            <span className="flex items-center justify-between gap-2">Usage rights {requiredHint}</span>
             <select className={inputClass} name="usageRights" defaultValue="Unknown - needs review" required>
               <option>Unknown - needs review</option>
               <option>TJC-owned / permission confirmed</option>
@@ -168,14 +169,14 @@ export function UploadPage() {
             </select>
           </label>
           <label className={`${labelClass} mt-4`}>
-            Consent/restrictions
+            <span className="flex items-center justify-between gap-2">Consent/restrictions {requiredHint}</span>
             <textarea className="min-h-28 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
           </label>
         </section>
 
-        <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold">Files and tags</h2>
+            <h2 className="text-base font-semibold">3. Files and tags</h2>
             <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
           <label className={labelClass}>
@@ -187,23 +188,38 @@ export function UploadPage() {
             <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
           </label>
           <label className={`${labelClass} mt-4`}>
-            Suggested tags
+            <span className="flex items-center justify-between gap-2">Suggested tags {requiredHint}</span>
             <input className={inputClass} name="tags" placeholder="Bible, fellowship, welcome, youth..." required />
           </label>
           <label className={`${labelClass} mt-4`}>
-            Intake notes
+            <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
             <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
           {largeWarning ? <div className="mt-4 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{largeWarning}</div> : null}
-          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-tjc-line bg-[#f6faf7] p-3">
+          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-tjc-line bg-[#f6faf7] p-3">
             <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <div>
               <strong className="block font-semibold">Large media intake</strong>
               <span className="mt-1 block text-sm leading-snug text-tjc-muted">{uploadDefaultState.largeMediaMessage}</span>
             </div>
           </div>
-          <div className="mt-4 rounded-lg border border-[#cbd8e4] bg-[#f2f7fb] p-3 text-sm leading-snug text-[#52677a]">
+          <div className="mt-4 rounded-md border border-[#cbd8e4] bg-[#f2f7fb] p-3 text-sm leading-snug text-[#52677a]">
             AI tag suggestions may help later, but a person still reviews titles, tags, people visibility, and rights before publishing.
+          </div>
+        </section>
+
+        <section className="rounded-md border border-tjc-line bg-[#fbfcfa] p-4 xl:col-span-3" aria-label="Ready to submit checklist">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Reviewer handoff checklist</h2>
+              <p className="mt-1 text-sm text-tjc-muted">Submission is stronger when every required evidence field is filled before intake.</p>
+            </div>
+            <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-3 py-2 text-xs font-semibold text-[#725216]">Status after submit: Needs Review / Do Not Publish</span>
+          </div>
+          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            {["Context present", "Source named", "People/minors answered", "Rights/restrictions noted"].map((item) => (
+              <span className="rounded-md border border-tjc-line bg-white px-3 py-2 font-semibold text-[#4d554d]" key={item}>{item}</span>
+            ))}
           </div>
         </section>
 
@@ -211,13 +227,14 @@ export function UploadPage() {
           <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
           Submit intake
         </button>
-        {message ? <div className="rounded-lg border border-tjc-line bg-white/82 p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
+        {message ? <div className="rounded-md border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
 
         {receipt ? (
-          <section className="grid gap-4 rounded-lg border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto] xl:col-span-3" aria-label="Upload receipt">
+          <section className="grid gap-4 rounded-md border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto] xl:col-span-3" aria-label="Upload receipt">
             <CheckCircle2 size={22} strokeWidth={1.8} aria-hidden="true" />
             <div>
               <h2 className="text-xl font-semibold">Intake received</h2>
+              <p className="mt-1 text-sm font-semibold">This media is blocked until a reviewer approves reuse.</p>
               <dl className="mt-3 grid gap-3 sm:grid-cols-4">
                 <div><dt className="text-xs font-semibold">Status</dt><dd>{receipt.defaultReviewState || uploadDefaultState.status}</dd></div>
                 <div><dt className="text-xs font-semibold">Event</dt><dd>{receipt.eventName || "Not provided"}</dd></div>
