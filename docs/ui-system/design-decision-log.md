@@ -176,3 +176,31 @@ Screenshot proof:
 - `docs/screenshots/qa/after-review-industry-pass-desktop.png`
 - `docs/screenshots/qa/after-review-industry-pass-tablet-768.png`
 - `docs/screenshots/qa/after-review-industry-pass-mobile-320.png`
+
+## 2026-06-06 - Collections Album Shelf Pass
+
+Decision: replace the Collections page's remaining generic album-grid feel with a selected shelf inspector so it behaves more like a real DAM album browser.
+
+Replacement:
+
+| Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
+|---|---|---|---|
+| Metrics header plus repeated album cards | `CollectionShelfInspector` selected album evidence panel | Album approval remains a navigation signal only; inspector repeats that Library/detail checks are required before publication | Hover and keyboard focus update the inspector; 320 px stacks cards and inspector with no horizontal overflow |
+| Album cards had no persistent selected state | Active `CollectionAlbumCard` shelf state | Stable collection ID and preview-pending state are visible without implying approved downloads | Selected state uses border/ring plus text labels, not color alone |
+| No-preview cards could read as broken | Intentional ResourceSpace preview-pending contact sheet | No fake thumbnails and no Viewer preview bypass | Preview-pending text remains visible at desktop and 320 px |
+
+Code paths:
+
+- `frontend/components/CollectionsPage.tsx`
+- `frontend/components/CollectionAlbumCard.tsx`
+- `frontend/components/CollectionShelfInspector.tsx`
+
+Screenshot proof:
+
+- `docs/screenshots/qa/collections-industry-pass-desktop.png`
+- `docs/screenshots/qa/collections-industry-pass-mobile-320.png`
+
+Verification:
+
+- Browser proof confirmed collection shelf inspector, stable ID labels, and `Open Library results` action at 1440 and 320 px.
+- No console errors and no horizontal overflow were observed after restarting the stale dev server.

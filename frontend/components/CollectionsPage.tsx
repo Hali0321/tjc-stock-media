@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Database, FolderOpen, Search, ShieldCheck, Users } from "lucide-react";
 import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
+import { CollectionShelfInspector } from "@/components/CollectionShelfInspector";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogCollection, SearchResult } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -37,6 +38,7 @@ export function CollectionsPage() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
   const apiUrl = useMemo(() => `/api/assets/search?role=${encodeURIComponent(role)}&sort=Approved+first&limit=36`, [role]);
 
@@ -75,6 +77,7 @@ export function CollectionsPage() {
   const totalCollectionAssets = collections.reduce((sum, collection) => sum + collection.count, 0);
   const peopleWarnings = collections.filter((collection) => collection.peopleWarning).length;
   const strongestCollection = collections.toSorted((a, b) => b.count - a.count)[0];
+  const selectedCollection = collections.find((collection) => collection.id === selectedCollectionId) || strongestCollection;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -115,6 +118,7 @@ export function CollectionsPage() {
             <button className="mt-2 inline-flex min-h-8 items-center rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
               setQuery("");
               setSubmittedQuery("");
+              setSelectedCollectionId("");
             }}>
               Clear search: {submittedQuery}
             </button>
@@ -166,7 +170,7 @@ export function CollectionsPage() {
         </div>
       ) : null}
 
-      <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]" aria-label="Collection album grid">
+      <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Collection album grid">
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 dam-section-bar px-3 py-2.5">
             <div>
@@ -199,6 +203,8 @@ export function CollectionsPage() {
                 approvalSummary={collection.approvalSummary}
                 peopleWarning={collection.peopleWarning}
                 images={collection.images}
+                isActive={selectedCollection?.id === collection.id}
+                onInspect={() => setSelectedCollectionId(collection.id)}
                 onOpen={() => openCollection(collection)}
               />
             ))}
@@ -206,6 +212,7 @@ export function CollectionsPage() {
         </div>
 
         <aside className="grid min-w-0 gap-3 lg:sticky lg:top-24 lg:self-start" aria-label="Collection governance">
+          <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
           <section className="dam-lift p-3">
             <h2 className="text-sm font-semibold text-tjc-evergreen">Before sharing an album</h2>
             <div className="mt-3 grid gap-2 text-sm text-[#4e5a52]">

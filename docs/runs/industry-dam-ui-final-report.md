@@ -46,7 +46,7 @@ Preserved constraints:
 |---|---|---|---|---|
 | App chrome / nav | Basic bordered route strip | Restrained Tubelight-style workflow nav plus utility command/guide/admin controls | `frontend/components/AppChrome.tsx`, `frontend/components/AppNav.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png` |
 | Library | Dashboard/card-wall hybrid | DAM command center with saved views, filters, pagination, count truth, dense contact sheet, and quick preview dialog | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/AssetQuickLookDialog.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/DisplayCard.tsx`, `frontend/components/LibraryPagination.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png`, `docs/screenshots/library-mobile-390.png`, `docs/screenshots/qa/library-quick-preview-desktop.png`, `docs/screenshots/qa/library-quick-preview-mobile-320.png` |
-| Collections | Generic cards | Album shelves with collection context and approval summaries | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx` | `docs/screenshots/collections-desktop.png` |
+| Collections | Generic cards | Album shelves with selected collection inspector, stable IDs, approval summaries, source/range facts, intentional preview-pending states, and Library handoff | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx` | `docs/screenshots/collections-desktop.png`, `docs/screenshots/qa/collections-industry-pass-desktop.png`, `docs/screenshots/qa/collections-industry-pass-mobile-320.png` |
 | Asset Detail | Chip-heavy metadata dump | Split trust workspace with preview, “Can I use this?”, governance passport, reuse options, and tabs | `frontend/components/AssetDetailPage.tsx`, `frontend/components/AssetTrustPanel.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/asset-detail-desktop.png`, `docs/screenshots/detail-mobile-320.png`, `docs/screenshots/detail-mobile-390.png` |
 | Upload | Plain form | Contributor intake workflow with selected-file preview, tag input, evidence fields, reviewer packet, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/UploadIntakePacket.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png`, `docs/screenshots/qa/upload-intake-packet-desktop.png`, `docs/screenshots/qa/upload-intake-packet-mobile-320.png` |
 | Review | Long generated list | Governance cockpit with visual triage board, media-led queue cards, queue tabs, sticky inspector, tabs, evidence checklist, dialog, and hold actions | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/review-desktop.png`, `docs/screenshots/review-mobile-320.png`, `docs/screenshots/review-mobile-390.png`, `docs/screenshots/qa/after-review-industry-pass-desktop.png`, `docs/screenshots/qa/after-review-industry-pass-mobile-320.png` |
@@ -59,7 +59,7 @@ Preserved constraints:
 |---|---|---|
 | Tubelight Navbar | Implemented | `frontend/components/AppNav.tsx`; visible in desktop/mobile screenshots |
 | Command Palette | Implemented | `frontend/components/CommandPalette.tsx`; `docs/screenshots/qa/command-palette-open.png`; browser QA verifies arrow-key selection and stable saved-view/queue navigation |
-| Display Cards | Implemented selectively | `frontend/components/DisplayCard.tsx`, `SavedViewCard`, `AdminPage`, `ReviewPage` |
+| Display Cards | Implemented selectively | `frontend/components/DisplayCard.tsx`, `SavedViewCard`, `CollectionAlbumCard`, `CollectionShelfInspector`, `AdminPage`, `ReviewPage` |
 | Animated Loading Skeleton | Implemented as layout-matching shimmer states | `frontend/app/globals.css`; documented in component inventory |
 | Liquid Glass Button | Partial inspiration only | Primary action depth in CSS and workflow buttons; no glass over safety labels |
 | Apple Tahoe Liquid Glass Button | Deferred | Too platform-specific; no production component |
@@ -148,6 +148,8 @@ Interaction proof:
 - `docs/screenshots/qa/after-detail-mobile-320.png`
 - `docs/screenshots/qa/after-upload-mobile-320.png`
 - `docs/screenshots/qa/after-review-mobile-320.png`
+- `docs/screenshots/qa/collections-industry-pass-desktop.png`
+- `docs/screenshots/qa/collections-industry-pass-mobile-320.png`
 
 Capture manifests:
 
