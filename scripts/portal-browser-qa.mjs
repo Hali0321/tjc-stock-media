@@ -243,9 +243,13 @@ for (const width of qaViewports) {
   await page.getByLabel("Consent/restrictions").fill("No consent restrictions; no people visible.");
   await page.getByLabel("Existing Google / ResourceSpace link").fill("https://drive.google.com/example");
   if ((await page.getByLabel("Suggested tags suggestions", { exact: true }).getByRole("button", { name: "Bible" }).count()) < 1) failures.push("upload tag input: taxonomy suggestions missing");
-  await page.getByLabel("Suggested tags", { exact: true }).fill("qa, sabbath");
+  await page.getByLabel("Suggested tags", { exact: true }).fill("qa");
   await page.keyboard.press("Enter");
-  if ((await page.getByRole("button", { name: "Remove qa" }).count()) < 1) failures.push("upload tag input: typed tag chip missing");
+  if ((await page.getByRole("button", { name: "Remove qa" }).count()) > 0) failures.push("upload tag input: non-canonical typed tag became canonical chip");
+  if ((await page.getByText("not in the current taxonomy").count()) < 1) failures.push("upload tag input: non-canonical tag warning missing");
+  await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
+  await page.keyboard.press("Enter");
+  if ((await page.getByRole("button", { name: "Remove Bible" }).count()) < 1) failures.push("upload tag input: canonical typed tag chip missing");
   await page.getByLabel("Intake notes").fill("Browser QA no-file intake with source link only.");
   await page.getByRole("button", { name: "Submit intake" }).click();
   await page.waitForSelector("text=Intake received");

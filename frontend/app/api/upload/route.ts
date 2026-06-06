@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { canUpload, normalizeRole } from "@/lib/permissions";
 import { normalizeTextField } from "@/lib/request-validation";
+import { canonicalTags } from "@/lib/taxonomy";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 export const dynamic = "force-dynamic";
+
+function parseTags(value: string) {
+  return value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function nonCanonicalTags(value: string) {
+  const allowed = new Set([...canonicalTags.visibleTags, ...canonicalTags.tjcTerms].map((tag) => tag.toLowerCase()));
+  return parseTags(value).filter((tag) => !allowed.has(tag.toLowerCase()));
+}
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
@@ -42,6 +55,17 @@ export async function POST(request: NextRequest) {
   ].filter((item): item is string => Boolean(item));
   if (missingRequired.length) {
     return NextResponse.json({ error: "Intake is missing required review context.", missingRequired }, { status: 400 });
+  }
+  const invalidTags = nonCanonicalTags(suggestedTags);
+  if (invalidTags.length) {
+    return NextResponse.json(
+      {
+        error: "Suggested tags must use the current ResourceSpace/export taxonomy.",
+        invalidTags,
+        guidance: "Add new wording to intake notes for reviewer consideration."
+      },
+      { status: 400 }
+    );
   }
   if (!files.length && !sourceLink) {
     return NextResponse.json({ error: "Add at least one file or existing Google/ResourceSpace link before submitting intake." }, { status: 400 });

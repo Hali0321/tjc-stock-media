@@ -69,6 +69,24 @@ expect_code 400 empty-upload-contributor \
   -X POST -F 'role=Contributor' -F 'eventName=No files test' \
   "$BASE_URL/api/upload"
 
+expect_code 400 noncanonical-upload-tags \
+  -X POST \
+  -F 'role=Contributor' \
+  -F 'title=Noncanonical tag test' \
+  -F 'eventName=Noncanonical tag test' \
+  -F 'eventDate=2026-06-06' \
+  -F 'ministry=Internet Ministry' \
+  -F 'source=QA Reviewer' \
+  -F 'peopleVisible=No' \
+  -F 'minorsVisible=No' \
+  -F 'usageRights=TJC-owned / permission confirmed' \
+  -F 'approvalSuggestion=Internal ministry' \
+  -F 'notes=No consent restrictions; no people visible.' \
+  -F 'tags=qa-only' \
+  -F 'intakeNotes=QA invalid taxonomy intake.' \
+  -F 'sourceLink=https://drive.google.com/example' \
+  "$BASE_URL/api/upload"
+
 expect_json source-link-upload-contributor '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.status !== "validated" || data.fileCount !== 0 || !data.sourceLink) {
@@ -87,7 +105,7 @@ if (data.status !== "validated" || data.fileCount !== 0 || !data.sourceLink) {
   -F 'usageRights=TJC-owned / permission confirmed' \
   -F 'approvalSuggestion=Internal ministry' \
   -F 'notes=No consent restrictions; no people visible.' \
-  -F 'tags=qa, sabbath' \
+  -F 'tags=Bible, worship' \
   -F 'intakeNotes=QA no-file intake with source link only.' \
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"

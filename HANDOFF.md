@@ -24,7 +24,7 @@ Latest local QA captured the required screenshots under `docs/screenshots/` from
 The current frontend shell is the final dense ministry DAM UI:
 
 - Desktop uses compact top navigation plus role utility controls.
-- Styling is Tailwind v4 with a small global token/base layer, Geist via `next/font/google`, and `lucide-react` icons.
+- Styling is Tailwind v4 with a small global token/base layer, Inter plus Noto Sans TC via `next/font/google`, Geist Mono for technical IDs, and `lucide-react` icons.
 - Main nav: Library, Collections, Upload, Review with restrained Tubelight-inspired active state.
 - Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
