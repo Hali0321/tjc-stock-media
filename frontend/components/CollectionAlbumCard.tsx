@@ -1,7 +1,7 @@
 "use client";
 
 import { PointerEvent, useState } from "react";
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight, FolderOpen, Users } from "lucide-react";
 
 type CollectionAlbumCardProps = {
   name: string;
@@ -52,15 +52,18 @@ export function CollectionAlbumCard({
       <span className="grid grid-cols-[6rem_1fr] gap-2 border-b border-tjc-line bg-[#e9eee8] p-2">
         <span className="grid aspect-[4/3] place-items-center rounded-md bg-white/74 p-1">
           {activeImage ? (
-            <img className="h-auto max-h-full w-auto max-w-full rounded object-contain transition duration-500 ease-out group-hover:scale-[1.025]" src={activeImage.src} alt="" aria-hidden="true" loading="lazy" />
+            <img className="h-auto max-h-full w-auto max-w-full rounded object-contain transition duration-500 ease-out group-hover:scale-[1.025]" src={activeImage.src} alt="" aria-hidden="true" loading="eager" />
           ) : (
-            <span className="skeleton block h-full w-full rounded-md" aria-hidden="true" />
+            <span className="grid h-full w-full place-items-center rounded-md bg-[#f6f8f5] text-center text-[11px] font-semibold leading-tight text-tjc-muted" aria-hidden="true">
+              <FolderOpen size={18} strokeWidth={1.8} />
+              No previews
+            </span>
           )}
         </span>
         <span className="grid min-w-0 grid-cols-4 gap-1" aria-hidden="true">
           {(images.length ? images.slice(0, 4) : []).map((image, index) => (
             <span className="grid min-h-12 place-items-center rounded bg-white/72 p-0.5" key={`${image.src}-${index}`}>
-              <img className="h-auto max-h-12 w-auto max-w-full rounded-[.2rem] object-contain" src={image.src} alt="" loading="lazy" />
+              <img className="h-auto max-h-12 w-auto max-w-full rounded-[.2rem] object-contain" src={image.src} alt="" loading="eager" />
             </span>
           ))}
         </span>

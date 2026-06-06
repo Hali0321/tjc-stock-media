@@ -7,8 +7,8 @@ const guideBlocks = [
   },
   {
     title: "How to know if something is approved",
-    body: "Use approval label, usage scope, reviewer/date, and rights notes together. Approved media stays first in Library results.",
-    doText: "Use Approved for church-wide use or Internal ministry use only inside its stated scope.",
+    body: "Use raw ResourceSpace status and portal reuse state together. ResourceSpace approval alone is not enough for public reuse.",
+    doText: "Use Portal ready or Internal ready assets inside their stated scope.",
     avoidText: "Do not treat Please review before public sharing, Archive only, or Contains children/youth as publishable."
   },
   {
@@ -20,7 +20,7 @@ const guideBlocks = [
   {
     title: "Photo use",
     body: "Keep ministry context intact. Cropping, contrast, and layout choices should preserve worship, service, fellowship, and event meaning.",
-    doText: "Use approved images for newsletters, slides, local updates, and website articles.",
+    doText: "Use portal-ready images for newsletters, slides, local updates, and website articles.",
     avoidText: "Do not crop in a way that changes ministry context or isolates people without clear reason."
   },
   {
@@ -50,8 +50,8 @@ const guideBlocks = [
 ];
 
 const decisionRows = [
-  ["Need public flyer or website image", "Use Approved for church-wide use and download approved copy."],
-  ["Need coworker recap or planning deck", "Use Internal ministry use only, if audience stays internal."],
+  ["Need public flyer or website image", "Use Portal ready and download approved web copy."],
+  ["Need coworker recap or planning deck", "Use Internal ready, if audience stays internal."],
   ["People, children/youth, or source unclear", "Pause and ask a media coworker or reviewer."],
   ["Original/master requested", "Request access. Normal users use approved copies only."]
 ];
@@ -61,7 +61,7 @@ export function GuidePage() {
     <div className="mx-auto max-w-[1280px] px-3 py-5 md:px-5">
       <section className="border-b border-tjc-line pb-4">
         <span className="text-sm font-semibold text-tjc-evergreen">Usage guide</span>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em] md:text-4xl">Use approved media with care</h1>
+        <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Use approved media with care</h1>
         <p className="mt-2 max-w-[68ch] text-base leading-relaxed text-tjc-muted">
           Quick rules for searching, checking approval, downloading copies, and knowing when to ask a reviewer.
         </p>
@@ -82,7 +82,7 @@ export function GuidePage() {
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {guideBlocks.map((block) => (
           <section className="rounded-lg border border-tjc-line bg-white/78 p-4" key={block.title}>
-            <h2 className="text-lg font-semibold tracking-[-.01em]">{block.title}</h2>
+            <h2 className="text-lg font-semibold">{block.title}</h2>
             <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <div className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-sm text-[#24583d]">

@@ -4,8 +4,8 @@ import { cn } from "@/lib/ui";
 const filterGroups = [
   { label: "Status", options: ["Church-wide use", "Internal ministry", "Needs review", "Archive only"] },
   { label: "Media type", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
-  { label: "People/minors", options: ["No people", "Adults only", "Children/youth"] },
-  { label: "Governance", options: ["Missing source", "Rights review"] },
+  { label: "People/minors", options: ["No people", "Adults only", "People unknown", "Children/youth"] },
+  { label: "Governance", options: ["Missing source", "Rights review", "Portal ready", "AI enrichment", "Taxonomy drift", "Duplicate candidate", "Stale approval", "Rendition gap"] },
   { label: "Ministry", options: ["Worship", "Bible Study", "Fellowship", "Sabbath", "Welcome Team"] },
   { label: "Event/date", options: ["2026", "2025", "2024"] },
   { label: "Orientation", options: ["Landscape", "Square", "Portrait"] },

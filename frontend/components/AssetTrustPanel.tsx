@@ -7,20 +7,25 @@ import { cn } from "@/lib/ui";
 export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
   const display = assetPresentation(asset, role);
   const downloadable = display.download.approvedCopy.allowed;
+  const hasWarnings = display.confidence.some((item) => item.tone === "warn");
   return (
     <section className="rounded-lg border border-tjc-line bg-white/82 p-4 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Trust summary">
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold">Can I use this?</h2>
+        <p className="mt-1 text-sm leading-snug text-tjc-muted">Approval, scope, rights, people/minors, and source confidence.</p>
+      </div>
       <div className="mb-3 flex flex-wrap gap-2">
         <StatusBadge status={asset.status} />
         <UsageBadge scope={asset.usageScope} />
       </div>
       <div className={cn(
         "mb-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border p-3",
-        downloadable ? "border-[#b7dac7] bg-[#eff9f3] text-[#25553b]" : "border-[#ead6a8] bg-[#fff7e5] text-[#73531a]"
+        downloadable && !hasWarnings ? "border-[#b7dac7] bg-[#eff9f3] text-[#25553b]" : "border-[#ead6a8] bg-[#fff7e5] text-[#73531a]"
       )}>
-        {downloadable ? <CheckCircle2 size={20} strokeWidth={1.8} aria-hidden="true" /> : <ShieldAlert size={20} strokeWidth={1.8} aria-hidden="true" />}
+        {downloadable && !hasWarnings ? <CheckCircle2 size={20} strokeWidth={1.8} aria-hidden="true" /> : <ShieldAlert size={20} strokeWidth={1.8} aria-hidden="true" />}
         <div>
-          <strong className="block text-sm font-semibold">{downloadable ? "Approved copy available" : "Not downloadable yet"}</strong>
-          <span className="mt-1 block text-sm leading-snug">{downloadable ? asset.usageGuidance : "A reviewer must approve this asset before reuse."}</span>
+          <strong className="block text-sm font-semibold">{downloadable ? "Approved copy available" : display.download.reuse.label}</strong>
+          <span className="mt-1 block text-sm leading-snug">{downloadable ? asset.usageGuidance : display.download.reuse.summary}</span>
         </div>
       </div>
       <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">

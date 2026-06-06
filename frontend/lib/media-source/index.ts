@@ -1,6 +1,6 @@
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { findResourceSpaceImageDerivative, type ImageVariant } from "@/lib/images";
+import { clearDerivativeFileIndex, findResourceSpaceImageDerivative, type ImageVariant } from "@/lib/images";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { demoFallbackAssets, demoFallbackStatus } from "@/lib/media-source/demo-fallback";
 import { exportedMetadataStatus, getAssetsFromExport, latestMetadataExportPath } from "@/lib/media-source/exported-metadata";
@@ -42,6 +42,7 @@ export async function getActiveMediaSource() {
 export function clearMediaSourceCache() {
   cachedAssets = null;
   cachedStatus = null;
+  clearDerivativeFileIndex();
 }
 
 export function findFilestoreDerivative(id: string, variant: ImageVariant) {

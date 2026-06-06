@@ -12,9 +12,11 @@ type UploadReceipt = {
   message?: string;
   eventName?: string;
   fileCount?: number;
+  sourceLink?: string | null;
+  reviewWarnings?: string[];
 };
 
-const inputClass = "min-h-10 rounded-md border border-tjc-line bg-white px-3 font-medium text-tjc-ink placeholder:text-[#858f87]";
+const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 font-medium text-tjc-ink placeholder:text-[#858f87]";
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 
 export function UploadPage() {
@@ -50,9 +52,9 @@ export function UploadPage() {
   if (!allowed) {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em]">Upload is available to contributors</h1>
+          <h1 className="mt-2 text-3xl font-semibold">Upload is for Contributors</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
         </section>
         <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-lg border border-tjc-line bg-white/76 p-5">
@@ -72,7 +74,7 @@ export function UploadPage() {
       <section className="grid gap-4 border-b border-tjc-line pb-4 lg:grid-cols-[minmax(0,1fr)_36rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em] md:text-4xl">Upload for review</h1>
+          <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Upload for review</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3" aria-label="Upload workflow">
@@ -94,7 +96,7 @@ export function UploadPage() {
       </section>
 
       <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(22rem,.82fr)]" onSubmit={submit}>
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-5">
           <div className="mb-4">
             <h2 className="text-xl font-semibold">Context</h2>
             <p className="text-sm text-tjc-muted">Help reviewers understand where this media came from.</p>
@@ -110,11 +112,11 @@ export function UploadPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
               Event date
-              <input className={inputClass} name="eventDate" type="date" defaultValue={today} />
+              <input className={inputClass} name="eventDate" type="date" defaultValue={today} required />
             </label>
             <label className={labelClass}>
               Ministry/team
-              <input className={inputClass} name="ministry" placeholder="Internet Ministry" />
+              <input className={inputClass} name="ministry" placeholder="Internet Ministry" required />
             </label>
           </div>
           <label className={`${labelClass} mt-4`}>
@@ -131,7 +133,7 @@ export function UploadPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
               People visible
-              <select className={inputClass} name="peopleVisible" defaultValue="Unknown">
+              <select className={inputClass} name="peopleVisible" defaultValue="Unknown" required>
                 <option>Unknown</option>
                 <option>No</option>
                 <option>Yes</option>
@@ -139,7 +141,7 @@ export function UploadPage() {
             </label>
             <label className={labelClass}>
               Children/youth visible
-              <select className={inputClass} name="minorsVisible" defaultValue="Unknown">
+              <select className={inputClass} name="minorsVisible" defaultValue="Unknown" required>
                 <option>Unknown</option>
                 <option>No</option>
                 <option>Yes</option>
@@ -148,7 +150,7 @@ export function UploadPage() {
           </div>
           <label className={`${labelClass} mt-4`}>
             Usage rights
-            <select className={inputClass} name="usageRights" defaultValue="Unknown - needs review">
+            <select className={inputClass} name="usageRights" defaultValue="Unknown - needs review" required>
               <option>Unknown - needs review</option>
               <option>TJC-owned / permission confirmed</option>
               <option>Internal ministry use only</option>
@@ -167,11 +169,11 @@ export function UploadPage() {
           </label>
           <label className={`${labelClass} mt-4`}>
             Consent/restrictions
-            <textarea className="min-h-28 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} />
+            <textarea className="min-h-28 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
           </label>
         </section>
 
-        <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-5">
           <div className="mb-4">
             <h2 className="text-xl font-semibold">Files and tags</h2>
             <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
@@ -181,12 +183,16 @@ export function UploadPage() {
             <input className="min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 py-2 text-sm font-medium file:mr-3 file:rounded-md file:border-0 file:bg-[#eef7f1] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-tjc-evergreen" name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
           </label>
           <label className={`${labelClass} mt-4`}>
+            Existing Google / ResourceSpace link
+            <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
+          </label>
+          <label className={`${labelClass} mt-4`}>
             Suggested tags
-            <input className={inputClass} name="tags" placeholder="Bible, fellowship, welcome, youth..." />
+            <input className={inputClass} name="tags" placeholder="Bible, fellowship, welcome, youth..." required />
           </label>
           <label className={`${labelClass} mt-4`}>
             Intake notes
-            <textarea className="min-h-24 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} />
+            <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
           {largeWarning ? <div className="mt-4 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{largeWarning}</div> : null}
           <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-tjc-line bg-[#f6faf7] p-3">
@@ -201,7 +207,7 @@ export function UploadPage() {
           </div>
         </section>
 
-        <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-5 text-base font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px xl:col-span-3" type="submit">
+        <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-5 text-base font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px xl:col-span-3" type="submit">
           <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
           Submit intake
         </button>
@@ -216,9 +222,16 @@ export function UploadPage() {
                 <div><dt className="text-xs font-semibold">Status</dt><dd>{receipt.defaultReviewState || uploadDefaultState.status}</dd></div>
                 <div><dt className="text-xs font-semibold">Event</dt><dd>{receipt.eventName || "Not provided"}</dd></div>
                 <div><dt className="text-xs font-semibold">Files</dt><dd>{receipt.fileCount ?? 0}</dd></div>
-                <div><dt className="text-xs font-semibold">Next step</dt><dd>Reviewer checks source, people, rights, and usage.</dd></div>
+                <div><dt className="text-xs font-semibold">Source link</dt><dd>{receipt.sourceLink ? "Captured" : "Not provided"}</dd></div>
               </dl>
               <p className="mt-3 text-sm">Persistence mode: server-routed demo/export intake. ResourceSpace API write mapping must be configured for production writes.</p>
+              {receipt.reviewWarnings?.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {receipt.reviewWarnings.map((warning) => (
+                    <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2.5 py-1 text-xs font-semibold text-[#725216]" key={warning}>{warning}</span>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <Clock3 size={20} strokeWidth={1.8} aria-hidden="true" />
           </section>

@@ -10,7 +10,7 @@ import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { missingReviewFields, reviewActions, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
-import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+import type { MediaSourceStatus, ReviewEvidenceChecklist, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
 type QueueSummary = {
@@ -27,6 +27,11 @@ type Governance = {
   rightsReview: number;
   approvedThisMonth: number;
   archiveCandidates: number;
+  duplicateCandidates: number;
+  aiEnrichment: number;
+  taxonomyDrift: number;
+  renditionGaps: number;
+  staleApprovals: number;
   missingRequiredFields: number;
 };
 
@@ -38,6 +43,7 @@ type ReviewResponse = {
   queues: QueueSummary[];
   governance: Governance;
   resourceSpaceUrls: Record<string, string>;
+  pendingWrites: Record<string, ReviewWriteRecordSummary>;
 };
 
 type AuditPreview = {
@@ -52,13 +58,38 @@ const governanceCards = [
   { key: "childrenYouth", label: "Children/youth", icon: Users },
   { key: "missingSource", label: "Missing source", icon: FileWarning },
   { key: "rightsReview", label: "Rights review", icon: Lock },
-  { key: "approvedThisMonth", label: "Approved this month", icon: ShieldCheck },
+  { key: "duplicateCandidates", label: "Duplicates", icon: Archive },
+  { key: "aiEnrichment", label: "AI enrichment", icon: Info },
+  { key: "taxonomyDrift", label: "Taxonomy drift", icon: FileWarning },
+  { key: "renditionGaps", label: "Rendition gaps", icon: Database },
+  { key: "staleApprovals", label: "Stale approval", icon: Archive },
   { key: "archiveCandidates", label: "Archive candidates", icon: Archive }
 ] as const;
 
 const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
 const factTermClass = "text-xs font-semibold text-tjc-evergreen";
 const factDescClass = "mt-1 break-words text-sm leading-relaxed text-[#4d554d]";
+const checklistLabels: Array<[keyof ReviewEvidenceChecklist, string]> = [
+  ["sourceConfirmed", "Source confirmed"],
+  ["rightsConfirmed", "Rights confirmed"],
+  ["peopleVisibilityConfirmed", "People visibility confirmed"],
+  ["childrenYouthChecked", "Children/youth checked"],
+  ["usageScopeSelected", "Usage scope selected"],
+  ["derivativeAvailable", "Derivative available"],
+  ["sensitiveContextChecked", "Sensitive context checked"],
+  ["creditRequirementChecked", "Credit requirement checked"]
+];
+
+const emptyChecklist: ReviewEvidenceChecklist = {
+  sourceConfirmed: false,
+  rightsConfirmed: false,
+  peopleVisibilityConfirmed: false,
+  childrenYouthChecked: false,
+  usageScopeSelected: false,
+  derivativeAvailable: false,
+  sensitiveContextChecked: false,
+  creditRequirementChecked: false
+};
 
 function sourceSummary(asset: StockMediaAsset) {
   return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
@@ -67,24 +98,38 @@ function sourceSummary(asset: StockMediaAsset) {
 export function ReviewPage() {
   const { role, ready } = useDemoRole();
   const [data, setData] = useState<ReviewResponse | null>(null);
+  const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [activeQueue, setActiveQueue] = useState<ReviewQueueId>("pending");
   const [auditPreview, setAuditPreview] = useState<AuditPreview | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
   const workbenchRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
 
   useEffect(() => {
-    if (!ready) return;
-    let cancelled = false;
-    fetch(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(activeQueue)}`)
-      .then((response) => response.json())
-      .then((body: ReviewResponse) => {
-        if (!cancelled) {
-          setData(body);
-          setSelectedId((current) => (body.assets.some((asset) => asset.id === current) ? current : body.assets[0]?.id || ""));
-        }
-      });
+	    if (!ready) return;
+	    let cancelled = false;
+	    setError("");
+	    fetch(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(activeQueue)}`)
+	      .then(async (response) => {
+	        const body = await response.json();
+	        if (!response.ok) throw new Error(body.error || "Unable to load review queue.");
+	        return body as ReviewResponse;
+	      })
+	      .then((body: ReviewResponse) => {
+	        if (!cancelled) {
+	          setData(body);
+	          setSelectedId((current) => (body.assets.some((asset) => asset.id === current) ? current : body.assets[0]?.id || ""));
+	        }
+	      })
+	      .catch((err: Error) => {
+	        if (!cancelled) {
+	          setError(err.message);
+	          setData(null);
+	        }
+	      });
     return () => {
       cancelled = true;
     };
@@ -92,6 +137,32 @@ export function ReviewPage() {
 
   const selectedAsset = useMemo(() => data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0], [data?.assets, selectedId]);
   const activeQueueSummary = data?.queues.find((queue) => queue.id === activeQueue);
+  const selectedPendingWrite = selectedAsset ? data?.pendingWrites[selectedAsset.id] : undefined;
+
+  useEffect(() => {
+    setReviewNote("");
+    setChecklist(emptyChecklist);
+  }, [selectedId]);
+
+  function missingEvidenceFor(action: (typeof reviewActions)[number]) {
+    const required: Array<keyof ReviewEvidenceChecklist> = [
+      "sourceConfirmed",
+      "rightsConfirmed",
+      "peopleVisibilityConfirmed",
+      "childrenYouthChecked",
+      "usageScopeSelected"
+    ];
+    if (action.backend === "Approve Public") {
+      required.push("derivativeAvailable", "sensitiveContextChecked", "creditRequirementChecked");
+    }
+    const missing = required.filter((field) => !checklist[field]).map((field) => String(field));
+    if (reviewNote.trim().length <= 10) missing.push("reviewNote");
+    return missing;
+  }
+
+  function toggleChecklist(field: keyof ReviewEvidenceChecklist) {
+    setChecklist((current) => ({ ...current, [field]: !current[field] }));
+  }
 
   useEffect(() => {
     if (!reviewer || !data?.assets.length || !workbenchRef.current) return;
@@ -121,16 +192,25 @@ export function ReviewPage() {
   }, [reviewer, data?.assets.length, activeQueue]);
 
   async function runAction(id: string, action: (typeof reviewActions)[number]) {
+    const missing = missingEvidenceFor(action);
+    if (missing.length) {
+      setMessage("Review evidence is incomplete. Add required checklist items and a review note before submitting.");
+      return;
+    }
     const timestamp = new Date().toISOString();
     setAuditPreview({ action: action.label, role, timestamp, assetId: id });
     setMessage("");
     const response = await fetch("/api/review", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, id, action: action.backend, label: action.label, notes: "Server-routed review action; ResourceSpace remains write target." })
+      body: JSON.stringify({ role, id, action: action.backend, label: action.label, notes: reviewNote, checklist })
     });
     const body = await response.json();
     setMessage(body.message || body.error || "Review route responded.");
+    if (response.ok) {
+      setReviewNote("");
+      setChecklist(emptyChecklist);
+    }
   }
 
   if (!ready) {
@@ -142,7 +222,7 @@ export function ReviewPage() {
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
         <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em]">Review is available to reviewers</h1>
+          <h1 className="mt-2 text-3xl font-semibold">Review workbench requires reviewer access</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
         </section>
         <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-lg border border-tjc-line bg-white/76 p-5">
@@ -162,7 +242,7 @@ export function ReviewPage() {
       <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-[-.03em] md:text-4xl">Review workbench</h1>
+          <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Review workbench</h1>
           <p className="mt-2 max-w-[78ch] text-base leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
         <div className="rounded-lg border border-tjc-line bg-white/82 p-3">
@@ -170,19 +250,25 @@ export function ReviewPage() {
           <strong className="mt-1 block text-2xl font-semibold tabular-nums">{data?.assets.length ?? "-"} shown</strong>
           <span className="text-sm text-tjc-muted">{activeQueueSummary ? `first ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
         </div>
-      </section>
+	      </section>
 
-      {data?.source.readOnly ? (
+	      {error ? (
+	        <div className="mt-4 rounded-lg border border-[#e5b7b5] bg-[#fff0ef] p-3 text-sm font-semibold text-[#7d2d2a]" role="status">
+	          {error}
+	        </div>
+	      ) : null}
+
+	      {data?.source.readOnly ? (
         <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-4 text-[#27435b]">
           <Database size={18} strokeWidth={1.8} aria-hidden="true" />
           <div>
             <strong className="block font-semibold">Review queue is reading ResourceSpace export.</strong>
-            <span className="text-sm">Actions stay server-routed. ResourceSpace API write persistence is pending field mapping.</span>
+            <span className="text-sm">Review action is ready, but ResourceSpace API write mapping is not configured yet. Actions stay server-routed until field mapping is live.</span>
           </div>
         </div>
       ) : null}
 
-      <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6" aria-label="Governance metrics">
+      <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
         {governanceCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -195,12 +281,12 @@ export function ReviewPage() {
         })}
       </section>
 
-      <section className="mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Review queues">
+      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 pb-2" aria-label="Review queues">
         {(data?.queues || []).map((queue) => (
           <button
             key={queue.id}
             type="button"
-            className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
+            className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
             onClick={() => setActiveQueue(queue.id)}
             aria-pressed={activeQueue === queue.id}
           >
@@ -273,33 +359,57 @@ export function ReviewPage() {
         {selectedAsset ? (
           <aside className="grid gap-3 self-start rounded-lg border border-tjc-line bg-white/86 p-3 shadow-[0_12px_28px_rgba(32,34,31,.08)] xl:sticky xl:top-24" aria-label="Selected asset review summary">
             <div className="grid aspect-[4/3] place-items-center rounded-md bg-[#e8eee8] p-3">
-              <img className="h-auto max-h-56 w-auto max-w-full rounded-md object-contain shadow-[0_5px_16px_rgba(32,34,31,.14)]" src={detailImageUrl(selectedAsset)} alt={selectedAsset.thumbnailAlt} />
+              <img className="h-auto max-h-56 w-auto max-w-full rounded-md object-contain shadow-[0_5px_16px_rgba(32,34,31,.14)]" src={detailImageUrl(selectedAsset, role)} alt={selectedAsset.thumbnailAlt} />
             </div>
             <div>
               <span className="text-sm font-semibold text-tjc-evergreen">Selected asset</span>
-              <h2 className="mt-1 text-xl font-semibold tracking-[-.01em]">{assetPresentation(selectedAsset, role).title}</h2>
+              <h2 className="mt-1 text-xl font-semibold">{assetPresentation(selectedAsset, role).title}</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={selectedAsset.status} />
               <UsageBadge scope={selectedAsset.usageScope} />
             </div>
             <dl className="grid gap-3">
+              <div className={factItemClass}><dt className={factTermClass}>Raw ResourceSpace status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>People/minors</dt><dd className={factDescClass}>{selectedAsset.peopleRisk || "Unknown - reviewer should confirm before public use"}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Usage guidance</dt><dd className={factDescClass}>{selectedAsset.usageGuidance || "Missing"}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Review notes</dt><dd className={factDescClass}>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>Portal reuse state</dt><dd className={factDescClass}>{selectedAsset.reuseDecision ? `${selectedAsset.reuseDecision.label} - ${selectedAsset.reuseDecision.summary}` : "Computed by TJC Stock Media policy"}</dd></div>
+              <div className={factItemClass}><dt className={factTermClass}>Pending write</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
               <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
             </dl>
             <section className="border-t border-tjc-line pt-3" aria-label="Review action area">
               <h3 className="text-sm font-semibold text-tjc-evergreen">Action area</h3>
-              <div className="mt-2 grid gap-2">
-                {reviewActions.map((action) => (
-                  <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer} onClick={() => runAction(selectedAsset.id, action)}>
-                    {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
-                    {action.label}
-                  </button>
+              <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
+                Review note
+                <textarea
+                  className="min-h-24 rounded-md border border-tjc-line bg-white p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
+                  value={reviewNote}
+                  onChange={(event) => setReviewNote(event.target.value)}
+                  placeholder="Record what was checked and why this action is appropriate..."
+                  rows={3}
+                />
+              </label>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Review checklist">
+                {checklistLabels.map(([field, label]) => (
+                  <label className="flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43]" key={field}>
+                    <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={checklist[field]} onChange={() => toggleChecklist(field)} />
+                    {label}
+                  </label>
                 ))}
+              </div>
+              <div className="mt-2 grid gap-2">
+                {reviewActions.map((action) => {
+                  const missing = missingEvidenceFor(action);
+                  return (
+                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={missing.length ? `Missing: ${missing.join(", ")}` : "Queue pending ResourceSpace write"} onClick={() => runAction(selectedAsset.id, action)}>
+                      {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
+                      {action.label}
+                    </button>
+                  );
+                })}
               </div>
             </section>
             {auditPreview ? (

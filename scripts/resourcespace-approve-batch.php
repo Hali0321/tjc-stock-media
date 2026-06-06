@@ -8,6 +8,12 @@ $reviewer = $argv[2] ?? "ResourceSpace admin";
 $review_date = $argv[3] ?? date("Y-m-d");
 $audit_path = $argv[4] ?? "/tmp/tjc-mvp-approval-audit.csv";
 $min_ref = (int) ($argv[5] ?? 363);
+$rights_status = $argv[6] ?? "Permission Confirmed";
+
+if (preg_match('/^(Approved Public|Approved Internal|Needs Review|Searchable Archive|Archive - Not Promoted|Do Not Use|Possible Minors)$/i', $rights_status)) {
+    fwrite(STDERR, "FAIL: rights_status must describe rights, not publish workflow state.\n");
+    exit(1);
+}
 
 function field_ref(string $shortname): int
 {
@@ -27,6 +33,8 @@ function field_ref(string $shortname): int
 $fields = [
     "import_batch" => field_ref("import_batch"),
     "rights_status" => field_ref("rights_status"),
+    "publish_status" => field_ref("publish_status"),
+    "workflow_state" => field_ref("workflow_state"),
     "public_safe" => field_ref("public_safe"),
     "usage_scope" => field_ref("usage_scope"),
     "reviewed_by" => field_ref("reviewed_by"),
@@ -59,6 +67,8 @@ fputcsv($handle, [
     "file_extension",
     "file_size",
     "rights_status",
+    "publish_status",
+    "workflow_state",
     "public_safe",
     "usage_scope",
     "reviewed_by",
@@ -73,7 +83,9 @@ foreach ($resources as $resource) {
     $ref = (int) $resource["ref"];
     $previous_archive = (int) $resource["archive"];
 
-    update_field($ref, $fields["rights_status"], "Approved Public");
+    update_field($ref, $fields["rights_status"], $rights_status);
+    update_field($ref, $fields["publish_status"], "Approved Public");
+    update_field($ref, $fields["workflow_state"], "Approved");
     update_field($ref, $fields["public_safe"], "Yes");
     update_field($ref, $fields["usage_scope"], "Public and Internal");
     update_field($ref, $fields["reviewed_by"], $reviewer);
@@ -91,7 +103,9 @@ foreach ($resources as $resource) {
         0,
         $resource["file_extension"],
         $resource["file_size"],
+        $rights_status,
         "Approved Public",
+        "Approved",
         "Yes",
         "Public and Internal",
         $reviewer,
@@ -106,6 +120,7 @@ fclose($handle);
 echo "Batch: {$batch}\n";
 echo "Reviewer: {$reviewer}\n";
 echo "Review date: {$review_date}\n";
+echo "Rights status: {$rights_status}\n";
 echo "Minimum resource ref: {$min_ref}\n";
 echo "Approved and published: {$approved}\n";
 echo "Audit: {$audit_path}\n";

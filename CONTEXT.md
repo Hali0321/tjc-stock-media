@@ -23,8 +23,11 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - **Quality status**: whether an asset is useful for stock media, such as `Hero Candidate`, `Useful`, `Context Only`, `Low Use`, or `Reject`.
 - **Rights status**: whether use rights are known, such as `Unknown`, `TJC-Owned`, `Permission Confirmed`, or `Rights Concern`.
 - **Publish status**: operational status for use, such as `Needs Review`, `Approved Public`, `Approved Internal`, `Archive - Not Promoted`, or `Do Not Use`.
-- **Approved Public**: safe for public TJC use.
+- **Approved Public**: raw ResourceSpace status indicating ResourceSpace approval. It is not automatically portal-reusable unless portal reuse policy also passes.
 - **Approved Internal**: safe inside TJC, not public.
+- **Portal Ready**: computed portal state where source, rights/consent, people/minors, reviewer/date, usage scope, and derivative checks all pass.
+- **Batch Approved With Blockers**: raw ResourceSpace-approved asset that still lacks one or more portal reuse requirements. User-facing label: `Needs portal review`.
+- **Pending Review Write**: local queued review decision that has not yet been written to ResourceSpace; audit evidence and retry state, not source of truth.
 - **Needs Review**: default state for imported assets.
 - **Do Not Publish**: default usage scope until reviewed.
 - **Exact duplicate**: same SHA-256 checksum. ResourceSpace should keep one canonical asset while preserving all source album memberships and source paths.

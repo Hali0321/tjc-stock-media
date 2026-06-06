@@ -119,6 +119,12 @@ else
   fail "large upload threshold missing"
 fi
 
+if grep -Eq 'update_field\(\$ref, \$fields\["rights_status"\], "(Approved Public|Approved Internal|Needs Review|Searchable Archive|Archive - Not Promoted|Do Not Use|Possible Minors)"\)' scripts/resourcespace-approve-batch.php; then
+  fail "approval script writes publish workflow state into rights_status"
+else
+  pass "approval script keeps rights_status separate from publish_status"
+fi
+
 echo
 echo "Launch readiness summary: failures=$failures warnings=$warnings"
 if [ "$failures" -gt 0 ]; then

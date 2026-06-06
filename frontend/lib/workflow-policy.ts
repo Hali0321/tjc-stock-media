@@ -1,4 +1,17 @@
 import type { StockMediaAsset } from "@/lib/types";
+import {
+  assetHasChildrenYouthRisk,
+  assetHasTaxonomyDrift,
+  assetIsDuplicateCandidate,
+  assetIsArchiveOnly,
+  assetIsApproved,
+  assetNeedsAiEnrichment,
+  assetNeedsReview,
+  assetNeedsRightsReview,
+  assetNeedsSourceReview,
+  assetNeedsStaleApprovalReview,
+  assetNeedsUsageGuidance
+} from "@/lib/asset-governance";
 
 export const LARGE_MEDIA_BYTES = 100 * 1024 * 1024;
 
@@ -29,66 +42,81 @@ export const reviewQueues = [
   { id: "internal-only", label: "Internal Only", description: "Useful but not public." },
   { id: "archive-candidates", label: "Archive Candidates", description: "Traceable, searchable, not promoted." },
   { id: "duplicate-candidates", label: "Duplicate Candidates", description: "Possible duplicate group or repeated source." },
+  { id: "ai-enrichment", label: "AI Enrichment", description: "Needs tags, dimensions, people check, or TJC terms." },
+  { id: "taxonomy-drift", label: "Taxonomy Drift", description: "Generic title or sparse controlled vocabulary." },
+  { id: "stale-approvals", label: "Stale Approvals", description: "Approved assets that should be rechecked." },
   { id: "large-media", label: "Large Media", description: "Video/audio or large file intake." }
 ] as const;
 
 export type ReviewQueueId = (typeof reviewQueues)[number]["id"];
 
-function rightsNeedReview(asset: StockMediaAsset) {
-  const rightsText = `${asset.rightsStatus || ""} ${asset.consentStatus || ""} ${asset.rightsNotes || ""}`.toLowerCase();
-  const approved = asset.status === "Approved Public" || asset.status === "Approved Internal";
-  if (approved && (asset.rightsNotes || /approved|clear|permission confirmed|tjc-owned/i.test(rightsText))) return false;
-  if (/rights unclear|unknown|concern|not confirmed|needs review|permission/i.test(rightsText)) return true;
-  if (asset.status === "Do Not Use" || asset.usageScope === "Do Not Use") return true;
-  return false;
+export function isReviewActionBackend(value: unknown): value is ReviewActionBackend {
+  return reviewActions.some((action) => action.backend === value);
 }
 
-export function assetMatchesReviewQueue(asset: StockMediaAsset, queueId: ReviewQueueId) {
-  const missingSource = !asset.sourcePath && !asset.sourceAccount && !asset.sourceSystem && !asset.resourceSpaceId;
-  const rightsUnclear = rightsNeedReview(asset);
+export function assetMatchesReviewQueue(asset: StockMediaAsset, queueId: ReviewQueueId, duplicateGroupCounts?: Map<string, number>) {
   const largeMedia = asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES;
 
   switch (queueId) {
     case "pending":
-      return asset.status === "Needs Review" || asset.status === "Possible Minors";
+      return assetNeedsReview(asset);
     case "children-youth":
-      return asset.peopleRisk === "Possible minors" || /minor|children|youth/i.test(asset.sensitiveContext || "");
+      return assetHasChildrenYouthRisk(asset);
     case "missing-source":
-      return missingSource;
+      return assetNeedsSourceReview(asset);
     case "rights-review":
-      return rightsUnclear;
+      return assetNeedsRightsReview(asset);
     case "usage-guidance":
-      return !asset.usageGuidance || /review before sharing|reviewer must approve/i.test(asset.usageGuidance);
+      return assetNeedsUsageGuidance(asset);
     case "internal-only":
       return asset.status === "Approved Internal" || asset.usageScope === "Internal";
     case "archive-candidates":
-      return asset.status === "Searchable Archive" || asset.usageScope === "Archive Only";
+      return assetIsArchiveOnly(asset);
     case "duplicate-candidates":
-      return Boolean(asset.duplicateGroup);
+      return assetIsDuplicateCandidate(asset, duplicateGroupCounts);
+    case "ai-enrichment":
+      return assetNeedsAiEnrichment(asset);
+    case "taxonomy-drift":
+      return assetHasTaxonomyDrift(asset);
+    case "stale-approvals":
+      return assetNeedsStaleApprovalReview(asset);
     case "large-media":
       return largeMedia;
   }
 }
 
-export function reviewRiskFlags(asset: StockMediaAsset) {
+function meaningfulMetadataValue(value?: string) {
+  return Boolean(value && !/^(unknown|not exported|not applicable|none|n\/a)$/i.test(value.trim()));
+}
+
+export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: Map<string, number>) {
   const flags: string[] = [];
-  if (asset.peopleRisk === "Possible minors") flags.push("Children/youth");
+  if (assetHasChildrenYouthRisk(asset)) flags.push("Children/youth");
   if (asset.peopleRisk === "Adults visible") flags.push("People visible");
-  if (!asset.sourcePath && !asset.sourceAccount && !asset.sourceSystem) flags.push("Missing source");
-  if (rightsNeedReview(asset)) flags.push("Rights unclear");
-  if (!asset.usageGuidance || /review before sharing|reviewer must approve/i.test(asset.usageGuidance)) flags.push("No usage guidance");
-  if (asset.duplicateGroup) flags.push("Possible duplicate");
+  if (!asset.peopleRisk || asset.peopleRisk === "Unknown") flags.push("People/minors unknown");
+  if (assetNeedsSourceReview(asset)) flags.push("Missing source");
+  if (assetNeedsRightsReview(asset)) flags.push("Rights unclear");
+  if (!meaningfulMetadataValue(asset.consentStatus)) flags.push("Consent unknown");
+  if (assetNeedsUsageGuidance(asset)) flags.push("No usage guidance");
+  if (assetIsDuplicateCandidate(asset, duplicateGroupCounts)) flags.push("Possible duplicate");
+  if (assetNeedsAiEnrichment(asset)) flags.push("AI enrichment");
+  if (assetHasTaxonomyDrift(asset)) flags.push("Taxonomy drift");
+  if (assetNeedsStaleApprovalReview(asset)) flags.push("Stale approval");
   if (asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES) flags.push("Large media");
-  if (asset.sensitiveContext) flags.push("Sensitive context");
+  if (meaningfulMetadataValue(asset.sensitiveContext)) flags.push("Sensitive context");
+  else if (asset.sensitiveContext === "Unknown") flags.push("Sensitivity unknown");
   return flags.length ? flags : ["Standard review"];
 }
 
 export function missingReviewFields(asset: StockMediaAsset) {
   const fields: string[] = [];
-  if (!asset.reviewer) fields.push("reviewer");
-  if (!asset.reviewedDate) fields.push("review date");
-  if (!asset.rightsNotes) fields.push("rights notes");
-  if (!asset.usageGuidance) fields.push("usage guidance");
-  if (!asset.sourcePath && !asset.sourceAccount && !asset.sourceSystem) fields.push("source");
+  if (assetIsApproved(asset) && !asset.reviewer) fields.push("reviewer");
+  if (assetIsApproved(asset) && !asset.reviewedDate) fields.push("review date");
+  if (!asset.peopleRisk || asset.peopleRisk === "Unknown") fields.push("people/minors");
+  if (!meaningfulMetadataValue(asset.consentStatus)) fields.push("consent");
+  if (assetNeedsRightsReview(asset) && !asset.rightsNotes) fields.push("rights notes");
+  if (assetNeedsUsageGuidance(asset)) fields.push("usage guidance");
+  if (assetNeedsSourceReview(asset)) fields.push("source");
+  if (assetNeedsAiEnrichment(asset) && (!asset.tags?.length || !asset.tjcTerms?.length)) fields.push("AI/taxonomy suggestions");
   return fields;
 }

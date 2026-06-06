@@ -2,11 +2,13 @@
 
 import { Download, FileLock2, Image as ImageIcon, Mail, Square, View } from "lucide-react";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
+import { assetMetadataHealth } from "@/lib/asset-governance";
 import { downloadState } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
 
 export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
   const state = downloadState(asset, role);
+  const health = assetMetadataHealth(asset);
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const options = [
     { label: "Web image", detail: "Good for website articles and newsletters.", icon: ImageIcon, available: state.approvedCopy.allowed },
@@ -15,18 +17,30 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   ];
 
   return (
-    <section className="rounded-lg border border-tjc-line bg-white/82 p-4 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Download approved copy">
+    <section className="min-w-0 rounded-lg border border-tjc-line bg-white/82 p-4 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Download approved copy">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold tracking-[-.01em]">Reuse safely</h2>
+        <h2 className="text-lg font-semibold">Reuse safely</h2>
         <p className="mt-1 text-sm leading-snug text-tjc-muted">{state.panelLabel}</p>
       </div>
+      {state.approvedCopy.allowed && health.missing.length ? (
+        <div className="mb-3 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm leading-snug text-[#725216]">
+          Download is allowed by approval status, but production use still has metadata warnings: {health.missing.join(", ")}.
+        </div>
+      ) : null}
+      {!state.approvedCopy.allowed && state.reuse.blockers.length ? (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {state.reuse.blockers.slice(0, 5).map((blocker) => (
+            <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-xs font-semibold text-[#725216]" key={blocker.code}>{blocker.label}</span>
+          ))}
+        </div>
+      ) : null}
       <div className="grid gap-2">
         {options.map((option, index) => {
           const Icon = option.icon;
           const row = (
             <>
               <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-              <span className="grid gap-0.5">
+              <span className="grid min-w-0 gap-0.5">
                 <strong className="font-semibold">{option.label}</strong>
                 <small className="text-sm leading-snug">{index === 0 && !state.approvedCopy.allowed ? state.panelLabel : option.detail}</small>
               </span>
@@ -34,11 +48,11 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             </>
           );
           return option.available ? (
-            <a key={option.label} className="grid min-h-[4.7rem] grid-cols-[auto_1fr_auto] items-start gap-3 rounded-lg border border-[#acd2be] bg-[#edf8f1] p-3 text-[#24583d] transition hover:bg-[#e4f4eb] active:translate-y-px" href={downloadHref}>
+            <a key={option.label} className="grid min-h-[4.7rem] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-[#acd2be] bg-[#edf8f1] p-3 text-[#24583d] transition hover:bg-[#e4f4eb] active:translate-y-px" href={downloadHref}>
               {row}
             </a>
           ) : (
-            <button key={option.label} className={cn("grid min-h-[4.7rem] grid-cols-[auto_1fr_auto] items-start gap-3 rounded-lg border border-tjc-line bg-white/72 p-3 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#ead6a8] bg-[#fff8e8] text-[#73531a]")} type="button" disabled>
+            <button key={option.label} className={cn("grid min-h-[4.7rem] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-tjc-line bg-white/72 p-3 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#ead6a8] bg-[#fff8e8] text-[#73531a]")} type="button" disabled>
               {row}
             </button>
           );
@@ -52,11 +66,15 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
         </div>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-        <a className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(asset.title)}`}>
+        <a className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(asset.title)}`}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request original access
         </a>
-        <a className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="mailto:media@tjc.org?subject=TJC Stock Media asset question">
+        <a className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(asset.title)}&body=ResourceSpace ID: ${encodeURIComponent(asset.resourceSpaceId || asset.id)}%0AReason:%20`}>
+          <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
+          Request review
+        </a>
+        <a className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="mailto:media@tjc.org?subject=TJC Stock Media asset question">
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Ask media coworker
         </a>

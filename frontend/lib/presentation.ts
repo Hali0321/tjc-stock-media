@@ -1,19 +1,63 @@
 import { decideAccess } from "@/lib/access-decisions";
+import { assetNeedsRightsReview } from "@/lib/asset-governance";
 import { normalizeAssetTitle, usageLabel, shortStatusLabel } from "@/lib/display";
 import { statusToUserLabel, usageScopeToUserLabel } from "@/lib/resourcespace-schema";
+import { buildReuseDecision, canPreviewAsset, metadataConfidence } from "@/lib/reuse-policy";
 import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
-export function cardImageUrl(asset: StockMediaAsset) {
-  return asset.imageUrls?.card || asset.preview || asset.thumbnail;
+export function imageUrlForRole(url: string | undefined, role?: DemoRole) {
+  if (!url || !role) return url;
+  const hashIndex = url.indexOf("#");
+  const base = hashIndex === -1 ? url : url.slice(0, hashIndex);
+  const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
+  const [pathname, query = ""] = base.split("?");
+  const params = new URLSearchParams(query);
+  params.set("role", role);
+  return `${pathname}?${params.toString()}${hash}`;
 }
 
-export function collectionImageUrl(asset: StockMediaAsset) {
-  return asset.imageUrls?.collection || asset.preview || asset.thumbnail;
+export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
+  const reuseDecision = buildReuseDecision(asset);
+  if (!canPreviewAsset(asset, role)) {
+    return {
+      ...asset,
+      reuseDecision,
+      thumbnail: "",
+      preview: undefined,
+      imageUrls: undefined
+    };
+  }
+  return {
+    ...asset,
+    reuseDecision,
+    thumbnail: imageUrlForRole(asset.thumbnail, role) || asset.thumbnail,
+    preview: imageUrlForRole(asset.preview, role),
+    imageUrls: asset.imageUrls
+      ? {
+          small: imageUrlForRole(asset.imageUrls.small, role) || asset.imageUrls.small,
+          card: imageUrlForRole(asset.imageUrls.card, role) || asset.imageUrls.card,
+          collection: imageUrlForRole(asset.imageUrls.collection, role) || asset.imageUrls.collection,
+          detail: imageUrlForRole(asset.imageUrls.detail, role) || asset.imageUrls.detail,
+          download: imageUrlForRole(asset.imageUrls.download, role) || asset.imageUrls.download
+        }
+      : undefined
+  };
 }
 
-export function detailImageUrl(asset: StockMediaAsset) {
-  return asset.imageUrls?.detail || asset.preview || asset.thumbnail;
+export function cardImageUrl(asset: StockMediaAsset, role?: DemoRole) {
+  if (role && !canPreviewAsset(asset, role)) return undefined;
+  return imageUrlForRole(asset.imageUrls?.card || asset.preview || asset.thumbnail, role);
+}
+
+export function collectionImageUrl(asset: StockMediaAsset, role?: DemoRole) {
+  if (role && !canPreviewAsset(asset, role)) return undefined;
+  return imageUrlForRole(asset.imageUrls?.collection || asset.preview || asset.thumbnail, role);
+}
+
+export function detailImageUrl(asset: StockMediaAsset, role?: DemoRole) {
+  if (role && !canPreviewAsset(asset, role)) return undefined;
+  return imageUrlForRole(asset.imageUrls?.detail || asset.preview || asset.thumbnail, role);
 }
 
 export function assetDisplayTitle(asset: StockMediaAsset) {
@@ -35,11 +79,13 @@ export function provenanceSummary(asset: StockMediaAsset, role: DemoRole) {
 export function downloadState(asset: StockMediaAsset, role: DemoRole) {
   const approved = decideAccess(role, "downloadApprovedCopy", asset);
   const original = decideAccess(role, "downloadOriginal", asset);
+  const reuse = buildReuseDecision(asset);
   return {
     approvedCopy: approved,
     originalMaster: original,
     cardLabel: approved.allowed ? "copy" : "blocked",
-    panelLabel: approved.allowed ? approved.label || "Download approved copy" : approved.reason || "Not downloadable yet."
+    panelLabel: approved.allowed ? approved.label || "Download approved web copy" : approved.reason || reuse.summary || "Not downloadable yet.",
+    reuse
   };
 }
 
@@ -68,7 +114,9 @@ export function guidanceFacts(asset: StockMediaAsset, role: DemoRole) {
       value:
         asset.peopleRisk === "Possible minors"
           ? "Review before public sharing if children/youth are visible."
-          : asset.sensitiveContext || "Use respectfully and keep ministry context intact."
+          : unknownReviewCopy(asset.sensitiveContext) === "Unknown - reviewer should confirm before public use"
+            ? "Unknown - reviewer should confirm ministry sensitivity before public use."
+            : asset.sensitiveContext || "Use respectfully and keep ministry context intact."
     }
   ];
 }
@@ -79,48 +127,48 @@ function unknownReviewCopy(value?: string) {
 }
 
 export function confidenceStates(asset: StockMediaAsset) {
-  const sourceKnown = Boolean(asset.sourcePath || asset.sourceAccount || asset.sourceSystem || asset.resourceSpaceId);
-  const peopleKnown = Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown");
-  const rightsText = `${asset.rightsStatus || ""} ${asset.rightsNotes || ""} ${asset.consentStatus || ""}`.toLowerCase();
-  const approved = asset.status === "Approved Public" || asset.status === "Approved Internal";
-  const rightsApproved = approved && (/approved|permission confirmed|tjc-owned|clear/i.test(rightsText) || Boolean(asset.rightsNotes));
-  const rightsNeedsReview = /unknown|unclear|concern|not confirmed|needs review|permission/i.test(rightsText) && !rightsApproved;
-  const usageMissing = !asset.usageGuidance || /review before sharing|reviewer must approve/i.test(asset.usageGuidance);
+  const confidence = metadataConfidence(asset);
 
   return [
     {
       key: "source",
       label: "Source",
-      state: sourceKnown ? "Source verified" : "Source missing",
-      tone: sourceKnown ? "ok" : "warn"
+      state: confidence.source === "verified" ? "Source verified" : "Source missing",
+      tone: confidence.source === "verified" ? "ok" : "warn"
     },
     {
       key: "people",
       label: "People/minors",
-      state: peopleKnown
-        ? asset.peopleRisk === "Possible minors"
+      state:
+        confidence.peopleMinors === "children_youth_possible"
           ? "Children/youth possible"
-          : "People/minors reviewed"
-        : "People/minors unknown",
-      tone: asset.peopleRisk === "Possible minors" || !peopleKnown ? "warn" : "ok"
+          : confidence.peopleMinors === "reviewed"
+            ? "People/minors reviewed"
+            : "Unknown - reviewer should confirm before public use",
+      tone: confidence.peopleMinors === "reviewed" ? "ok" : "warn"
     },
     {
       key: "rights",
       label: "Rights",
-      state: rightsApproved ? "Rights approved" : rightsNeedsReview ? "Rights review required" : "Rights unknown",
-      tone: rightsApproved ? "ok" : "warn"
+      state:
+        confidence.rights === "approved"
+          ? "Rights approved"
+          : confidence.rights === "review_required"
+            ? "Rights review required"
+            : "Unknown - reviewer should confirm before public use",
+      tone: confidence.rights === "approved" ? "ok" : "warn"
     },
     {
       key: "usage",
       label: "Usage",
-      state: usageMissing ? "Usage guidance missing" : "Usage guidance present",
-      tone: usageMissing ? "warn" : "ok"
+      state: confidence.usageGuidance === "present" ? "Usage guidance present" : "Usage guidance missing",
+      tone: confidence.usageGuidance === "present" ? "ok" : "warn"
     },
     {
       key: "review",
       label: "Review",
-      state: asset.reviewer && asset.reviewedDate ? "Review complete" : "Review pending",
-      tone: asset.reviewer && asset.reviewedDate ? "ok" : "warn"
+      state: confidence.review === "complete" ? "Review complete" : "Review pending",
+      tone: confidence.review === "complete" ? "ok" : "warn"
     }
   ] as const;
 }
@@ -136,13 +184,15 @@ function bestUseCopy(asset: StockMediaAsset) {
 
 export function trustFacts(asset: StockMediaAsset, role: DemoRole) {
   const provenance = provenanceSummary(asset, role);
+  const reuse = buildReuseDecision(asset);
   return [
-    { label: "Approval", value: statusToUserLabel(asset.status) },
+    { label: "ResourceSpace status", value: statusToUserLabel(asset.status) },
+    { label: "Portal reuse state", value: `${reuse.label} - ${reuse.summary}` },
     { label: "Usage scope", value: usageScopeToUserLabel(asset.usageScope) },
     { label: "Source / provenance", value: provenance.publicLabel },
     { label: "Reviewer", value: asset.reviewer && asset.reviewedDate ? `${asset.reviewer} - ${asset.reviewedDate}` : "Review pending" },
     { label: "People/minors", value: unknownReviewCopy(asset.peopleRisk) },
-    { label: "Rights", value: unknownReviewCopy(asset.rightsStatus || asset.rightsNotes || "Rights review pending") }
+    { label: "Rights", value: assetNeedsRightsReview(asset) ? "Unknown - reviewer should confirm before public use" : unknownReviewCopy(asset.rightsStatus || asset.rightsNotes || "Rights review pending") }
   ];
 }
 
@@ -169,8 +219,8 @@ export function assetPresentation(asset: StockMediaAsset, role: DemoRole) {
     usage: usageLabel(asset.usageScope),
     cardSubtitle: asset.eventName || asset.collection,
     quickLabel: quickTerms[0] || asset.peopleRisk || asset.mediaType,
-    image: cardImageUrl(asset),
-    detailImage: detailImageUrl(asset),
+    image: cardImageUrl(asset, role),
+    detailImage: detailImageUrl(asset, role),
     download: downloadState(asset, role),
     trustFacts: trustFacts(asset, role),
     confidence: confidenceStates(asset),

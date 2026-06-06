@@ -35,9 +35,9 @@ export function normalizeAssetTitle(rawTitle: string, originalFilename?: string,
 export function shortStatusLabel(status: StockMediaAsset["status"]) {
   switch (status) {
     case "Approved Public":
-      return "Approved";
+      return "RS approved";
     case "Approved Internal":
-      return "Internal";
+      return "RS internal";
     case "Needs Review":
       return "Needs review";
     case "Searchable Archive":

@@ -10,8 +10,8 @@ const mediaExtensions = {
 };
 
 const statusLabels: Record<PublishStatus, string> = {
-  "Approved Public": "Approved for church-wide use",
-  "Approved Internal": "Internal ministry use only",
+  "Approved Public": "ResourceSpace Approved Public",
+  "Approved Internal": "ResourceSpace Approved Internal",
   "Needs Review": "Please review before public sharing",
   "Searchable Archive": "Archive only",
   "Do Not Use": "Do not publish externally",
@@ -144,6 +144,15 @@ function normalizeMediaType(row: ResourceSpaceRecord): StockMediaAsset["mediaTyp
   return "photo";
 }
 
+function normalizeRightsStatus(row: ResourceSpaceRecord) {
+  const raw = value(row, "rights_status");
+  if (!raw) return undefined;
+  if (/^(approved public|approved internal|needs review|searchable archive|archive - not promoted|do not use|possible minors)$/i.test(raw)) {
+    return undefined;
+  }
+  return raw;
+}
+
 function normalizeDownloadPolicy(status: PublishStatus): StockMediaAsset["downloadPolicy"] {
   if (status === "Approved Public") return "approved-copy-allowed";
   if (status === "Approved Internal") return "internal-approved-copy-allowed";
@@ -207,13 +216,14 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     capturedDate: value(row, "captured_date") || undefined,
     importDate: value(row, "import_date") || undefined,
     imageDimensions: value(row, "image_dimensions") || undefined,
-    rightsStatus: value(row, "rights_status") || undefined,
+    rightsStatus: normalizeRightsStatus(row),
     workflowState: value(row, "workflow_state") || undefined,
     qualityStatus: value(row, "quality_status") || undefined,
     sensitiveContext: value(row, "sensitive_context") || undefined,
     consentStatus: value(row, "consent_status") || undefined,
     usageTerms: splitResourceSpaceList(value(row, "usage_terms")),
     duplicateGroup: value(row, "duplicate_group") || undefined,
+    duplicateRole: value(row, "duplicate_role") || undefined,
     checksumSha256,
     reviewer: value(row, "reviewed_by") || undefined,
     reviewedDate: value(row, "reviewed_date") || undefined,

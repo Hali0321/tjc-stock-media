@@ -2,8 +2,8 @@ import type { StockMediaAsset } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
 const statusLabels: Record<StockMediaAsset["status"], string> = {
-  "Approved Public": "Approved for church-wide use",
-  "Approved Internal": "Internal ministry use only",
+  "Approved Public": "ResourceSpace Approved Public",
+  "Approved Internal": "ResourceSpace Approved Internal",
   "Needs Review": "Please review before public sharing",
   "Searchable Archive": "Archive only",
   "Do Not Use": "Do not publish externally",
