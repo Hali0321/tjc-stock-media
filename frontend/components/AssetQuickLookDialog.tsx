@@ -66,14 +66,14 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
     <div className="fixed inset-0 z-50 grid place-items-center bg-[#07100d]/42 p-3 backdrop-blur-[5px]" role="presentation" onMouseDown={onClose}>
       <section
         ref={dialogRef}
-        className="grid max-h-[92dvh] w-full max-w-6xl overflow-hidden rounded-[1.2rem] border border-[#9fb4a8] bg-[#fbfdfb] shadow-[0_34px_110px_rgba(7,16,13,.36),0_1px_0_rgba(255,255,255,.95)_inset] lg:grid-cols-[minmax(0,1.25fr)_24rem]"
+        className="grid max-h-[92dvh] w-full max-w-6xl overflow-hidden rounded-lg border border-[#9fb4a8] bg-white shadow-[0_24px_80px_rgba(7,16,13,.24)] lg:grid-cols-[minmax(0,1.25fr)_24rem]"
         role="dialog"
         aria-modal="true"
         aria-labelledby={`quick-look-${asset.id}-title`}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="min-h-0 overflow-y-auto bg-[#111a17] p-3">
-          <div className="relative aspect-[4/3] min-h-64 overflow-hidden rounded-2xl border border-white/10 bg-[#19231f] shadow-[0_18px_60px_rgba(0,0,0,.24)]">
+        <div className="min-h-0 overflow-y-auto bg-white p-3">
+          <div className="relative aspect-[4/3] min-h-64 overflow-hidden rounded-lg border border-[#d6dfd8] bg-[#eef1ed]">
             <MediaPreview
               src={preview}
               alt={asset.thumbnailAlt}
@@ -84,10 +84,10 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
               loading="eager"
             />
           </div>
-          <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-white/7 p-3 text-white">
-            <span className="text-xs font-black uppercase tracking-[.08em] text-white/58">Quick look</span>
+          <div className="mt-3 grid gap-2 border-t border-[#d6dfd8] pt-3 text-tjc-ink">
+            <span className="text-xs font-black uppercase tracking-[.06em] text-tjc-muted">Quick look</span>
             <h2 id={`quick-look-${asset.id}-title`} className="text-2xl font-black leading-tight">{display.title}</h2>
-            <p className="text-sm font-semibold leading-relaxed text-white/62">{display.cardSubtitle}</p>
+            <p className="text-sm font-semibold leading-relaxed text-tjc-muted">{display.cardSubtitle}</p>
           </div>
         </div>
 
@@ -120,7 +120,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
               Download approved copy
             </a>
           ) : (
-            <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#dfbd73] bg-[linear-gradient(180deg,#fff9ea,#fff1cf)] p-3 text-[#6f4608]">
+            <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#6f4608]">
               <FileLock2 size={18} strokeWidth={1.9} aria-hidden="true" />
               <span>
                 <strong className="block text-sm font-black">Download blocked</strong>
@@ -129,31 +129,31 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
             </div>
           )}
 
-          <Link className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`}>
+          <Link className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-tjc-line bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`}>
             <ExternalLink size={16} strokeWidth={1.9} aria-hidden="true" />
             Open trust record
           </Link>
 
           <dl className="mt-4 grid gap-3">
-            <div className="rounded-2xl border border-tjc-line bg-white p-3">
+            <div className="rounded-lg border border-tjc-line bg-white p-3">
               <dt className="text-xs font-black uppercase tracking-[.06em] text-tjc-evergreen">Source</dt>
               <dd className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{source.publicLabel || "Source pending"}</dd>
             </div>
-            <div className="rounded-2xl border border-tjc-line bg-white p-3">
+            <div className="rounded-lg border border-tjc-line bg-white p-3">
               <dt className="text-xs font-black uppercase tracking-[.06em] text-tjc-evergreen">Review</dt>
               <dd className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{display.reviewFacts.reviewLine}</dd>
             </div>
           </dl>
 
           {state.reuse.blockers.length ? (
-            <div className="mt-4 rounded-2xl border border-[#dfbd73] bg-[#fff8e8] p-3 text-[#725216]">
+            <div className="mt-4 rounded-lg border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#725216]">
               <div className="flex items-start gap-2">
                 <ShieldAlert size={18} strokeWidth={1.9} aria-hidden="true" className="mt-0.5 shrink-0" />
                 <div>
                   <strong className="block text-sm font-black">Reuse blockers</strong>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {state.reuse.blockers.slice(0, 5).map((blocker) => (
-                      <span key={blocker.code} className="rounded-full border border-[#e9c779] bg-white px-2 py-1 text-xs font-black">
+                      <span key={blocker.code} className="rounded-md border border-[#e9c779] bg-white px-2 py-1 text-xs font-black">
                         {blocker.label}
                       </span>
                     ))}
@@ -165,7 +165,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
 
           <div className="mt-4 grid gap-2" aria-label="Metadata confidence">
             {confidenceStates(asset).map((item) => (
-              <div key={item.key} className={cn("flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-sm font-black", item.tone === "ok" ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff7e5] text-[#725216]")}>
+              <div key={item.key} className={cn("flex items-center justify-between gap-2 border-b border-[#d6dfd8] px-1 py-2 text-sm font-black", item.tone === "ok" ? "text-[#22563a]" : "text-[#725216]")}>
                 <span>{item.label}</span>
                 <span className="text-right text-xs">{item.state}</span>
               </div>

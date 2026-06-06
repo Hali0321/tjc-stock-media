@@ -36,12 +36,22 @@ function pillarIcon(pillar: DamReadinessItem["pillar"]) {
 
 function MetricTile({ label, value }: { label: string; value?: number }) {
   return (
-    <div className="grid min-h-20 content-center dam-card p-3">
-      <strong className="text-xl font-semibold tabular-nums text-tjc-ink">{(value ?? 0).toLocaleString()}</strong>
-      <span className="mt-1 text-xs font-medium leading-tight text-tjc-muted">{label}</span>
+    <div className="min-w-0 border-r border-[#d6dfd8] px-3 py-2 last:border-r-0">
+      <strong className="block text-lg font-black tabular-nums text-tjc-ink">{(value ?? 0).toLocaleString()}</strong>
+      <span className="mt-0.5 block truncate text-xs font-semibold leading-tight text-tjc-muted">{label}</span>
     </div>
   );
 }
+
+const adminNav = [
+  { label: "Overview", href: "#overview", icon: Gauge },
+  { label: "Launch gate", href: "#launch-gate", icon: Lock },
+  { label: "Pillars", href: "#pillars", icon: Layers },
+  { label: "Backlog", href: "#backlog", icon: ListChecks },
+  { label: "Mappings", href: "#mappings", icon: Database },
+  { label: "Vocabulary", href: "#vocabulary", icon: Tags },
+  { label: "Portal gate", href: "#portal-gate", icon: Share2 }
+];
 
 function AdminLoadingState() {
   return (
@@ -122,6 +132,32 @@ export function AdminPage() {
   const writeMapping = data.integrationReadiness.find((item) => item.id === "review-writes");
   const pendingQueue = data.integrationReadiness.find((item) => item.id === "pending-review-writes");
   const requiredFieldRefsPresent = requiredFields.filter((field) => field.resourceSpaceField && field.coverage > 0).length;
+  const launchDecisions = [
+    {
+      question: "Can we read ResourceSpace?",
+      answer: readBridge?.ready ? "yes" : "blocked",
+      detail: readBridge?.detail || "Read bridge unavailable.",
+      tone: readBridge?.ready ? "ok" : "warn"
+    },
+    {
+      question: "Can we write ResourceSpace?",
+      answer: writeMapping?.ready ? "yes" : "blocked",
+      detail: writeMapping?.detail || "Write mapping unavailable.",
+      tone: writeMapping?.ready ? "ok" : "warn"
+    },
+    {
+      question: "Can users safely download?",
+      answer: data.metrics.portalReady > 0 ? `${data.metrics.portalReady.toLocaleString()} portal ready` : "blocked",
+      detail: `${data.metrics.needsReview.toLocaleString()} assets still need review; unsafe downloads remain blocked.`,
+      tone: data.metrics.portalReady > 0 ? "ok" : "warn"
+    },
+    {
+      question: "Can we launch beyond demo?",
+      answer: data.score >= 80 ? "yes" : "not yet",
+      detail: `Readiness score ${data.score}%; pending queue: ${pendingQueue?.detail || "none"}.`,
+      tone: data.score >= 80 ? "ok" : "info"
+    }
+  ] as const;
 
   function exportReadinessCsv() {
     if (!data) return;
@@ -142,28 +178,60 @@ export function AdminPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
-      <section className="dam-workbench grid gap-4 p-3 md:p-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <div>
-          <span className="text-sm font-semibold text-tjc-evergreen">DAM Admin</span>
-          <h1 className="mt-2 text-3xl font-semibold md:text-4xl">Production readiness</h1>
-          <p className="mt-2 max-w-[78ch] text-base leading-relaxed text-tjc-muted">Command center for find, trust, review, share, and govern quality across the ResourceSpace-backed archive.</p>
-        </div>
-        <div className={cn("grid content-center rounded-2xl border p-4 shadow-[0_18px_44px_rgba(49,60,52,.08)]", toneClass(scoreTone(data.score)))}>
-          <div className="flex items-center gap-2">
-            <Gauge size={20} strokeWidth={1.8} aria-hidden="true" />
-            <span className="text-sm font-semibold">Readiness score</span>
+    <div className="mx-auto grid w-full max-w-[1760px] gap-5 px-3 py-5 md:px-5 xl:grid-cols-[14rem_minmax(0,1fr)]">
+      <aside className="hidden xl:block">
+        <div className="sticky top-24 grid gap-1 border-r border-[#d6dfd8] pr-3">
+          <span className="px-3 pb-2 text-xs font-black uppercase text-tjc-muted">Admin</span>
+          {adminNav.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" href={item.href} key={item.href}>
+                <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
+                {item.label}
+              </a>
+            );
+          })}
+          <div className="mt-6 border-t border-[#d6dfd8] px-3 pt-4 text-xs leading-relaxed text-tjc-muted">
+            <strong className="block text-tjc-evergreen">Data source</strong>
+            ResourceSpace export
           </div>
-          <strong className="mt-2 text-4xl font-semibold tabular-nums">{data.score}%</strong>
-          <span className="mt-1 text-sm">{data.assetCount.toLocaleString()} assets checked from {data.source.label}</span>
-          <button className="mt-3 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-current bg-white/55 px-3 text-sm font-semibold transition hover:bg-white/80" type="button" onClick={exportReadinessCsv}>
+        </div>
+      </aside>
+
+      <main className="min-w-0">
+      <section id="overview" className="scroll-mt-24 grid gap-4 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
+        <div>
+          <span className="text-sm font-black text-tjc-evergreen">DAM Admin</span>
+          <h1 className="mt-2 text-3xl font-black text-tjc-ink md:text-4xl">Production readiness</h1>
+          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Operational truth for ResourceSpace read/write status, download safety, launch blockers, and field coverage.</p>
+        </div>
+        <div className="grid content-center gap-3 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
+              <Gauge size={19} strokeWidth={1.8} aria-hidden="true" />
+              Readiness score
+            </div>
+            <strong className="mt-1 block text-4xl font-black tabular-nums text-tjc-ink">{data.score}%</strong>
+            <span className="mt-1 block text-sm font-semibold text-tjc-muted">{data.assetCount.toLocaleString()} assets checked from {data.source.label}</span>
+          </div>
+          <button className="inline-flex min-h-9 w-fit items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportReadinessCsv}>
             <Download size={15} strokeWidth={1.8} aria-hidden="true" />
             Export report
           </button>
         </div>
       </section>
 
-      <section className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#d7dfd5] bg-[#f8fbf7] p-2 md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
+      <section id="launch-gate" className="mt-4 scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white" aria-label="Launch decisions">
+        {launchDecisions.map((decision) => (
+          <div className="grid gap-2 border-b border-[#d6dfd8] px-3 py-3 last:border-b-0 md:grid-cols-[15rem_8rem_minmax(0,1fr)]" key={decision.question}>
+            <strong className="text-sm text-tjc-ink">{decision.question}</strong>
+            <span className={cn("w-fit rounded border px-2 py-0.5 text-xs font-semibold", toneClass(decision.tone))}>{decision.answer}</span>
+            <span className="text-sm leading-relaxed text-tjc-muted">{decision.detail}</span>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-4 grid grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
         <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
         <MetricTile label="Portal ready" value={data.metrics.portalReady} />
         <MetricTile label="Needs review" value={data.metrics.needsReview} />
@@ -176,7 +244,7 @@ export function AdminPage() {
         <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
       </section>
 
-      <section className="mt-4 grid gap-2 dam-lift p-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
+      <section className="mt-4 grid gap-5 border-y border-[#d6dfd8] py-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
         <div>
           <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{data.source.label}</strong>
@@ -199,40 +267,44 @@ export function AdminPage() {
         </div>
       </section>
 
-      <section className="mt-4 grid gap-3 lg:grid-cols-5" aria-label="Production DAM pillars">
+      <section id="pillars" className="mt-4 scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white" aria-label="Production DAM pillars">
         {data.readiness.map((item) => {
           const Icon = pillarIcon(item.pillar);
           return (
-            <article className="dam-lift p-3" key={item.id}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
+            <article className="grid gap-3 border-b border-[#d6dfd8] px-3 py-3 last:border-b-0 md:grid-cols-[12rem_minmax(0,1fr)_10rem]" key={item.id}>
+              <div className="flex items-center gap-2">
                   <Icon size={17} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
                   <span className="text-sm font-semibold text-tjc-evergreen">{item.pillar}</span>
-                </div>
-                <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold tabular-nums", toneClass(item.tone))}>{item.score}%</span>
               </div>
-              <h2 className="mt-3 text-lg font-semibold">{item.label}</h2>
-              <p className="mt-1 text-sm leading-relaxed text-tjc-muted">{item.detail}</p>
-              <p className="mt-3 text-sm font-semibold text-[#3f4a43]">{item.action}</p>
-              {item.savedViewId ? (
-                <Link className="mt-3 inline-flex min-h-9 items-center rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/?view=${encodeURIComponent(item.savedViewId)}`}>
-                  Open queue
-                </Link>
-              ) : null}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-black text-tjc-ink">{item.label}</h2>
+                  <span className={cn("rounded border px-2 py-0.5 text-xs font-semibold tabular-nums", toneClass(item.tone))}>{item.score}%</span>
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-tjc-muted">{item.detail}</p>
+                <p className="mt-2 text-sm font-semibold text-[#3f4a43]">{item.action}</p>
+              </div>
+              <div className="self-center md:justify-self-end">
+                {item.savedViewId ? (
+                  <Link className="inline-flex min-h-9 items-center rounded-lg border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/?view=${encodeURIComponent(item.savedViewId)}`}>
+                    Open queue
+                  </Link>
+                ) : null}
+              </div>
             </article>
           );
         })}
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]" aria-label="Admin work plan">
-        <section className="dam-lift p-4">
+      <section id="backlog" className="mt-4 scroll-mt-24 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]" aria-label="Admin work plan">
+        <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><ListChecks size={18} strokeWidth={1.8} aria-hidden="true" /> Action backlog</h2>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             {data.actionBacklog.map((item) => (
               <Link
                 key={item.id}
                 href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-                className="grid gap-3 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 transition hover:-translate-y-0.5 hover:border-[#9fb8ae] hover:bg-[#f4f8f5] hover:shadow-[0_14px_34px_rgba(49,60,52,.07)]"
+                className="grid gap-2 border-b border-[#d6dfd8] py-3 transition last:border-b-0 hover:bg-[#f8fbf8]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -247,11 +319,11 @@ export function AdminPage() {
           </div>
         </section>
 
-        <section className="dam-lift p-4">
+        <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Lock size={18} strokeWidth={1.8} aria-hidden="true" /> Integration readiness</h2>
           <div className="mt-3 grid gap-2">
             {data.integrationReadiness.map((item) => (
-              <div className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3" key={item.id}>
+              <div className="grid gap-2 border-b border-[#d6dfd8] py-3 last:border-b-0" key={item.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <strong className="text-sm font-semibold text-tjc-ink">{item.label}</strong>
@@ -267,7 +339,7 @@ export function AdminPage() {
       </section>
 
       <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]">
-        <section className="dam-lift p-4" aria-label="ResourceSpace field mapping">
+        <section id="mappings" className="scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="ResourceSpace field mapping">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-xl font-semibold"><Database size={18} strokeWidth={1.8} aria-hidden="true" /> Field mapping coverage</h2>
@@ -276,9 +348,9 @@ export function AdminPage() {
           </div>
           <div className="grid gap-2">
             {requiredFields.map((field) => (
-              <div className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,.7fr)_minmax(12rem,.8fr)_minmax(10rem,1fr)_5rem]" key={field.key}>
+              <div className="grid gap-2 border-b border-[#d6dfd8] py-3 last:border-b-0 md:grid-cols-[minmax(10rem,.7fr)_minmax(12rem,.8fr)_minmax(10rem,1fr)_5rem]" key={field.key}>
                 <strong className="text-sm text-tjc-ink">{field.label}</strong>
-                <code className="truncate rounded bg-white px-2 py-1 text-xs text-tjc-muted">{field.resourceSpaceField}</code>
+                <code className="truncate text-xs text-tjc-muted">{field.resourceSpaceField}</code>
                 <span className="h-2 self-center overflow-hidden rounded-full bg-[#e2e8df]">
                   <span className="block h-full rounded-full bg-tjc-evergreen" style={{ width: `${field.coverage}%` }} />
                 </span>
@@ -286,13 +358,13 @@ export function AdminPage() {
               </div>
             ))}
           </div>
-          <details className="mt-3 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3">
+          <details className="mt-3 border-t border-[#d6dfd8] pt-3">
             <summary className="cursor-pointer text-sm font-semibold text-tjc-evergreen">Optional fields</summary>
             <div className="mt-3 grid gap-2">
               {optionalFields.map((field) => (
                 <div className="grid gap-2 text-sm md:grid-cols-[minmax(10rem,.7fr)_minmax(12rem,.8fr)_5rem]" key={field.key}>
                   <span className="font-semibold text-tjc-ink">{field.label}</span>
-                  <code className="truncate rounded bg-white px-2 py-1 text-xs text-tjc-muted">{field.resourceSpaceField}</code>
+                  <code className="truncate text-xs text-tjc-muted">{field.resourceSpaceField}</code>
                   <span className="text-right font-semibold tabular-nums">{field.coverage}%</span>
                 </div>
               ))}
@@ -300,43 +372,48 @@ export function AdminPage() {
           </details>
         </section>
 
-        <section className="dam-lift p-4" aria-label="Controlled vocabulary">
+        <section id="vocabulary" className="scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="Controlled vocabulary">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Tags size={18} strokeWidth={1.8} aria-hidden="true" /> Vocabulary control</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 divide-y divide-[#d6dfd8]">
             {data.vocabulary.map((term) => (
               <span
                 className={cn(
-                  "rounded-md border px-2.5 py-1 text-xs font-semibold",
-                  term.kind === "canonical" && "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]",
-                  term.kind === "candidate" && "border-[#c8d7e6] bg-[#f2f7fb] text-[#27435b]",
-                  term.kind === "drift" && "border-[#ead6a8] bg-[#fff7e5] text-[#725216]"
+                  "grid grid-cols-[1fr_auto] gap-3 py-2 text-sm",
+                  term.kind === "canonical" && "text-[#22563a]",
+                  term.kind === "candidate" && "text-[#27435b]",
+                  term.kind === "drift" && "text-[#725216]"
                 )}
                 key={`${term.kind}-${term.term}`}
                 title={term.kind}
               >
-                {term.term} · {term.count}
+                <strong className="truncate font-semibold">{term.term}</strong>
+                <span className="tabular-nums">{term.count}</span>
               </span>
             ))}
           </div>
         </section>
       </section>
 
-      <section className="mt-4 dam-lift p-4" aria-label="Portal policy">
+      <section id="portal-gate" className="mt-4 scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="Portal policy">
         <h2 className="flex items-center gap-2 text-xl font-semibold"><Share2 size={18} strokeWidth={1.8} aria-hidden="true" /> Public portal gate</h2>
-        <div className="mt-3 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
+        <div className="mt-3 grid gap-x-5 gap-y-2 md:grid-cols-2 xl:grid-cols-3">
           {data.portalPolicy.map((policy) => (
             <Link
               key={policy.id}
               href={policy.savedViewId ? `/?view=${encodeURIComponent(policy.savedViewId)}` : "/"}
-              className={cn("rounded-md border p-3 transition hover:brightness-[.98]", toneClass(policy.blocked ? "warn" : "ok"))}
+              className="grid grid-cols-[5rem_1fr] gap-3 border-b border-[#d6dfd8] py-3 text-tjc-ink transition last:border-b-0 hover:bg-[#f8fbf8]"
               title={policy.detail}
             >
-              <strong className="block text-xl font-semibold tabular-nums">{policy.blocked.toLocaleString()}</strong>
-              <span className="mt-1 block text-xs font-semibold leading-tight">{policy.label}</span>
+              <strong className={cn("text-xl font-black tabular-nums", policy.blocked ? "text-[#7d2d2a]" : "text-[#22563a]")}>{policy.blocked.toLocaleString()}</strong>
+              <span>
+                <span className="block text-sm font-semibold leading-tight">{policy.label}</span>
+                <span className="mt-1 block text-xs leading-relaxed text-tjc-muted">{policy.detail}</span>
+              </span>
             </Link>
           ))}
         </div>
       </section>
+      </main>
     </div>
   );
 }

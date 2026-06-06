@@ -31,9 +31,23 @@ const useCaseButtons = [
 const viewerShortcutIds = new Set(["approved-church-wide", "website-hero", "sermon-slides", "newsletter", "social-media", "no-people", "recently-approved"]);
 const contributorShortcutIds = new Set([...viewerShortcutIds, "internal-ministry"]);
 
+function assetTileVariant(index: number): "standard" | "wide" | "tall" | "feature" {
+  if (index === 0) return "feature";
+  if (index === 7 || index === 18) return "wide";
+  if (index % 11 === 5) return "tall";
+  return "standard";
+}
+
+function assetTileClass(index: number) {
+  if (index === 0) return "sm:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2";
+  if (index === 7 || index === 18) return "sm:col-span-2 xl:col-span-2";
+  if (index % 11 === 5) return "sm:row-span-2";
+  return "";
+}
+
 function AssetGridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" aria-hidden="true">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" aria-hidden="true">
       {Array.from({ length: 15 }).map((_, index) => (
         <div key={index} className={cn("skeleton w-full", index % 4 === 0 ? "h-48" : index % 3 === 0 ? "h-44" : "h-[11.5rem]")} />
       ))}
@@ -105,7 +119,7 @@ export function LibraryPage() {
   const [collectionOwner, setCollectionOwner] = useState("Ministry media");
 
   const apiUrl = useMemo(() => {
-    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: "84", offset: String(pageOffset) });
+    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: "36", offset: String(pageOffset) });
     if (selectedView) params.set("view", selectedView);
     if (selectedCollection) params.set("collection", selectedCollection);
     filters.forEach((filter) => params.append("filter", filter));
@@ -328,7 +342,7 @@ export function LibraryPage() {
 
   return (
     <div className="dam-shell">
-      <section className="dam-studio grid gap-5 p-3 md:p-5 xl:grid-cols-[minmax(0,1fr)_34rem]" aria-label="Library workspace">
+      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_34rem]" aria-label="Library workspace">
         <div className="min-w-0">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -344,7 +358,7 @@ export function LibraryPage() {
               </button>
             ) : null}
           </div>
-          <form className="mt-5 grid gap-2 rounded-[1.15rem] border border-[#b8c8bf] bg-white p-2.5 shadow-[0_22px_60px_rgba(25,34,29,.12),0_1px_0_rgba(255,255,255,.95)_inset] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
+          <form className="mt-5 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2.5 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
             <Search aria-hidden="true" className="ml-1 mt-2.5 text-tjc-evergreen" size={22} strokeWidth={1.9} />
             <label className="sr-only" htmlFor="library-search">Search approved media</label>
             <input
@@ -363,7 +377,7 @@ export function LibraryPage() {
               <button
                 key={item.label}
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-full border border-[#cbd8ce] bg-white/88 px-3 text-sm font-semibold text-[#3f4a43] shadow-[0_1px_0_rgba(255,255,255,.85)_inset] transition hover:border-[#8fb2a5] hover:bg-[#eef7f1] active:translate-y-px"
+                className="inline-flex min-h-9 items-center rounded-md px-3 text-sm font-black text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen active:translate-y-px"
                 onClick={() => openUseCase(item)}
               >
                 {item.label}
@@ -372,29 +386,29 @@ export function LibraryPage() {
           </div>
         </div>
 
-        <div className="dam-dark-panel grid min-w-0 content-start gap-4 p-4">
+        <div className="grid min-w-0 content-start gap-4 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-sm font-black text-white">Source and count truth</span>
-              <strong className="mt-1 block text-sm font-semibold text-white/78">{result?.source.label || "Loading source"}</strong>
-              <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-white/56 sm:line-clamp-none">{result?.source.detail || "Loading ResourceSpace source state."}</p>
+              <span className="text-sm font-black text-tjc-evergreen">Source and count truth</span>
+              <strong className="mt-1 block text-sm font-semibold text-tjc-ink">{result?.source.label || "Loading source"}</strong>
+              <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-tjc-muted sm:line-clamp-none">{result?.source.detail || "Loading ResourceSpace source state."}</p>
             </div>
-            <Database className="shrink-0 text-white/70" size={20} strokeWidth={1.9} aria-hidden="true" />
+            <Database className="shrink-0 text-tjc-evergreen" size={20} strokeWidth={1.9} aria-hidden="true" />
           </div>
           <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold text-tjc-ink sm:hidden" aria-label="Mobile catalog summary">
-            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
-              {result?.counts.approved ?? "-"} approved
+            <span className="rounded-md border border-tjc-line bg-white px-2 py-1.5">
+              {result?.counts.approved ?? "-"} RS approved
             </span>
-            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+            <span className="rounded-md border border-tjc-line bg-white px-2 py-1.5">
               {result?.counts.rightsReview ?? "-"} rights
             </span>
-            <span className="rounded-xl border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
+            <span className="rounded-md border border-tjc-line bg-white px-2 py-1.5">
               {result?.counts.visibleToRole ?? "-"} visible
             </span>
           </div>
           <div className="hidden grid-cols-3 gap-2 sm:grid sm:grid-cols-6" aria-label="Catalog summary">
             {[
-              { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "approved", tone: "ok" as const },
+              { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "RS approved", tone: "ok" as const },
               { icon: Clock3, value: result?.counts.needsReview ?? "-", label: "review", tone: "warn" as const },
               { icon: ShieldAlert, value: result?.counts.rightsReview ?? "-", label: "rights", tone: "warn" as const },
               { icon: Users, value: result?.counts.childrenYouth ?? "-", label: "youth", tone: "info" as const },
@@ -478,31 +492,26 @@ export function LibraryPage() {
         </div>
       </details>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[21rem_minmax(0,1fr)]" aria-label="Library controls and results">
-        <aside className="order-2 grid min-w-0 gap-4 xl:order-1 xl:sticky xl:top-24 xl:self-start">
-          <section className="min-w-0 overflow-hidden dam-inspector p-3" aria-label="Saved DAM views">
-            <div className="pb-3">
-              <h2 className="text-sm font-black text-tjc-evergreen">Saved DAM views</h2>
-              <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">Display-card shortcuts backed by ResourceSpace export fields.</p>
-            </div>
-            <div className="grid max-w-full min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              {shortcuts.slice(0, 12).map((view) => (
-                <SavedViewCard key={view.id} view={view} active={selectedView === view.id} onOpen={() => openSavedView(view.id)} />
-              ))}
-            </div>
-          </section>
-          <div className="xl:hidden">
-            <button className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen" type="button" onClick={() => setFiltersOpen((value) => !value)}>
-              <SlidersHorizontal size={16} strokeWidth={1.8} aria-hidden="true" />
-              {filtersOpen ? "Hide filters" : "Show filters"}
-            </button>
+      <section className="mt-4" aria-label="Saved DAM views">
+        <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-black text-tjc-evergreen">Saved DAM views</h2>
+            <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">ResourceSpace-backed shortcuts for common church media needs.</p>
           </div>
-          <div className={cn("xl:block", filtersOpen ? "block" : "hidden")}>
-            <FilterSidebar filters={filters} onToggle={toggleFilter} onClear={() => setFilters([])} />
-          </div>
-        </aside>
+          <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen xl:hidden" type="button" onClick={() => setFiltersOpen((value) => !value)}>
+            <SlidersHorizontal size={16} strokeWidth={1.8} aria-hidden="true" />
+            {filtersOpen ? "Hide filters" : "Filters"}
+          </button>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+          {shortcuts.slice(0, 6).map((view) => (
+            <SavedViewCard key={view.id} view={view} active={selectedView === view.id} onOpen={() => openSavedView(view.id)} />
+          ))}
+        </div>
+      </section>
 
-        <div className="order-1 min-w-0 xl:order-2">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]" aria-label="Library controls and results">
+        <div className="min-w-0">
           <section className="min-w-0" aria-label="Asset results">
             <section className="mb-3 grid gap-3 dam-contact-sheet p-3" aria-label="Selection and batch actions">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -638,13 +647,13 @@ export function LibraryPage() {
               <div className="rounded-xl border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
             ) : null}
             {viewMode === "grid" ? (
-              <div className="dam-contact-sheet grid grid-cols-2 gap-2 p-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {visibleAssets.map((asset) => (
-                  <div className="relative" key={asset.id}>
+              <div className="contact-sheet-board grid auto-rows-auto grid-cols-1 gap-2.5 p-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {visibleAssets.map((asset, index) => (
+                  <div className={cn("relative min-w-0", assetTileClass(index))} key={asset.id}>
                     <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-xl border border-white/70 bg-white/92 shadow-[0_10px_22px_rgba(7,16,13,.14)]" aria-label={`Select ${asset.title}`}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
                     </label>
-                    <AssetCard asset={asset} role={role} />
+                    <AssetCard asset={asset} role={role} variant={assetTileVariant(index)} />
                   </div>
                 ))}
               </div>
@@ -697,6 +706,9 @@ export function LibraryPage() {
             </div>
           </section>
         </div>
+        <aside className={cn("min-w-0 xl:block", filtersOpen ? "block" : "hidden")} aria-label="Library filter panel">
+          <FilterSidebar filters={filters} onToggle={toggleFilter} onClear={() => setFilters([])} />
+        </aside>
       </section>
     </div>
   );

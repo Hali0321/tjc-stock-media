@@ -4,7 +4,7 @@ Status: Tuesday presentation / church pilot demo candidate
 
 Date: 2026-06-06
 
-This report records the final evidence for the 21st.dev-inspired visual rebuild of TJC Stock Media. It does not claim full production readiness.
+This report records evidence for the light 21st.dev-pattern DAM rebuild of TJC Stock Media. It does not claim full production readiness.
 
 ## Git Evidence
 
@@ -16,7 +16,8 @@ This report records the final evidence for the 21st.dev-inspired visual rebuild 
 | Visual rebuild commit | `ab40d55984270150e7206ee29425435854de975d` |
 | Final report commit | `31ec627b917439ea56e9e61e2c3bc937cf022c6a` |
 | Collections album shelf pass | `074d844` |
-| Current status before final report edit | Clean after `ab40d55` |
+| Current working-tree base for latest light pass | `baace7313ffcb5198bff7e7ecdf7b6773f87402d` |
+| Final commit | Recorded by `git rev-parse HEAD` after this report is committed |
 
 ## Scope Preserved
 
@@ -43,16 +44,16 @@ Preserved constraints:
 
 ## What Was Rebuilt Visually
 
-| Area | Old weak pattern | New reference-inspired pattern | Code paths | Screenshot evidence |
+| Area | Old weak pattern | New implemented pattern | Code paths | Screenshot evidence |
 |---|---|---|---|---|
-| App chrome / nav | Basic bordered route strip | Restrained Tubelight-style workflow nav plus utility command/guide/admin controls | `frontend/components/AppChrome.tsx`, `frontend/components/AppNav.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png` |
-| Library | Dashboard/card-wall hybrid | DAM command center with saved views, filters, pagination, count truth, dense contact sheet, and quick preview dialog | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/AssetQuickLookDialog.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/DisplayCard.tsx`, `frontend/components/LibraryPagination.tsx` | `docs/screenshots/library-desktop.png`, `docs/screenshots/library-mobile-320.png`, `docs/screenshots/library-mobile-390.png`, `docs/screenshots/qa/library-quick-preview-desktop.png`, `docs/screenshots/qa/library-quick-preview-mobile-320.png` |
-| Collections | Generic cards | Album shelves with selected collection inspector, stable IDs, approval summaries, source/range facts, intentional preview-pending states, and Library handoff | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx` | `docs/screenshots/collections-desktop.png`, `docs/screenshots/qa/collections-industry-pass-desktop.png`, `docs/screenshots/qa/collections-industry-pass-mobile-320.png` |
-| Asset Detail | Chip-heavy metadata dump | Split trust workspace with preview, “Can I use this?”, governance passport, reuse options, and tabs | `frontend/components/AssetDetailPage.tsx`, `frontend/components/AssetTrustPanel.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/asset-detail-desktop.png`, `docs/screenshots/detail-mobile-320.png`, `docs/screenshots/detail-mobile-390.png` |
-| Upload | Plain form | Contributor intake workflow with selected-file preview, tag input, evidence fields, reviewer packet, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/UploadIntakePacket.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png`, `docs/screenshots/qa/upload-intake-packet-desktop.png`, `docs/screenshots/qa/upload-intake-packet-mobile-320.png` |
-| Review | Long generated list | Governance cockpit with visual triage board, media-led queue cards, queue tabs, sticky inspector, tabs, evidence checklist, dialog, and hold actions | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/review-desktop.png`, `docs/screenshots/review-mobile-320.png`, `docs/screenshots/review-mobile-390.png`, `docs/screenshots/qa/after-review-industry-pass-desktop.png`, `docs/screenshots/qa/after-review-industry-pass-mobile-320.png` |
-| Admin | Generic readiness page | Serious production readiness dashboard with blockers, field mapping coverage, and public portal gate | `frontend/components/AdminPage.tsx`, `frontend/components/StatusBanner.tsx` | `docs/screenshots/admin-desktop.png` |
-| Guide | Long stacked text | Cleaner operational guide with mobile-readable Do/Avoid blocks | `frontend/components/GuidePage.tsx` | `docs/screenshots/guide-desktop.png`, `docs/screenshots/guide-mobile-320.png` |
+| App chrome / nav | Basic bordered route strip | Restrained Tubelight-style workflow nav plus utility command/guide/admin controls | `frontend/components/AppChrome.tsx`, `frontend/components/AppNav.tsx` | `docs/screenshots/qa/library-light-desktop.png` |
+| Library | Dashboard/card-wall hybrid | Warm-neutral DAM contact sheet with saved-view row, quiet filter sidebar, pagination, count truth, and quick preview dialog | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/AssetQuickLookDialog.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/DisplayCard.tsx`, `frontend/components/LibraryPagination.tsx` | `docs/screenshots/qa/library-light-desktop.png`, `docs/screenshots/qa/library-light-mobile-375.png`, `docs/screenshots/qa/library-quick-preview-desktop.png` |
+| Collections | Generic cards | Album rows with selected collection inspector, stable IDs, approval summaries, source/range facts, intentional preview-pending states, and Library handoff | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx` | `docs/screenshots/qa/collections-light-desktop.png`, `docs/screenshots/qa/collections-light-mobile-375.png` |
+| Asset Detail | Chip-heavy metadata dump | Split trust record with large preview, reuse decision banner, “Can I use this?”, governance passport, actions dropdown, and tabs | `frontend/components/AssetDetailPage.tsx`, `frontend/components/AssetTrustPanel.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/qa/detail-light-desktop.png` |
+| Upload | Plain form | Contributor intake workflow with light upload preview, selected-file list, tag input, evidence fields, reviewer packet, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/UploadIntakePacket.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/qa/upload-light-desktop.png`, `docs/screenshots/qa/upload-image-upload-preview.png` |
+| Review | Long generated list | Governance cockpit with display-card summaries, queue tabs, visual triage, media-led queue rows, sticky inspector, tabs, dialog, and hold actions | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/qa/review-light-desktop.png` |
+| Admin | Generic readiness page | Calm production diagnostics with left admin rail, launch decision list, field mapping coverage, vocabulary, and blockers | `frontend/components/AdminPage.tsx`, `frontend/components/StatusBanner.tsx` | `docs/screenshots/qa/admin-light-desktop.png` |
+| Guide | Long stacked text | Editorial guide with left On-this-page navigation, thin dividers, lighter Do/Avoid guidance, and one quiet callout | `frontend/components/GuidePage.tsx` | `docs/screenshots/qa/guide-light-desktop.png` |
 
 ## Component Classification
 
@@ -62,7 +63,7 @@ Preserved constraints:
 | Command Palette | Implemented | `frontend/components/CommandPalette.tsx`; `docs/screenshots/qa/command-palette-open.png`; browser QA verifies arrow-key selection and stable saved-view/queue navigation |
 | Display Cards | Implemented selectively | `frontend/components/DisplayCard.tsx`, `SavedViewCard`, `CollectionAlbumCard`, `CollectionShelfInspector`, `AdminPage`, `ReviewPage` |
 | Animated Loading Skeleton | Implemented as layout-matching shimmer states | `frontend/app/globals.css`; documented in component inventory |
-| Liquid Glass Button | Partial inspiration only | Primary action depth in CSS and workflow buttons; no glass over safety labels |
+| Liquid Glass Button | Deferred after evaluation | Flashy glass treatment did not fit the calm church DAM direction; primary actions use solid evergreen styling |
 | Apple Tahoe Liquid Glass Button | Deferred | Too platform-specific; no production component |
 | Tabs | Implemented | `frontend/components/DamTabs.tsx`; Asset Detail and Review inspector; browser QA checks `aria-controls` targets |
 | Dialog | Implemented | `AssetQuickLookDialog`, `ReviewActionDialog`, `ReuseRequestDialog`; interaction screenshots for quick preview, request-original, and pending-write dialogs |

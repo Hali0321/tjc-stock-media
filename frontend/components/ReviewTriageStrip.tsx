@@ -18,13 +18,13 @@ export function ReviewTriageStrip({ assets, role, selectedId, onSelect }: Review
   if (!stripAssets.length) return null;
 
   return (
-    <section className="mt-4 dam-dark-panel overflow-hidden p-3" aria-label="Visual triage strip">
+    <section className="mt-4 overflow-hidden rounded-lg border border-[#cfd7d1] bg-white p-3" aria-label="Visual triage strip">
       <div className="flex items-center justify-between gap-3 px-1 pb-3">
         <div>
-          <span className="text-xs font-black uppercase tracking-[.08em] text-white/60">Visual triage</span>
-          <h2 className="text-lg font-black text-white">Scan risk before opening records</h2>
+          <span className="text-xs font-black uppercase tracking-[.06em] text-tjc-muted">Visual triage</span>
+          <h2 className="text-lg font-black text-tjc-ink">Scan risk before opening records</h2>
         </div>
-        <span className="hidden rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs font-black text-white/72 sm:inline-flex">
+        <span className="hidden rounded-md border border-[#d6dfd8] bg-[#f7faf7] px-3 py-1 text-xs font-black text-tjc-muted sm:inline-flex">
           First {stripAssets.length} loaded
         </span>
       </div>
@@ -40,15 +40,15 @@ export function ReviewTriageStrip({ assets, role, selectedId, onSelect }: Review
               onClick={() => onSelect(asset.id)}
               aria-pressed={selected}
               className={cn(
-                "group grid min-w-0 gap-2 rounded-2xl border p-2 text-left transition hover:-translate-y-0.5 hover:bg-white/12 focus-visible:outline-white",
-                selected ? "border-[#a8d9c0] bg-white/16 shadow-[0_0_0_2px_rgba(168,217,192,.22)]" : "border-white/12 bg-white/7"
+                "group grid min-w-0 gap-2 rounded-md border p-2 text-left transition hover:bg-[#f8fbf8]",
+                selected ? "border-[#0b4b42] bg-[#f4faf6] shadow-[inset_3px_0_0_#0b4b42]" : "border-[#d6dfd8] bg-white"
               )}
             >
-              <span className="block aspect-[4/3] overflow-hidden rounded-xl bg-black/25">
+              <span className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
                 <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.035]" className="px-2" loading="eager" />
               </span>
-              <span className="line-clamp-1 text-sm font-black text-white">{display.title}</span>
-              <span className="line-clamp-1 rounded-full bg-[#fff0c2] px-2 py-1 text-[11px] font-black text-[#684a10]">{risk}</span>
+              <span className="line-clamp-1 text-sm font-black text-tjc-ink">{display.title}</span>
+              <span className="line-clamp-1 border-l-2 border-[#d09a31] pl-2 text-[11px] font-black text-[#684a10]">{risk}</span>
             </button>
           );
         })}

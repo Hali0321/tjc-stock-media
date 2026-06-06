@@ -9,6 +9,7 @@ import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DownloadOptionsPanel } from "@/components/DownloadOptionsPanel";
 import { MediaPreview } from "@/components/MediaPreview";
 import { useDemoRole } from "@/components/RoleProvider";
+import { StatusBanner } from "@/components/StatusBanner";
 import { decideAccess } from "@/lib/access-decisions";
 import { assetGovernancePassport } from "@/lib/asset-governance";
 import { assetPresentation, collectionImageUrl, detailImageUrl, provenanceSummary } from "@/lib/presentation";
@@ -120,7 +121,7 @@ export function AssetDetailPage({ id }: { id: string }) {
       </Link>
       <section className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(420px,.8fr)]">
         <div className="order-1 min-w-0 xl:order-1">
-          <div className="dam-dark-panel grid min-h-[28rem] place-items-center overflow-hidden p-3">
+          <div className="grid min-h-[28rem] place-items-center overflow-hidden rounded-lg border border-[#cfd7d1] bg-white p-3">
             <MediaPreview
               src={preview}
               alt={asset.thumbnailAlt}
@@ -130,7 +131,7 @@ export function AssetDetailPage({ id }: { id: string }) {
               imgClassName="!h-auto max-h-[72dvh] !w-auto max-w-full rounded !object-contain shadow-[0_8px_24px_rgba(32,34,31,.14)]"
             />
           </div>
-          <section className="mt-4 dam-contact-sheet p-3" aria-label="Related assets">
+          <section className="mt-4 rounded-lg border border-[#cfd7d1] bg-white p-3" aria-label="Related assets">
             <div className="mb-3">
               <h2 className="dam-section-title">Related assets</h2>
               <p className="mt-1 text-sm text-tjc-muted">Same collection, tags, or TJC terms. Approved assets shown first.</p>
@@ -140,10 +141,10 @@ export function AssetDetailPage({ id }: { id: string }) {
         </div>
 
         <aside className="order-2 grid min-w-0 gap-3 xl:order-2 xl:sticky xl:top-24 xl:self-start">
-          <section className="min-w-0 dam-inspector p-4">
+          <section className="min-w-0 border-b border-[#d6dfd8] pb-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <span className="text-sm font-semibold text-tjc-evergreen">{asset.collection}</span>
+                <span className="text-sm font-black text-tjc-evergreen">{asset.collection}</span>
                 <h1 className="mt-2 dam-page-title">{display.title}</h1>
                 <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{provenance.publicLabel}</p>
               </div>
@@ -151,8 +152,11 @@ export function AssetDetailPage({ id }: { id: string }) {
             </div>
           </section>
 
+          <StatusBanner tone={display.download.approvedCopy.allowed ? "ok" : "warn"} title={display.download.reuse.label}>
+            {display.download.reuse.summary}
+          </StatusBanner>
           <AssetTrustPanel asset={asset} role={role} />
-          <section className="min-w-0 dam-inspector p-4" aria-label="Governance passport">
+          <section className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Governance passport">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="flex items-center gap-2 text-lg font-black"><ShieldCheck size={18} strokeWidth={1.8} aria-hidden="true" /> Governance passport</h2>
@@ -172,16 +176,16 @@ export function AssetDetailPage({ id }: { id: string }) {
             </div>
             {passport.blockers.length || passport.warnings.length ? (
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]">
+                <div className="border-l-2 border-[#d09a31] pl-3 text-[#725216]">
                   <strong className="flex items-center gap-2 text-sm font-semibold"><AlertTriangle size={15} strokeWidth={1.8} aria-hidden="true" /> Portal blockers</strong>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(passport.blockers.length ? passport.blockers : ["None"]).map((item) => <span className="rounded-md bg-white/65 px-2 py-1 text-xs font-semibold" key={item}>{item}</span>)}
+                  <div className="mt-2 grid gap-1">
+                    {(passport.blockers.length ? passport.blockers : ["None"]).map((item) => <span className="text-xs font-semibold" key={item}>{item}</span>)}
                   </div>
                 </div>
-                <div className={cn("rounded-md border p-3", passportTone(passport.warnings.length ? "info" : "ok"))}>
+                <div className="border-l-2 border-[#9fb6c8] pl-3 text-[#27435b]">
                   <strong className="flex items-center gap-2 text-sm font-semibold"><Info size={15} strokeWidth={1.8} aria-hidden="true" /> Improvement notes</strong>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(passport.warnings.length ? passport.warnings : ["None"]).map((item) => <span className="rounded-md bg-white/65 px-2 py-1 text-xs font-semibold" key={item}>{item}</span>)}
+                  <div className="mt-2 grid gap-1">
+                    {(passport.warnings.length ? passport.warnings : ["None"]).map((item) => <span className="text-xs font-semibold" key={item}>{item}</span>)}
                   </div>
                 </div>
               </div>
@@ -191,7 +195,7 @@ export function AssetDetailPage({ id }: { id: string }) {
 
           <DamTabs tabs={detailTabs} active={activeTab} onChange={setActiveTab} ariaLabel="Asset detail sections" idPrefix="asset-detail" />
 
-          <section id={damTabPanelId("asset-detail", "Use")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Use")} className="min-w-0 dam-inspector p-4" aria-label="Usage guidance" hidden={activeTab !== "Use"}>
+          <section id={damTabPanelId("asset-detail", "Use")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Use")} className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Usage guidance" hidden={activeTab !== "Use"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><ShieldCheck size={18} strokeWidth={1.8} aria-hidden="true" /> Use guidance</h2>
               <dl className="grid gap-3">
                 {display.guidanceFacts.map((fact) => (
@@ -200,7 +204,7 @@ export function AssetDetailPage({ id }: { id: string }) {
               </dl>
           </section>
 
-          <section id={damTabPanelId("asset-detail", "Source")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Source")} className="min-w-0 dam-inspector p-4" aria-label="Source and provenance" hidden={activeTab !== "Source"}>
+          <section id={damTabPanelId("asset-detail", "Source")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Source")} className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Source and provenance" hidden={activeTab !== "Source"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><Info size={18} strokeWidth={1.8} aria-hidden="true" /> Source and provenance</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Source system</dt><dd className={factDescClass}>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
@@ -213,7 +217,7 @@ export function AssetDetailPage({ id }: { id: string }) {
               </dl>
           </section>
 
-          <section id={damTabPanelId("asset-detail", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Review")} className="min-w-0 dam-inspector p-4" aria-label="Review status" hidden={activeTab !== "Review"}>
+          <section id={damTabPanelId("asset-detail", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Review")} className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Review status" hidden={activeTab !== "Review"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><History size={18} strokeWidth={1.8} aria-hidden="true" /> Review record</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{asset.reviewer || "Not reviewed"}</dd></div>
@@ -239,7 +243,7 @@ export function AssetDetailPage({ id }: { id: string }) {
               <p className="mt-3 rounded-md bg-[#f3f6f0] p-3 text-sm text-tjc-muted">{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
           </section>
 
-          <section id={damTabPanelId("asset-detail", "Files")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Files")} className="min-w-0 dam-inspector p-4" aria-label="File options" hidden={activeTab !== "Files"}>
+          <section id={damTabPanelId("asset-detail", "Files")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Files")} className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="File options" hidden={activeTab !== "Files"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><FileText size={18} strokeWidth={1.8} aria-hidden="true" /> Files</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Media type</dt><dd className={factDescClass}>{asset.mediaType}</dd></div>
@@ -263,12 +267,12 @@ export function AssetDetailPage({ id }: { id: string }) {
               </div>
           </section>
 
-          <section id={damTabPanelId("asset-detail", "Related")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Related")} className="min-w-0 dam-inspector p-4" aria-label="Related assets" hidden={activeTab !== "Related"}>
+          <section id={damTabPanelId("asset-detail", "Related")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Related")} className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Related assets" hidden={activeTab !== "Related"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><Layers size={18} strokeWidth={1.8} aria-hidden="true" /> Related</h2>
               <RelatedStrip assets={related} role={role} />
           </section>
 
-          <section className="min-w-0 dam-inspector p-4" aria-label="Tags">
+          <section className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Tags">
             <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><ImageIcon size={18} strokeWidth={1.8} aria-hidden="true" /> Tags</h2>
             <div className="flex flex-wrap gap-2">
               {(asset.usageTerms || []).map((tag) => <span className="rounded-md bg-[#eef4f0] px-2.5 py-1 text-xs font-semibold text-[#4b5b51]" key={tag}>{tag}</span>)}

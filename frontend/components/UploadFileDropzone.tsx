@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type DragEvent, type RefObject } from "react";
+import { useEffect, useState, type DragEvent, type RefObject } from "react";
 import { FileCheck2, ShieldAlert, Trash2, UploadCloud } from "lucide-react";
 import { cn } from "@/lib/ui";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
@@ -20,6 +20,20 @@ function formatBytes(value: number) {
   return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
 }
 
+function useImageUpload(files: File[]) {
+  const [previews, setPreviews] = useState<Array<{ index: number; url: string }>>([]);
+
+  useEffect(() => {
+    const nextPreviews = files
+      .map((file, index) => file.type.startsWith("image/") ? { index, url: URL.createObjectURL(file) } : null)
+      .filter((item): item is { index: number; url: string } => Boolean(item));
+    setPreviews(nextPreviews);
+    return () => nextPreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+  }, [files]);
+
+  return previews;
+}
+
 export function UploadFileDropzone({
   inputRef,
   selectedFiles,
@@ -29,6 +43,8 @@ export function UploadFileDropzone({
   onClear
 }: UploadFileDropzoneProps) {
   const [dragging, setDragging] = useState(false);
+  const imagePreviews = useImageUpload(selectedFiles);
+  const imagePreviewByIndex = new Map(imagePreviews.map((preview) => [preview.index, preview.url]));
 
   function handleDrag(event: DragEvent<HTMLElement>, active: boolean) {
     event.preventDefault();
@@ -57,8 +73,8 @@ export function UploadFileDropzone({
     >
       <label
         className={cn(
-          "grid min-h-64 cursor-pointer place-items-center rounded-[1.15rem] border border-dashed border-[#85a898] bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,.18),transparent_32%),linear-gradient(180deg,#17211d,#111a17)] p-6 text-center text-white shadow-[0_26px_72px_rgba(7,16,13,.18),inset_0_1px_0_rgba(255,255,255,.12)] transition focus-within:border-[#9bd2b3] focus-within:ring-2 focus-within:ring-[#9bc5b5]",
-          dragging && "scale-[1.01] border-[#9bd2b3] bg-[#102d28] shadow-[0_30px_78px_rgba(6,63,57,.22),inset_0_0_0_1px_rgba(155,210,179,.25)]"
+          "grid min-h-64 cursor-pointer place-items-center rounded-lg border border-dashed border-[#85a898] bg-[#f7faf7] p-6 text-center text-tjc-ink transition focus-within:border-[#0b4b42] focus-within:ring-2 focus-within:ring-[#9bc5b5]",
+          dragging && "scale-[1.01] border-[#0b4b42] bg-[#eef7f1]"
         )}
         onDragEnter={(event) => handleDrag(event, true)}
         onDragOver={(event) => handleDrag(event, true)}
@@ -66,11 +82,11 @@ export function UploadFileDropzone({
         onDrop={handleDrop}
       >
         <span className="grid justify-items-center gap-2">
-          <span className="grid h-16 w-16 place-items-center rounded-2xl border border-white/16 bg-white/10 text-white shadow-[0_14px_30px_rgba(0,0,0,.18)]">
+          <span className="grid h-16 w-16 place-items-center rounded-lg border border-[#c4d5ca] bg-white text-tjc-evergreen">
             <UploadCloud size={25} strokeWidth={1.8} aria-hidden="true" />
           </span>
-          <span className="text-lg font-black text-white">{dragging ? "Release to add files" : "Drop files here or browse"}</span>
-          <span id="upload-file-help" className="max-w-[28rem] text-sm font-semibold leading-relaxed text-white/62">
+          <span className="text-lg font-black text-tjc-ink">{dragging ? "Release to add files" : "Drop files here or browse"}</span>
+          <span id="upload-file-help" className="max-w-[28rem] text-sm font-semibold leading-relaxed text-tjc-muted">
             Photos, graphics, documents, video, and audio still enter Needs Review / Do Not Publish. Large media uses Shared Drive Incoming.
           </span>
         </span>
@@ -87,7 +103,7 @@ export function UploadFileDropzone({
       </label>
 
       {selectedFiles.length ? (
-        <section className="rounded-2xl border border-[#b8c8bf] bg-white p-3 shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_18px_48px_rgba(25,34,29,.1)]" aria-label="Selected file preview">
+        <section className="rounded-lg border border-[#b8c8bf] bg-white p-3" aria-label="Selected file preview">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-tjc-ink">{selectedFiles.length} selected file{selectedFiles.length === 1 ? "" : "s"}</h3>
             <button className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={onClear}>
@@ -99,8 +115,14 @@ export function UploadFileDropzone({
             {selectedFiles.map((file, index) => {
               const tooLarge = file.size > LARGE_MEDIA_BYTES;
               return (
-                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-xl border border-[#c9d5cd] bg-[#fbfcfa] px-3 py-3 shadow-[0_1px_0_rgba(255,255,255,.9)_inset]" key={`${file.name}-${file.size}-${index}`}>
-                  {tooLarge ? <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" /> : <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />}
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[#d6dfd8] px-1 py-3 last:border-b-0" key={`${file.name}-${file.size}-${index}`}>
+                  {imagePreviewByIndex.has(index) ? (
+                    <img className="h-12 w-12 rounded-md border border-[#d6dfd8] object-cover" src={imagePreviewByIndex.get(index)} alt="" />
+                  ) : tooLarge ? (
+                    <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" />
+                  ) : (
+                    <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />
+                  )}
                   <span className="min-w-0">
                     <strong className="block truncate text-xs font-semibold text-tjc-ink">{file.name}</strong>
                     <span className="mt-0.5 block text-[11px] font-medium text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>

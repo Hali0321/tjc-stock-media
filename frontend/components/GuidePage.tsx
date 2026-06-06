@@ -73,20 +73,22 @@ export function GuidePage() {
   }, [query]);
 
   return (
-    <div className="mx-auto max-w-[1180px] px-3 py-5 md:px-5">
-      <section className="dam-workbench p-4 md:p-5">
-        <span className="text-sm font-semibold text-tjc-evergreen">Usage guide</span>
-        <h1 className="mt-2 dam-page-title">Use approved media with care</h1>
-        <p className="mt-2 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
-          Quick rules for searching, checking approval, downloading copies, and knowing when to ask a reviewer.
-        </p>
-        <label className="mt-4 grid max-w-xl gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
+    <div className="mx-auto max-w-[1180px] px-3 py-6 md:px-5">
+      <section className="grid gap-4 border-b border-[#d6dfd8] pb-5 md:grid-cols-[minmax(0,1fr)_22rem]">
+        <div>
+          <span className="text-sm font-black text-tjc-evergreen">Usage guide</span>
+          <h1 className="mt-2 dam-page-title">Use approved media with care</h1>
+          <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
+            Quick rules for searching, checking approval, downloading copies, and knowing when to ask a reviewer.
+          </p>
+        </div>
+        <label className="grid content-end gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
           Search guide
-          <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-xl border border-tjc-line bg-white px-3">
+          <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-lg border border-[#cad8cf] bg-white px-3">
             <Search size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <input
               id="guide-search"
-              className="min-h-10 min-w-0 bg-transparent text-sm font-medium placeholder:text-[#7f8a82]"
+              className="min-h-10 min-w-0 bg-transparent text-sm font-medium text-tjc-ink placeholder:text-[#7f8a82]"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search children, source, public, original..."
@@ -96,47 +98,64 @@ export function GuidePage() {
         </label>
       </section>
 
-      <section className="mt-4 dam-lift p-4" aria-label="Download decision guide">
-        <h2 className="text-base font-semibold">Before downloading</h2>
-        <div className="mt-3 grid gap-2">
-          {decisionRows.map(([need, action]) => (
-            <div className="grid gap-2 border-b border-tjc-line px-1 py-3 last:border-b-0 md:grid-cols-[18rem_1fr]" key={need}>
-              <strong className="text-sm text-tjc-ink">{need}</strong>
-              <span className="text-sm leading-relaxed text-tjc-muted">{action}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="mt-5 grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <aside className="hidden lg:block">
+          <nav className="sticky top-24 grid gap-1 text-sm font-semibold text-tjc-muted" aria-label="Guide sections">
+            <a className="rounded-md px-2 py-1.5 text-tjc-evergreen hover:bg-[#eef4f0]" href="#before-downloading">Before downloading</a>
+            {guideBlocks.map((block) => (
+              <a className="rounded-md px-2 py-1.5 hover:bg-[#eef4f0]" href={`#guide-${block.title.toLowerCase().replaceAll(" ", "-").replaceAll("/", "-")}`} key={block.title}>{block.title}</a>
+            ))}
+          </nav>
+        </aside>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {visibleBlocks.map((block) => (
-          <section className="dam-lift p-4" key={block.title}>
-            <h2 className="text-base font-semibold">{block.title}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
-            <div className="mt-3 grid gap-2">
-              <div className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-sm text-[#24583d]">
-                <strong className="block font-semibold">Do</strong>
-                <span className="mt-1 block leading-relaxed">{block.doText}</span>
-              </div>
-              <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm text-[#725216]">
-                <strong className="block font-semibold">Avoid</strong>
-                <span className="mt-1 block leading-relaxed">{block.avoidText}</span>
-              </div>
+        <div className="min-w-0">
+          <section id="before-downloading" className="scroll-mt-24 border-b border-[#d6dfd8] pb-5" aria-label="Download decision guide">
+            <h2 className="text-base font-black text-tjc-evergreen">Before downloading</h2>
+            <div className="mt-3 divide-y divide-[#dbe4dd] rounded-lg border border-[#dbe4dd] bg-white">
+              {decisionRows.map(([need, action]) => (
+                <div className="grid gap-2 px-3 py-3 md:grid-cols-[17rem_1fr]" key={need}>
+                  <strong className="text-sm text-tjc-ink">{need}</strong>
+                  <span className="text-sm font-semibold leading-relaxed text-tjc-muted">{action}</span>
+                </div>
+              ))}
             </div>
           </section>
-        ))}
+
+          <div className="grid">
+            {visibleBlocks.map((block) => (
+              <section id={`guide-${block.title.toLowerCase().replaceAll(" ", "-").replaceAll("/", "-")}`} className="scroll-mt-24 border-b border-[#d6dfd8] py-5" key={block.title}>
+                <div className="grid gap-3 md:grid-cols-[16rem_1fr]">
+                  <div>
+                    <h2 className="text-base font-black text-tjc-ink">{block.title}</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
+                  </div>
+                  <div className="grid gap-3 text-sm md:grid-cols-2">
+                    <p className="leading-relaxed text-[#24583d]">
+                      <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
+                      {block.doText}
+                    </p>
+                    <p className="leading-relaxed text-[#725216]">
+                      <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
+                      {block.avoidText}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            ))}
+          </div>
+
+          {!visibleBlocks.length ? (
+            <div className="mt-4 rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
+          ) : null}
+
+          <section className="mt-5 rounded-lg border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]">
+            <h2 className="text-base font-semibold text-[#27435b]">Ask a media coworker</h2>
+            <p className="mt-2 text-sm leading-relaxed">
+              If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
+            </p>
+          </section>
+        </div>
       </div>
-
-      {!visibleBlocks.length ? (
-        <div className="mt-4 rounded-xl border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
-      ) : null}
-
-      <section className="mt-4 rounded-md border border-[#cbd8e4] bg-[#f2f7fb] p-4 text-[#52677a]">
-        <h2 className="text-base font-semibold text-[#27435b]">Ask a media coworker</h2>
-        <p className="mt-2 text-sm leading-relaxed">
-          If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
-        </p>
-      </section>
     </div>
   );
 }

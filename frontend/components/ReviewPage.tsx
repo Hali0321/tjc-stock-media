@@ -322,16 +322,16 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <section className="dam-studio grid gap-5 p-4 md:p-5 xl:grid-cols-[minmax(0,1fr)_30rem]">
+      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_30rem]">
         <div>
-          <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
+          <span className="text-sm font-black text-tjc-evergreen">Govern</span>
           <h1 className="mt-2 dam-page-title">Review workbench</h1>
           <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
-        <div className="dam-dark-panel p-4">
-          <span className="text-sm font-black text-white/68">Current queue</span>
-          <strong className="mt-1 block text-4xl font-black tracking-[-.03em] tabular-nums text-white">{data?.assets.length ?? "-"} shown</strong>
-          <span className="mt-2 block text-sm font-semibold text-white/58">{activeQueueSummary ? `loaded ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
+        <div className="grid content-center gap-1 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+          <span className="text-sm font-black text-tjc-evergreen">Current queue</span>
+          <strong className="block text-4xl font-black tabular-nums text-tjc-ink">{data?.assets.length ?? "-"} shown</strong>
+          <span className="block text-sm font-semibold text-tjc-muted">{activeQueueSummary ? `loaded ${data?.assets.length ?? 0} of ${activeQueueSummary.count.toLocaleString()} ${activeQueueSummary.label}` : "Loading queue"}</span>
         </div>
 	      </section>
 
@@ -354,12 +354,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         })}
       </section>
 
-      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 rounded-2xl border border-[#c5d1c9] bg-[#edf3ee] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" aria-label="Review queues">
+      <section className="mt-4 flex max-w-full min-w-0 flex-wrap gap-2 border-y border-[#d6dfd8] py-3" aria-label="Review queues">
         {(data?.queues || []).map((queue) => (
           <button
             key={queue.id}
             type="button"
-            className={cn("inline-flex min-h-9 items-center gap-2 rounded-full border border-[#cbd8ce] bg-white px-3 text-sm font-semibold text-[#3f4a43] shadow-[0_1px_0_rgba(255,255,255,.85)_inset] transition hover:border-[#8fb2a5] hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#8fb2a5] bg-[#e1f2e9] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]")}
+            className={cn("inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "bg-white text-tjc-evergreen shadow-[inset_0_-2px_0_#063f39]")}
             onClick={() => selectQueue(queue.id)}
             aria-pressed={activeQueue === queue.id}
           >
@@ -371,12 +371,13 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      {data?.assets.length ? (
-        <ReviewTriageStrip assets={data.assets} role={role} selectedId={selectedAsset?.id} onSelect={setSelectedId} />
-      ) : null}
-
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
-        <div className="order-2 min-w-0 overflow-hidden dam-contact-sheet xl:order-1">
+        <div className="order-2 grid min-w-0 gap-4 xl:order-1">
+          {data?.assets.length ? (
+            <ReviewTriageStrip assets={data.assets} role={role} selectedId={selectedAsset?.id} onSelect={setSelectedId} />
+          ) : null}
+
+          <div className="min-w-0 overflow-hidden rounded-[.9rem] border border-[#b9c9bf] bg-white">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#f6faf6] px-3 py-2 text-sm">
             <strong className="font-semibold text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
             {activeQueueSummary ? <span className="text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
@@ -406,11 +407,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               </button>
             </div>
           ) : null}
+          </div>
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid gap-3 self-start dam-inspector p-3 xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
-            <div className="block aspect-[4/3] overflow-hidden rounded-2xl bg-[#111a17] shadow-[0_18px_48px_rgba(25,34,29,.15)]">
+          <aside className="order-1 grid gap-3 self-start rounded-lg border border-[#d4ded7] bg-white p-3 xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
+            <div className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
               <MediaPreview src={selectedPreview} alt={selectedAsset.thumbnailAlt} className="px-3" loading="eager" />
             </div>
             <div>
@@ -428,7 +430,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
                   Review note
                   <textarea
-                    className="min-h-24 dam-card p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
+                    className="min-h-24 rounded-lg border border-tjc-line bg-white p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
                     value={reviewNote}
                     onChange={(event) => setReviewNote(event.target.value)}
                     placeholder="Record what was checked and why this action is appropriate..."
@@ -437,7 +439,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 </label>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Review checklist">
                   {checklistLabels.map(([field, label]) => (
-                    <label className="flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43] shadow-[0_1px_0_rgba(255,255,255,.85)_inset]" key={field}>
+                    <label className="flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43]" key={field}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={checklist[field]} onChange={() => toggleChecklist(field)} />
                       {label}
                     </label>

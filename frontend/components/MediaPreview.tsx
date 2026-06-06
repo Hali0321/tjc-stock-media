@@ -40,9 +40,9 @@ export function MediaPreview({
 
   return (
     <div className={cn("dam-preview-grid grid h-full w-full place-items-center p-3 text-center text-tjc-muted", className)}>
-      <span className="grid max-w-[22rem] justify-items-center gap-2 rounded-2xl border border-white/75 bg-white/62 px-4 py-3 shadow-[0_12px_34px_rgba(25,34,29,.08)] backdrop-blur-[2px]">
-        <ImageIcon size={24} strokeWidth={1.9} aria-hidden="true" />
-        <strong className="text-[11px] font-black uppercase tracking-[.1em] text-[#4f5c55]">{label}</strong>
+      <span className="grid max-w-[20rem] justify-items-center gap-1.5 px-3 py-2">
+        <ImageIcon size={22} strokeWidth={1.8} aria-hidden="true" />
+        <strong className="text-[10px] font-black uppercase tracking-[.08em] text-[#4f5c55]">{label}</strong>
         {detail ? <span className="max-w-[28rem] text-sm font-medium leading-snug text-tjc-muted">{detail}</span> : null}
       </span>
     </div>

@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
 import { InputWithTags } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
+import { StatusBanner } from "@/components/StatusBanner";
 import { UploadFileDropzone } from "@/components/UploadFileDropzone";
 import { UploadIntakePacket } from "@/components/UploadIntakePacket";
 import { canUpload } from "@/lib/permissions";
@@ -112,13 +113,13 @@ export function UploadPage() {
 
   return (
     <div className="dam-shell max-w-[1600px]">
-      <section className="dam-studio grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,1fr)_38rem]">
+      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 lg:grid-cols-[minmax(0,1fr)_38rem]">
         <div>
-          <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
+          <span className="text-sm font-black text-tjc-evergreen">Contributor intake</span>
           <h1 className="mt-2 dam-page-title">Upload for review</h1>
           <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-3" aria-label="Upload workflow">
+        <div className="grid gap-2 border-t border-[#d6dfd8] pt-4 sm:grid-cols-3 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0" aria-label="Upload workflow">
           {[
             { icon: UploadCloud, title: "Context", body: "Event, date, ministry, source." },
             { icon: ShieldCheck, title: "People and rights", body: "Visibility, consent, restrictions." },
@@ -126,9 +127,9 @@ export function UploadPage() {
           ].map((step) => {
             const Icon = step.icon;
             return (
-              <div className="dam-inspector p-3" key={step.title}>
+              <div className="border-l border-[#d6dfd8] pl-3" key={step.title}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-                <strong className="mt-2 block font-black">{step.title}</strong>
+                <strong className="mt-2 block font-black text-tjc-ink">{step.title}</strong>
                 <span className="mt-1 block text-sm font-semibold text-tjc-muted">{step.body}</span>
               </div>
             );
@@ -136,8 +137,12 @@ export function UploadPage() {
         </div>
       </section>
 
+      <StatusBanner className="mt-4" tone="info" title="Submitted media stays blocked">
+        Every file enters Needs Review / Do Not Publish. No public download is created until reviewer evidence is complete.
+      </StatusBanner>
+
       <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_27rem]" onSubmit={submit}>
-        <section className="dam-inspector min-w-0 self-start p-4">
+        <section className="rounded-lg border border-[#d4ded7] bg-white p-4 min-w-0 self-start">
           <div className="mb-4">
             <h2 className="text-lg font-black">1. Context</h2>
             <p className="text-sm font-semibold text-tjc-muted">Help reviewers understand where this media came from.</p>
@@ -166,7 +171,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="dam-inspector self-start p-4">
+        <section className="rounded-lg border border-[#d4ded7] bg-white p-4 self-start">
           <div className="mb-4">
             <h2 className="text-lg font-black">2. People and rights</h2>
             <p className="text-sm font-semibold text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
@@ -210,11 +215,11 @@ export function UploadPage() {
           </label>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Consent/restrictions {requiredHint}</span>
-            <textarea className="min-h-28 w-full min-w-0 dam-card p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
+            <textarea className="min-h-28 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
           </label>
         </section>
 
-        <section className="dam-inspector min-w-0 self-start p-4">
+        <section className="rounded-lg border border-[#d4ded7] bg-white p-4 min-w-0 self-start">
           <div className="mb-4">
             <h2 className="text-lg font-black">3. Files and tags</h2>
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
@@ -245,7 +250,7 @@ export function UploadPage() {
           </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
-            <textarea className="min-h-24 w-full min-w-0 dam-card p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
+            <textarea className="min-h-24 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
           {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
           <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#c9d6ce] bg-[#f6faf7] p-3">

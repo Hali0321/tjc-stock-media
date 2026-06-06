@@ -26,7 +26,7 @@ export function AppNav({ role }: { role: DemoRole }) {
   const visibleItems = navItems.filter((item) => !item.adminOnly || role === "DAM Admin");
 
   return (
-    <nav className="tubelight-nav flex min-w-0 items-center gap-1 overflow-x-auto rounded-[1.15rem] border border-[#b9c8bf] bg-[#fdfefd]/92 p-1.5 shadow-[0_18px_46px_rgba(25,34,29,.11),inset_0_1px_0_rgba(255,255,255,.95)] backdrop-blur md:justify-center" aria-label="Primary navigation">
+    <nav className="tubelight-nav flex min-w-0 items-center gap-1 overflow-x-auto rounded-full border border-[#b9c8bf] bg-white/92 p-1 backdrop-blur md:justify-center" aria-label="Primary navigation">
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -36,16 +36,16 @@ export function AppNav({ role }: { role: DemoRole }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "relative inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-[.9rem] px-3.5 text-sm font-bold text-[#3f4741] transition duration-200 hover:bg-[#edf5ef] hover:text-tjc-evergreen active:translate-y-px",
+              "relative inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold text-[#3f4741] transition duration-200 hover:bg-[#f2f6f2] hover:text-tjc-evergreen active:translate-y-px",
               isActive && "text-tjc-evergreen",
               utility && "border-l border-tjc-line"
             )}
             title={item.label}
             aria-current={isActive ? "page" : undefined}
           >
-            {isActive ? <span className="absolute inset-0 rounded-[.9rem] border border-[#7db3a1] bg-[linear-gradient(180deg,#f5fff8,#e0f4e9)] shadow-[0_10px_26px_rgba(6,63,57,.18),inset_0_1px_0_rgba(255,255,255,.95)]" aria-hidden="true" /> : null}
+            {isActive ? <span className="absolute inset-x-2 bottom-1 h-1 rounded-full bg-tjc-evergreen" aria-hidden="true" /> : null}
             <Icon className="relative z-10" aria-hidden="true" size={16} strokeWidth={1.8} />
-            <span className="relative z-10 max-[430px]:sr-only">{item.label}</span>
+            <span className={cn("relative z-10", utility ? "max-[1530px]:sr-only" : "max-[430px]:sr-only")}>{item.label}</span>
           </Link>
         );
       })}
