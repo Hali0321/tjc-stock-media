@@ -73,4 +73,7 @@ The frontend does not create a second DAM or store secret API keys in the browse
 - Viewer unsafe download and review actions are blocked by server routes.
 - Review action without note/checklist fails with `400`.
 - Valid reviewer evidence creates a local pending-write record and returns `202`; ResourceSpace is not updated until write mapping is configured.
+- Asset Detail and Review inspector tabs are keyboard-accessible and browser QA checks tab `aria-controls` targets.
+- Request original access opens a safety dialog first; it creates only an email draft and does not grant access or write to ResourceSpace.
+- Review queue initially renders 24 loaded rows with an explicit `Show more review items` action so mobile reviewers reach the inspector/action area sooner.
 - Browser QA finished with zero failures, zero warnings, and zero console errors. Expected denied requests are 400/403 safety checks.

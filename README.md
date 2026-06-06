@@ -245,8 +245,10 @@ Current UI and workflow notes:
 - Assets without exported preview derivatives show honest `Preview pending` or `Preview unavailable` states instead of broken thumbnails. This is a ResourceSpace/export readiness signal, not fake media.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
+- Asset detail and Review inspector use maintained `DamTabs` with real tab semantics, arrow-key movement, and verified `aria-controls` targets.
+- Request original access, request review, and ask-media-coworker actions open `ReuseRequestDialog` first. The dialog explains that email drafts do not grant original access, update ResourceSpace, or create pending writes.
 - Upload is a guided contributor intake with selected-file preview, type/size display, remove/clear controls, required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
-- Review is a role-gated workbench with queue tabs, selected-asset inspector, required checklist, audit preview, and pending write result copy.
+- Review is a role-gated workbench with queue tabs, selected-asset inspector, required checklist, audit preview, pending write result copy, and an explicit `Show more review items` gate so mobile is not forced through all loaded queue rows at once.
 - `/admin` is DAM Admin-only and shows current data source, API read/write readiness, required field refs, pending write queue, role matrix, and production blockers.
 - Safe-download logic uses the portal reuse policy, not raw ResourceSpace approval alone.
 - Theme toggle is deferred until dark-mode safety labels and contrast can be fully designed and verified.

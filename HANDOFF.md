@@ -32,9 +32,9 @@ The current frontend shell is the final dense ministry DAM UI:
 - Library: compact command bar, early search, use-case shortcuts, saved views, filters, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
 - Collections: album-style records opened by stable collection ID, including Sabbath wording.
 - Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.
-- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets.
+- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets. Use/Source/Review/Files/Related use maintained `DamTabs`.
 - Upload: guided three-step intake with selected-file preview, type/size display, remove/clear controls, required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
-- Review: queue tabs, compact decision rows, selected-asset inspector, evidence checklist, note field, audit preview, pending write state, and desktop-only GSAP motion disabled by reduced-motion.
+- Review: queue tabs, compact decision rows, selected-asset inspector tabs, evidence checklist, note field, audit preview, pending write state, explicit load-more gate for long queues, and desktop-only GSAP motion disabled by reduced-motion.
 
 ## Architecture
 
@@ -76,6 +76,8 @@ Viewer cannot download unsafe assets.
 Contributor can submit upload intake but cannot approve.
 
 Reviewer/DAM Admin can open review queue. Review actions go through `/api/review`. Missing evidence returns `400`. Valid evidence queues a local pending-write record and returns `202 pending-write` until ResourceSpace API write mapping is configured. Pending writes are not final ResourceSpace truth.
+
+Request-original, request-review, and ask-media-coworker dialogs only open email drafts. They do not grant original access, approve reuse, update ResourceSpace, or create pending review writes.
 
 Latest checked behavior on 2026-06-06:
 

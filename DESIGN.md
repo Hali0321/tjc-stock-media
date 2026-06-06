@@ -41,7 +41,7 @@ Dribbble DAM density
 
 Reference patterns, adapted without copying:
 
-- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, loading skeletons, upload preview, pagination, review dialog, and future tabs/dialog/dropdown patterns.
+- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, loading skeletons, upload preview, pagination, maintained tabs, review confirmation dialog, and request dialogs. Dropdowns remain future-only for secondary actions.
 - Dribbble DAM references: dense thumbnail grid, left filter/sidebar rhythm, asset detail panel, table/list toggle, and review/admin information density.
 - Awwwards references: clean photographic hierarchy, image-first detail view, restrained white/evergreen polish, and mobile filter behavior without cinematic storytelling.
 - CodePen interaction references: upload drag/preview/remove states and gallery filtering ideas adapted to DAM reuse states.
@@ -61,6 +61,8 @@ Reference patterns, adapted without copying:
 Reference accountability lives in `docs/runs/final-product-critique.md`. Each source group is mapped to maintained components, rejected ideas, screenshot evidence, code paths, and remaining debt. This prevents the reference list from becoming a moodboard with no implementation proof.
 
 The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
+
+Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DamTabs`, `LibraryPagination`, `ReviewActionDialog`, and `ReuseRequestDialog`. Image Comparison Slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions.
 
 Avoided:
 
