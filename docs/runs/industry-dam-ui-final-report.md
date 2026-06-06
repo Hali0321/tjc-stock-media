@@ -49,7 +49,7 @@ Preserved constraints:
 | Collections | Generic cards | Album shelves with collection context and approval summaries | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx` | `docs/screenshots/collections-desktop.png` |
 | Asset Detail | Chip-heavy metadata dump | Split trust workspace with preview, “Can I use this?”, governance passport, reuse options, and tabs | `frontend/components/AssetDetailPage.tsx`, `frontend/components/AssetTrustPanel.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/asset-detail-desktop.png`, `docs/screenshots/detail-mobile-320.png`, `docs/screenshots/detail-mobile-390.png` |
 | Upload | Plain form | Contributor intake workflow with selected-file preview, tag input, evidence fields, and Needs Review framing | `frontend/components/UploadPage.tsx`, `frontend/components/UploadFileDropzone.tsx`, `frontend/components/InputWithTags.tsx` | `docs/screenshots/upload-desktop.png`, `docs/screenshots/upload-mobile-320.png`, `docs/screenshots/upload-mobile-390.png` |
-| Review | Long generated list | Governance cockpit with queue tabs, dense rows, sticky inspector, tabs, evidence checklist, dialog, and hold actions | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/review-desktop.png`, `docs/screenshots/review-mobile-320.png`, `docs/screenshots/review-mobile-390.png` |
+| Review | Long generated list | Governance cockpit with visual triage board, media-led queue cards, queue tabs, sticky inspector, tabs, evidence checklist, dialog, and hold actions | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewActionDialog.tsx`, `frontend/components/HoldReleaseButton.tsx`, `frontend/components/DamTabs.tsx` | `docs/screenshots/review-desktop.png`, `docs/screenshots/review-mobile-320.png`, `docs/screenshots/review-mobile-390.png`, `docs/screenshots/qa/after-review-industry-pass-desktop.png`, `docs/screenshots/qa/after-review-industry-pass-mobile-320.png` |
 | Admin | Generic readiness page | Serious production readiness dashboard with blockers, field mapping coverage, and public portal gate | `frontend/components/AdminPage.tsx`, `frontend/components/StatusBanner.tsx` | `docs/screenshots/admin-desktop.png` |
 | Guide | Long stacked text | Cleaner operational guide with mobile-readable Do/Avoid blocks | `frontend/components/GuidePage.tsx` | `docs/screenshots/guide-desktop.png`, `docs/screenshots/guide-mobile-320.png` |
 
@@ -102,10 +102,10 @@ Full component inventory: `docs/ui-system/component-inventory.md`.
 
 ### Review Desktop
 
-- Improved: now reads as governance cockpit with metrics, queue tabs, dense rows, sticky inspector, evidence controls, pending-write dialog, and hold actions.
-- Still weaker: queue remains dense/spreadsheet-like because review data is heavy.
+- Improved: now reads as governance cockpit with metrics, queue tabs, media triage board, media-led queue cards, sticky inspector, evidence controls, pending-write dialog, and hold actions.
+- Still weaker: queue remains intentionally dense because review data is heavy.
 - Acceptable for Tuesday demo: yes.
-- Remaining fix made: load-more gate and interaction-proof screenshots.
+- Remaining fix made: extracted `ReviewTriageStrip` and `ReviewQueueAssetCard`, then captured 1440/768/320 proof with no console errors or horizontal overflow.
 
 ### Guide Mobile 320
 

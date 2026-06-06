@@ -30,7 +30,9 @@ The community library exposes many useful and many unsuitable categories. Review
 | Filter sidebar/drawer | Implemented | Scattered chips and competing filters | DAM facets belong in a compact filter control | Neutral panel, small labels, stable facet groups | Mobile must not push results too low or overflow | `frontend/components/FilterSidebar.tsx` |
 | File upload dropzone / preview | Implemented | Plain form/file input | Contributors need drop/browse state and selected-file context before submitting review evidence | Dashed neutral dropzone, type/size rows, remove/clear controls, large-media warning | Does not imply review bypass; all submissions still enter Needs Review / Do Not Publish | `frontend/components/UploadFileDropzone.tsx`, `frontend/components/UploadPage.tsx`, `frontend/app/api/upload/route.ts` |
 | Input with tags | Implemented | Plain comma-only suggested-tags field | Suggested tags should be easy to add while staying tied to existing taxonomy/export terms | Compact chips, suggestion buttons, evergreen focus, hidden canonical-only serialized form value | Uses `canonicalTags` through `upload-tags`; typed non-canonical terms are rejected with guidance to add new wording to intake notes; reviewers still approve final taxonomy before ResourceSpace write | `frontend/components/InputWithTags.tsx`, `frontend/components/UploadPage.tsx`, `frontend/lib/upload-tags.ts`, `frontend/lib/taxonomy.ts`, `frontend/app/api/upload/route.ts` |
-| Review cockpit rows | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Compact queue tabs, rows, blocker text, audit preview | Mobile switches to compact cards; no horizontal overflow | `frontend/components/ReviewPage.tsx` |
+| Review visual triage board | Implemented | Review opened directly into records without a media-first scan layer | Reviewers need to scan risk visually before opening record details | Dark restrained thumbnail board, thumbnail-led buttons, first-risk label, no preview bypass | Responsive grid keeps focusable controls in viewport at 320/768/1440 px | `frontend/components/ReviewTriageStrip.tsx`, `frontend/components/ReviewPage.tsx` |
+| Review cockpit queue cards | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Media-led records with ResourceSpace ID, raw status, usage badge, risk callout, next check, and quiet secondary detail action | Mobile stacks into readable review cards; no horizontal overflow; selected state uses text/border/background | `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewPage.tsx` |
+| Review cockpit rows | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Compact queue tabs, cards, blocker text, audit preview | Mobile switches to compact cards; no horizontal overflow | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewTriageStrip.tsx` |
 | Review load-more gate | Implemented | Rendering up to 80 review rows at once | Reviewers still get a dense queue, but mobile reaches inspector/actions sooner | Shows first 24 loaded rows, exact loaded/total copy, evergreen load-more button | Preserves selected row visibility and avoids hiding review status | `frontend/components/ReviewPage.tsx` |
 | Banner | Implemented | Inline warnings competing with metadata chips | Operational warnings need high signal without becoming decorative | Muted info/warning/danger surfaces, text-first labels, no glass | Important safety copy appears in the banner body, not only color or tooltip | `frontend/components/StatusBanner.tsx`, `frontend/components/ReviewPage.tsx`, `frontend/components/UploadPage.tsx` |
 | Tooltip | Implemented selectively | Dense governance hints either missing or over-explained inline | Helps compact DAM controls without hiding safety facts | Small neutral text treatment, evergreen focus/hover behavior where used | Essential blockers are never tooltip-only | `frontend/components/AppNav.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/DownloadOptionsPanel.tsx` |
@@ -92,3 +94,17 @@ Safety requirements before implementation:
 - Add a dedicated download-options dialog only if approved derivative choices become richer; request dialogs are now implemented.
 - Consider extracting richer `AssetDetailTabs` / `ReviewInspectorTabs` panel composition if the panels keep growing; base tab behavior now lives in `DamTabs`.
 - Keep component styling unified; reject any imported 21st.dev component that cannot be fully restyled into the TJC DAM system.
+
+## Latest Visual Proof
+
+Review cockpit industry pass screenshots captured locally:
+
+- `docs/screenshots/qa/after-review-industry-pass-desktop.png`
+- `docs/screenshots/qa/after-review-industry-pass-tablet-768.png`
+- `docs/screenshots/qa/after-review-industry-pass-mobile-320.png`
+
+Browser proof against `http://127.0.0.1:3028/review` with Reviewer role:
+
+- 1440 desktop: visual triage board present, 24 queue cards rendered, inspector tabs present, 2 hold-to-confirm buttons present, no console errors, no horizontal overflow.
+- 768 tablet: visual triage board present, 24 queue cards rendered, inspector tabs present, 2 hold-to-confirm buttons present, no console errors, no horizontal overflow.
+- 320 mobile: visual triage board present, 24 queue cards rendered, inspector tabs present, 2 hold-to-confirm buttons present, no console errors, no horizontal overflow.

@@ -99,3 +99,27 @@ Future implementation requirements:
 
 - Upload preview now supports drop/browse drag state; safe thumbnails remain deferred until real upload backend and preview policy are wired.
 - Download-options dialog remains deferred until derivative choices are richer; request-original/review/help dialogs are implemented.
+
+## 2026-06-06 - Review Cockpit Industry Pass
+
+Decision: replace the weakest remaining Review surface with a more visible media-review cockpit rather than adding more generic cards.
+
+Replacement:
+
+| Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
+|---|---|---|---|
+| Review opened directly into long generated records | `ReviewTriageStrip` responsive media board | Lets reviewers scan risk visually without changing preview/download policy | Buttons use `aria-pressed`; responsive grid keeps focusable controls inside viewport at 320 px |
+| Soft row/card hybrid | `ReviewQueueAssetCard` | Raw ResourceSpace status, usage scope, ResourceSpace ID, risks, missing fields, and next check are visible per asset | Cards stack cleanly on 320 px; selected state is text/border/background, not color-only |
+| Page-owned queue markup inside `ReviewPage` | Review queue presentation modules | `ReviewPage` keeps orchestration, fetching, role, evidence, and pending-write behavior; presentation now has better locality | Browser proof captured 1440/768/320 with no console errors and no horizontal overflow |
+
+Code paths:
+
+- `frontend/components/ReviewTriageStrip.tsx`
+- `frontend/components/ReviewQueueAssetCard.tsx`
+- `frontend/components/ReviewPage.tsx`
+
+Screenshot proof:
+
+- `docs/screenshots/qa/after-review-industry-pass-desktop.png`
+- `docs/screenshots/qa/after-review-industry-pass-tablet-768.png`
+- `docs/screenshots/qa/after-review-industry-pass-mobile-320.png`

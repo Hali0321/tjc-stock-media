@@ -16,6 +16,8 @@ import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { MediaPreview } from "@/components/MediaPreview";
 import { ReviewActionDialog } from "@/components/ReviewActionDialog";
+import { ReviewQueueAssetCard } from "@/components/ReviewQueueAssetCard";
+import { ReviewTriageStrip } from "@/components/ReviewTriageStrip";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { missingReviewFields, reviewActions, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, ReviewEvidenceChecklist, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
@@ -369,64 +371,32 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
+      {data?.assets.length ? (
+        <ReviewTriageStrip assets={data.assets} role={role} selectedId={selectedAsset?.id} onSelect={setSelectedId} />
+      ) : null}
+
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
         <div className="order-2 min-w-0 overflow-hidden dam-contact-sheet xl:order-1">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-tjc-line bg-[#f6faf6] px-3 py-2 text-sm">
             <strong className="font-semibold text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
             {activeQueueSummary ? <span className="text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
           </div>
-          <div className="hidden grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
+          <div className="hidden grid-cols-[7.25rem_minmax(14rem,1.15fr)_minmax(15rem,1fr)_minmax(13rem,.9fr)] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
             <span>Preview</span>
-            <span>Asset</span>
-            <span>Reason</span>
-            <span>Missing / risk</span>
-            <span>Action</span>
+            <span>Asset record</span>
+            <span>Risk signal</span>
+            <span>Next check</span>
           </div>
           <div className="grid">
-            {visibleReviewAssets.map((asset) => {
-              const display = assetPresentation(asset, role);
-              const selected = selectedAsset?.id === asset.id;
-              const risks = reviewRiskFlags(asset);
-              const missing = missingReviewFields(asset);
-              return (
-                <article className={cn("grid gap-3 border-b border-tjc-line px-3 py-3 transition hover:bg-[#f8fbf8] last:border-b-0 lg:grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem]", selected && "bg-[#e5f3ea] shadow-[inset_6px_0_0_#063f39]")} key={asset.id}>
-                  <Link href={`/assets/${asset.id}`} className="review-media-reveal group block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]" aria-label={`Open ${display.title}`}>
-                    <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
-                  </Link>
-                  <div className="min-w-0">
-                    <h2 className="line-clamp-2 text-sm font-semibold leading-tight">{display.title}</h2>
-                    <p className="mt-1 grid gap-1 text-sm text-tjc-muted"><span className="truncate">{asset.collection}</span><span className="truncate">{sourceSummary(asset)}</span></p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <StatusBadge status={asset.status} />
-                      <UsageBadge scope={asset.usageScope} />
-                    </div>
-                  </div>
-                  <div className="text-sm leading-snug text-[#4d554d]">
-                    <strong className="block font-semibold text-tjc-ink">{risks[0] || "Standard review"}</strong>
-                    <span>{asset.rightsNotes || "Review needed before reuse."}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 text-xs font-medium text-[#5d665f]">
-                    {risks.slice(0, 2).map((flag) => <span className="rounded-md border border-[#ead6a8] bg-[#fff7e5] px-2 py-1 text-[#725216]" key={flag}>{flag}</span>)}
-                    <span className="rounded-md bg-[#f1f4ef] px-2 py-1">{missing.length ? `Missing: ${missing.join(", ")}` : "Required fields present"}</span>
-                    <span className="rounded-md bg-[#f1f4ef] px-2 py-1">RS {asset.resourceSpaceId || asset.id}</span>
-                  </div>
-                  <div className="flex flex-wrap content-start gap-2 lg:grid">
-                    <button
-                      className={cn("inline-flex min-h-8 items-center justify-center rounded-md border px-2.5 text-xs font-semibold transition hover:bg-[#eef7f1] active:translate-y-px", selected ? "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen" : "border-tjc-line bg-white text-tjc-evergreen")}
-                      type="button"
-                      onClick={() => setSelectedId(asset.id)}
-                      aria-pressed={selected}
-                    >
-                      Inspect
-                    </button>
-                    <Link className="inline-flex min-h-8 items-center justify-center gap-1 rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/assets/${asset.id}`}>
-                      <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />
-                      Detail
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
+            {visibleReviewAssets.map((asset) => (
+              <ReviewQueueAssetCard
+                key={asset.id}
+                asset={asset}
+                role={role}
+                selected={selectedAsset?.id === asset.id}
+                onInspect={setSelectedId}
+              />
+            ))}
             {data && !data.assets.length ? <div className="p-8 text-tjc-muted">No assets in this queue.</div> : null}
           </div>
           {data && visibleReviewCount < data.assets.length ? (
