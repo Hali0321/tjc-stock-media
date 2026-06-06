@@ -19,6 +19,7 @@ This pass was not a backend rewrite. It preserved:
 | 2 | Detail mobile put preview/related assets before trust answer; upload cards stretched with empty space; no-preview assets looked like broken thumbnails. | Reordered mobile detail, tightened upload sections, added explicit `Preview pending` / `Preview unavailable` states. |
 | 3 | Main nav and upload intake still missed two requested workflow components. | Added Tubelight-inspired nav, `Cmd/Ctrl+K` command palette, and upload file preview/remove controls. |
 | 4 | Remaining limitation is ResourceSpace/export derivative readiness and production mapping, not UI polish or safety logic. | Refreshed screenshots and documented no-preview state as a data readiness signal. |
+| 5 | Detail and review sections still used loose tab-like controls or one long inspector list. | Added maintained `DamTabs` with real tab semantics and arrow-key behavior for Asset Detail and Review inspector panels. |
 
 ## Final Product Read
 
@@ -79,7 +80,7 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 
 ## 21st.dev Component Scouting Results
 
-Subagent used: yes. Dedicated subagent `019e9b6f-3c09-7eb0-8445-fbb2b356e47c` reviewed the 21st.dev community library and Image Comparison Slider. A direct local scouting pass also checked `https://21st.dev/community/components` and confirmed available categories including navigation menus, alerts, badges, buttons, cards, dialogs/modals, dropdowns, empty states, file uploads, forms, inputs, menus, paginations, sidebars, sliders, spinner loaders, tables, tabs, tags, text areas, toggles, and tooltips.
+Subagent used: yes. Dedicated scouting subagent `019e9bb6-78c4-72e1-97c1-fa42cac99e66` reviewed the 21st.dev community library and Image Comparison Slider. A direct browser scouting pass also checked `https://21st.dev/community/components` and confirmed available categories including navigation menus, alerts, badges, buttons, cards, dialogs/modals, dropdowns, empty states, file uploads, forms, inputs, menus, paginations, sidebars, sliders, spinner loaders, tables, tabs, tags, text areas, toggles, and tooltips.
 
 Selected patterns:
 
@@ -90,6 +91,7 @@ Selected patterns:
 | Display cards | Implemented selectively | Oversized generic dashboard cards | Good for saved views, review metrics, admin health, metadata confidence | Compact white operational cards, no asset-grid use | `frontend/components/SavedViewCard.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/AdminPage.tsx`, `frontend/components/ReviewPage.tsx` | `library-desktop.png`, `collections-desktop.png`, `admin-desktop.png` |
 | File upload preview | Implemented | Plain file input | Contributors can see selected file, type, size, large-media warning, remove/clear | Neutral upload panel, review-blocked receipt copy | `frontend/components/UploadPage.tsx` | `upload-desktop.png`, `upload-mobile-320.png` |
 | Review table/list cockpit | Implemented | Long soft review card list | Reviewers can triage blockers, raw status, pending writes, and evidence quickly | Dense rows, sticky inspector, readable warnings | `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
+| Tabs | Implemented | Asset detail loose buttons and long review inspector fact list | Gives Use/Source/Review/Files/Related and Checklist/Metadata/Rights/History/Pending write stable, keyboard-friendly task sections | Shared `DamTabs`, evergreen active state, real `tablist`/`tab`/`tabpanel`, arrow-key movement | `frontend/components/DamTabs.tsx`, `frontend/components/AssetDetailPage.tsx`, `frontend/components/ReviewPage.tsx` | `asset-detail-desktop.png`, `review-desktop.png`, mobile screenshots after refresh |
 | Dialog / modal | Implemented for review actions | Immediate action POST after checklist | Confirmation step makes local pending-write semantics explicit before any queued review action | Focus-trapped white shell, evergreen confirm action, no decorative glass, Escape/cancel supported | `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
 | Badges / alerts / tooltips | Implemented selectively | Inconsistent chip-heavy safety text | Keeps raw status, portal reuse state, and blockers visible | Text plus color, no tooltip-only safety copy | `frontend/components/StatusBadge.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/AssetTrustPanel.tsx` | `asset-detail-desktop.png`, `detail-mobile-320.png` |
 | Pagination | Implemented | First-page-only result browsing | Lets large DAM searches move through results without losing search, view, collection, sort, or count truth | Compact evergreen controls, disabled states, exact `Showing X-Y of Z` copy | `frontend/components/LibraryPagination.tsx`, `frontend/components/LibraryPage.tsx`, `frontend/app/api/assets/search/route.ts` | `library-desktop.png`, `library-mobile-320.png` |
@@ -145,7 +147,7 @@ Measured browser QA:
 - `git diff --check`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass with zero failures, zero warnings, and zero console errors.
-- Browser QA now includes command palette, command arrow-key selection, and upload file-preview checks.
+- Browser QA now includes command palette, command arrow-key selection, upload file-preview checks, Review inspector tab checks, and Asset Detail tab checks.
 
 ## Current Blockers
 

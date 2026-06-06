@@ -6,7 +6,7 @@ Last updated: 2026-06-06
 
 Decision: use 21st.dev as a component scouting source, not as a drop-in visual system.
 
-Subagent: used. Dedicated subagent `019e9b6f-3c09-7eb0-8445-fbb2b356e47c` reviewed the 21st.dev community library and Image Comparison Slider, then produced a scouting report. A direct local browser/curl scouting pass also confirmed the library categories and slider page.
+Subagent: used. Dedicated scouting subagent `019e9bb6-78c4-72e1-97c1-fa42cac99e66` reviewed the 21st.dev community library and Image Comparison Slider, then produced a scouting report. A direct browser scouting pass also checked the library and slider page.
 
 Categories reviewed:
 
@@ -26,6 +26,7 @@ Accepted patterns:
 - Filter sidebar/drawer for DAM facets.
 - File upload preview for contributor confidence.
 - Review cockpit row/list pattern for governance.
+- Accessible tabs for Asset Detail trust sections and Review inspector sections.
 - Badges/banners/tooltips for safety clarity, with essential warnings visible in primary UI.
 - Skeleton loaders that match final layout.
 
@@ -81,12 +82,13 @@ Future implementation requirements:
 | Large asset card wells | Contact-sheet tiles | Blocked/download state remains visible without fake media | Grid fits 320 px without horizontal overflow |
 | Plain upload file input | File preview workflow | Upload still enters Needs Review / Do Not Publish | Selected files can be removed before submit |
 | Soft review cards | Review cockpit rows + inspector | Evidence and pending-write state stay explicit | Mobile uses stacked cards without horizontal overflow |
+| One long review inspector list | Shared `DamTabs` inspector panels | Checklist, metadata, rights, history, and pending writes remain explicit without burying action evidence | Real tab semantics, arrow-key movement, and horizontal mobile scroll |
+| Asset detail `aria-pressed` section buttons | Shared `DamTabs` detail panels | Use, Source, Review, Files, and Related stay separated as trust record sections | Real tab semantics and keyboard movement replace loose buttons |
 | Backend-ish status chips | StatusBadge / safety panels | Raw ResourceSpace status remains separate from portal reuse state | Status text never relies on color alone |
 | First-page-only Library results | LibraryPagination | Count truth now says `Showing X-Y of Z` and query/view/filter state is preserved | Previous/Next buttons have accessible labels and fit 320 px |
 | Immediate review action POST | ReviewActionDialog confirmation | Reviewers must see pending-write, not-final-ResourceSpace semantics before queueing | Focus trap, Escape/cancel, and initial confirm focus are implemented |
 
 ## Open Debt
 
-- Asset detail and review inspector tabs should become maintained components.
 - Upload preview should support drag state and safe thumbnails.
 - Download/request-original dialogs should be added with focus trap and no fake ResourceSpace persistence.

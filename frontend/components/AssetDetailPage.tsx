@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, CheckCircle2, ExternalLink, FileText, History, Image as ImageIcon, Info, Layers, ShieldCheck } from "lucide-react";
 import { AssetTrustPanel } from "@/components/AssetTrustPanel";
+import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DownloadOptionsPanel } from "@/components/DownloadOptionsPanel";
 import { MediaPreview } from "@/components/MediaPreview";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -182,16 +183,10 @@ export function AssetDetailPage({ id }: { id: string }) {
           </section>
           <DownloadOptionsPanel asset={asset} role={role} />
 
-          <nav className="flex min-w-0 flex-wrap gap-2" aria-label="Asset detail sections">
-            {detailTabs.map((tab) => (
-              <button key={tab} type="button" className={cn("min-h-9 min-w-0 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#424c45] transition hover:bg-[#eef7f1] active:translate-y-px", activeTab === tab && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab}>
-                {tab}
-              </button>
-            ))}
-          </nav>
+          <DamTabs tabs={detailTabs} active={activeTab} onChange={setActiveTab} ariaLabel="Asset detail sections" idPrefix="asset-detail" />
 
           {activeTab === "Use" ? (
-            <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Usage guidance">
+            <section id={damTabPanelId("asset-detail", "Use")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Use")} className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Usage guidance">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><ShieldCheck size={18} strokeWidth={1.8} aria-hidden="true" /> Use guidance</h2>
               <dl className="grid gap-3">
                 {display.guidanceFacts.map((fact) => (
@@ -202,7 +197,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           ) : null}
 
           {activeTab === "Source" ? (
-            <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Source and provenance">
+            <section id={damTabPanelId("asset-detail", "Source")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Source")} className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Source and provenance">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><Info size={18} strokeWidth={1.8} aria-hidden="true" /> Source and provenance</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Source system</dt><dd className={factDescClass}>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
@@ -217,7 +212,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           ) : null}
 
           {activeTab === "Review" ? (
-            <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Review status">
+            <section id={damTabPanelId("asset-detail", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Review")} className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Review status">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><History size={18} strokeWidth={1.8} aria-hidden="true" /> Review record</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{asset.reviewer || "Not reviewed"}</dd></div>
@@ -245,7 +240,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           ) : null}
 
           {activeTab === "Files" ? (
-            <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="File options">
+            <section id={damTabPanelId("asset-detail", "Files")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Files")} className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="File options">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><FileText size={18} strokeWidth={1.8} aria-hidden="true" /> Files</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Media type</dt><dd className={factDescClass}>{asset.mediaType}</dd></div>
@@ -271,7 +266,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           ) : null}
 
           {activeTab === "Related" ? (
-            <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Related assets">
+            <section id={damTabPanelId("asset-detail", "Related")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Related")} className="min-w-0 rounded-md border border-tjc-line bg-white p-3" aria-label="Related assets">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><Layers size={18} strokeWidth={1.8} aria-hidden="true" /> Related</h2>
               <RelatedStrip assets={related} role={role} />
             </section>

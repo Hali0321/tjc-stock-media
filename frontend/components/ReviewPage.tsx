@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
@@ -68,6 +69,9 @@ const governanceCards = [
   { key: "archiveCandidates", label: "Archive candidates", icon: Archive }
 ] as const;
 
+const reviewInspectorTabs = ["Checklist", "Metadata", "Rights", "History", "Pending write"] as const;
+type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
+
 const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
 const factTermClass = "text-xs font-semibold text-tjc-evergreen";
 const factDescClass = "mt-1 break-words text-sm leading-relaxed text-[#4d554d]";
@@ -99,6 +103,21 @@ function sourceSummary(asset: StockMediaAsset) {
   return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
 }
 
+function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
+  return (
+    <section className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]" aria-label="Audit preview">
+      <h3 className="font-semibold text-[#27435b]">Audit preview</h3>
+      <dl className="mt-2 grid gap-1">
+        <div><dt className="font-semibold">Intended action</dt><dd>{auditPreview.action}</dd></div>
+        <div><dt className="font-semibold">Reviewer role</dt><dd>{auditPreview.role}</dd></div>
+        <div><dt className="font-semibold">Asset ID</dt><dd>{auditPreview.assetId}</dd></div>
+        <div><dt className="font-semibold">Timestamp</dt><dd>{auditPreview.timestamp}</dd></div>
+        <div><dt className="font-semibold">Required before real write</dt><dd>ResourceSpace field mapping, signed API write, reviewer identity, and status audit fields.</dd></div>
+      </dl>
+    </section>
+  );
+}
+
 export function ReviewPage() {
   const { role, ready } = useDemoRole();
   const [data, setData] = useState<ReviewResponse | null>(null);
@@ -110,6 +129,7 @@ export function ReviewPage() {
   const [reviewNote, setReviewNote] = useState("");
   const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
+  const [activeInspectorTab, setActiveInspectorTab] = useState<ReviewInspectorTab>("Checklist");
   const [submittingReview, setSubmittingReview] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
@@ -150,7 +170,8 @@ export function ReviewPage() {
     setReviewNote("");
     setChecklist(emptyChecklist);
     setPendingAction(null);
-  }, [selectedId]);
+    setAuditPreview(null);
+  }, [activeQueue, selectedId]);
 
   function missingEvidenceFor(action: ReviewAction) {
     const required: Array<keyof ReviewEvidenceChecklist> = [
@@ -236,6 +257,7 @@ export function ReviewPage() {
   }
 
   const confirmedChecklistLabels = checklistLabels.filter(([field]) => checklist[field]).map(([, label]) => label);
+  const selectedAuditPreview = selectedAsset && auditPreview?.assetId === selectedAsset.id ? auditPreview : null;
 
   if (!ready) {
     return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
@@ -323,7 +345,7 @@ export function ReviewPage() {
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
       <section ref={workbenchRef} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem]" aria-label="Review workbench">
-        <div className="min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white">
+        <div className="order-2 min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white xl:order-1">
           <div className="hidden grid-cols-[7rem_minmax(12rem,1.1fr)_minmax(12rem,1fr)_minmax(13rem,1.1fr)_9rem] gap-3 border-b border-tjc-line px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
             <span>Preview</span>
             <span>Asset</span>
@@ -381,7 +403,7 @@ export function ReviewPage() {
         </div>
 
         {selectedAsset ? (
-          <aside className="grid gap-3 self-start rounded-md border border-tjc-line bg-white p-3 shadow-[0_10px_24px_rgba(32,34,31,.07)] xl:sticky xl:top-24" aria-label="Selected asset review summary">
+          <aside className="order-1 grid gap-3 self-start rounded-md border border-tjc-line bg-white p-3 shadow-[0_10px_24px_rgba(32,34,31,.07)] xl:order-2 xl:sticky xl:top-24" aria-label="Selected asset review summary">
             <div className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
               <MediaPreview src={selectedPreview} alt={selectedAsset.thumbnailAlt} className="px-3" loading="eager" />
             </div>
@@ -393,58 +415,91 @@ export function ReviewPage() {
               <StatusBadge status={selectedAsset.status} />
               <UsageBadge scope={selectedAsset.usageScope} />
             </div>
-            <dl className="grid gap-2">
-              <div className={factItemClass}><dt className={factTermClass}>Raw ResourceSpace status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>People/minors</dt><dd className={factDescClass}>{selectedAsset.peopleRisk || "Unknown - reviewer should confirm before public use"}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Usage guidance</dt><dd className={factDescClass}>{selectedAsset.usageGuidance || "Missing"}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Review notes</dt><dd className={factDescClass}>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Portal reuse state</dt><dd className={factDescClass}>{selectedAsset.reuseDecision ? `${selectedAsset.reuseDecision.label} - ${selectedAsset.reuseDecision.summary}` : "Computed by TJC Stock Media policy"}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Pending write</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
-              <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
-            </dl>
-            <section className="border-t border-tjc-line pt-3" aria-label="Review action area">
-              <h3 className="text-sm font-semibold text-tjc-evergreen">Action area</h3>
-              <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
-                Review note
-                <textarea
-                  className="min-h-24 rounded-md border border-tjc-line bg-white p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
-                  value={reviewNote}
-                  onChange={(event) => setReviewNote(event.target.value)}
-                  placeholder="Record what was checked and why this action is appropriate..."
-                  rows={3}
-                />
-              </label>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Review checklist">
-                {checklistLabels.map(([field, label]) => (
-                  <label className="flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43]" key={field}>
-                    <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={checklist[field]} onChange={() => toggleChecklist(field)} />
-                    {label}
-                  </label>
-                ))}
-              </div>
-              <div className="mt-2 grid gap-2">
-                {reviewActions.map((action) => {
-                  const missing = missingEvidenceFor(action);
-                  return (
-                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={missing.length ? `Missing: ${missing.join(", ")}` : "Review evidence and queue pending write"} onClick={() => requestAction(action)}>
-                      {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
-                      {action.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-            {auditPreview ? (
-              <section className="rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]" aria-label="Audit preview">
-                <h3 className="font-semibold text-[#27435b]">Audit preview</h3>
-                <dl className="mt-2 grid gap-1">
-                  <div><dt className="font-semibold">Intended action</dt><dd>{auditPreview.action}</dd></div>
-                  <div><dt className="font-semibold">Reviewer role</dt><dd>{auditPreview.role}</dd></div>
-                  <div><dt className="font-semibold">Timestamp</dt><dd>{auditPreview.timestamp}</dd></div>
-                  <div><dt className="font-semibold">Required before real write</dt><dd>ResourceSpace field mapping, signed API write, reviewer identity, and status audit fields.</dd></div>
+            <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" />
+
+            {activeInspectorTab === "Checklist" ? (
+              <section id={damTabPanelId("review-inspector", "Checklist")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Checklist")} className="border-t border-tjc-line pt-3" aria-label="Review action area">
+                <h3 className="text-sm font-semibold text-tjc-evergreen">Action evidence</h3>
+                <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
+                  Review note
+                  <textarea
+                    className="min-h-24 rounded-md border border-tjc-line bg-white p-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]"
+                    value={reviewNote}
+                    onChange={(event) => setReviewNote(event.target.value)}
+                    placeholder="Record what was checked and why this action is appropriate..."
+                    rows={3}
+                  />
+                </label>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Review checklist">
+                  {checklistLabels.map(([field, label]) => (
+                    <label className="flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43]" key={field}>
+                      <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={checklist[field]} onChange={() => toggleChecklist(field)} />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-2 grid gap-2">
+                  {reviewActions.map((action) => {
+                    const missing = missingEvidenceFor(action);
+                    return (
+                      <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={missing.length ? `Missing: ${missing.join(", ")}` : "Review evidence and queue pending write"} onClick={() => requestAction(action)}>
+                        {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
+                        {action.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
+              </section>
+            ) : null}
+
+            {activeInspectorTab === "Metadata" ? (
+              <section id={damTabPanelId("review-inspector", "Metadata")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Metadata")}>
+                <dl className="grid gap-2">
+                  <div className={factItemClass}><dt className={factTermClass}>Raw ResourceSpace status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Portal reuse state</dt><dd className={factDescClass}>{selectedAsset.reuseDecision ? `${selectedAsset.reuseDecision.label} - ${selectedAsset.reuseDecision.summary}` : "Computed by TJC Stock Media policy"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{selectedAsset.resourceSpaceId || selectedAsset.id}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Collection</dt><dd className={factDescClass}>{selectedAsset.collection}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Usage scope</dt><dd className={factDescClass}>{selectedAsset.usageScope}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Missing fields</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? missingReviewFields(selectedAsset).join(", ") : "Required fields present"}</dd></div>
                 </dl>
+              </section>
+            ) : null}
+
+            {activeInspectorTab === "Rights" ? (
+              <section id={damTabPanelId("review-inspector", "Rights")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Rights")}>
+                <dl className="grid gap-2">
+                  <div className={factItemClass}><dt className={factTermClass}>Why review</dt><dd className={factDescClass}>{reviewRiskFlags(selectedAsset).join(", ")}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Source/provenance</dt><dd className={factDescClass}>{sourceSummary(selectedAsset)}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>People/minors</dt><dd className={factDescClass}>{selectedAsset.peopleRisk || "Unknown - reviewer should confirm before public use"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Rights status</dt><dd className={factDescClass}>{selectedAsset.rightsStatus || "Unknown - reviewer should confirm before public use"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Consent status</dt><dd className={factDescClass}>{selectedAsset.consentStatus || "Unknown - reviewer should confirm before public use"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Usage guidance</dt><dd className={factDescClass}>{selectedAsset.usageGuidance || "Missing"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Review notes</dt><dd className={factDescClass}>{selectedAsset.rightsNotes || "No notes exported yet"}</dd></div>
+                </dl>
+              </section>
+            ) : null}
+
+            {activeInspectorTab === "History" ? (
+              <section id={damTabPanelId("review-inspector", "History")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "History")}>
+                <dl className="grid gap-2">
+                  <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{selectedAsset.reviewer || "Not reviewed"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Reviewed date</dt><dd className={factDescClass}>{selectedAsset.reviewedDate || "Pending"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Last exported state</dt><dd className={factDescClass}>Read from ResourceSpace metadata export. Local pending writes are shown separately.</dd></div>
+                </dl>
+                {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
+              </section>
+            ) : null}
+
+            {activeInspectorTab === "Pending write" ? (
+              <section id={damTabPanelId("review-inspector", "Pending write")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Pending write")}>
+                <dl className="grid gap-2">
+                  <div className={factItemClass}><dt className={factTermClass}>Pending write</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Write mode</dt><dd className={factDescClass}>Pending local queue only until ResourceSpace API field mapping is configured.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>ResourceSpace truth</dt><dd className={factDescClass}>Raw status remains {selectedAsset.status}. Pending review write is not final ResourceSpace persistence.</dd></div>
+                </dl>
+                {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
               </section>
             ) : null}
             <div className="grid gap-2">

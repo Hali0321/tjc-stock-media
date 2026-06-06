@@ -114,6 +114,10 @@ async function inspectPage(page, expected) {
       hasViewerUploadBlock: visibleText.includes("Upload is for Contributors"),
       hasAdminBlock: visibleText.includes("Admin cockpit requires DAM Admin role"),
       hasOriginalFilenameOnCard: [...document.querySelectorAll('[aria-label="Source metadata"]')].some((el) => (el.textContent || "").includes("Original:")),
+      missingTabControls: [...document.querySelectorAll('[role="tab"][aria-controls]')]
+        .map((el) => el.getAttribute("aria-controls"))
+        .filter((id) => id && !document.getElementById(id))
+        .slice(0, 10),
       textSample: visibleText.replace(/\s+/g, " ").trim().slice(0, 220)
     };
   }, expected);
@@ -127,6 +131,7 @@ for (const width of qaViewports) {
     if (!response || response.status() >= 500) failures.push(`${item.label} ${width}: HTTP ${response?.status()}`);
     if (state.overflowX) failures.push(`${item.label} ${width}: horizontal overflow ${state.scrollWidth}/${state.clientWidth}`);
     if (state.clippedControls.length) failures.push(`${item.label} ${width}: clipped controls ${JSON.stringify(state.clippedControls)}`);
+    if (state.missingTabControls.length) failures.push(`${item.label} ${width}: tab aria-controls missing targets ${state.missingTabControls.join(", ")}`);
     if (state.brokenImages.length) warnings.push(`${item.label} ${width}: broken images ${state.brokenImages.join(", ")}`);
     if (item.label === "detail-approved-viewer" && !state.hasBlockedDownload) failures.push(`${item.label} ${width}: portal-ready blocker missing`);
     if (item.label === "review-viewer" && !state.hasViewerReviewBlock) failures.push(`${item.label} ${width}: viewer review block missing`);
@@ -202,6 +207,11 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await page.goto(`${base}/review`, { waitUntil: "networkidle" });
+  await page.getByRole("tab", { name: "Metadata", exact: true }).click();
+  if ((await page.getByText("Raw ResourceSpace status").count()) < 1) failures.push("review inspector tabs: Metadata panel missing raw status");
+  await page.getByRole("tab", { name: "Metadata", exact: true }).press("ArrowRight");
+  if ((await page.getByText("People/minors").count()) < 1) failures.push("review inspector tabs: ArrowRight did not open Rights panel");
+  await page.getByRole("tab", { name: "Checklist", exact: true }).click();
   await page.getByLabel("Review note").fill("Browser QA confirms source, rights, people, derivative, and sensitive context evidence.");
   for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
     await page.getByLabel(label).check();
@@ -211,6 +221,16 @@ for (const width of qaViewports) {
   await page.getByRole("button", { name: "Queue pending review write" }).click();
   await page.waitForSelector("text=ResourceSpace API write mapping is not configured yet");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Viewer", 1440, 1000);
+  await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  await page.getByRole("tab", { name: "Files", exact: true }).click();
+  if ((await page.getByText("Original filename").count()) < 1) failures.push("asset detail tabs: Files panel missing original filename row");
+  await page.getByRole("tab", { name: "Files", exact: true }).press("ArrowRight");
+  if ((await page.getByRole("heading", { name: "Related", exact: true }).count()) < 1) failures.push("asset detail tabs: ArrowRight did not open Related panel");
   await context.close();
 }
 
