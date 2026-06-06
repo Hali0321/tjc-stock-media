@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink, FolderOpen, HelpCircle, Search, Settings2, ShieldCheck, UploadCloud } from "lucide-react";
+import { CommandPalette } from "@/components/CommandPalette";
 import { roles } from "@/lib/permissions";
 import { useDemoRole } from "@/components/RoleProvider";
 import { cn } from "@/lib/ui";
@@ -38,28 +39,33 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <nav className="flex min-w-0 flex-wrap items-center gap-1 md:justify-center" aria-label="Primary navigation">
+          <nav className="tubelight-nav flex min-w-0 items-center gap-1 overflow-x-auto rounded-xl border border-tjc-line bg-[#fbfcfa]/92 p-1 md:justify-center" aria-label="Primary navigation">
             {nav.filter((item) => !("adminOnly" in item) || role === "DAM Admin").map((item) => {
               const Icon = item.icon;
               const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              const utility = item.href === "/admin";
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold text-[#3f4741] transition hover:bg-[#f3f6f2] hover:text-tjc-evergreen active:translate-y-px",
-                    isActive && "bg-[#edf4f0] text-tjc-evergreen"
+                    "relative inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-[#3f4741] transition hover:text-tjc-evergreen active:translate-y-px",
+                    isActive && "text-tjc-evergreen",
+                    utility && "border-l border-tjc-line"
                   )}
                   title={item.label}
+                  aria-current={isActive ? "page" : undefined}
                 >
-                  <Icon aria-hidden="true" size={16} strokeWidth={1.8} />
-                  <span className="max-[350px]:sr-only">{item.label}</span>
+                  {isActive ? <span className="absolute inset-0 rounded-lg border border-[#a7cbbd] bg-white shadow-[0_6px_18px_rgba(18,63,58,.10)]" aria-hidden="true" /> : null}
+                  <Icon className="relative z-10" aria-hidden="true" size={16} strokeWidth={1.8} />
+                  <span className="relative z-10 max-[430px]:sr-only">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
           <div className="flex min-w-0 items-center justify-end gap-2">
+            <CommandPalette />
             <Link href="/guide" className="hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:inline-flex" aria-label="Open usage guide">
               <HelpCircle aria-hidden="true" size={16} strokeWidth={1.8} />
               <span>Guide</span>

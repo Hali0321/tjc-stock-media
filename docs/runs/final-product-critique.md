@@ -17,7 +17,8 @@ This pass was not a backend rewrite. It preserved:
 |---|---|---|
 | 1 | Screens still felt too soft and card-heavy; Library buried results under operational panels. | Tightened global surface, app chrome, asset cards, saved views, collection cards, and Library density. |
 | 2 | Detail mobile put preview/related assets before trust answer; upload cards stretched with empty space; no-preview assets looked like broken thumbnails. | Reordered mobile detail, tightened upload sections, added explicit `Preview pending` / `Preview unavailable` states. |
-| 3 | Remaining limitation is ResourceSpace/export derivative readiness, not UI polish or safety logic. | Refreshed screenshots and documented no-preview state as a data readiness signal. |
+| 3 | Main nav and upload intake still missed two requested workflow components. | Added Tubelight-inspired nav, `Cmd/Ctrl+K` command palette, and upload file preview/remove controls. |
+| 4 | Remaining limitation is ResourceSpace/export derivative readiness and production mapping, not UI polish or safety logic. | Refreshed screenshots and documented no-preview state as a data readiness signal. |
 
 ## Final Product Read
 
@@ -26,10 +27,12 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 ## Find
 
 - Search is first on Library with ministry/use-case placeholder text.
+- `Cmd/Ctrl+K` command palette jumps to saved views, collections, upload, review queues, Guide, Admin diagnostics, and ResourceSpace IDs.
 - Saved views use stable view IDs for Website hero, Slides, Newsletter, Social, No people, Internal ready, Recently approved, Needs review, and related workflow queues.
 - Results appear high on desktop and mobile.
 - Counts distinguish rendered, matching, visible-to-role, approved, pending review, rights review, children/youth, and archive.
 - Collections use album-style cards and stable collection IDs; Sabbath wording is preserved.
+- Upload preview shows selected files, type/size, large-media handoff warning, and remove/clear controls before submit.
 
 ## Trust
 
@@ -54,6 +57,7 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 ## Visual System
 
 - Removed giant hero blocks, oversized cards, heavy font weights, pale green wash, repeated dashboard cards, and broken-image-looking thumbnails.
+- Added restrained Tubelight-inspired workflow nav without turning navigation into decoration.
 - Contact-sheet asset cards use compact status, title, collection/source, usage, and blocked/download state.
 - No-preview derivatives are labeled as `Preview pending` or `Preview unavailable`.
 - Guide is searchable secondary help with compact Do/Avoid rules.
@@ -92,6 +96,7 @@ Measured browser QA:
 - `git diff --check`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
 - `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass with zero failures, zero warnings, and zero console errors.
+- Browser QA now includes command palette and upload file-preview checks.
 
 ## Current Blockers
 
@@ -100,3 +105,5 @@ Measured browser QA:
 - Production host, access allowlist, backup schedule, and restore ownership remain external.
 - Production derivative policy still needs approved presets for web, slide, social, and approved copy.
 - Current ResourceSpace export lacks preview derivatives for many first-batch assets; UI handles this honestly but product readiness improves when derivatives are exported/configured.
+- Theme toggle is deferred until dark-mode status contrast can be fully designed and verified.
+- Load-more/pagination beyond current API cap remains deferred.

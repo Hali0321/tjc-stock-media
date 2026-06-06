@@ -148,8 +148,22 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Viewer", 1440, 1000);
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
+  await page.getByLabel("Command search").fill("website hero");
+  await page.keyboard.press("Enter");
+  await page.waitForURL(/view=website-hero/, { timeout: 10000 });
+  if (!page.url().includes("view=website-hero")) failures.push("command palette: website hero did not open stable view");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
+  await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }]);
+  if ((await page.getByLabel("Selected file preview").getByText("qa-photo.jpg").count()) < 1) failures.push("upload file preview: selected file missing");
+  await page.getByRole("button", { name: "Clear files" }).click();
   await page.getByLabel("Title").fill("Browser QA intake");
   await page.getByLabel("Event name").fill("Sabbath media QA");
   await page.getByLabel("Event date").fill("2026-06-06");

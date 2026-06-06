@@ -17,6 +17,8 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 - Tailwind v4 utility system with a small global token/base layer.
 - Geist variable sans via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
 - App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, collection entry points, filter controls, sort controls, and asset contact sheet high on page.
+- Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
+- Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, review queues, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
 - Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
@@ -140,6 +142,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 ## Workflow Screens
 
 - Upload uses a guided intake workflow with Context, People and rights, Files and tags, required-field markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt copy.
+- Upload previews selected files before submit, shows type/size, flags files over 100 MB for Shared Drive Incoming, and lets contributors remove/clear selected files.
 - Review uses a professional workbench layout: compact governance metrics, queue tabs, dense review rows, smaller workflow actions, selected-asset inspector, evidence checklist, audit preview, pending write state, and desktop-only GSAP motion skipped for reduced-motion users.
 - Guide is a searchable secondary usage guide with download decision rows and Do/Avoid blocks.
 - Asset detail is the trust record. On mobile, title/reuse state/blockers/download decision render before preview/related assets. Approved copy and original/master restrictions stay separated.
@@ -149,7 +152,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 - `npm run typecheck`: passed on 2026-06-06 during final DAM UI pass.
 - Production browser QA refreshed Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px, plus responsive QA at 1280, 1024, 768, 390, and 320px, with no horizontal page overflow.
 - Role safety API checks remain server-owned: blocked Viewer downloads return 403, missing review evidence returns 400, valid review evidence queues a 202 pending write, and upload intake does not fake file counts.
-- Latest browser QA had zero failures, zero warnings, and zero console errors; expected 400/403 denials were recorded as safety checks.
+- Latest browser QA includes command palette and upload file-preview checks. Expected 400/403 denials are recorded as safety checks.
 - Refreshed screenshot set lives under `docs/screenshots/`.
 
 ## Anti-AI Checklist
@@ -162,3 +165,4 @@ Current UI tokens live in `frontend/app/globals.css`.
 - No meaningless decorative icons.
 - No over-polished empty dashboard.
 - No broken-image placeholders; no-preview export gaps are labeled.
+- Theme toggle deferred: dark mode needs a full safety-label contrast pass before enabling.

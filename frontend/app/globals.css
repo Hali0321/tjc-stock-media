@@ -160,6 +160,14 @@ textarea:focus-visible {
   min-height: 2.75rem;
 }
 
+.tubelight-nav {
+  scrollbar-width: none;
+}
+
+.tubelight-nav::-webkit-scrollbar {
+  display: none;
+}
+
 @media (min-width: 768px) {
   .dam-shell {
     padding: 1.25rem 1.25rem 2.5rem;

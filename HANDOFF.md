@@ -25,14 +25,15 @@ The current frontend shell is the final dense ministry DAM UI:
 
 - Desktop uses compact top navigation plus role utility controls.
 - Styling is Tailwind v4 with a small global token/base layer, Geist via `next/font/google`, and `lucide-react` icons.
-- Main nav: Library, Collections, Upload, Review.
+- Main nav: Library, Collections, Upload, Review with restrained Tubelight-inspired active state.
 - Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
+- Command palette: `Cmd/Ctrl+K` for search, saved views, collections, upload, review queues, ResourceSpace ID lookup, Guide, and Admin diagnostics.
 - Library: compact command bar, early search, use-case shortcuts, saved views, filters, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
 - Collections: album-style records opened by stable collection ID, including Sabbath wording.
 - Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.
 - Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets.
-- Upload: guided three-step intake with required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
+- Upload: guided three-step intake with selected-file preview, type/size display, remove/clear controls, required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
 - Review: queue tabs, compact decision rows, selected-asset inspector, evidence checklist, note field, audit preview, pending write state, and desktop-only GSAP motion disabled by reduced-motion.
 
 ## Architecture
@@ -110,6 +111,11 @@ Needs Review, Searchable Archive, Possible Minors, and Do Not Use assets return 
 The frontend uses `/api/assets/thumbnail/:id` to resolve a ResourceSpace derivative for a specific asset ID. It never exposes the whole filestore directory and never copies thumbnails into Git.
 
 If the current ResourceSpace export lacks a usable preview derivative for the role, the portal shows `Preview pending` or `Preview unavailable` and keeps the reuse decision governed by policy. It does not fabricate thumbnails.
+
+## Deferred UI Items
+
+- Theme toggle is intentionally deferred. Dark mode needs a full contrast/safety-label pass before it can be enabled without weakening approval, warning, blocked, people/minors, or pending-write clarity.
+- Load-more/pagination beyond the current API cap remains a follow-up; current browser QA still verifies count truth and responsive layout.
 
 ## Remaining Before Church PC/NAS
 
