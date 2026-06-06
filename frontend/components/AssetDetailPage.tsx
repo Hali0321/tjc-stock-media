@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, CheckCircle2, ExternalLink, FileText, History, Image as ImageIcon, Info, Layers, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, FileText, History, Image as ImageIcon, Info, Layers, ShieldCheck } from "lucide-react";
+import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { AssetTrustPanel } from "@/components/AssetTrustPanel";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DownloadOptionsPanel } from "@/components/DownloadOptionsPanel";
@@ -140,9 +141,14 @@ export function AssetDetailPage({ id }: { id: string }) {
 
         <aside className="order-1 grid min-w-0 gap-3 xl:order-2 xl:sticky xl:top-24 xl:self-start">
           <section className="min-w-0 rounded-md border border-tjc-line bg-white p-3">
-            <span className="text-sm font-semibold text-tjc-evergreen">{asset.collection}</span>
-            <h1 className="mt-2 dam-page-title">{display.title}</h1>
-            <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{provenance.publicLabel}</p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-sm font-semibold text-tjc-evergreen">{asset.collection}</span>
+                <h1 className="mt-2 dam-page-title">{display.title}</h1>
+                <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{provenance.publicLabel}</p>
+              </div>
+              <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl} canOpenResourceSpace={canOpenResourceSpace} />
+            </div>
           </section>
 
           <AssetTrustPanel asset={asset} role={role} />
@@ -281,12 +287,6 @@ export function AssetDetailPage({ id }: { id: string }) {
             </div>
           </section>
 
-          {data.resourceSpaceUrl && canOpenResourceSpace ? (
-            <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-blue px-4 text-sm font-semibold text-white transition hover:bg-[#163e5d] active:translate-y-px" href={data.resourceSpaceUrl} target="_blank" rel="noreferrer">
-              <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
-              Open in ResourceSpace
-            </a>
-          ) : null}
         </aside>
       </section>
     </div>

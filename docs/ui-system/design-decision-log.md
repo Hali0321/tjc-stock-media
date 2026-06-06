@@ -91,6 +91,7 @@ Future implementation requirements:
 | Backend-ish status chips | StatusBadge / safety panels | Raw ResourceSpace status remains separate from portal reuse state | Status text never relies on color alone |
 | First-page-only Library results | LibraryPagination | Count truth now says `Showing X-Y of Z` and query/view/filter state is preserved | Previous/Next buttons have accessible labels and fit 320 px |
 | Immediate review action POST | ReviewActionDialog confirmation | Reviewers must see pending-write, not-final-ResourceSpace semantics before queueing | Focus trap, Escape/cancel, and initial confirm focus are implemented |
+| Standalone detail admin/copy actions | DropdownActionMenu / AssetActionsMenu | Secondary actions should be available without competing with reuse and trust panels | Viewer/Reviewer see copy actions only; DAM Admin can open ResourceSpace source-of-truth link |
 
 ## Open Debt
 

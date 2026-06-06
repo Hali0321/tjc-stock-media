@@ -251,6 +251,19 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  const viewerActionsButton = page.getByRole("button", { name: "Asset actions" });
+  await viewerActionsButton.click();
+  if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "true") failures.push("asset actions menu: aria-expanded not true after open");
+  if ((await page.getByRole("menuitem", { name: /Copy ResourceSpace ID/ }).count()) < 1) failures.push("asset actions menu: copy ResourceSpace ID missing");
+  if ((await page.getByRole("menuitem", { name: /Copy portal link/ }).count()) < 1) failures.push("asset actions menu: copy portal link missing");
+  if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) > 0) failures.push("asset actions menu: Viewer can see ResourceSpace admin action");
+  await page.keyboard.press("ArrowDown");
+  const activeMenuText = await page.evaluate(() => document.activeElement?.textContent || "");
+  if (!activeMenuText.includes("Copy portal link")) failures.push("asset actions menu: ArrowDown did not move focus");
+  await page.keyboard.press("Escape");
+  if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "false") failures.push("asset actions menu: Escape did not close menu");
+  const focusedAfterEscape = await page.evaluate(() => document.activeElement?.textContent || "");
+  if (!focusedAfterEscape.includes("Asset actions")) failures.push("asset actions menu: focus did not return after Escape");
   await page.getByRole("tab", { name: "Files", exact: true }).click();
   if ((await page.getByText("Original filename").count()) < 1) failures.push("asset detail tabs: Files panel missing original filename row");
   await page.getByRole("tab", { name: "Files", exact: true }).press("ArrowRight");
@@ -260,6 +273,23 @@ for (const width of qaViewports) {
   if ((await page.getByText("This request does not grant access automatically.").count()) < 1) failures.push("request original dialog: safety copy missing");
   if ((await page.getByText("ResourceSpace status, portal reuse state, and pending review writes do not change here.").count()) < 1) failures.push("request original dialog: no-fake-persistence copy missing");
   await page.getByRole("button", { name: "Close request dialog" }).click();
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("DAM Admin", 1440, 1000);
+  await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Asset actions" }).click();
+  if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) < 1) failures.push("asset actions menu: DAM Admin ResourceSpace action missing");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Viewer", 320, 900);
+  await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Asset actions" }).click();
+  const menuOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+  if (menuOverflow) failures.push("asset actions menu: mobile menu caused horizontal overflow");
   await context.close();
 }
 

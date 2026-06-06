@@ -245,6 +245,7 @@ Current UI and workflow notes:
 - Assets without exported preview derivatives show honest `Preview pending` or `Preview unavailable` states instead of broken thumbnails. This is a ResourceSpace/export readiness signal, not fake media.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
 - Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
+- Asset detail uses maintained `DropdownActionMenu` / `AssetActionsMenu` for secondary copy/open actions. Viewers can copy ResourceSpace ID and portal link; DAM Admin can open the ResourceSpace source-of-truth link when configured.
 - Asset detail and Review inspector use maintained `DamTabs` with real tab semantics, arrow-key movement, and verified `aria-controls` targets.
 - Request original access, request review, and ask-media-coworker actions open `ReuseRequestDialog` first. The dialog explains that email drafts do not grant original access, update ResourceSpace, or create pending writes.
 - Review uses `HoldReleaseButton` for high-risk `Archive only` and `Do not publish externally` decisions after evidence is complete, so accidental clicks do not queue those pending writes.
