@@ -20,6 +20,7 @@ Current notable paths:
 - Workflows: `frontend/components/LibraryPage.tsx`, `frontend/components/AssetDetailPage.tsx`, `frontend/components/UploadPage.tsx`, `frontend/components/ReviewPage.tsx`, `frontend/components/CollectionsPage.tsx`, `frontend/components/AdminPage.tsx`, `frontend/components/GuidePage.tsx`
 - Accessibility hardening: `frontend/components/DamTabs.tsx`
 - QA evidence: `docs/screenshots/qa/`
+- Final evidence report: `docs/runs/industry-dam-ui-final-report.md`
 
 ## Before / After Visual Inspection
 
