@@ -27,8 +27,8 @@ approval_notes
 
 | State | Use when |
 |---|---|
-| Approved Public | Safe for public TJC use. |
-| Approved Internal | Safe inside TJC, not public. |
+| Approved Public | Raw ResourceSpace approval state. It becomes publicly reusable in the portal only after source, rights, people/minors, reviewer/date, usage scope, and derivative checks pass. |
+| Approved Internal | Raw ResourceSpace internal approval state. It becomes internally reusable only after required portal checks pass. |
 | Searchable Archive | Useful to find later, but not publishable yet. |
 | Archive - Not Promoted | Safe enough to keep, low stock-media value. |
 | Do Not Use | Rights, privacy, safety, or mission concern. |
@@ -53,9 +53,10 @@ Keep these in `Needs Review` unless clearly approved:
 
 Preview success is not approval. Good-looking media can still be unsafe to publish.
 
+Raw ResourceSpace approval is not portal reuse permission. Reviewers should resolve portal blockers before telling users an asset is reusable.
+
 When unsure, choose:
 
 ```text
 Needs Review / Do Not Publish
 ```
-

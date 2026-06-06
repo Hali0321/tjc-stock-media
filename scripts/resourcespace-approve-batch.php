@@ -9,6 +9,12 @@ $review_date = $argv[3] ?? date("Y-m-d");
 $audit_path = $argv[4] ?? "/tmp/tjc-mvp-approval-audit.csv";
 $min_ref = (int) ($argv[5] ?? 363);
 $rights_status = $argv[6] ?? "Permission Confirmed";
+$portal_confirmation = $argv[7] ?? "";
+
+if ($portal_confirmation !== "portal-ready-confirmed") {
+    fwrite(STDERR, "FAIL: batch approval now requires explicit portal-ready-confirmed confirmation after source, rights, people/minors, reviewer/date, usage scope, and derivative checks.\n");
+    exit(1);
+}
 
 if (preg_match('/^(Approved Public|Approved Internal|Needs Review|Searchable Archive|Archive - Not Promoted|Do Not Use|Possible Minors)$/i', $rights_status)) {
     fwrite(STDERR, "FAIL: rights_status must describe rights, not publish workflow state.\n");
@@ -77,7 +83,7 @@ fputcsv($handle, [
 ]);
 
 $approved = 0;
-$notes = "Approved by {$reviewer} on {$review_date} for TJC MVP 2024 stock media prototype. Approved Public means usable for public and internal church communication in this prototype batch.";
+$notes = "Approved by {$reviewer} on {$review_date} for TJC MVP 2024 stock media prototype after explicit portal-ready confirmation. Approved Public is ResourceSpace status; portal reuse still depends on source, rights, people/minors, reviewer/date, usage scope, and derivative policy checks.";
 
 foreach ($resources as $resource) {
     $ref = (int) $resource["ref"];

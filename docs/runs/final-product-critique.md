@@ -57,10 +57,55 @@ The portal now reads as a mature internal DAM workflow product rather than a lan
 ## Visual System
 
 - Removed giant hero blocks, oversized cards, heavy font weights, pale green wash, repeated dashboard cards, and broken-image-looking thumbnails.
-- Added restrained Tubelight-inspired workflow nav without turning navigation into decoration.
+- Added restrained Tubelight-inspired workflow nav as maintained `AppNav`, without turning navigation into decoration.
 - Contact-sheet asset cards use compact status, title, collection/source, usage, and blocked/download state.
 - No-preview derivatives are labeled as `Preview pending` or `Preview unavailable`.
 - Guide is searchable secondary help with compact Do/Avoid rules.
+
+## Reference Accountability
+
+| Reference/source | Used where | Implemented components | Rejected ideas | Reason | Screenshot evidence | Code paths | Remaining debt |
+|---|---|---|---|---|---|---|---|
+| 21st.dev | App shell, command access, operational cards, upload preview, review/admin summaries | `AppNav`, `CommandPalette`, `SavedViewCard`, upload file preview, compact health/status cards | Full glassmorphism, hero components, pricing blocks, particles, component showcase | Workflow components helped real DAM tasks; decorative components would weaken safety clarity | `library-desktop.png`, `upload-desktop.png`, `review-desktop.png`, `admin-desktop.png` when refreshed | `frontend/components/AppNav.tsx`, `frontend/components/CommandPalette.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/UploadPage.tsx`, `frontend/components/AdminPage.tsx` | True pagination/load more and richer dialogs remain deferred. Theme toggle deferred pending safety contrast pass. |
+| Dribbble DAM references | Library density, collections, review workbench, admin diagnostics | Contact-sheet grid, filter sidebar, collection album cards, dense review rows | Oversized dashboard cards and generic analytics panels | DAM browsing needs media density and triage speed, not decorative dashboard rhythm | `library-desktop.png`, `collections-desktop.png`, `review-desktop.png` | `frontend/components/LibraryPage.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/FilterSidebar.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/ReviewPage.tsx` | Table/list toggle is still deferred. |
+| Awwwards | Asset detail image treatment, restrained visual polish, Guide readability | Large preview/detail trust layout, minimal contextual UI | Cinematic heroes, flashy scroll motion, portfolio storytelling | Restraint improved media inspection; storytelling would slow ministry workflows | `asset-detail-desktop.png`, `detail-mobile-320.png`, `guide-desktop.png` | `frontend/components/AssetDetailPage.tsx`, `frontend/components/MediaPreview.tsx`, `frontend/components/GuidePage.tsx` | Dedicated zoom/inspection dialog remains deferred. |
+| CodePen upload/gallery patterns | Contributor intake and preview behavior | Selected-file preview, file type/size, remove/clear, large-media warning | Pure drag/drop demo and masonry-lightbox-first browsing | Upload preview was useful; lightbox-first gallery would hide DAM metadata and safety state | `upload-desktop.png`, `upload-mobile-320.png` | `frontend/components/UploadPage.tsx`, `frontend/app/api/upload/route.ts` | Drag-over state can be improved after real upload backend is wired. |
+| Godly / Frame.io mood | Media review SaaS polish | Review inspector, queue tabs, pending-write state | Dark-heavy trend chrome and collaboration-widget clutter | Review needed serious cockpit feel while staying church-safe and readable | `review-desktop.png`, `review-mobile-320.png` | `frontend/components/ReviewPage.tsx` | Comment-thread collaboration remains out of scope until ResourceSpace workflow mapping exists. |
+| Monet | Admin/Guide calm enterprise sections | Diagnostics cards, production blocker sections, readable guide blocks | Marketing feature-showcase layout for Library | Monet-style calm works for docs/admin, not contact-sheet browsing | `admin-desktop.png`, `guide-desktop.png` | `frontend/components/AdminPage.tsx`, `frontend/components/GuidePage.tsx` | Admin remains read-only; ResourceSpace admin replacement intentionally rejected. |
+| Pinterest moodboard | Archive/upload visual rhythm only | Album-card mood and upload selection layout | Dark neon dashboards, generic startup templates, nostalgic archive decoration | Moodboard used as loose density signal, not implementation source | `collections-desktop.png`, `upload-desktop.png` | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/UploadPage.tsx` | None beyond real derivative coverage improving thumbnail richness. |
+| AI design tools | Research-only prompt direction | No app dependency added | Fake church people, AI media, decorative motion | Production DAM must not add fabricated ministry media or extra tool dependencies | Not applicable | No production code paths | Deferred by design. |
+| Font references | App-wide typography | Existing Geist with Inter/Noto guidance documented | Font churn to Inter before stability pass | Geist was already integrated; replacing it risked churn without solving safety/workflow issues | All screenshots | `frontend/app/layout.tsx`, `frontend/app/globals.css`, `DESIGN.md` | Evaluate Inter + Noto Sans TC fallback in future typography-only pass. |
+| Product/design references | Find/Trust/Reuse/Govern flows | Search/views, trust record, download gates, review queues, usage guide | Copying Brandfolder/Frontify/Bynder/PhotoShelter layouts directly | Borrowed product logic while preserving ResourceSpace truth layer and TJC rules | Full refreshed screenshot set | `frontend/components/*`, `frontend/lib/reuse-policy.ts`, `frontend/lib/asset-governance.ts`, `frontend/app/api/*` | Real auth, ResourceSpace write mapping, derivative presets, and original-access workflow remain production blockers. |
+
+## 21st.dev Component Scouting Results
+
+Subagent used: yes. Dedicated subagent `019e9b6f-3c09-7eb0-8445-fbb2b356e47c` reviewed the 21st.dev community library and Image Comparison Slider. A direct local scouting pass also checked `https://21st.dev/community/components` and confirmed available categories including navigation menus, alerts, badges, buttons, cards, dialogs/modals, dropdowns, empty states, file uploads, forms, inputs, menus, paginations, sidebars, sliders, spinner loaders, tables, tabs, tags, text areas, toggles, and tooltips.
+
+Selected patterns:
+
+| 21st.dev pattern/category | Status | Replaced old pattern | Why it fits TJC Stock Media | Style normalization | Code paths | Screenshot evidence |
+|---|---|---|---|---|---|---|
+| Tubelight Navbar | Implemented | Inline primary nav | Clarifies Library, Collections, Upload, Review as core workflows | Evergreen active surface, subtle border, low motion, role-aware Admin | `frontend/components/AppNav.tsx`, `frontend/components/AppChrome.tsx` | `library-desktop.png`, `library-mobile-320.png` |
+| Command palette / menus | Implemented | Slow manual route and saved-view switching | Speeds asset search, saved views, collection jumps, review queues, ResourceSpace IDs | White dialog shell, evergreen icons, no neon/glass showcase | `frontend/components/CommandPalette.tsx` | `library-desktop.png` |
+| Display cards | Implemented selectively | Oversized generic dashboard cards | Good for saved views, review metrics, admin health, metadata confidence | Compact white operational cards, no asset-grid use | `frontend/components/SavedViewCard.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/AdminPage.tsx`, `frontend/components/ReviewPage.tsx` | `library-desktop.png`, `collections-desktop.png`, `admin-desktop.png` |
+| File upload preview | Implemented | Plain file input | Contributors can see selected file, type, size, large-media warning, remove/clear | Neutral upload panel, review-blocked receipt copy | `frontend/components/UploadPage.tsx` | `upload-desktop.png`, `upload-mobile-320.png` |
+| Review table/list cockpit | Implemented | Long soft review card list | Reviewers can triage blockers, raw status, pending writes, and evidence quickly | Dense rows, sticky inspector, readable warnings | `frontend/components/ReviewPage.tsx` | `review-desktop.png`, `review-mobile-320.png` |
+| Badges / alerts / tooltips | Implemented selectively | Inconsistent chip-heavy safety text | Keeps raw status, portal reuse state, and blockers visible | Text plus color, no tooltip-only safety copy | `frontend/components/StatusBadge.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/AssetTrustPanel.tsx` | `asset-detail-desktop.png`, `detail-mobile-320.png` |
+
+Rejected or deferred:
+
+| Component/pattern | Status | Reason |
+|---|---|---|
+| Image Comparison Slider | Deferred | Useful for reviewer/admin derivative comparison, but current export lacks safe paired derivative/original previews. Must not expose restricted originals to Viewer. Future path: `frontend/components/ImageComparisonReviewPanel.tsx`. |
+| Theme toggle | Deferred | Dark mode needs full safety-label contrast verification before release. |
+| Floating quick-action dock | Deferred | Risks duplicating primary nav and crowding mobile. |
+| Heavy glassmorphism / shaders / particles / heroes / pricing sections | Rejected | These weaken DAM scanning, rights/status readability, and church-safe tone. |
+| Pagination/load more | Deferred but high priority | Needed for large DAM browsing, but requires API state preservation and count truth updates. |
+
+Component-system debt now tracked in:
+
+- `docs/ui-system/component-inventory.md`
+- `docs/ui-system/design-decision-log.md`
 
 ## Browser QA Evidence
 
@@ -77,6 +122,7 @@ Chrome-backed screenshot capture refreshed:
 - `docs/screenshots/guide-desktop.png`
 - `docs/screenshots/guide-mobile-320.png`
 - `docs/screenshots/collections-desktop.png`
+- `docs/screenshots/admin-desktop.png`
 
 Measured browser QA:
 

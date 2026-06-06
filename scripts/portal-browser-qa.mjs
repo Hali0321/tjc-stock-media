@@ -16,10 +16,12 @@ const requiredShots = [
   { name: "upload-desktop.png", path: "/upload", role: "Contributor", width: 1440, height: 1000 },
   { name: "review-desktop.png", path: "/review", role: "Reviewer", width: 1440, height: 1000 },
   { name: "guide-desktop.png", path: "/guide", role: "Viewer", width: 1440, height: 1000 },
+  { name: "admin-desktop.png", path: "/admin", role: "DAM Admin", width: 1440, height: 1000 },
   { name: "library-mobile-320.png", path: "/", role: "Viewer", width: 320, height: 900 },
   { name: "detail-mobile-320.png", path: "/assets/368", role: "Viewer", width: 320, height: 900 },
   { name: "review-mobile-320.png", path: "/review", role: "Reviewer", width: 320, height: 900 },
-  { name: "upload-mobile-320.png", path: "/upload", role: "Contributor", width: 320, height: 900 }
+  { name: "upload-mobile-320.png", path: "/upload", role: "Contributor", width: 320, height: 900 },
+  { name: "guide-mobile-320.png", path: "/guide", role: "Viewer", width: 320, height: 900 }
 ];
 
 const qaViewports = [1440, 1280, 1024, 768, 390, 320];
@@ -151,6 +153,9 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await page.goto(base, { waitUntil: "networkidle" });
   await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
+  if ((await page.getByLabel("Command search").count()) === 0) {
+    await page.locator('button[aria-label="Open command palette"]:visible').first().click();
+  }
   await page.getByLabel("Command search").fill("website hero");
   await page.keyboard.press("Enter");
   await page.waitForURL(/view=website-hero/, { timeout: 10000 });

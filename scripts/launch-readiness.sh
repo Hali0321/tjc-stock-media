@@ -125,6 +125,12 @@ else
   pass "approval script keeps rights_status separate from publish_status"
 fi
 
+if grep -q 'portal-ready-confirmed' scripts/resourcespace-approve-batch.php && grep -q 'portal-ready-confirmed' scripts/approve-mvp-batch.sh; then
+  pass "batch approval requires explicit portal-ready confirmation"
+else
+  fail "batch approval confirmation guard missing"
+fi
+
 echo
 echo "Launch readiness summary: failures=$failures warnings=$warnings"
 if [ "$failures" -gt 0 ]; then

@@ -1,13 +1,16 @@
 import type { DemoRole, MetadataConfidence, ReuseBlocker, ReuseDecision, ReuseState, StockMediaAsset } from "@/lib/types";
 import {
   assetHasChildrenYouthRisk,
+  assetHasCompatibleUsageScope,
   assetHasRenditionGap,
+  assetHasSensitiveContext,
   assetHasSourceProvenance,
   assetIsArchiveOnly,
   assetIsBlocked,
   assetIsApproved,
   assetNeedsReview,
   assetNeedsRightsReview,
+  assetNeedsStaleApprovalReview,
   assetNeedsUsageGuidance,
   assetReviewComplete
 } from "@/lib/asset-governance";
@@ -35,22 +38,6 @@ function meaningfulValue(value?: string) {
   return Boolean(value && !/^(unknown|not exported|not applicable|none|n\/a)$/i.test(value.trim()));
 }
 
-export function assetHasSensitiveContext(asset: StockMediaAsset) {
-  const text = [
-    asset.sensitiveContext,
-    asset.rightsNotes,
-    ...(asset.tags || []),
-    ...(asset.tjcTerms || []),
-    ...(asset.usageTerms || [])
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  if (!text.trim()) return false;
-  return /sensitive|sacrament|communion|footwashing|baptism|children|youth|minor|privacy|consent concern|do not publish/.test(text);
-}
-
 export function metadataConfidence(asset: StockMediaAsset): MetadataConfidence {
   return {
     source: assetHasSourceProvenance(asset) ? "verified" : "missing",
@@ -71,15 +58,21 @@ export function metadataConfidence(asset: StockMediaAsset): MetadataConfidence {
 
 export function reuseBlockers(asset: StockMediaAsset) {
   const blockers: ReuseBlocker[] = [];
-  if (assetIsBlocked(asset)) blockers.push(blocker("blocked-do-not-use"));
-  if (assetIsArchiveOnly(asset)) blockers.push(blocker("blocked-archive"));
-  if (assetNeedsReview(asset) || !assetIsApproved(asset)) blockers.push(blocker("blocked-needs-review"));
-  if (!assetHasSourceProvenance(asset)) blockers.push(blocker("blocked-source"));
-  if (assetNeedsRightsReview(asset)) blockers.push(blocker("blocked-rights"));
-  if (!asset.peopleRisk || asset.peopleRisk === "Unknown" || assetHasChildrenYouthRisk(asset)) blockers.push(blocker("blocked-people-minors"));
-  if (!asset.reviewer || !asset.reviewedDate) blockers.push(blocker("blocked-reviewer-date"));
-  if (assetHasRenditionGap(asset)) blockers.push(blocker("blocked-derivative"));
-  if (assetHasSensitiveContext(asset)) blockers.push(blocker("blocked-sensitive"));
+  const addBlocker = (code: ReuseState) => {
+    if (!blockers.some((item) => item.code === code)) blockers.push(blocker(code));
+  };
+
+  if (assetIsBlocked(asset)) addBlocker("blocked-do-not-use");
+  if (assetIsArchiveOnly(asset)) addBlocker("blocked-archive");
+  if (assetNeedsReview(asset) || !assetIsApproved(asset)) addBlocker("blocked-needs-review");
+  if (!assetHasSourceProvenance(asset)) addBlocker("blocked-source");
+  if (assetNeedsRightsReview(asset)) addBlocker("blocked-rights");
+  if (!assetHasCompatibleUsageScope(asset)) addBlocker("blocked-needs-review");
+  if (!asset.peopleRisk || asset.peopleRisk === "Unknown" || assetHasChildrenYouthRisk(asset)) addBlocker("blocked-people-minors");
+  if (!asset.reviewer || !asset.reviewedDate) addBlocker("blocked-reviewer-date");
+  if (assetHasRenditionGap(asset)) addBlocker("blocked-derivative");
+  if (assetHasSensitiveContext(asset)) addBlocker("blocked-sensitive");
+  if (assetNeedsStaleApprovalReview(asset)) addBlocker("blocked-reviewer-date");
   return blockers;
 }
 

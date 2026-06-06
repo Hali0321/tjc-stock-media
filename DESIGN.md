@@ -15,9 +15,9 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 - Photo-first library, not admin dashboard.
 - Warm white background, deep charcoal text, evergreen/navy accents.
 - Tailwind v4 utility system with a small global token/base layer.
-- Geist variable sans via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
+- Inter plus Noto Sans TC fallback via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
 - App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, collection entry points, filter controls, sort controls, and asset contact sheet high on page.
-- Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
+- Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review is implemented as maintained `AppNav`. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
 - Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, review queues, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
@@ -33,6 +33,10 @@ Reference patterns, adapted without copying:
 - PhotoShelter: contributor/reviewer/user role separation.
 - Notion Gallery: calm cards, simple tags, approachable metadata.
 - Airbnb: warm, human, photo-led trust.
+
+Reference accountability lives in `docs/runs/final-product-critique.md`. Each source group is mapped to maintained components, rejected ideas, screenshot evidence, code paths, and remaining debt. This prevents the reference list from becoming a moodboard with no implementation proof.
+
+The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
 Avoided:
 
@@ -121,7 +125,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Card radius | mostly 6-8px; larger rounding avoided on workflow surfaces |
 | Chip radius | compact rounded rectangles; pills used sparingly |
 | Shadow | very soft image shadow only |
-| Typography | Geist variable sans, compact app hierarchy, no giant marketing landing hero |
+| Typography | Inter + Noto Sans TC fallback, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
 | Motion | GSAP only in review workbench; disabled under reduced-motion |
 

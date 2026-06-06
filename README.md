@@ -236,9 +236,9 @@ Current search and collection behavior:
 Current UI and workflow notes:
 
 - Primary navigation is `Library`, `Collections`, `Upload`, and `Review`; `Guide` moved to utility/footer access.
-- Navigation now uses a restrained Tubelight-inspired active surface for the four primary workflows; command palette, Guide, ResourceSpace, and Admin links remain utility/role-aware.
+- Navigation now uses a maintained `AppNav` component with a restrained Tubelight-inspired active surface for the four primary workflows; command palette, Guide, ResourceSpace, and Admin links remain utility/role-aware.
 - `Cmd/Ctrl+K` opens a command palette for library search, saved DAM views, collection jumps, review queues, ResourceSpace ID lookup, upload intake, guide, and admin diagnostics.
-- The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Geist via `next/font/google`, and existing `lucide-react` icons.
+- The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Inter + Noto Sans TC via `next/font/google`, and existing `lucide-react` icons.
 - Review includes isolated GSAP motion for desktop reviewer workflow only; reduced-motion disables the pin/scale effects.
 - Library is now a DAM command workspace, not a hero page: compact search, use-case buttons, source/safety strip, operational saved views, compact collection rail, filters, and real asset results high on the page.
 - Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
