@@ -196,6 +196,8 @@ for (const width of qaViewports) {
     await page.getByLabel(label).check();
   }
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
+  await page.waitForSelector("text=Queue pending review write");
+  await page.getByRole("button", { name: "Queue pending review write" }).click();
   await page.waitForSelector("text=ResourceSpace API write mapping is not configured yet");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
   await context.close();

@@ -83,10 +83,11 @@ Future implementation requirements:
 | Soft review cards | Review cockpit rows + inspector | Evidence and pending-write state stay explicit | Mobile uses stacked cards without horizontal overflow |
 | Backend-ish status chips | StatusBadge / safety panels | Raw ResourceSpace status remains separate from portal reuse state | Status text never relies on color alone |
 | First-page-only Library results | LibraryPagination | Count truth now says `Showing X-Y of Z` and query/view/filter state is preserved | Previous/Next buttons have accessible labels and fit 320 px |
+| Immediate review action POST | ReviewActionDialog confirmation | Reviewers must see pending-write, not-final-ResourceSpace semantics before queueing | Focus trap, Escape/cancel, and initial confirm focus are implemented |
 
 ## Open Debt
 
-- Review confirmation dialog should be added with focus trap and explicit pending-write copy.
 - Asset detail and review inspector tabs should become maintained components.
 - Upload preview should support drag state and safe thumbnails.
 - Command palette should add arrow-key selection and stronger dialog focus management.
+- Download/request-original dialogs should be added with focus trap and no fake ResourceSpace persistence.

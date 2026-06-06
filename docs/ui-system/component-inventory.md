@@ -25,6 +25,7 @@ The community library exposes many useful and many unsuitable categories. Review
 | Status badges and banners | Implemented | Inconsistent chips and backend wording | Safety status must be clear and role-aware | Text plus color, muted warning/danger palette | Essential blockers never tooltip-only | `frontend/components/StatusBadge.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/AssetTrustPanel.tsx` |
 | Skeleton loaders | Implemented | Generic loading blocks | Loading should match final DAM surfaces | Calm shimmer and stable dimensions | `prefers-reduced-motion` disables animation | `frontend/app/globals.css`, page/component loading states |
 | Pagination | Implemented | First-page-only browsing | Large DAM search needs truthful ranges and preserved query/view/filter state | Compact operational nav with `Showing X-Y of Z`, disabled states, evergreen focus | Controls must stay reachable at 320 px and never imply infinite scroll | `frontend/components/LibraryPagination.tsx`, `frontend/components/LibraryPage.tsx`, `frontend/app/api/assets/search/route.ts` |
+| Review confirmation dialog | Implemented | Immediate review action POST after checklist | Reviewer must explicitly confirm pending-write semantics before queueing action | Focus-trapped dialog, pending-not-final copy, no decorative glass | Escape/cancel available; confirmation button gets initial focus | `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReviewPage.tsx` |
 
 ## Selected For Future Replacement
 
@@ -32,7 +33,7 @@ The community library exposes many useful and many unsuitable categories. Review
 |---|---|---|---|
 | Maintained asset detail tabs | Defer | Chip-heavy detail sections | Current detail is safe and usable; tabs should be added in a focused accessibility pass with keyboard semantics. |
 | Maintained review inspector tabs | Defer | Dense inspector sections | Review logic is stable; tab extraction should not disturb evidence requirements or pending-write truth. |
-| Dialog/modals for review/download decisions | Defer | Inline confirmation/decision surfaces | Useful, but must add focus trap, escape handling, and honest ResourceSpace-write copy. |
+| Download/request dialogs | Defer | Inline download/request surfaces | Review confirmation exists; download/request original dialogs still need focus trap and safety copy. |
 | Dropdown action menus | Defer | Secondary asset/collection/review actions | Do not hide critical safety status; implement only for secondary copy/open actions. |
 
 ## Rejected Patterns
@@ -78,6 +79,6 @@ Safety requirements before implementation:
 ## Remaining Component Debt
 
 - Extract `FileUploadPanel` for drag/drop and image thumbnails once backend upload mode is clearer.
-- Extract `ReviewActionDialog` and `DownloadOptionsDialog` with focus trap and no fake ResourceSpace persistence.
+- Add `DownloadOptionsDialog` / request-original dialog with focus trap and no fake ResourceSpace persistence.
 - Extract `AssetDetailTabs` and `ReviewInspectorTabs` with keyboard support.
 - Keep component styling unified; reject any imported 21st.dev component that cannot be fully restyled into the TJC DAM system.

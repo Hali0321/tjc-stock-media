@@ -9,6 +9,7 @@ import { useDemoRole } from "@/components/RoleProvider";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { MediaPreview } from "@/components/MediaPreview";
+import { ReviewActionDialog } from "@/components/ReviewActionDialog";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { missingReviewFields, reviewActions, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, ReviewEvidenceChecklist, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
@@ -92,6 +93,8 @@ const emptyChecklist: ReviewEvidenceChecklist = {
   creditRequirementChecked: false
 };
 
+type ReviewAction = (typeof reviewActions)[number];
+
 function sourceSummary(asset: StockMediaAsset) {
   return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
 }
@@ -106,6 +109,8 @@ export function ReviewPage() {
   const [auditPreview, setAuditPreview] = useState<AuditPreview | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
+  const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
 
@@ -144,9 +149,10 @@ export function ReviewPage() {
   useEffect(() => {
     setReviewNote("");
     setChecklist(emptyChecklist);
+    setPendingAction(null);
   }, [selectedId]);
 
-  function missingEvidenceFor(action: (typeof reviewActions)[number]) {
+  function missingEvidenceFor(action: ReviewAction) {
     const required: Array<keyof ReviewEvidenceChecklist> = [
       "sourceConfirmed",
       "rightsConfirmed",
@@ -193,27 +199,43 @@ export function ReviewPage() {
     return () => ctx.revert();
   }, [reviewer, data?.assets.length, activeQueue]);
 
-  async function runAction(id: string, action: (typeof reviewActions)[number]) {
+  function requestAction(action: ReviewAction) {
     const missing = missingEvidenceFor(action);
     if (missing.length) {
       setMessage("Review evidence is incomplete. Add required checklist items and a review note before submitting.");
       return;
     }
-    const timestamp = new Date().toISOString();
-    setAuditPreview({ action: action.label, role, timestamp, assetId: id });
     setMessage("");
-    const response = await fetch("/api/review", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, id, action: action.backend, label: action.label, notes: reviewNote, checklist })
-    });
-    const body = await response.json();
-    setMessage(body.message || body.error || "Review route responded.");
-    if (response.ok) {
-      setReviewNote("");
-      setChecklist(emptyChecklist);
+    setPendingAction(action);
+  }
+
+  async function confirmPendingAction() {
+    if (!selectedAsset || !pendingAction) return;
+    const timestamp = new Date().toISOString();
+    setAuditPreview({ action: pendingAction.label, role, timestamp, assetId: selectedAsset.id });
+    setMessage("");
+    setSubmittingReview(true);
+    try {
+      const response = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, id: selectedAsset.id, action: pendingAction.backend, label: pendingAction.label, notes: reviewNote, checklist })
+      });
+      const body = await response.json();
+      setMessage(body.message || body.error || "Review route responded.");
+      if (response.ok) {
+        setReviewNote("");
+        setChecklist(emptyChecklist);
+        setPendingAction(null);
+      }
+    } catch {
+      setMessage("Review route did not respond. No ResourceSpace write was attempted.");
+    } finally {
+      setSubmittingReview(false);
     }
   }
+
+  const confirmedChecklistLabels = checklistLabels.filter(([field]) => checklist[field]).map(([, label]) => label);
 
   if (!ready) {
     return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
@@ -406,7 +428,7 @@ export function ReviewPage() {
                 {reviewActions.map((action) => {
                   const missing = missingEvidenceFor(action);
                   return (
-                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={missing.length ? `Missing: ${missing.join(", ")}` : "Queue pending ResourceSpace write"} onClick={() => runAction(selectedAsset.id, action)}>
+                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={missing.length ? `Missing: ${missing.join(", ")}` : "Review evidence and queue pending write"} onClick={() => requestAction(action)}>
                       {action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />}
                       {action.label}
                     </button>
@@ -444,6 +466,24 @@ export function ReviewPage() {
           </aside>
         ) : null}
       </section>
+      {selectedAsset && pendingAction ? (
+        <ReviewActionDialog
+          open={Boolean(pendingAction)}
+          actionLabel={pendingAction.label}
+          requestedStatus={pendingAction.targetStatus}
+          assetTitle={assetPresentation(selectedAsset, role).title}
+          resourceSpaceId={selectedAsset.resourceSpaceId || selectedAsset.id}
+          rawStatus={selectedAsset.status}
+          portalReuseState={selectedAsset.reuseDecision ? `${selectedAsset.reuseDecision.label} - ${selectedAsset.reuseDecision.summary}` : "Computed by TJC Stock Media policy"}
+          blockers={(selectedAsset.reuseDecision?.blockers || []).map((blocker) => blocker.label)}
+          checklistSummary={confirmedChecklistLabels}
+          note={reviewNote}
+          sourceReadOnly={Boolean(data?.source.readOnly)}
+          submitting={submittingReview}
+          onCancel={() => setPendingAction(null)}
+          onConfirm={confirmPendingAction}
+        />
+      ) : null}
     </div>
   );
 }
