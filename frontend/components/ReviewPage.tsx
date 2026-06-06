@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,7 +15,7 @@ import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { MediaPreview } from "@/components/MediaPreview";
 import { ReviewActionDialog } from "@/components/ReviewActionDialog";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
-import { missingReviewFields, reviewActions, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
+import { missingReviewFields, reviewActions, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, ReviewEvidenceChecklist, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
@@ -103,6 +104,10 @@ const emptyChecklist: ReviewEvidenceChecklist = {
 
 type ReviewAction = (typeof reviewActions)[number];
 
+function normalizeInitialQueue(value?: string): ReviewQueueId {
+  return reviewQueues.find((queue) => queue.id === value)?.id || "pending";
+}
+
 function sourceSummary(asset: StockMediaAsset) {
   return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
 }
@@ -122,13 +127,14 @@ function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
   );
 }
 
-export function ReviewPage() {
+export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string }) {
+  const router = useRouter();
   const { role, ready } = useDemoRole();
   const [data, setData] = useState<ReviewResponse | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
-  const [activeQueue, setActiveQueue] = useState<ReviewQueueId>("pending");
+  const [activeQueue, setActiveQueue] = useState<ReviewQueueId>(() => normalizeInitialQueue(initialQueue));
   const [auditPreview, setAuditPreview] = useState<AuditPreview | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
@@ -138,6 +144,10 @@ export function ReviewPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
+
+  useEffect(() => {
+    setActiveQueue(normalizeInitialQueue(initialQueue));
+  }, [initialQueue]);
 
   useEffect(() => {
 	    if (!ready) return;
@@ -248,6 +258,11 @@ export function ReviewPage() {
     setPendingAction(action);
   }
 
+  function selectQueue(queueId: ReviewQueueId) {
+    setActiveQueue(queueId);
+    router.replace(`/review?queue=${queueId}`, { scroll: false });
+  }
+
   async function confirmPendingAction() {
     if (!selectedAsset || !pendingAction) return;
     const timestamp = new Date().toISOString();
@@ -351,7 +366,7 @@ export function ReviewPage() {
             key={queue.id}
             type="button"
             className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
-            onClick={() => setActiveQueue(queue.id)}
+            onClick={() => selectQueue(queue.id)}
             aria-pressed={activeQueue === queue.id}
           >
             <span>{queue.label}</span>

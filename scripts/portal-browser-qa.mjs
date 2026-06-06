@@ -180,6 +180,31 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Reviewer", 1440, 1000);
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+K" : "Control+K");
+  if ((await page.getByLabel("Command search").count()) === 0) {
+    await page.locator('button[aria-label="Open command palette"]:visible').first().click();
+  }
+  await page.getByLabel("Command search").fill("children youth");
+  await page.keyboard.press("Enter");
+  await page.waitForURL(/queue=children-youth/, { timeout: 10000 });
+  const activeChildrenQueue = page.getByRole("button", { name: /Children\/Youth/ });
+  if ((await activeChildrenQueue.getAttribute("aria-pressed")) !== "true") failures.push("command palette: children/youth queue did not become active");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Reviewer", 1440, 1000);
+  await page.goto(`${base}/review?queue=rights-review`, { waitUntil: "networkidle" });
+  const activeRightsQueue = page.getByRole("button", { name: /Rights Review/ });
+  if ((await activeRightsQueue.getAttribute("aria-pressed")) !== "true") failures.push("review stable queue URL: rights-review did not become active");
+  await activeRightsQueue.click();
+  if (!page.url().includes("queue=rights-review")) failures.push("review stable queue URL: queue button did not preserve URL state");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
   if ((await page.getByText("Drop files here or browse").count()) < 1) failures.push("upload file dropzone: drop/browse affordance missing");

@@ -21,6 +21,7 @@ Accepted patterns:
 
 - Tubelight-style navigation for workflow orientation.
 - Command palette for fast DAM task switching.
+- Review queue commands use stable `/review?queue=...` URLs instead of generic `/review` jumps.
 - Display cards only for operational summaries.
 - Contact-sheet grid for asset browsing.
 - Filter sidebar/drawer for DAM facets.

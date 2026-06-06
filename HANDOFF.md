@@ -28,7 +28,7 @@ The current frontend shell is the final dense ministry DAM UI:
 - Main nav: Library, Collections, Upload, Review with restrained Tubelight-inspired active state.
 - Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
-- Command palette: `Cmd/Ctrl+K` for search, saved views, collections, upload, review queues, ResourceSpace ID lookup, Guide, and Admin diagnostics.
+- Command palette: `Cmd/Ctrl+K` for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, Guide, and Admin diagnostics.
 - Library: compact command bar, early search, use-case shortcuts, saved views, filters, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
 - Collections: album-style records opened by stable collection ID, including Sabbath wording.
 - Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.

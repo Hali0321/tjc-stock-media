@@ -25,9 +25,12 @@ const commands: Command[] = [
   { id: "sabbath", label: "Sabbath collection", hint: "Open collection by stable ID", href: "/?collection=sabbath", keywords: "sabbath worship church life collection", icon: FolderOpen },
   { id: "collections", label: "Collections", hint: "Browse albums and ministry contexts", href: "/collections", keywords: "albums collections events", icon: FolderOpen },
   { id: "upload", label: "Start upload intake", hint: "Contributor context and files", href: "/upload", keywords: "upload intake contributor submit files", icon: UploadCloud },
-  { id: "review", label: "Pending review", hint: "Reviewer governance queue", href: "/review", keywords: "review governance pending queue", icon: ShieldAlert, reviewerOnly: true },
-  { id: "children-youth", label: "Children/youth review", hint: "Review sensitive people/minors queue", href: "/review", keywords: "children youth minors sensitive", icon: ShieldAlert, reviewerOnly: true },
-  { id: "archive", label: "Archive candidates", hint: "Review archive-only material", href: "/review", keywords: "archive do not use searchable archive", icon: Archive, reviewerOnly: true },
+  { id: "review", label: "Pending review", hint: "Reviewer governance queue", href: "/review?queue=pending", keywords: "review governance pending queue", icon: ShieldAlert, reviewerOnly: true },
+  { id: "children-youth", label: "Children/youth review", hint: "Review sensitive people/minors queue", href: "/review?queue=children-youth", keywords: "children youth minors sensitive", icon: ShieldAlert, reviewerOnly: true },
+  { id: "rights-review", label: "Rights review", hint: "Review rights, consent, and source concerns", href: "/review?queue=rights-review", keywords: "rights consent source review", icon: ShieldAlert, reviewerOnly: true },
+  { id: "missing-source", label: "Missing source", hint: "Review missing source/provenance queue", href: "/review?queue=missing-source", keywords: "missing source photographer provenance", icon: FileSearch, reviewerOnly: true },
+  { id: "usage-guidance", label: "Needs usage guidance", hint: "Review assets missing use guidance", href: "/review?queue=usage-guidance", keywords: "usage guidance captions credit rules", icon: FileSearch, reviewerOnly: true },
+  { id: "archive", label: "Archive candidates", hint: "Review archive-only material", href: "/review?queue=archive-candidates", keywords: "archive do not use searchable archive", icon: Archive, reviewerOnly: true },
   { id: "guide", label: "Usage guide", hint: "Search rules, Do/Avoid, large media", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle },
   { id: "admin", label: "Admin diagnostics", hint: "Read-only operational checks", href: "/admin", keywords: "admin diagnostics readiness api field mapping", icon: Settings2, adminOnly: true }
 ];
