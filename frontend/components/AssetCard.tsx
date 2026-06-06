@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Download, Lock } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
-import { decideAccess } from "@/lib/access-decisions";
 import { assetPresentation, provenanceSummary } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
 
@@ -12,7 +11,6 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
   const display = assetPresentation(asset, role);
   const canDownload = display.download.approvedCopy.allowed;
   const source = provenanceSummary(asset, role);
-  const canSeeOriginal = decideAccess(role, "viewOriginalMetadata", asset).allowed;
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const confidence = display.confidence.filter((item) => item.tone === "warn").slice(0, 1);
   const hasWarnings = confidence.length > 0;
@@ -53,7 +51,6 @@ export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoR
           <span className="block">Source: {source.publicLabel}</span>
           <span className="block">{display.reviewFacts.reviewLine}</span>
           <span className="block">{asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : "ResourceSpace export"}</span>
-          {canSeeOriginal && asset.originalFilename ? <span className="block">Original: {asset.originalFilename}</span> : null}
         </div>
       </div>
     </article>

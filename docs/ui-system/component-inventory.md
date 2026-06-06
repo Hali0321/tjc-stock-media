@@ -8,6 +8,14 @@ This inventory records the 21st.dev scouting pass for TJC Stock Media. The sourc
 
 - 21st.dev community components: `https://21st.dev/community/components`
 - Image Comparison Slider: `https://21st.dev/community/components/thanh/image-comparison-slider/default`
+- Dribbble DAM references: Media Library Dashboard, Media Library Panel, Photographers Admin Panel, Asset Management Dashboard UX UI.
+- Awwwards references: Kontainer DAM System, SK Photographer, Ottografie Reinvented.
+- CodePen references: Drag + Drop Image Uploader, React Preview Upload, Filter Masonry Lightbox.
+- Godly references: User Interface Gallery and Frame.io.
+- Monet reference: Monet Feature Showcase.
+- Pinterest moodboard: media library dashboard, file/asset management, photo upload selection, Delis Archive.
+- Product references: Google Photos, Apple Photos, Brandfolder, Frontify, PhotoShelter, Bynder, Canto, AEM Assets, ResourceSpace, Notion, Airtable, and Linear.
+- AI design tools discussed: Stitch by Google, Midjourney Moodboards, and Higgsfield. These remain research-only and are not production dependencies.
 
 The community library exposes many useful and many unsuitable categories. Reviewed categories included navigation menus, command palettes/menus, cards, buttons, dialogs/modals, dropdowns, file uploads, forms, inputs, paginations, sidebars, sliders, skeleton/spinner loaders, tables, tabs, tags, text areas, toggles, tooltips, badges, alerts/banners, and empty states.
 

@@ -27,6 +27,7 @@ const requiredShots = [
 const qaViewports = [1440, 1280, 1024, 768, 390, 320];
 const qaPaths = [
   { path: "/", role: "Viewer", label: "library-viewer" },
+  { path: "/", role: "Reviewer", label: "library-reviewer" },
   { path: "/?view=website-hero", role: "Viewer", label: "library-website-hero" },
   { path: "/collections", role: "Viewer", label: "collections-viewer" },
   { path: "/?view=needs-review", role: "Viewer", label: "viewer-needs-review-hidden" },
@@ -79,7 +80,7 @@ async function inspectPage(page, expected) {
     const visibleText = document.body.textContent || "";
     const visibleImages = [...document.images].filter((img) => {
       const rect = img.getBoundingClientRect();
-      return rect.width > 20 && rect.height > 20;
+      return rect.width > 20 && rect.height > 20 && rect.bottom > 0 && rect.top < window.innerHeight;
     });
     const brokenImages = visibleImages
       .filter((img) => !img.complete || img.naturalWidth === 0)
@@ -112,6 +113,7 @@ async function inspectPage(page, expected) {
       hasViewerReviewBlock: visibleText.includes("Review workbench requires reviewer access"),
       hasViewerUploadBlock: visibleText.includes("Upload is for Contributors"),
       hasAdminBlock: visibleText.includes("Admin cockpit requires DAM Admin role"),
+      hasOriginalFilenameOnCard: [...document.querySelectorAll('[aria-label="Source metadata"]')].some((el) => (el.textContent || "").includes("Original:")),
       textSample: visibleText.replace(/\s+/g, " ").trim().slice(0, 220)
     };
   }, expected);
@@ -131,6 +133,7 @@ for (const width of qaViewports) {
     if (item.label === "upload-viewer" && !state.hasViewerUploadBlock) failures.push(`${item.label} ${width}: viewer upload block missing`);
     if (item.label === "admin-viewer" && !state.hasAdminBlock) failures.push(`${item.label} ${width}: viewer admin block missing`);
     if (item.label === "review-reviewer" && !state.hasReviewBlocker) failures.push(`${item.label} ${width}: write mapping blocker missing`);
+    if (item.label === "library-reviewer" && state.hasOriginalFilenameOnCard) failures.push(`${item.label} ${width}: original filename exposed on Library card`);
     if (item.label === "viewer-needs-review-hidden" && state.textSample.includes("2012 Photo")) warnings.push(`${item.label} ${width}: viewer may see review asset copy`);
     if ((width === 1024 || width === 768 || width === 390 || width === 320) && ["library-viewer", "review-reviewer", "guide-viewer"].includes(item.label)) {
       await page.screenshot({ path: path.join(outDir, "qa", `${item.label}-${width}.png`), fullPage: true });

@@ -25,14 +25,38 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 - Use less explanatory text. Thumbnails, badges, filters, and clear actions should carry the product.
 - Asset detail includes moment-of-use guidance: best used for, please avoid, caption suggestion, credit requirement, and ministry sensitivity.
 
+Best combined direction:
+
+```text
+Dribbble DAM density
++ 21st.dev workflow components
++ Tubelight Navbar
++ Display Cards for operational state
++ restrained liquid/glass for nav and primary actions
++ Awwwards photographic restraint
++ Inter/Noto typography
++ ResourceSpace truth layer
++ TJC safety rules
+```
+
 Reference patterns, adapted without copying:
 
+- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, loading skeletons, upload preview, pagination, review dialog, and future tabs/dialog/dropdown patterns.
+- Dribbble DAM references: dense thumbnail grid, left filter/sidebar rhythm, asset detail panel, table/list toggle, and review/admin information density.
+- Awwwards references: clean photographic hierarchy, image-first detail view, restrained white/evergreen polish, and mobile filter behavior without cinematic storytelling.
+- CodePen interaction references: upload drag/preview/remove states and gallery filtering ideas adapted to DAM reuse states.
+- Godly / Frame.io references: polished media-review cockpit feel, used carefully without dark-heavy trend chrome.
+- Monet: calm light-theme admin/guide sections, diagnostics, production blockers, and workflow explanation patterns.
+- Pinterest moodboard: archive/upload visual rhythm only; no direct layout copying.
+- AI design tools: research/prototyping only. No generated church people, fake ministry media, or production AI dependency.
 - Google Photos / Apple Photos: minimal chrome, image-first browsing, fast visual scanning.
-- Brandfolder: professional DAM search, metadata clarity, approval/download confidence.
-- Frontify: usage guidance and lifecycle/status clarity.
-- PhotoShelter: contributor/reviewer/user role separation.
-- Notion Gallery: calm cards, simple tags, approachable metadata.
-- Airbnb: warm, human, photo-led trust.
+- Brandfolder: approval clarity, asset safety, permissions, and download controls.
+- Frontify: usage guidance, brand rules, Do/Avoid guidance, and lifecycle clarity.
+- PhotoShelter: albums/events, source attribution, contributor/reviewer separation, and permission-aware downloads.
+- Bynder / Canto / AEM Assets: metadata facets, governance, review lifecycle, renditions, and reporting.
+- ResourceSpace: source-of-truth backend, workflow state, metadata, permissions, admin settings, and asset IDs.
+- Notion: calm documentation and guide readability.
+- Airtable / Linear: dense workflow UI, clear actions, and table/list/detail rhythm.
 
 Reference accountability lives in `docs/runs/final-product-critique.md`. Each source group is mapped to maintained components, rejected ideas, screenshot evidence, code paths, and remaining debt. This prevents the reference list from becoming a moodboard with no implementation proof.
 
@@ -42,7 +66,11 @@ Avoided:
 
 - abstract generated art
 - huge hero section
+- component showcase
+- glassmorphism demo
 - beige/yellow dashboard
+- dark neon dashboard
+- pricing/hero/particle templates
 - developer console look
 - ResourceSpace clone
 - second metadata UI
