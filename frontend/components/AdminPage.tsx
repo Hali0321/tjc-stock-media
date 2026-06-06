@@ -43,6 +43,28 @@ function MetricTile({ label, value }: { label: string; value?: number }) {
   );
 }
 
+function AdminLoadingState() {
+  return (
+    <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
+      <section className="rounded-lg border border-tjc-line bg-white/82 p-5">
+        <span className="text-sm font-semibold text-tjc-evergreen">DAM Admin</span>
+        <h1 className="mt-2 text-2xl font-semibold md:text-3xl">Loading production diagnostics</h1>
+        <p className="mt-2 max-w-[72ch] text-sm leading-relaxed text-tjc-muted">
+          Reading the ResourceSpace metadata export, field mapping coverage, pending write queue, and launch blockers.
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div className="rounded-md border border-tjc-line bg-[#fbfcfa] p-3" key={index}>
+              <div className="skeleton h-4 w-24 rounded" />
+              <div className="skeleton mt-3 h-8 w-16 rounded" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function AdminPage() {
   const { role, ready } = useDemoRole();
   const [data, setData] = useState<DamReadinessResult | null>(null);
@@ -70,7 +92,7 @@ export function AdminPage() {
   }, [ready, role]);
 
   if (!ready) {
-    return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
+    return <AdminLoadingState />;
   }
 
   if (role !== "DAM Admin") {
@@ -91,7 +113,7 @@ export function AdminPage() {
   }
 
   if (!data) {
-    return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
+    return <AdminLoadingState />;
   }
 
   const requiredFields = data.fieldMappings.filter((field) => field.required);

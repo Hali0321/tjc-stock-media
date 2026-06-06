@@ -376,7 +376,7 @@ export function LibraryPage() {
               { icon: ShieldAlert, value: result?.counts.rightsReview ?? "-", label: "rights" },
               { icon: Users, value: result?.counts.childrenYouth ?? "-", label: "youth" },
               { icon: Archive, value: result?.counts.archive ?? "-", label: "archive" },
-              { icon: Database, value: result?.counts.visibleToRole ?? "-", label: "visible" }
+              { icon: Database, value: result?.counts.visibleToRole ?? "-", label: "role-visible" }
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -552,7 +552,7 @@ export function LibraryPage() {
             <div className="mb-3 grid gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="font-semibold text-tjc-ink">{loading ? "Loading results" : formatResultCount(result?.assets.length ?? 0, result?.total ?? 0)}</strong>
-                <span>Rendered {result?.counts.rendered ?? result?.assets.length ?? 0} / matching {result?.counts.matching ?? result?.total ?? 0} / visible {result?.counts.visibleToRole ?? 0}</span>
+                <span>Rendered {result?.counts.rendered ?? result?.assets.length ?? 0} / matching {result?.counts.matching ?? result?.total ?? 0} / role-visible {result?.counts.visibleToRole ?? 0}</span>
               </div>
               {activeView ? (
                 <p>
