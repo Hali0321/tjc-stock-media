@@ -22,8 +22,8 @@ export function FilterSidebar({
   onClear: () => void;
 }) {
   return (
-    <aside className="rounded-lg border border-tjc-line bg-white/82 shadow-[0_1px_0_rgba(32,34,31,.04)] xl:sticky xl:top-24" aria-label="Advanced filters">
-      <div className="flex items-center justify-between gap-3 border-b border-tjc-line px-3 py-3">
+    <aside className="overflow-hidden rounded-[1.2rem] border border-[#d1ddd2] bg-[#fbfdfb]" aria-label="Advanced filters">
+      <div className="flex items-center justify-between gap-3 border-b border-tjc-line bg-[#f8fbf7] px-3 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
           <SlidersHorizontal aria-hidden="true" size={16} strokeWidth={1.8} />
           <strong>Filters</strong>
@@ -35,18 +35,18 @@ export function FilterSidebar({
           </button>
         ) : null}
       </div>
-      <div className="grid gap-0">
+      <div className="grid gap-0 md:grid-cols-2 xl:grid-cols-4">
         {filterGroups.map((group) => (
-          <section className="border-b border-tjc-line/70 px-3 py-3 last:border-b-0" key={group.label} aria-label={`${group.label} filters`}>
+          <section className="border-b border-tjc-line/70 px-3 py-3 md:border-r md:last:border-r-0" key={group.label} aria-label={`${group.label} filters`}>
             <h2 className="mb-2 text-xs font-semibold text-[#65736b]">{group.label}</h2>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
               {group.options.map((filter) => (
                 <button
                   type="button"
                   key={filter}
                   className={cn(
-                    "min-h-8 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3e4741] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1] active:translate-y-px",
-                    filters.includes(filter) && "border-[#92c2b0] bg-[#e8f5ef] text-tjc-evergreen"
+                    "min-h-8 rounded-lg border border-tjc-line bg-white px-2 text-left text-[11px] font-semibold text-[#3e4741] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1] active:translate-y-px",
+                    filters.includes(filter) && "border-[#92c2b0] bg-[#e8f5ef] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]"
                   )}
                   onClick={() => onToggle(filter)}
                   aria-pressed={filters.includes(filter)}

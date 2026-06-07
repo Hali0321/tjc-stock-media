@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-06T06:34:40.358Z",
+  "checkedAt": "2026-06-07T18:07:11.174Z",
   "viewports": [
     1440,
     1280,
@@ -8,20 +8,28 @@
     390,
     320
   ],
-  "pages": 14,
+  "pages": 15,
   "screenshots": [
     "library-desktop.png",
-    "collections-desktop.png",
-    "asset-detail-desktop.png",
-    "upload-desktop.png",
-    "review-desktop.png",
-    "guide-desktop.png",
-    "admin-desktop.png",
     "library-mobile-320.png",
-    "detail-mobile-320.png",
-    "review-mobile-320.png",
+    "library-mobile-390.png",
+    "collections-desktop.png",
+    "collections-mobile-320.png",
+    "collections-mobile-390.png",
+    "upload-desktop.png",
     "upload-mobile-320.png",
-    "guide-mobile-320.png"
+    "upload-mobile-390.png",
+    "review-desktop.png",
+    "review-mobile-320.png",
+    "review-mobile-390.png",
+    "asset-detail-desktop.png",
+    "detail-mobile-320.png",
+    "detail-mobile-390.png",
+    "admin-desktop.png",
+    "admin-mobile-390.png",
+    "guide-desktop.png",
+    "guide-mobile-320.png",
+    "guide-mobile-390.png"
   ],
   "consoleErrors": [],
   "expectedDeniedConsole": [

@@ -1,61 +1,109 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Download, Lock } from "lucide-react";
+import { Download, Eye, Lock, ShieldAlert } from "lucide-react";
+import { AssetQuickLookDialog } from "@/components/AssetQuickLookDialog";
 import { MediaPreview } from "@/components/MediaPreview";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
-import { decideAccess } from "@/lib/access-decisions";
 import { assetPresentation, provenanceSummary } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
 
-export function AssetCard({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
+type AssetCardVariant = "standard" | "wide" | "tall" | "feature";
+
+function mediaAspectClass(variant: AssetCardVariant) {
+  if (variant === "feature") return "aspect-[16/9]";
+  if (variant === "wide") return "aspect-[16/10]";
+  if (variant === "tall") return "aspect-[5/4]";
+  return "aspect-[4/3]";
+}
+
+export function AssetCard({
+  asset,
+  role,
+  variant = "standard"
+}: {
+  asset: StockMediaAsset;
+  role: DemoRole;
+  variant?: AssetCardVariant;
+}) {
+  const [quickLookOpen, setQuickLookOpen] = useState(false);
   const display = assetPresentation(asset, role);
   const canDownload = display.download.approvedCopy.allowed;
   const source = provenanceSummary(asset, role);
-  const canSeeOriginal = decideAccess(role, "viewOriginalMetadata", asset).allowed;
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const confidence = display.confidence.filter((item) => item.tone === "warn").slice(0, 1);
   const hasWarnings = confidence.length > 0;
   const quickLabel = display.download.reuse.label || confidence[0]?.state || display.quickLabel || asset.mediaType;
+  const blocker = display.download.reuse.blockers[0]?.label || confidence[0]?.state;
+  const previewLabel = display.image ? "Preview export pending" : `${asset.mediaType} preview restricted`;
+  const previewDetail = display.image
+    ? undefined
+    : `${asset.collection || "Collection"} · ${display.download.reuse.blockers[0]?.label || display.download.approvedCopy.reason || "Reviewer-only until reuse checks pass."}`;
 
   return (
-    <article className="group overflow-hidden rounded-md border border-tjc-line bg-white transition duration-150 hover:border-[#9fb8ae]">
-      <Link href={`/assets/${asset.id}`} className="relative block aspect-[4/3] overflow-hidden bg-[#eef1ed]" aria-label={`Open ${display.title}`}>
-        <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]" />
+    <article className="group flex h-full min-h-0 flex-col overflow-hidden rounded-[1.25rem] border border-[#cad8cf] bg-white shadow-[0_12px_30px_rgba(35,53,111,.045)] transition duration-200 hover:-translate-y-0.5 hover:border-[#7ca792] hover:shadow-[0_18px_42px_rgba(35,53,111,.08)] max-sm:rounded-[.85rem]">
+      <div className={cn("relative overflow-hidden bg-[#edf2ed]", mediaAspectClass(variant))}>
+        <Link href={`/assets/${asset.id}`} className="absolute inset-0 block" aria-label={`Open ${display.title}`}>
+          <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(255,255,255,0)_58%,rgba(247,250,247,.88))]" aria-hidden="true" />
+          <MediaPreview
+            src={display.image}
+            alt={asset.thumbnailAlt}
+            label={previewLabel}
+            detail={previewDetail}
+            imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]"
+          />
+        </Link>
         <span className={cn(
-          "absolute left-2 top-2 max-w-[calc(100%-1rem)] rounded bg-white/92 px-2 py-1 text-[11px] font-semibold leading-none shadow-[0_1px_0_rgba(32,34,31,.08)]",
-          canDownload && !hasWarnings ? "text-[#22563a]" : "text-[#725216]"
+          "absolute left-2 top-2 z-[2] max-w-[calc(100%-1rem)] rounded-full border px-2.5 py-1 text-[10px] font-black leading-none backdrop-blur max-sm:px-2 max-sm:text-[9px]",
+          canDownload && !hasWarnings ? "border-[#b7dfc8] bg-[#effbf3]/95 text-[#1f5d3b]" : "border-[#f0cf7d] bg-[#fff2cb]/95 text-[#704707]"
         )}>
-          {display.shortStatus}
+          {quickLabel}
         </span>
-      </Link>
-      <div className="grid gap-2 p-2.5">
+        {!canDownload ? (
+          <span className="absolute bottom-2 left-2 z-[2] inline-flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-full border border-[#f0cf7d] bg-[#fff2cb]/95 px-2.5 py-1 text-[10px] font-black text-[#704707] backdrop-blur">
+            <ShieldAlert size={12} strokeWidth={1.9} aria-hidden="true" />
+            blocked
+          </span>
+        ) : null}
+        <button
+          className="absolute bottom-2 right-2 z-[2] inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[#c5d3ca] bg-white/90 px-2.5 text-[11px] font-black text-tjc-evergreen backdrop-blur transition hover:bg-[#eef7f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px max-sm:h-8 max-sm:w-8 max-sm:px-0"
+          type="button"
+          onClick={() => setQuickLookOpen(true)}
+          aria-haspopup="dialog"
+          aria-label={`Quick preview ${display.title}`}
+        >
+          <Eye size={13} strokeWidth={1.9} aria-hidden="true" />
+          <span className="max-sm:sr-only">Preview</span>
+        </button>
+      </div>
+      <div className="grid flex-1 content-start gap-2.5 border-t border-[#d6dfd8] p-3.5 text-tjc-ink max-sm:gap-1.5 max-sm:p-2">
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="line-clamp-2 text-[13px] font-semibold leading-tight text-tjc-ink">{display.title}</h2>
-            <span className="mt-1 block truncate text-[11px] font-medium text-tjc-muted">{display.cardSubtitle}</span>
+            <h2 className="line-clamp-2 text-sm font-black leading-tight text-tjc-ink max-sm:text-[12px]">{display.title}</h2>
+            <span className="mt-1 block truncate text-xs font-semibold text-tjc-muted max-sm:text-[10px]">{display.cardSubtitle}</span>
           </div>
 	          {canDownload ? (
-	            <a className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-md border transition active:translate-y-px", hasWarnings ? "border-[#ead6a8] bg-[#fff7e5] text-[#725216] hover:bg-[#fff2d5]" : "border-[#b8d9c6] bg-[#edf8f1] text-[#24583d] hover:bg-[#e2f3e9]")} href={downloadHref} aria-label={`Download approved copy${hasWarnings ? " with review warnings" : ""} of ${display.title}`}>
+	            <a className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg border transition active:translate-y-px", hasWarnings ? "border-[#f0cf7d] bg-[#fff2cb] text-[#704707] hover:bg-[#ffe9ad]" : "border-[#92cfad] bg-[#e6f7ec] text-[#164d34] hover:bg-[#d9f0e3]")} href={downloadHref} aria-label={`Download approved copy${hasWarnings ? " with review warnings" : ""} of ${display.title}`}>
 	              <Download aria-hidden="true" size={15} strokeWidth={1.8} />
 	            </a>
           ) : (
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[#ead6a8] bg-[#fff7e5] text-[#725216]" title={display.download.approvedCopy.reason || "Download blocked"}>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#f0cf7d] bg-[#fff2cb] text-[#704707]" title={display.download.approvedCopy.reason || "Download blocked"}>
               <Lock aria-hidden="true" size={15} strokeWidth={1.8} />
             </span>
           )}
         </div>
-        <div className="grid gap-1 text-[11px] leading-snug text-[#566159]">
-          <span className="truncate">{display.usage} / {asset.mediaType}</span>
-          <span className="truncate font-semibold text-[#4b5b51]">{display.download.reuse.blockers[0]?.label || quickLabel}</span>
+        <div className="grid gap-1 text-xs leading-snug text-tjc-muted max-sm:text-[10px]">
+          <span className="truncate font-semibold">RS: {display.shortStatus} / {display.usage}</span>
+          <span className="truncate font-semibold max-sm:hidden">Source: {source.publicLabel}</span>
+          <span className={cn("line-clamp-2 border-l-2 pl-2 font-black max-sm:line-clamp-1", canDownload && !hasWarnings ? "border-[#7db58f] text-[#164d34]" : "border-[#d09a31] text-[#704707]")}>{blocker || quickLabel}</span>
         </div>
-        <div className="max-h-0 overflow-hidden text-xs leading-snug text-tjc-muted opacity-0 transition-all duration-300 group-hover:max-h-28 group-hover:opacity-100 group-focus-within:max-h-28 group-focus-within:opacity-100" aria-label="Source metadata">
-          <span className="block">Source: {source.publicLabel}</span>
-          <span className="block">{display.reviewFacts.reviewLine}</span>
-          <span className="block">{asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : "ResourceSpace export"}</span>
-          {canSeeOriginal && asset.originalFilename ? <span className="block">Original: {asset.originalFilename}</span> : null}
+        <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-t border-[#eef1ef] pt-2 text-[11px] font-bold leading-snug text-tjc-muted max-sm:hidden" aria-label="Source metadata">
+          <span className="truncate">{display.reviewFacts.reviewLine}</span>
+          <span className="rounded-full bg-[#f3f6f2] px-2 py-1 tabular-nums">{asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export"}</span>
         </div>
       </div>
+      <AssetQuickLookDialog asset={asset} role={role} open={quickLookOpen} onClose={() => setQuickLookOpen(false)} />
     </article>
   );
 }

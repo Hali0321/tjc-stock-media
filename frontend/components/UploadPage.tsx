@@ -1,9 +1,15 @@
 "use client";
 
 import { FormEvent, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldAlert, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
+import { CheckCircle2, Clock3, FileCheck2, FolderInput, RotateCcw, Save, ShieldCheck, UploadCloud } from "lucide-react";
+import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
+import { StateBanner } from "@/components/StatusBanner";
+import { UploadDropzone } from "@/components/UploadFileDropzone";
+import { UploadIntakePacket } from "@/components/UploadIntakePacket";
 import { canUpload } from "@/lib/permissions";
+import { toastDraftSaved, toastUploadComplete, toastUploadFailed, toastUploadStarted } from "@/lib/tjc-toasts";
+import { uploadTagSuggestions } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 type UploadReceipt = {
@@ -16,15 +22,9 @@ type UploadReceipt = {
   reviewWarnings?: string[];
 };
 
-const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
+const inputClass = "min-h-10 w-full min-w-0 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
-
-function formatBytes(value: number) {
-  if (value >= 1024 * 1024 * 1024) return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
-}
 
 export function UploadPage() {
   const { role, ready } = useDemoRole();
@@ -32,6 +32,7 @@ export function UploadPage() {
   const [largeWarning, setLargeWarning] = useState("");
   const [receipt, setReceipt] = useState<UploadReceipt | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [suggestedTags, setSuggestedTags] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const allowed = ready && canUpload(role);
 
@@ -42,11 +43,19 @@ export function UploadPage() {
     setMessage("");
     setReceipt(null);
     const form = new FormData(event.currentTarget);
+    form.delete("files");
+    selectedFiles.forEach((file) => form.append("files", file));
     form.set("role", role);
+    toastUploadStarted(selectedFiles.length ? `${selectedFiles.length} file(s) staged for review.` : "Source-link intake will be reviewed without a browser file.");
     const response = await fetch("/api/upload", { method: "POST", body: form });
     const body = await response.json();
     setMessage(body.message || body.error || "Upload intake checked.");
-    if (response.ok) setReceipt(body);
+    if (response.ok) {
+      setReceipt(body);
+      toastUploadComplete();
+    } else {
+      toastUploadFailed(body.error || "No files were approved or published.");
+    }
   }
 
   function checkFiles(files: FileList | null) {
@@ -54,24 +63,45 @@ export function UploadPage() {
     setSelectedFiles(nextFiles);
     const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
     setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+    if (nextFiles.length) toastUploadStarted(`${nextFiles.length} selected file${nextFiles.length === 1 ? "" : "s"} staged for review.`);
   }
 
   function syncFileInput(nextFiles: File[]) {
-    if (!fileInputRef.current) return;
-    const transfer = new DataTransfer();
-    nextFiles.forEach((file) => transfer.items.add(file));
-    fileInputRef.current.files = transfer.files;
-    checkFiles(transfer.files);
+    if (fileInputRef.current && typeof DataTransfer !== "undefined") {
+      try {
+        const transfer = new DataTransfer();
+        nextFiles.forEach((file) => transfer.items.add(file));
+        fileInputRef.current.files = transfer.files;
+      } catch {
+        fileInputRef.current.value = "";
+      }
+    }
+    setSelectedFiles(nextFiles);
+    const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
+    setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+  }
+
+  function addDroppedFiles(files: File[]) {
+    syncFileInput([...selectedFiles, ...files]);
+    toastUploadStarted(`${files.length} dropped file${files.length === 1 ? "" : "s"} added to reviewer intake.`);
   }
 
   function removeFile(index: number) {
+    const file = selectedFiles[index];
     syncFileInput(selectedFiles.filter((_, fileIndex) => fileIndex !== index));
+    toastDraftSaved(`${file?.name || "File"} removed from intake.`);
   }
 
   function clearFiles() {
     if (fileInputRef.current) fileInputRef.current.value = "";
     setSelectedFiles([]);
     setLargeWarning("");
+    if (selectedFiles.length) toastDraftSaved("Selected files cleared.");
+  }
+
+  function saveDraftNotice() {
+    setMessage("Draft capture is local-only in this demo. Files still need Submit for review before server intake.");
+    toastDraftSaved("Draft capture is local-only in this demo. Submit for review before server intake.");
   }
 
   if (!ready) {
@@ -81,12 +111,12 @@ export function UploadPage() {
   if (!allowed) {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="min-w-0 rounded-md border border-tjc-line bg-white p-5">
+        <section className="min-w-0 dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
           <h1 className="mt-2 dam-page-title">Upload is for Contributors</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
         </section>
-        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-md border border-tjc-line bg-white p-5">
+        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
           <UploadCloud size={30} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
           <div>
             <h2 className="text-xl font-semibold">Contribution flow</h2>
@@ -99,14 +129,14 @@ export function UploadPage() {
   }
 
   return (
-    <div className="dam-shell max-w-[1520px]">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 lg:grid-cols-[minmax(0,1fr)_36rem]">
+    <div className="dam-shell max-w-[1600px]">
+      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 lg:grid-cols-[minmax(0,1fr)_38rem]">
         <div>
-          <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
+          <span className="text-sm font-black text-tjc-evergreen">Contributor intake</span>
           <h1 className="mt-2 dam-page-title">Upload for review</h1>
-          <p className="mt-2 max-w-[64ch] text-sm leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
+          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-3" aria-label="Upload workflow">
+        <div className="grid gap-2 border-t border-[#d6dfd8] pt-4 sm:grid-cols-3 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0" aria-label="Upload workflow">
           {[
             { icon: UploadCloud, title: "Context", body: "Event, date, ministry, source." },
             { icon: ShieldCheck, title: "People and rights", body: "Visibility, consent, restrictions." },
@@ -114,21 +144,31 @@ export function UploadPage() {
           ].map((step) => {
             const Icon = step.icon;
             return (
-              <div className="rounded-md border border-tjc-line bg-white p-3" key={step.title}>
+              <div className="border-l border-[#d6dfd8] pl-3" key={step.title}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-                <strong className="mt-2 block font-semibold">{step.title}</strong>
-                <span className="mt-1 block text-sm text-tjc-muted">{step.body}</span>
+                <strong className="mt-2 block font-black text-tjc-ink">{step.title}</strong>
+                <span className="mt-1 block text-sm font-semibold text-tjc-muted">{step.body}</span>
               </div>
             );
           })}
         </div>
       </section>
 
-      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_24rem]" onSubmit={submit}>
-        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
+      <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+        <StateBanner tone="info" title="Autosave checkpoint">
+          Context, rights, files, and tags are reviewed together. Submitted media stays Needs Review / Do Not Publish until reviewer evidence is complete.
+        </StateBanner>
+        <div className="grid content-center rounded-[1.35rem] border border-[#d7e1d9] bg-white px-4 py-3 text-sm shadow-[0_10px_28px_rgba(25,34,29,.035)]">
+          <strong className="text-tjc-ink">{selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected</strong>
+          <span className="text-xs font-semibold text-tjc-muted">Review visibility: blocked by default</span>
+        </div>
+      </div>
+
+      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_27rem]" onSubmit={submit}>
+        <section className="dam-soft-card min-w-0 self-start p-4">
           <div className="mb-4">
-            <h2 className="text-base font-semibold">1. Context</h2>
-            <p className="text-sm text-tjc-muted">Help reviewers understand where this media came from.</p>
+            <h2 className="text-lg font-black">1. Context</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Help reviewers understand where this media came from.</p>
           </div>
           <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Title {requiredHint}</span>
@@ -154,10 +194,10 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="self-start rounded-md border border-tjc-line bg-white p-4">
+        <section className="dam-soft-card self-start p-4">
           <div className="mb-4">
-            <h2 className="text-base font-semibold">2. People and rights</h2>
-            <p className="text-sm text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
+            <h2 className="text-lg font-black">2. People and rights</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
@@ -198,61 +238,45 @@ export function UploadPage() {
           </label>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Consent/restrictions {requiredHint}</span>
-            <textarea className="min-h-28 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
+            <textarea className="min-h-28 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
           </label>
         </section>
 
-        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
+        <section className="dam-soft-card min-w-0 self-start p-4">
           <div className="mb-4">
-            <h2 className="text-base font-semibold">3. Files and tags</h2>
-            <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
+            <h2 className="text-lg font-black">3. Files and tags</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
-          <label className={labelClass}>
-            Files
-            <input ref={fileInputRef} className="min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 py-2 text-sm font-medium file:mr-3 file:rounded-md file:border-0 file:bg-[#eef7f1] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-tjc-evergreen" name="files" type="file" multiple onChange={(event) => checkFiles(event.currentTarget.files)} />
-          </label>
-          {selectedFiles.length ? (
-            <section className="mt-3 rounded-md border border-tjc-line bg-[#fbfcfa] p-3" aria-label="Selected file preview">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-tjc-ink">{selectedFiles.length} selected file{selectedFiles.length === 1 ? "" : "s"}</h3>
-                <button className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={clearFiles}>
-                  <Trash2 size={13} strokeWidth={1.8} aria-hidden="true" />
-                  Clear files
-                </button>
-              </div>
-              <div className="mt-2 grid gap-2">
-                {selectedFiles.map((file, index) => {
-                  const tooLarge = file.size > LARGE_MEDIA_BYTES;
-                  return (
-                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 py-2" key={`${file.name}-${file.size}-${index}`}>
-                      {tooLarge ? <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" /> : <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />}
-                      <span className="min-w-0">
-                        <strong className="block truncate text-xs font-semibold text-tjc-ink">{file.name}</strong>
-                        <span className="mt-0.5 block text-[11px] font-medium text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
-                      </span>
-                      <button className="grid h-8 w-8 place-items-center rounded-md text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={() => removeFile(index)} aria-label={`Remove ${file.name}`}>
-                        <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ) : null}
+          <UploadDropzone
+            inputRef={fileInputRef}
+            selectedFiles={selectedFiles}
+            onInputFiles={checkFiles}
+            onDropFiles={addDroppedFiles}
+            onRemove={removeFile}
+            onClear={clearFiles}
+          />
           <label className={`${labelClass} mt-4`}>
             Existing Google / ResourceSpace link
             <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
           </label>
-          <label className={`${labelClass} mt-4`}>
-            <span className="flex items-center justify-between gap-2">Suggested tags {requiredHint}</span>
-            <input className={inputClass} name="tags" placeholder="Bible, fellowship, welcome, youth..." required />
-          </label>
+          <div className="mt-4">
+              <TagInput
+              name="tags"
+              label="Suggested tags"
+              value={suggestedTags}
+              onChange={setSuggestedTags}
+              required
+              placeholder="Bible, fellowship, welcome, youth..."
+              suggestions={uploadTagSuggestions}
+              helperText="Use existing visible-content or TJC terms. Reviewers approve final taxonomy before ResourceSpace updates."
+            />
+          </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
-            <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
+            <textarea className="min-h-24 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
           </label>
-          {largeWarning ? <div className="mt-4 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{largeWarning}</div> : null}
-          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-tjc-line bg-[#f6faf7] p-3">
+          {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
+          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#c9d6ce] bg-[#f6faf7] p-3">
             <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <div>
               <strong className="block font-semibold">Large media intake</strong>
@@ -264,26 +288,36 @@ export function UploadPage() {
           </div>
         </section>
 
-        <section className="rounded-md border border-tjc-line bg-[#fbfcfa] p-4 xl:col-span-3" aria-label="Ready to submit checklist">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold">Reviewer handoff checklist</h2>
-              <p className="mt-1 text-sm text-tjc-muted">Submission is stronger when every required evidence field is filled before intake.</p>
-            </div>
-            <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-3 py-2 text-xs font-semibold text-[#725216]">Status after submit: Needs Review / Do Not Publish</span>
+        <div className="xl:col-span-3">
+          <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} largeWarning={largeWarning} />
+        </div>
+
+        <section className="sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:grid-cols-[1fr_auto] xl:col-span-3" aria-label="Upload actions">
+          <div className="grid content-center">
+            <strong className="text-sm font-black text-tjc-ink">Submit for reviewer intake</strong>
+            <span className="text-xs font-semibold text-tjc-muted">No upload bypasses review. Approved copies are created only after reviewer decision.</span>
           </div>
-          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            {["Context present", "Source named", "People/minors answered", "Rights/restrictions noted"].map((item) => (
-              <span className="rounded-md border border-tjc-line bg-white px-3 py-2 font-semibold text-[#4d554d]" key={item}>{item}</span>
-            ))}
+          <div className="flex flex-wrap gap-2">
+            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
+              <Save size={15} strokeWidth={1.8} aria-hidden="true" />
+              Save draft
+            </button>
+            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
+              clearFiles();
+              setSuggestedTags("");
+              setMessage("File selection and suggested tags cleared.");
+              toastDraftSaved("File selection and suggested tags cleared.");
+            }}>
+              <RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" />
+              Clear all
+            </button>
+            <button className="inline-flex min-h-11 min-w-[12rem] items-center justify-center gap-2 dam-button-primary px-5 text-base font-black transition active:translate-y-px" type="submit" aria-label="Submit intake">
+              <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
+              Submit for review
+            </button>
           </div>
         </section>
-
-        <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-5 text-base font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px xl:col-span-3" type="submit">
-          <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
-          Submit intake
-        </button>
-        {message ? <div className="rounded-md border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
+        {message ? <div className="rounded-xl border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
 
         {receipt ? (
           <section className="grid gap-4 rounded-md border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto] xl:col-span-3" aria-label="Upload receipt">

@@ -19,8 +19,17 @@ mkdir -p "$BACKUP_DIR"
 mkdir -p "$ROOT/.runtime/audits" "$ROOT/.runtime/exports"
 
 if docker compose ps --status running | grep -q 'tjc-resourcespace-db'; then
-  docker compose exec -T mariadb mariadb-dump \
-    -u"${MYSQL_USER}" "-p${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" > "$BACKUP_DIR/database.sql"
+  docker compose exec -T mariadb sh -eu -c '
+    client_cnf="$(mktemp)"
+    trap "rm -f \"$client_cnf\"" EXIT
+    chmod 600 "$client_cnf"
+    cat > "$client_cnf" <<EOF
+[client]
+user=${MYSQL_USER}
+password=${MYSQL_PASSWORD}
+EOF
+    mariadb-dump --defaults-extra-file="$client_cnf" "${MYSQL_DATABASE}"
+  ' > "$BACKUP_DIR/database.sql"
 else
   echo "WARN: MariaDB is not running; database dump skipped." > "$BACKUP_DIR/database.sql.SKIPPED"
 fi

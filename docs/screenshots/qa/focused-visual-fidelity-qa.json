@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-06-06T13:38:30.292Z",
+  "failures": [],
+  "consoleErrors": [],
+  "networkFailures": [],
+  "api": {
+    "viewerBlockedDownload": 403,
+    "reviewerMissingEvidence": 400,
+    "validReview": 202,
+    "validReviewSyncState": "queued",
+    "uploadStatus": 200,
+    "uploadDefaultReviewState": "Needs Review / Do Not Publish"
+  },
+  "viewports": [
+    320,
+    390,
+    768,
+    1440
+  ]
+}

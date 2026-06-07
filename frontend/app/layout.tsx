@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Noto_Sans_TC } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 import { AppChrome } from "@/components/AppChrome";
 import { RoleProvider } from "@/components/RoleProvider";
 
-const inter = Inter({
-  variable: "--font-inter",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
   display: "swap"
 });
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${notoSansTc.variable} ${geistMono.variable} font-sans`}>
+      <body className={`${geist.variable} ${notoSansTc.variable} ${geistMono.variable} font-sans`}>
         <RoleProvider>
           <AppChrome>{children}</AppChrome>
         </RoleProvider>

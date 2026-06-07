@@ -13,36 +13,66 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds.
 ## Visual Direction
 
 - Photo-first library, not admin dashboard.
-- Warm white background, deep charcoal text, evergreen/navy accents.
+- Warm off-white background, deep charcoal text, evergreen accent, sage selected states, restrained amber/red safety states.
 - Tailwind v4 utility system with a small global token/base layer.
 - Inter plus Noto Sans TC fallback via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
-- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, operational saved views, collection entry points, filter controls, sort controls, and asset contact sheet high on page.
+- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, Library saved-view rail, collection entry points, filter drawer, sort controls, and asset contact sheet high on page.
 - Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review is implemented as maintained `AppNav`. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
-- Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, review queues, ResourceSpace ID lookup, guide, and admin diagnostics.
+- Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
 - Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
 - Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
 - Use less explanatory text. Thumbnails, badges, filters, and clear actions should carry the product.
 - Asset detail includes moment-of-use guidance: best used for, please avoid, caption suggestion, credit requirement, and ministry sensitivity.
 
+Best combined direction:
+
+```text
+Dribbble DAM density
++ 21st.dev workflow components
++ Tubelight Navbar
++ Display Cards for operational state
++ restrained liquid/glass for nav and primary actions
++ Awwwards photographic restraint
++ Inter/Noto typography
++ ResourceSpace truth layer
++ TJC safety rules
+```
+
 Reference patterns, adapted without copying:
 
+- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, DataTable direction for Admin/Review governance, Animated Loading Skeleton-style loading states, state/banner primitives, upload dropzone/preview, tag input, Sonner-style toasts, pagination, maintained tabs, media preview wrappers, review confirmation dialog, request dialogs, secondary action dropdowns, restrained primary-action depth, and hold-and-release buttons for high-risk review decisions.
+- Dribbble DAM references: dense thumbnail grid, left filter/sidebar rhythm, asset detail panel, table/list toggle, and review/admin information density.
+- Awwwards references: clean photographic hierarchy, image-first detail view, restrained white/evergreen polish, and mobile filter behavior without cinematic storytelling.
+- CodePen interaction references: upload drag/preview/remove states and gallery filtering ideas adapted to DAM reuse states.
+- Godly / Frame.io references: polished media-review cockpit feel, used carefully without dark-heavy trend chrome.
+- Monet: calm light-theme admin/guide sections, diagnostics, production blockers, and workflow explanation patterns.
+- Pinterest moodboard: archive/upload visual rhythm only; no direct layout copying.
+- AI design tools: research/prototyping only. No generated church people, fake ministry media, or production AI dependency.
 - Google Photos / Apple Photos: minimal chrome, image-first browsing, fast visual scanning.
-- Brandfolder: professional DAM search, metadata clarity, approval/download confidence.
-- Frontify: usage guidance and lifecycle/status clarity.
-- PhotoShelter: contributor/reviewer/user role separation.
-- Notion Gallery: calm cards, simple tags, approachable metadata.
-- Airbnb: warm, human, photo-led trust.
+- Brandfolder: approval clarity, asset safety, permissions, and download controls.
+- Frontify: usage guidance, brand rules, Do/Avoid guidance, and lifecycle clarity.
+- PhotoShelter: albums/events, source attribution, contributor/reviewer separation, and permission-aware downloads.
+- Bynder / Canto / AEM Assets: metadata facets, governance, review lifecycle, renditions, and reporting.
+- ResourceSpace: source-of-truth backend, workflow state, metadata, permissions, admin settings, and asset IDs.
+- Notion: calm documentation and guide readability.
+- Airtable / Linear: dense workflow UI, clear actions, and table/list/detail rhythm.
 
 Reference accountability lives in `docs/runs/final-product-critique.md`. Each source group is mapped to maintained components, rejected ideas, screenshot evidence, code paths, and remaining debt. This prevents the reference list from becoming a moodboard with no implementation proof.
 
 The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
+Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DisplayCard`, `DataTable`, `TjcStatusBadge`, `StatusBanner`, `DamStates`, `MediaPreviewPanel`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `PaginationBar`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, `UploadFileDropzone`, `tjc-toasts`, and `ImageComparisonPanel`. The safe comparison panel is implemented with role-safe previews only; a true original-vs-approved derivative slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions. Document/video/audio preview modes are implemented as safe shells until ResourceSpace export includes role-safe rows. Theme Toggle is rejected for this pass; infinite scroll is rejected for core DAM workflows.
+
 Avoided:
 
 - abstract generated art
 - huge hero section
+- component showcase
+- glassmorphism demo
 - beige/yellow dashboard
+- dark neon dashboard
+- pricing/hero/particle templates
 - developer console look
 - ResourceSpace clone
 - second metadata UI
@@ -110,11 +140,11 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 | Token | Value / rule |
 |---|---|
-| Background | neutral off-white `#f7f8f6`; no beige/yellow dashboard treatment |
+| Background | warm off-white `#f7f4ef`; no dark gradient or beige/yellow dashboard treatment |
 | Surface | white with restrained borders; minimal shadow |
-| Text | deep charcoal `#20221f` |
-| Muted text | gray-green `#687068` |
-| Accent | deep evergreen `#123f3a` |
+| Text | deep charcoal `#171b19` |
+| Muted text | gray-green `#5a635f` |
+| Accent | deep evergreen `#0f3d2e` |
 | Secondary accent | calm navy `#1f4f73` |
 | Approved for church-wide use | restrained green |
 | Internal ministry use only | navy/blue |
@@ -122,9 +152,9 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Archive only | muted purple/gray |
 | Do not publish externally | muted red |
 | Spacing scale | 4px rhythm, mostly 8/12/16/24px |
-| Card radius | mostly 6-8px; larger rounding avoided on workflow surfaces |
-| Chip radius | compact rounded rectangles; pills used sparingly |
-| Shadow | very soft image shadow only |
+| Card radius | mostly 12-24px depending surface; rounder controls without childish bubble UI |
+| Chip radius | compact rounded pills for controls and tags |
+| Shadow | minimal soft lift only; no fake-premium heavy shadow |
 | Typography | Inter + Noto Sans TC fallback, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
 | Motion | GSAP only in review workbench; disabled under reduced-motion |
@@ -153,11 +183,16 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 ## Latest QA Evidence
 
-- `npm run typecheck`: passed on 2026-06-06 during final DAM UI pass.
-- Production browser QA refreshed Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px, plus responsive QA at 1280, 1024, 768, 390, and 320px, with no horizontal page overflow.
+- `npm --prefix frontend run typecheck`: passed on 2026-06-07 after the primitive/mobile density fixes.
+- `npm --prefix frontend run build`: passed on 2026-06-07.
+- `make frontend-check` and `make demo-check`: passed on 2026-06-07 when run sequentially.
+- `make smoke`: passed on 2026-06-07 with Docker/ResourceSpace/MariaDB-not-running warnings only.
+- `make launch-readiness`: passed on 2026-06-07 with `.env` placeholder and 19 GiB free-disk warnings.
+- `BASE_URL=http://localhost:3029 make portal-api-smoke` and `BASE_URL=http://localhost:3029 make portal-browser-qa`: passed on 2026-06-07 from a fresh production Next server with `TJC_STOCK_MEDIA_ROOT` set to the repo root. Browser QA reported 15 pages, 1440/1280/1024/768/390/320 px, 0 failures, 0 warnings, 0 console errors, and 0 network failures.
+- The full screenshot set was refreshed under `docs/screenshots/`, including Library, Collections, Upload, Review, Asset Detail, Admin, Guide, and primitive-proof captures. The capture manifest reports no horizontal page overflow.
 - Role safety API checks remain server-owned: blocked Viewer downloads return 403, missing review evidence returns 400, valid review evidence queues a 202 pending write, and upload intake does not fake file counts.
 - Latest browser QA includes command palette and upload file-preview checks. Expected 400/403 denials are recorded as safety checks.
-- Refreshed screenshot set lives under `docs/screenshots/`.
+- `git diff --check`: passed on 2026-06-07.
 
 ## Anti-AI Checklist
 

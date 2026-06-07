@@ -1,8 +1,9 @@
 "use client";
 
-import { PointerEvent, useState } from "react";
-import { ArrowRight, FolderOpen, Users } from "lucide-react";
+import { ArrowRight, Users } from "lucide-react";
+import { CollectionPreviewPlaceholder } from "@/components/DamStates";
 import { MediaPreview } from "@/components/MediaPreview";
+import { cn } from "@/lib/ui";
 
 type CollectionAlbumCardProps = {
   name: string;
@@ -13,12 +14,10 @@ type CollectionAlbumCardProps = {
   approvalSummary: string;
   peopleWarning?: string;
   images: { src: string; alt: string }[];
+  isActive?: boolean;
+  onInspect?: () => void;
   onOpen: () => void;
 };
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
 
 export function CollectionAlbumCard({
   name,
@@ -29,65 +28,61 @@ export function CollectionAlbumCard({
   approvalSummary,
   peopleWarning,
   images,
+  isActive = false,
+  onInspect,
   onOpen
 }: CollectionAlbumCardProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeImage = images[activeIndex] || images[0];
-
-  function scrubPreview(event: PointerEvent<HTMLButtonElement>) {
-    if (images.length <= 1) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 0.999);
-    setActiveIndex(Math.floor(ratio * images.length));
-  }
-
   return (
     <button
       type="button"
-      className="group grid overflow-hidden rounded-md border border-tjc-line bg-white text-left transition duration-150 hover:border-[#9fb8ae] active:translate-y-px"
+      className={cn(
+        "group grid min-w-0 gap-3 rounded-[1.5rem] border bg-white p-3 text-left shadow-[0_14px_34px_rgba(35,53,111,.045)] transition duration-200 hover:-translate-y-0.5 hover:border-[#8aa99a] hover:bg-[#fbfdfb] active:translate-y-px sm:grid-cols-[15rem_minmax(0,1fr)_auto]",
+        isActive ? "border-[#0b4b42] bg-[#f6fbf7] shadow-[inset_4px_0_0_#0b4b42,0_18px_40px_rgba(35,53,111,.07)]" : "border-[#d4ded7]"
+      )}
       onClick={onOpen}
-      onPointerMove={scrubPreview}
-      onPointerLeave={() => setActiveIndex(0)}
+      onFocus={onInspect}
+      onPointerEnter={onInspect}
       aria-label={`Browse ${name}`}
     >
-      <span className="grid grid-cols-[7rem_1fr] gap-1.5 border-b border-tjc-line bg-[#eef1ed] p-1.5">
-        <span className="grid aspect-[4/3] place-items-center overflow-hidden rounded bg-white">
-          {activeImage ? (
-            <MediaPreview src={activeImage.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
-          ) : (
-            <span className="grid h-full w-full place-items-center rounded-md bg-[#f6f8f5] text-center text-[11px] font-semibold leading-tight text-tjc-muted" aria-hidden="true">
-              <FolderOpen size={18} strokeWidth={1.8} />
-              No previews
+      <span className="grid max-w-full grid-cols-[1.35fr_1fr] gap-1.5 overflow-hidden" aria-hidden="true">
+        {images.length ? (
+          <>
+            <span className="row-span-2 grid aspect-[4/3] place-items-center overflow-hidden rounded-[1rem] border border-[#d6e0d8] bg-[#f4f7f4]">
+              <MediaPreview src={images[0]?.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
             </span>
-          )}
-        </span>
-        <span className="grid min-w-0 grid-cols-4 gap-1" aria-hidden="true">
-          {(images.length ? images.slice(0, 4) : []).map((image, index) => (
-            <span className="grid min-h-12 place-items-center overflow-hidden rounded bg-white" key={`${image.src}-${index}`}>
-              <MediaPreview src={image.src} alt="" />
-            </span>
-          ))}
-        </span>
+            {images.slice(1, 3).map((image, index) => (
+              <span className="grid aspect-[4/3] place-items-center overflow-hidden rounded-[.85rem] border border-[#d6e0d8] bg-[#f4f7f4]" key={`${image.src}-${index}`}>
+                <MediaPreview src={image.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
+              </span>
+            ))}
+          </>
+        ) : (
+          <>
+            <CollectionPreviewPlaceholder className="row-span-2 aspect-[4/3]" title="Album cover pending" />
+            <CollectionPreviewPlaceholder className="aspect-[4/3]" title="Shelf" />
+            <span className="grid aspect-[4/3] min-w-0 place-items-center rounded-[.85rem] border border-dashed border-[#cbd8cf] bg-[#fbfcfa] text-[10px] font-bold leading-tight text-[#718078]">pending</span>
+          </>
+        )}
       </span>
-      <span className="grid gap-2 p-2.5">
-        <span className="flex min-w-0 items-start justify-between gap-3">
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold leading-tight text-tjc-ink">{name}</span>
-            <span className="mt-1 block text-xs leading-snug text-tjc-muted">{description}</span>
-          </span>
-          <ArrowRight className="shrink-0 text-tjc-evergreen transition group-hover:translate-x-1" size={16} strokeWidth={1.8} aria-hidden="true" />
-        </span>
-        <span className="grid gap-1 text-[11px] text-[#5c675f]">
-          <span>{countLabel} / {dateRange}</span>
-          <span>{ministry}</span>
-          <strong className="font-semibold text-tjc-evergreen">{approvalSummary}</strong>
+      <span className="grid min-w-0 content-center gap-1">
+        <span className="truncate text-base font-black leading-tight text-tjc-ink">{name}</span>
+        <span className="line-clamp-2 text-sm leading-snug text-tjc-muted">{description}</span>
+        <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#5c675f]">
+          <span>{countLabel}</span>
+          <span>{approvalSummary}</span>
+          <span>{dateRange}</span>
+          <span className="hidden md:inline">Source: {ministry}</span>
+          <span className="hidden md:inline">Stable ID</span>
         </span>
         {peopleWarning ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#725216]">
+          <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#725216]">
             <Users size={13} strokeWidth={1.8} aria-hidden="true" />
             {peopleWarning}
           </span>
         ) : null}
+      </span>
+      <span className="hidden h-9 w-9 place-items-center self-center rounded-md text-tjc-evergreen transition group-hover:translate-x-0.5 group-hover:bg-[#edf5ef] sm:grid">
+        <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
       </span>
     </button>
   );
