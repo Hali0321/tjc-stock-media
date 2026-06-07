@@ -1,8 +1,22 @@
 # TJC Stock Media UI Component Inventory
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 This inventory records the 21st.dev scouting pass for TJC Stock Media. The source library was reviewed as a component idea library, not as drop-in branding. Every selected pattern must be restyled into the TJC DAM system: Inter + Noto Sans TC fallback, evergreen accent, subtle borders, restrained radius, high-contrast safety labels, consistent badge language, and mobile behavior that works at 320/390/768 px.
+
+## 2026-06-07 DAM Safety Component Tightening
+
+This pass tightened three acceptance gaps without changing ResourceSpace policy or API contracts:
+
+- `frontend/components/DataTable.tsx` now provides the shared Admin/Review table primitive: search, sort, page-size control, pagination, desktop table rows, and mobile cards. It is visible in Admin production blockers, integration readiness, required field mappings, controlled vocabulary, and the Review xl queue.
+- `frontend/components/MediaPreviewPanel.tsx` now owns safe image/video/audio/document/restricted/unknown preview modes. Image/restricted modes are visible in real asset flows; document/video/audio modes are implemented as safe shells until ResourceSpace export includes role-safe rows of those media types.
+- `frontend/components/DamStates.tsx` now owns shared loading/empty/error/restricted/blocked/pending/offline state cards plus skeletons. Restricted previews use polished policy panels with deterministic visual variety and safe collection/type context.
+- `frontend/lib/tjc-toasts.tsx` centralizes Sonner feedback for upload, draft, share/copy, review queueing, pending writes, blocked downloads, and save failures. Toasts never replace persistent safety copy.
+- `frontend/components/StatusBadge.tsx` now exposes one core `TjcStatusBadge` primitive with the requested domain/status/tone/icon/label/tooltip API. Semantic wrappers (`ReuseStateBadge`, `RightsBadge`, `ReviewBadge`, `VisibilityBadge`, `DownloadBadge`, `RawStatusBadge`) are visible in Asset Detail trust panels. Safety notes: raw ResourceSpace status remains separate from portal reuse state; text and icons accompany color.
+- `frontend/components/AdminPage.tsx` now includes an `Audit log` sidebar target and read-only audit section using integration readiness and action backlog records. Safety notes: pending writes remain explicitly local until ResourceSpace write mapping is configured.
+- `frontend/components/GuidePage.tsx` now has a mobile jump navigation row, keeping Guide sections reachable at 320/390 while preserving desktop anchor navigation.
+
+Verification after the final 2026-06-07 pass: `npm --prefix frontend run typecheck`, `npm --prefix frontend run build`, `make frontend-check`, `make demo-check`, `make smoke`, `make launch-readiness`, `BASE_URL=http://localhost:3029 make portal-api-smoke`, `BASE_URL=http://localhost:3029 make portal-browser-qa`, and `git diff --check` passed. Screenshots and primitive proofs were refreshed under `docs/screenshots/`; the capture manifest reports no horizontal page overflow.
 
 ## 2026-06-06 Light DAM Rebuild Continuation
 
@@ -58,7 +72,7 @@ The community library exposes many useful and many unsuitable categories. Review
 
 | Pattern | Status | Old pattern replaced | TJC DAM fit | Style normalization | Accessibility/mobile risks | Code paths |
 |---|---|---|---|---|---|---|
-| Tubelight-style workflow nav | Implemented | Inline nav living inside app chrome | Gives Library, Collections, Upload, and Review clear workflow orientation | Evergreen active surface, subtle border, low motion, no heavy glass | Keep `aria-current`; labels become screen-reader-only under 430 px to avoid overflow | `frontend/components/AppNav.tsx`, `frontend/components/AppChrome.tsx` |
+| Tubelight-style workflow nav | Implemented | Inline nav living inside app chrome | Gives Library, Collections, Upload, and Review clear workflow orientation | Evergreen active surface, subtle border, low motion, no heavy glass | Keep `aria-current`; labels become screen-reader-only under 360 px to avoid overflow | `frontend/components/AppNav.tsx`, `frontend/components/AppChrome.tsx` |
 | Command palette | Implemented | Slow manual route/search jumps | Speeds saved views, collection navigation, ResourceSpace ID lookup, Upload, stable Review queue URLs, Guide, Admin | White dialog shell, evergreen icons, selected-row ring, no neon/marketing styling | Arrow/Home/End selection, focus trap, Escape close, return-focus behavior, and queue URL state are implemented | `frontend/components/CommandPalette.tsx`, `frontend/components/ReviewPage.tsx`, `frontend/app/review/page.tsx` |
 | Display cards | Implemented selectively | Oversized generic dashboard cards | Useful for saved views, review metrics, admin health, metadata confidence, pending writes, and collection shelf context | White surfaces, compact count/purpose/action, no glass over safety state | Do not use for main asset grid or guide content | `frontend/components/DisplayCard.tsx`, `frontend/components/SavedViewCard.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx`, `frontend/components/AdminPage.tsx`, `frontend/components/ReviewPage.tsx` |
 | DAM contact sheet/grid | Implemented | Large card wells and weak thumbnails | Library must scan like DAM/media browser | Media-led tiles, compact metadata, one primary status, no fake preview art | Must preserve blocked state text and no active unsafe downloads | `frontend/components/AssetCard.tsx`, `frontend/components/LibraryPage.tsx` |
@@ -71,10 +85,10 @@ The community library exposes many useful and many unsuitable categories. Review
 | Review cockpit queue cards | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Media-led records with ResourceSpace ID, raw status, usage badge, risk callout, next check, and quiet secondary detail action | Mobile stacks into readable review cards; no horizontal overflow; selected state uses text/border/background | `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewPage.tsx` |
 | Collection shelf inspector | Implemented | Collections page looked like a metric header plus generic album cards | Collections should feel like PhotoShelter/Brandfolder album browsing with selected album evidence, stable IDs, approval summary, source, range, and Library handoff | Light album rows, quiet thumbnail rails, white trust facts; no fake media; preview-pending state is intentional | Hover/focus selection works; 320 px stacks album rows then inspector; no horizontal overflow | `frontend/components/CollectionsPage.tsx`, `frontend/components/CollectionAlbumCard.tsx`, `frontend/components/CollectionShelfInspector.tsx` |
 | Review cockpit rows | Implemented | Long soft generated review cards | Reviewers need dense triage and selected-asset inspector | Compact queue tabs, cards, blocker text, audit preview | Mobile switches to compact cards; no horizontal overflow | `frontend/components/ReviewPage.tsx`, `frontend/components/ReviewQueueAssetCard.tsx`, `frontend/components/ReviewTriageStrip.tsx` |
-| Review load-more gate | Implemented | Rendering up to 80 review rows at once | Reviewers still get a dense queue, but mobile reaches inspector/actions sooner | Shows first 24 loaded rows, exact loaded/total copy, evergreen load-more button | Preserves selected row visibility and avoids hiding review status | `frontend/components/ReviewPage.tsx` |
+| Review load-more gate | Implemented | Rendering up to 80 review rows at once | Reviewers still get a dense queue, but mobile reaches inspector/actions sooner | Desktop shows first 24 loaded rows; mobile shows an 8-card compact queue after the selected asset panel; both use exact loaded/total copy and an evergreen load-more button | Preserves selected row visibility and avoids hiding review status | `frontend/components/ReviewPage.tsx` |
 | Banner | Implemented | Inline warnings competing with metadata chips | Operational warnings need high signal without becoming decorative | Muted info/warning/danger surfaces, text-first labels, no glass | Important safety copy appears in the banner body, not only color or tooltip | `frontend/components/StatusBanner.tsx`, `frontend/components/ReviewPage.tsx`, `frontend/components/UploadPage.tsx` |
 | Tooltip | Implemented selectively | Dense governance hints either missing or over-explained inline | Helps compact DAM controls without hiding safety facts | Small neutral text treatment, evergreen focus/hover behavior where used | Essential blockers are never tooltip-only | `frontend/components/AppNav.tsx`, `frontend/components/AssetCard.tsx`, `frontend/components/DownloadOptionsPanel.tsx` |
-| Status badges and trust badges | Implemented | Inconsistent chips and backend wording | Safety status must be clear and role-aware | Text plus color, muted warning/danger palette | Essential blockers never tooltip-only | `frontend/components/StatusBadge.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/AssetTrustPanel.tsx` |
+| Status badges and trust badges | Implemented | Inconsistent chips and backend wording | Safety status must be clear and role-aware | Core `TjcStatusBadge` primitive plus semantic wrappers for raw status, portal reuse, review, rights, visibility, and download | Essential blockers never tooltip-only; raw ResourceSpace status stays separate from portal reuse state | `frontend/components/StatusBadge.tsx`, `frontend/components/DownloadOptionsPanel.tsx`, `frontend/components/AssetTrustPanel.tsx` |
 | Animated Loading Skeleton | Implemented | Generic loading blocks | Loading should match final DAM surfaces | Calm shimmer and stable dimensions | `prefers-reduced-motion` disables animation | `frontend/app/globals.css`, page/component loading states |
 | Pagination | Implemented | First-page-only browsing | Large DAM search needs truthful ranges and preserved query/view/filter state | Compact operational nav with `Showing X-Y of Z`, disabled states, evergreen focus | Controls must stay reachable at 320 px and never imply infinite scroll | `frontend/components/LibraryPagination.tsx`, `frontend/components/LibraryPage.tsx`, `frontend/app/api/assets/search/route.ts` |
 | Review confirmation dialog | Implemented | Immediate review action POST after checklist | Reviewer must explicitly confirm pending-write semantics before queueing action | Focus-trapped dialog, pending-not-final copy, no decorative glass | Escape/cancel available; confirmation button gets initial focus | `frontend/components/ReviewActionDialog.tsx`, `frontend/components/ReviewPage.tsx` |
@@ -143,18 +157,18 @@ Review cockpit industry pass screenshots captured locally:
 - `docs/screenshots/qa/after-review-industry-pass-tablet-768.png`
 - `docs/screenshots/qa/after-review-industry-pass-mobile-320.png`
 
-Browser proof against `http://127.0.0.1:3028/review` with Reviewer role:
+Browser proof against `http://localhost:3029/review` with Reviewer role:
 
 - 1440 desktop: visual triage board present, 24 queue cards rendered, inspector tabs present, 2 hold-to-confirm buttons present, no console errors, no horizontal overflow.
 - 768 tablet: visual triage board present, 24 queue cards rendered, inspector tabs present, 2 hold-to-confirm buttons present, no console errors, no horizontal overflow.
-- 320 mobile: visual triage board present, 24 queue cards rendered, inspector tabs present, 2 hold-to-confirm buttons present, no console errors, no horizontal overflow.
+- 320 mobile: selected asset/action panel appears before the compact 8-card queue slice, hold-to-confirm buttons remain present after evidence is complete, no console errors, no horizontal overflow.
 
 Library quick preview screenshots captured locally:
 
 - `docs/screenshots/qa/library-quick-preview-desktop.png`
 - `docs/screenshots/qa/library-quick-preview-mobile-320.png`
 
-Browser proof against `http://127.0.0.1:3028/` with Viewer role:
+Browser proof against `http://localhost:3029/` with Viewer role:
 
 - 1440 desktop: quick preview dialog opens, trust-record link present, blocked asset has zero active download links, no console errors, no clipped controls, no horizontal overflow.
 - 320 mobile: quick preview dialog opens, trust-record link present, blocked asset has zero active download links, no console errors, no clipped controls, no horizontal overflow.
@@ -164,7 +178,7 @@ Upload intake packet screenshots captured locally:
 - `docs/screenshots/qa/upload-intake-packet-desktop.png`
 - `docs/screenshots/qa/upload-intake-packet-mobile-320.png`
 
-Browser proof against `http://127.0.0.1:3028/upload` with Contributor role:
+Browser proof against `http://localhost:3029/upload` with Contributor role:
 
 - 1440 desktop: reviewer packet visible, selected-file preview visible, `Needs Review / Do Not Publish` visible, ResourceSpace write-mapping honesty visible, no console errors, no clipped controls, no horizontal overflow.
 - 320 mobile: reviewer packet visible, selected-file preview visible, `Needs Review / Do Not Publish` visible, ResourceSpace write-mapping honesty visible, no console errors, no clipped controls, no horizontal overflow.
@@ -174,7 +188,7 @@ Collections shelf inspector screenshots captured locally:
 - `docs/screenshots/qa/collections-industry-pass-desktop.png`
 - `docs/screenshots/qa/collections-industry-pass-mobile-320.png`
 
-Browser proof against `http://127.0.0.1:3008/collections` with Viewer role:
+Browser proof against `http://localhost:3029/collections` with Viewer role:
 
 - 1440 desktop: collection shelf inspector present, stable ID labels present, `Open Library results` action present, no console errors, no horizontal overflow.
 - 320 mobile: album cards stack before inspector, collection search intent remains visible, `Open Library results` action present, no console errors, no horizontal overflow.

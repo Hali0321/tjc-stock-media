@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { AssetPreviewPlaceholder, RestrictedPreviewPanel } from "@/components/DamStates";
 import { cn } from "@/lib/ui";
 
 type MediaPreviewProps = {
@@ -13,6 +13,14 @@ type MediaPreviewProps = {
   imgClassName?: string;
   loading?: "lazy" | "eager";
 };
+
+function previewVariantClass(seed: string) {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) % 997;
+  }
+  return `dam-preview-variant-${(hash % 4) + 1}`;
+}
 
 export function MediaPreview({
   src,
@@ -38,13 +46,11 @@ export function MediaPreview({
     );
   }
 
-  return (
-    <div className={cn("dam-preview-grid grid h-full w-full place-items-center p-3 text-center text-tjc-muted", className)}>
-      <span className="grid max-w-[20rem] justify-items-center gap-1.5 px-3 py-2">
-        <ImageIcon size={22} strokeWidth={1.8} aria-hidden="true" />
-        <strong className="text-[10px] font-black uppercase tracking-[.08em] text-[#4f5c55]">{label}</strong>
-        {detail ? <span className="max-w-[28rem] text-sm font-medium leading-snug text-tjc-muted">{detail}</span> : null}
-      </span>
-    </div>
-  );
+  const restricted = /restricted|unavailable|blocked/i.test(label);
+
+  if (restricted) {
+    return <RestrictedPreviewPanel title={label} detail={detail} className={cn("h-full w-full", previewVariantClass(`${alt}-${detail || ""}`), className)} />;
+  }
+
+  return <AssetPreviewPlaceholder title={label} detail={detail} className={cn("h-full w-full", className)} />;
 }

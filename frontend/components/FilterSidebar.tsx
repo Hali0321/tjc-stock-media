@@ -22,7 +22,7 @@ export function FilterSidebar({
   onClear: () => void;
 }) {
   return (
-    <aside className="overflow-hidden dam-lift xl:sticky xl:top-24" aria-label="Advanced filters">
+    <aside className="overflow-hidden rounded-[1.2rem] border border-[#d1ddd2] bg-[#fbfdfb]" aria-label="Advanced filters">
       <div className="flex items-center justify-between gap-3 border-b border-tjc-line bg-[#f8fbf7] px-3 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
           <SlidersHorizontal aria-hidden="true" size={16} strokeWidth={1.8} />
@@ -35,9 +35,9 @@ export function FilterSidebar({
           </button>
         ) : null}
       </div>
-      <div className="grid gap-0">
+      <div className="grid gap-0 md:grid-cols-2 xl:grid-cols-4">
         {filterGroups.map((group) => (
-          <section className="border-b border-tjc-line/70 px-3 py-3 last:border-b-0" key={group.label} aria-label={`${group.label} filters`}>
+          <section className="border-b border-tjc-line/70 px-3 py-3 md:border-r md:last:border-r-0" key={group.label} aria-label={`${group.label} filters`}>
             <h2 className="mb-2 text-xs font-semibold text-[#65736b]">{group.label}</h2>
             <div className="grid grid-cols-2 gap-1.5">
               {group.options.map((filter) => (

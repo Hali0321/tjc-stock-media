@@ -1,19 +1,20 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Archive, CheckCircle2, Clock3, Database, FileDown, FolderPlus, LayoutGrid, List, Search, ShieldAlert, ShieldCheck, SlidersHorizontal, Users, X } from "lucide-react";
+import { Archive, CheckCircle2, Database, FileDown, FolderPlus, LayoutGrid, List, Search, ShieldAlert, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { AssetCard } from "@/components/AssetCard";
 import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
-import { DisplayCard } from "@/components/DisplayCard";
+import { EmptyState, ErrorState, SkeletonGrid } from "@/components/DamStates";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { FilterPills } from "@/components/FilterPills";
 import { LibraryPagination } from "@/components/LibraryPagination";
 import { SavedViewCard } from "@/components/SavedViewCard";
-import { StatusBanner } from "@/components/StatusBanner";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogSort, SearchResult, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
 import { cn } from "@/lib/ui";
+import { toastDraftSaved, toastSaveFailed, toastShareCopied } from "@/lib/tjc-toasts";
 
 const sortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
 
@@ -30,30 +31,6 @@ const useCaseButtons = [
 
 const viewerShortcutIds = new Set(["approved-church-wide", "website-hero", "sermon-slides", "newsletter", "social-media", "no-people", "recently-approved"]);
 const contributorShortcutIds = new Set([...viewerShortcutIds, "internal-ministry"]);
-
-function assetTileVariant(index: number): "standard" | "wide" | "tall" | "feature" {
-  if (index === 0) return "feature";
-  if (index === 7 || index === 18) return "wide";
-  if (index % 11 === 5) return "tall";
-  return "standard";
-}
-
-function assetTileClass(index: number) {
-  if (index === 0) return "sm:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2";
-  if (index === 7 || index === 18) return "sm:col-span-2 xl:col-span-2";
-  if (index % 11 === 5) return "sm:row-span-2";
-  return "";
-}
-
-function AssetGridSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" aria-hidden="true">
-      {Array.from({ length: 15 }).map((_, index) => (
-        <div key={index} className={cn("skeleton w-full", index % 4 === 0 ? "h-48" : index % 3 === 0 ? "h-44" : "h-[11.5rem]")} />
-      ))}
-    </div>
-  );
-}
 
 function healthTone(score: number) {
   if (score >= 90) return "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]";
@@ -179,14 +156,25 @@ export function LibraryPage() {
   const [collectionAudience, setCollectionAudience] = useState("Internal ministry");
   const [collectionExpiry, setCollectionExpiry] = useState("");
   const [collectionOwner, setCollectionOwner] = useState("Ministry media");
+  const [pageLimit, setPageLimit] = useState(24);
 
   const apiUrl = useMemo(() => {
-    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: "36", offset: String(pageOffset) });
+    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: String(pageLimit), offset: String(pageOffset) });
     if (selectedView) params.set("view", selectedView);
     if (selectedCollection) params.set("collection", selectedCollection);
     filters.forEach((filter) => params.append("filter", filter));
     return `/api/assets/search?${params.toString()}`;
-  }, [role, submittedQuery, filters, selectedView, selectedCollection, sort, pageOffset]);
+  }, [role, submittedQuery, filters, selectedView, selectedCollection, sort, pageOffset, pageLimit]);
+
+  useEffect(() => {
+    function updatePageLimit() {
+      const width = window.innerWidth;
+      setPageLimit(width < 640 ? 12 : width >= 1536 ? 36 : 24);
+    }
+    updatePageLimit();
+    window.addEventListener("resize", updatePageLimit);
+    return () => window.removeEventListener("resize", updatePageLimit);
+  }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -339,6 +327,8 @@ export function LibraryPage() {
     });
     const body = await response.json();
     setBatchMessage(body.message || body.error || "Batch route responded.");
+    if (response.ok) toastDraftSaved("Batch preview ready. No ResourceSpace write was attempted.");
+    else toastSaveFailed(body.error || "Selection could not be processed.");
   }
 
   function exportCsv() {
@@ -366,6 +356,7 @@ export function LibraryPage() {
     link.click();
     URL.revokeObjectURL(url);
     setBatchMessage(`Exported ${selected.length} selected asset records as CSV.`);
+    toastShareCopied(`CSV exported: ${selected.length} selected asset records`);
   }
 
   async function createCollectionDraft(event: FormEvent<HTMLFormElement>) {
@@ -385,6 +376,8 @@ export function LibraryPage() {
     });
     const body = await response.json();
     setBatchMessage(body.message || body.error || "Collection route responded.");
+    if (response.ok) toastDraftSaved("Collection draft remains local until publishing is configured.");
+    else toastSaveFailed(body.error || "No draft was queued.");
   }
 
   const reviewer = role === "Reviewer" || role === "DAM Admin";
@@ -420,7 +413,7 @@ export function LibraryPage() {
               </button>
             ) : null}
           </div>
-          <form className="mt-5 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2.5 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
+          <form className="mt-5 grid gap-2 rounded-[1.25rem] border border-[#cad8cf] bg-white p-2.5 shadow-[0_18px_42px_rgba(35,53,111,.06)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
             <Search aria-hidden="true" className="ml-1 mt-2.5 text-tjc-evergreen" size={22} strokeWidth={1.9} />
             <label className="sr-only" htmlFor="library-search">Search approved media</label>
             <input
@@ -434,21 +427,18 @@ export function LibraryPage() {
             />
             <button className="min-h-12 dam-button-primary px-6 text-sm font-black transition active:translate-y-px" type="submit">Search</button>
           </form>
-          <div className="mt-3 flex max-w-full min-w-0 flex-wrap gap-2 pb-1" aria-label="Use-case shortcuts">
-            {visibleUseCases.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                className="inline-flex min-h-9 items-center rounded-md px-3 text-sm font-black text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen active:translate-y-px"
-                onClick={() => openUseCase(item)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          <FilterPills
+            className="mt-3 hidden pb-1 sm:flex"
+            ariaLabel="Use-case shortcuts"
+            pills={visibleUseCases.map((item) => ({ id: item.view, label: item.label, active: selectedView === item.view }))}
+            onSelect={(id) => {
+              const item = visibleUseCases.find((useCase) => useCase.view === id);
+              if (item) openUseCase(item);
+            }}
+          />
         </div>
 
-        <div className="grid min-w-0 content-start gap-4 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+        <div className="hidden min-w-0 content-start gap-4 border-t border-[#d6dfd8] pt-4 sm:grid xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-sm font-black text-tjc-evergreen">Source and count truth</span>
@@ -457,37 +447,26 @@ export function LibraryPage() {
             </div>
             <Database className="shrink-0 text-tjc-evergreen" size={20} strokeWidth={1.9} aria-hidden="true" />
           </div>
-          <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold text-tjc-ink sm:hidden" aria-label="Mobile catalog summary">
-            <span className="rounded-md border border-tjc-line bg-white px-2 py-1.5">
-              {result?.counts.approved ?? "-"} RS approved
-            </span>
-            <span className="rounded-md border border-tjc-line bg-white px-2 py-1.5">
-              {result?.counts.rightsReview ?? "-"} rights
-            </span>
-            <span className="rounded-md border border-tjc-line bg-white px-2 py-1.5">
-              {result?.counts.visibleToRole ?? "-"} visible
-            </span>
-          </div>
-          <div className="hidden grid-cols-3 gap-2 sm:grid sm:grid-cols-6" aria-label="Catalog summary">
+          <div className="grid grid-cols-3 gap-2" aria-label="Catalog summary">
             {[
-              { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "RS approved", tone: "ok" as const },
-              { icon: Clock3, value: result?.counts.needsReview ?? "-", label: "review", tone: "warn" as const },
-              { icon: ShieldAlert, value: result?.counts.rightsReview ?? "-", label: "rights", tone: "warn" as const },
-              { icon: Users, value: result?.counts.childrenYouth ?? "-", label: "youth", tone: "info" as const },
-              { icon: Archive, value: result?.counts.archive ?? "-", label: "archive", tone: "info" as const },
-              { icon: Database, value: result?.counts.visibleToRole ?? "-", label: "visible", tone: "dark" as const }
+              { value: result?.counts.approved ?? "-", label: "RS approved", tone: "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" },
+              { value: result?.counts.rightsReview ?? "-", label: "Rights review", tone: "border-[#ead6a8] bg-[#fff7e5] text-[#725216]" },
+              { value: result?.counts.visibleToRole ?? "-", label: "Visible here", tone: "border-[#bdd9e2] bg-[#eef8fb] text-[#0b5f7a]" }
             ].map((item) => (
-              <DisplayCard key={item.label} icon={item.icon} value={item.value} label={item.label} tone={item.tone} />
+              <div key={item.label} className={cn("rounded-2xl border px-3 py-2", item.tone)}>
+                <strong className="block text-2xl font-black tabular-nums">{item.value}</strong>
+                <span className="text-xs font-bold">{item.label}</span>
+              </div>
             ))}
           </div>
         </div>
 	      </section>
 
 	      {error ? (
-	        <StatusBanner className="mt-4" tone="critical" title="Library did not load">{error}</StatusBanner>
+	        <ErrorState className="mt-4" title="Library did not load" detail={error} />
 	      ) : null}
 
-	      <details className="mt-3 hidden rounded-2xl border border-[#d1ddd2] bg-white/88 shadow-[0_12px_32px_rgba(49,60,52,.045)] md:block">
+	      <details className="mt-3 hidden rounded-2xl border border-[#d1ddd2] bg-white/88 shadow-[0_12px_32px_rgba(49,60,52,.045)] 2xl:block">
         <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-tjc-evergreen">
           <span>Production signals</span>
           <span className="text-xs font-medium text-tjc-muted">Metadata health, operational signals, search gaps</span>
@@ -554,7 +533,7 @@ export function LibraryPage() {
         </div>
       </details>
 
-      <section className="mt-4 xl:hidden" aria-label="Saved DAM views">
+      <section className="mt-4 hidden sm:block xl:hidden" aria-label="Saved DAM views">
         <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-sm font-black text-tjc-evergreen">Saved DAM views</h2>
@@ -572,7 +551,7 @@ export function LibraryPage() {
         </div>
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_20rem]" aria-label="Library controls and results">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)]" aria-label="Library controls and results">
         <LibrarySavedRail
           shortcuts={shortcuts}
           visibleUseCases={visibleUseCases}
@@ -582,21 +561,26 @@ export function LibraryPage() {
         />
         <div className="min-w-0">
           <section className="min-w-0" aria-label="Asset results">
-            <section className="mb-3 grid gap-3 dam-contact-sheet p-3" aria-label="Selection and batch actions">
+            <section className="mb-3 grid gap-3 dam-contact-sheet p-2 sm:p-3" aria-label="Selection and batch actions">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={selectVisibleAssets}>
+                  <button className="hidden min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] sm:inline-flex" type="button" onClick={selectVisibleAssets}>
                     <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
                     {selectedIds.length ? "Clear selection" : "Select visible"}
                   </button>
                   <span className="text-sm font-semibold text-tjc-muted">{selectedIds.length} selected</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", filtersOpen ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setFiltersOpen((value) => !value)} aria-expanded={filtersOpen}>
+                    <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true" />
+                    Filters
+                    {filters.length ? <span className="rounded-full bg-tjc-evergreen px-1.5 text-[11px] text-white">{filters.length}</span> : null}
+                  </button>
                   <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "grid" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
                     <LayoutGrid size={15} strokeWidth={1.8} aria-hidden="true" />
                     Grid
                   </button>
-                  <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "list" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
+                  <button className={cn("hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition sm:inline-flex", viewMode === "list" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
                     <List size={15} strokeWidth={1.8} aria-hidden="true" />
                     List
                   </button>
@@ -639,9 +623,14 @@ export function LibraryPage() {
                   {batchMessage ? <div className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-2 text-sm font-semibold text-[#27435b]">{batchMessage}</div> : null}
                 </div>
               ) : null}
+              {filtersOpen ? (
+                <div className="border-t border-tjc-line pt-3">
+                  <FilterSidebar filters={filters} onToggle={toggleFilter} onClear={() => setFilters([])} />
+                </div>
+              ) : null}
             </section>
 
-            <div className="mb-3 grid gap-2 rounded-2xl border border-[#c8d5cd] bg-[#fbfcfa] px-3 py-3 text-sm font-semibold text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.85)_inset]" aria-live="polite">
+            <div className="mb-3 grid gap-2 rounded-2xl border border-[#c8d5cd] bg-[#fbfcfa] px-3 py-3 text-sm font-semibold text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.85)_inset] max-sm:text-xs" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="font-semibold text-tjc-ink">
                   {loading
@@ -667,18 +656,24 @@ export function LibraryPage() {
                   Collection: <strong className="font-semibold text-tjc-evergreen">{activeCollection.name}</strong>. Opened by stable collection ID, not raw keyword search.
                 </p>
               ) : null}
-              <div className="flex flex-wrap gap-1.5">
-                {submittedQuery ? <span className="rounded-md bg-[#eef4f1] px-2 py-1 text-xs font-semibold text-[#536058]">Search: {submittedQuery}</span> : null}
-                {filters.map((filter) => (
-                  <button key={filter} className="inline-flex min-h-7 items-center gap-1 rounded-md bg-[#eef4f1] px-2 text-xs font-semibold text-[#536058]" type="button" onClick={() => toggleFilter(filter)}>
-                    {filter}
-                    <X size={12} strokeWidth={1.8} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
+              <FilterPills
+                ariaLabel="Active filters"
+                pills={[
+                  ...(submittedQuery ? [{ id: "search", label: `Search: ${submittedQuery}`, active: true }] : []),
+                  ...filters.map((filter) => ({ id: filter, label: filter, active: true }))
+                ]}
+                onRemove={(id) => {
+                  if (id === "search") {
+                    setQuery("");
+                    setSubmittedQuery("");
+                    return;
+                  }
+                  toggleFilter(id);
+                }}
+              />
             </div>
 
-            <section className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-[#e9f0eb] p-2 text-sm text-tjc-muted" aria-label="Sort results">
+            <section className="mb-3 hidden flex-wrap items-center gap-2 rounded-2xl bg-[#e9f0eb] p-2 text-sm text-tjc-muted sm:flex" aria-label="Sort results">
               <span className="font-semibold text-tjc-ink">Sort</span>
               {sortOptions.map((option) => (
                 <button
@@ -707,22 +702,27 @@ export function LibraryPage() {
                   loading={loading}
                   onPrevious={() => setPageOffset(pagination.previousOffset)}
                   onNext={() => setPageOffset(pagination.nextOffset)}
+                  pageSize={pageLimit}
+                  onPage={(page) => setPageOffset(Math.max(0, (page - 1) * pageLimit))}
                 />
               </div>
             ) : null}
 
-            {loading ? <AssetGridSkeleton /> : null}
+            {loading ? <SkeletonGrid count={pageLimit < 24 ? 8 : 12} /> : null}
             {!loading && result?.assets.length === 0 ? (
-              <div className="rounded-xl border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
+              <EmptyState
+                title="No visible assets match"
+                detail="Try Portal ready, Needs portal review, No people, or Bible Study."
+              />
             ) : null}
             {viewMode === "grid" ? (
-              <div className="contact-sheet-board grid auto-rows-auto grid-cols-1 gap-2.5 p-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              <div className="contact-sheet-board dam-contact-grid auto-rows-auto gap-3 p-3">
                 {visibleAssets.map((asset, index) => (
-                  <div className={cn("relative min-w-0", assetTileClass(index))} key={asset.id}>
+                  <div className="relative min-w-0" key={asset.id}>
                     <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-xl border border-white/70 bg-white/92 shadow-[0_10px_22px_rgba(7,16,13,.14)]" aria-label={`Select ${asset.title}`}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
                     </label>
-                    <AssetCard asset={asset} role={role} variant={assetTileVariant(index)} />
+                    <AssetCard asset={asset} role={role} variant={index % 11 === 0 ? "wide" : index % 7 === 0 ? "tall" : "standard"} />
                   </div>
                 ))}
               </div>
@@ -745,12 +745,14 @@ export function LibraryPage() {
                   loading={loading}
                   onPrevious={() => setPageOffset(pagination.previousOffset)}
                   onNext={() => setPageOffset(pagination.nextOffset)}
+                  pageSize={pageLimit}
+                  onPage={(page) => setPageOffset(Math.max(0, (page - 1) * pageLimit))}
                 />
               </div>
             ) : null}
           </section>
 
-          <section id="collections" className="mt-6 scroll-mt-24" aria-label="Featured collections">
+          <section id="collections" className="mt-6 hidden scroll-mt-24 lg:block" aria-label="Featured collections">
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
               <div>
                 <h2 className="text-lg font-semibold text-tjc-ink">Collections</h2>
@@ -775,9 +777,6 @@ export function LibraryPage() {
             </div>
           </section>
         </div>
-        <aside className={cn("min-w-0 xl:block", filtersOpen ? "block" : "hidden")} aria-label="Library filter panel">
-          <FilterSidebar filters={filters} onToggle={toggleFilter} onClear={() => setFilters([])} />
-        </aside>
       </section>
     </div>
   );

@@ -90,8 +90,8 @@ export function CollectionsPage() {
             Albums and ministry contexts
           </div>
           <h1 className="mt-2 dam-page-title">Collections</h1>
-          <p className="mt-1 max-w-[72ch] text-sm font-semibold leading-relaxed text-tjc-muted">
-            Browse Sabbath, study, seasonal, welcome, fellowship, and web/slide albums using live ResourceSpace export metadata.
+          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">
+            Browse ministry albums first, then open Library to confirm per-asset reuse before publication.
           </p>
           <form className="mt-4 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={19} strokeWidth={1.8} />
@@ -118,7 +118,7 @@ export function CollectionsPage() {
           ) : null}
         </div>
 
-        <div className="grid min-w-0 content-start gap-3 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+        <div className="hidden min-w-0 content-start gap-3 border-t border-[#d6dfd8] pt-4 xl:grid xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <span className="text-sm font-black text-tjc-evergreen">ResourceSpace export</span>
@@ -183,7 +183,7 @@ export function CollectionsPage() {
               ["Newsletter", "newsletter"],
               ["No people", "no-people"]
             ].map(([label, view]) => (
-              <button key={view} type="button" className="shrink-0 rounded-md px-2.5 py-1.5 text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" onClick={() => router.push(`/?view=${view}`)}>
+              <button key={view} type="button" className="shrink-0 rounded-full bg-white px-3 py-2 text-[#3f4a43] ring-1 ring-[#d8e1da] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" onClick={() => router.push(`/?view=${view}`)}>
                 {label}
               </button>
             ))}
@@ -198,7 +198,7 @@ export function CollectionsPage() {
           {!loading && !collections.length ? (
             <div className="rounded-xl border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No collections match this search.</div>
           ) : null}
-          <div className="grid gap-2">
+          <div className="grid gap-3">
             {collections.map((collection) => (
               <CollectionAlbumCard
                 key={collection.id}
@@ -220,6 +220,19 @@ export function CollectionsPage() {
 
         <aside className="grid min-w-0 gap-3 lg:sticky lg:top-24 lg:self-start" aria-label="Collection governance">
           <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
+          <details className="rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 text-sm lg:hidden">
+            <summary className="cursor-pointer font-black text-tjc-evergreen">ResourceSpace export</summary>
+            <div className="mt-3 grid gap-2 text-tjc-muted">
+              <strong className="text-tjc-ink">{result?.source.label || "Loading source"}</strong>
+              <p className="text-xs font-semibold leading-relaxed">{result?.source.detail || "Loading ResourceSpace source state."}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <span>{collections.length} collections</span>
+                <span>{totalCollectionAssets} album assets</span>
+                <span>{peopleWarnings} people flags</span>
+                <span>{result?.counts.approved ?? "-"} approved</span>
+              </div>
+            </div>
+          </details>
           <details className="border-y border-[#d6dfd8] py-3 text-sm">
             <summary className="cursor-pointer font-semibold text-tjc-evergreen">Before sharing an album</summary>
             <ul className="mt-3 grid gap-2 text-xs leading-relaxed text-tjc-muted">

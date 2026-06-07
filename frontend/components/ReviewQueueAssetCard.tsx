@@ -39,13 +39,13 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   return (
     <article
       className={cn(
-        "group grid gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] lg:grid-cols-[7.25rem_minmax(14rem,1.15fr)_minmax(15rem,1fr)_minmax(13rem,.9fr)]",
+        "group grid gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] max-sm:grid-cols-[5.5rem_minmax(0,1fr)] max-sm:gap-2 max-sm:py-2 lg:grid-cols-[7.25rem_minmax(14rem,1.15fr)_minmax(15rem,1fr)_minmax(13rem,.9fr)]",
         selected && "bg-[#e5f3ea] shadow-[inset_6px_0_0_#063f39]"
       )}
     >
       <Link
         href={`/assets/${asset.id}`}
-        className="review-media-reveal block aspect-[4/3] overflow-hidden rounded-xl border border-black/10 bg-[#eef1ed] shadow-[0_10px_24px_rgba(25,34,29,.08)]"
+        className="review-media-reveal block aspect-[4/3] overflow-hidden rounded-xl border border-black/10 bg-[#eef1ed] shadow-[0_10px_24px_rgba(25,34,29,.08)] max-sm:rounded-lg"
         aria-label={`Open ${display.title}`}
       >
         <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
@@ -54,21 +54,21 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="line-clamp-2 text-base font-black leading-tight text-tjc-ink">{display.title}</h2>
-            <p className="mt-1 grid gap-1 text-sm font-medium text-tjc-muted">
+            <h2 className="line-clamp-2 text-base font-black leading-tight text-tjc-ink max-sm:text-sm">{display.title}</h2>
+            <p className="mt-1 grid gap-1 text-sm font-medium text-tjc-muted max-sm:text-xs">
               <span className="truncate">{asset.collection}</span>
-              <span className="truncate">{sourceSummary(asset, role)}</span>
+              <span className="truncate max-sm:hidden">{sourceSummary(asset, role)}</span>
             </p>
           </div>
-          <span className="rounded-full border border-[#cad8cf] bg-white px-2 py-1 text-[11px] font-black text-tjc-evergreen tabular-nums">RS {asset.resourceSpaceId || asset.id}</span>
+          <span className="rounded-full border border-[#cad8cf] bg-white px-2 py-1 text-[11px] font-black text-tjc-evergreen tabular-nums max-sm:hidden">RS {asset.resourceSpaceId || asset.id}</span>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
           <StatusBadge status={asset.status} />
           <UsageBadge scope={asset.usageScope} />
         </div>
       </div>
 
-      <div className="grid gap-2">
+      <div className="grid gap-2 max-sm:hidden">
         <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e6] p-3 text-sm text-[#684a10]">
           <div className="flex items-start gap-2">
             <ShieldAlert size={17} strokeWidth={1.8} aria-hidden="true" className="mt-0.5 shrink-0" />
@@ -90,8 +90,8 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         </div>
       </div>
 
-      <div className="grid content-start gap-2">
-        <div className="rounded-xl border border-[#c9d8cf] bg-white/86 p-3">
+      <div className="grid content-start gap-2 max-sm:col-span-2">
+        <div className="rounded-xl border border-[#c9d8cf] bg-white/86 p-3 max-sm:hidden">
           <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Next check</span>
           <strong className="mt-1 flex items-center gap-2 text-sm text-tjc-ink">
             {nextCheck}
@@ -102,16 +102,16 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           <button
             className={cn(
-              "inline-flex min-h-9 items-center justify-center rounded-xl border px-2.5 text-sm font-black transition hover:bg-[#eef7f1] active:translate-y-px",
+              "inline-flex min-h-9 items-center justify-center rounded-xl border px-2.5 text-sm font-black transition hover:bg-[#eef7f1] active:translate-y-px max-sm:col-span-2",
               selected ? "border-[#8fb2a5] bg-[#dff0e6] text-tjc-evergreen" : "border-tjc-line bg-white text-tjc-evergreen"
             )}
             type="button"
             onClick={() => onInspect(asset.id)}
             aria-pressed={selected}
           >
-            Inspect
+            {selected ? "Selected in decision panel" : "Select for decision"}
           </button>
-          <Link className="inline-flex min-h-9 items-center justify-center gap-1 rounded-xl border border-tjc-line bg-white px-2.5 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" href={`/assets/${asset.id}`}>
+          <Link className="inline-flex min-h-9 items-center justify-center gap-1 rounded-xl border border-tjc-line bg-white px-2.5 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] max-sm:hidden" href={`/assets/${asset.id}`}>
             <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />
             Detail
           </Link>

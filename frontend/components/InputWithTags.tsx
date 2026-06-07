@@ -136,3 +136,5 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
     </div>
   );
 }
+
+export const TagInput = InputWithTags;

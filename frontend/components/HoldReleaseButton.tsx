@@ -92,3 +92,5 @@ export function HoldReleaseButton({
     </button>
   );
 }
+
+export const HoldToConfirmButton = HoldReleaseButton;

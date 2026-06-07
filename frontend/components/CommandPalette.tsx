@@ -13,26 +13,29 @@ type Command = {
   href: string;
   keywords: string;
   icon: typeof Search;
+  group: "Go to" | "Saved views" | "Review work" | "Safety" | "ResourceSpace";
   adminOnly?: boolean;
   reviewerOnly?: boolean;
 };
 
 const commands: Command[] = [
-  { id: "search-library", label: "Search library", hint: "Find assets by ministry need", href: "/", keywords: "search library assets bible fellowship media", icon: Search },
-  { id: "website-hero", label: "Website hero images", hint: "Open stable saved view", href: "/?view=website-hero", keywords: "hero banner web header website", icon: FileSearch },
-  { id: "portal-ready", label: "Portal ready", hint: "Assets passing reuse policy", href: "/?view=portal-ready", keywords: "public safe portal ready approved reusable", icon: ShieldCheck },
-  { id: "no-people", label: "No people", hint: "Lower-risk visual search", href: "/?view=no-people", keywords: "no people empty plants bible safe", icon: FileSearch },
-  { id: "sabbath", label: "Sabbath collection", hint: "Open collection by stable ID", href: "/?collection=sabbath", keywords: "sabbath worship church life collection", icon: FolderOpen },
-  { id: "collections", label: "Collections", hint: "Browse albums and ministry contexts", href: "/collections", keywords: "albums collections events", icon: FolderOpen },
-  { id: "upload", label: "Start upload intake", hint: "Contributor context and files", href: "/upload", keywords: "upload intake contributor submit files", icon: UploadCloud },
-  { id: "review", label: "Pending review", hint: "Reviewer governance queue", href: "/review?queue=pending", keywords: "review governance pending queue", icon: ShieldAlert, reviewerOnly: true },
-  { id: "children-youth", label: "Children/youth review", hint: "Review sensitive people/minors queue", href: "/review?queue=children-youth", keywords: "children youth minors sensitive", icon: ShieldAlert, reviewerOnly: true },
-  { id: "rights-review", label: "Rights review", hint: "Review rights, consent, and source concerns", href: "/review?queue=rights-review", keywords: "rights consent source review", icon: ShieldAlert, reviewerOnly: true },
-  { id: "missing-source", label: "Missing source", hint: "Review missing source/provenance queue", href: "/review?queue=missing-source", keywords: "missing source photographer provenance", icon: FileSearch, reviewerOnly: true },
-  { id: "usage-guidance", label: "Needs usage guidance", hint: "Review assets missing use guidance", href: "/review?queue=usage-guidance", keywords: "usage guidance captions credit rules", icon: FileSearch, reviewerOnly: true },
-  { id: "archive", label: "Archive candidates", hint: "Review archive-only material", href: "/review?queue=archive-candidates", keywords: "archive do not use searchable archive", icon: Archive, reviewerOnly: true },
-  { id: "guide", label: "Usage guide", hint: "Search rules, Do/Avoid, large media", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle },
-  { id: "admin", label: "Admin diagnostics", hint: "Read-only operational checks", href: "/admin", keywords: "admin diagnostics readiness api field mapping", icon: Settings2, adminOnly: true }
+  { id: "search-library", group: "Go to", label: "Search library", hint: "Find assets by ministry need", href: "/", keywords: "search library assets bible fellowship media", icon: Search },
+  { id: "collections", group: "Go to", label: "Albums", hint: "Browse albums and ministry contexts", href: "/collections", keywords: "albums collections events", icon: FolderOpen },
+  { id: "upload", group: "Go to", label: "Start upload intake", hint: "Contributor context and files", href: "/upload", keywords: "upload intake contributor submit files", icon: UploadCloud },
+  { id: "guide", group: "Go to", label: "Usage guide", hint: "Search rules, Do/Avoid, large media", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle },
+  { id: "admin", group: "Go to", label: "Admin readiness", hint: "Read-only operational checks", href: "/admin", keywords: "admin diagnostics readiness api field mapping", icon: Settings2, adminOnly: true },
+  { id: "website-hero", group: "Saved views", label: "Website hero images", hint: "Open stable saved view", href: "/?view=website-hero", keywords: "hero banner web header website", icon: FileSearch },
+  { id: "portal-ready", group: "Saved views", label: "Portal ready", hint: "Assets passing reuse policy", href: "/?view=portal-ready", keywords: "public safe portal ready approved reusable", icon: ShieldCheck },
+  { id: "no-people", group: "Saved views", label: "No people", hint: "Lower-risk visual search", href: "/?view=no-people", keywords: "no people empty plants bible safe", icon: FileSearch },
+  { id: "sabbath", group: "Saved views", label: "Sabbath collection", hint: "Open collection by stable ID", href: "/?collection=sabbath", keywords: "sabbath worship church life collection", icon: FolderOpen },
+  { id: "review", group: "Review work", label: "Pending review", hint: "Reviewer governance queue", href: "/review?queue=pending", keywords: "review governance pending queue pending writes", icon: ShieldAlert, reviewerOnly: true },
+  { id: "children-youth", group: "Review work", label: "Children/youth review", hint: "Review sensitive people/minors queue", href: "/review?queue=children-youth", keywords: "children youth minors sensitive", icon: ShieldAlert, reviewerOnly: true },
+  { id: "rights-review", group: "Review work", label: "Rights review", hint: "Review rights, consent, and source concerns", href: "/review?queue=rights-review", keywords: "rights consent source review", icon: ShieldAlert, reviewerOnly: true },
+  { id: "missing-source", group: "Review work", label: "Missing source", hint: "Review missing source/provenance queue", href: "/review?queue=missing-source", keywords: "missing source photographer provenance", icon: FileSearch, reviewerOnly: true },
+  { id: "usage-guidance", group: "Review work", label: "Needs usage guidance", hint: "Review assets missing use guidance", href: "/review?queue=usage-guidance", keywords: "usage guidance captions credit rules", icon: FileSearch, reviewerOnly: true },
+  { id: "archive", group: "Review work", label: "Archive candidates", hint: "Review archive-only material", href: "/review?queue=archive-candidates", keywords: "archive do not use searchable archive", icon: Archive, reviewerOnly: true },
+  { id: "blocked-downloads", group: "Safety", label: "Blocked downloads", hint: "Assets not safe to download yet", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish missing derivative", icon: ShieldAlert },
+  { id: "pending-writes", group: "Safety", label: "Pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, adminOnly: true }
 ];
 
 export function CommandPalette() {
@@ -59,6 +62,7 @@ export function CommandPalette() {
     if (resourceId) {
       base.unshift({
         id: `resource-${resourceId}`,
+        group: "ResourceSpace",
         label: `Open ResourceSpace ID ${resourceId}`,
         hint: "Open asset detail by exported ID/reference",
         href: `/assets/${resourceId}`,
@@ -69,6 +73,7 @@ export function CommandPalette() {
     if (query.trim() && !resourceId) {
       base.push({
         id: `search-${query.trim()}`,
+        group: "Go to",
         label: `Search "${query.trim()}"`,
         hint: "Run library search",
         href: `/?q=${encodeURIComponent(query.trim())}`,
@@ -76,8 +81,21 @@ export function CommandPalette() {
         icon: Search
       });
     }
-    return base.slice(0, 9);
+    return base.slice(0, 12);
   }, [query, reviewer, role]);
+
+  const groupedCommands = useMemo(() => {
+    const groups: Array<{ group: Command["group"]; items: Command[] }> = [];
+    visibleCommands.forEach((command) => {
+      let group = groups.find((item) => item.group === command.group);
+      if (!group) {
+        group = { group: command.group, items: [] };
+        groups.push(group);
+      }
+      group.items.push(command);
+    });
+    return groups;
+  }, [visibleCommands]);
 
   const openPalette = useCallback(() => {
     lastActiveRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -180,11 +198,12 @@ export function CommandPalette() {
       </button>
       <button
         type="button"
-        className="inline-grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-white text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:hidden"
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#f3f6f2] active:translate-y-px md:hidden"
         onClick={openPalette}
         aria-label="Open command palette"
       >
         <Search size={16} strokeWidth={1.8} aria-hidden="true" />
+        <span>Command</span>
       </button>
       {open ? (
         <div className="fixed inset-0 z-50 bg-[#07100d]/36 p-3 backdrop-blur-[5px]" role="presentation" onMouseDown={closePalette}>
@@ -217,34 +236,40 @@ export function CommandPalette() {
             </div>
             <div className="max-h-[60dvh] overflow-y-auto p-2">
               {visibleCommands.length ? (
-                <div className="grid gap-1" id="command-results" role="listbox" aria-label="Command results">
-                  {visibleCommands.map((command, index) => {
-                    const Icon = command.icon;
-                    const selected = index === selectedIndex;
-                    return (
-                      <button
-                        type="button"
-                        key={command.id}
-                        id={`command-option-${command.id}`}
-                        className={cn(
-                          "grid min-h-16 grid-cols-[auto_1fr] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
-                          selected ? "bg-[#e7f5ec] ring-1 ring-[#8fbda8] shadow-[inset_4px_0_0_#063f39]" : ""
-                        )}
-                        role="option"
-                        aria-selected={selected}
-                        onClick={() => runCommand(command)}
-                        onMouseEnter={() => setSelectedIndex(index)}
-                      >
-                        <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#c5d0c8] bg-white text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">
-                          <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-                        </span>
-                        <span className="min-w-0">
-                          <strong className="block truncate text-sm font-black text-tjc-ink">{command.label}</strong>
-                          <span className="mt-0.5 block truncate text-xs font-medium text-tjc-muted">{command.hint}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div className="grid gap-2" id="command-results" role="listbox" aria-label="Command results">
+                  {groupedCommands.map((group) => (
+                    <section className="grid gap-1" key={group.group} aria-label={group.group}>
+                      <h3 className="px-3 pt-1 text-[11px] font-black text-tjc-muted">{group.group}</h3>
+                      {group.items.map((command) => {
+                        const index = visibleCommands.findIndex((item) => item.id === command.id);
+                        const Icon = command.icon;
+                        const selected = index === selectedIndex;
+                        return (
+                          <button
+                            type="button"
+                            key={command.id}
+                            id={`command-option-${command.id}`}
+                            className={cn(
+                              "grid min-h-16 grid-cols-[auto_1fr] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
+                              selected ? "bg-[#e7f5ec] ring-1 ring-[#8fbda8] shadow-[inset_4px_0_0_#063f39]" : ""
+                            )}
+                            role="option"
+                            aria-selected={selected}
+                            onClick={() => runCommand(command)}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                          >
+                            <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#c5d0c8] bg-white text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">
+                              <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+                            </span>
+                            <span className="min-w-0">
+                              <strong className="block truncate text-sm font-black text-tjc-ink">{command.label}</strong>
+                              <span className="mt-0.5 block truncate text-xs font-medium text-tjc-muted">{command.hint}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </section>
+                  ))}
                 </div>
               ) : (
                 <div className="p-8 text-center text-sm font-medium text-tjc-muted">No matching commands.</div>

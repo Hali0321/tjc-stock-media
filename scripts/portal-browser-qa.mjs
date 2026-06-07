@@ -6,22 +6,32 @@ import path from "node:path";
 const { chromium } = playwright;
 const base = process.env.BASE_URL || "http://localhost:3008";
 const outDir = path.resolve("docs/screenshots");
+const tinyPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
 
 fs.mkdirSync(path.join(outDir, "qa"), { recursive: true });
+fs.mkdirSync(path.join(outDir, "primitive-proof"), { recursive: true });
 
 const requiredShots = [
   { name: "library-desktop.png", path: "/", role: "Viewer", width: 1440, height: 1000 },
-  { name: "collections-desktop.png", path: "/collections", role: "Viewer", width: 1440, height: 1000 },
-  { name: "asset-detail-desktop.png", path: "/assets/368", role: "Viewer", width: 1440, height: 1000 },
-  { name: "upload-desktop.png", path: "/upload", role: "Contributor", width: 1440, height: 1000 },
-  { name: "review-desktop.png", path: "/review", role: "Reviewer", width: 1440, height: 1000 },
-  { name: "guide-desktop.png", path: "/guide", role: "Viewer", width: 1440, height: 1000 },
-  { name: "admin-desktop.png", path: "/admin", role: "DAM Admin", width: 1440, height: 1000 },
   { name: "library-mobile-320.png", path: "/", role: "Viewer", width: 320, height: 900 },
-  { name: "detail-mobile-320.png", path: "/assets/368", role: "Viewer", width: 320, height: 900 },
-  { name: "review-mobile-320.png", path: "/review", role: "Reviewer", width: 320, height: 900 },
+  { name: "library-mobile-390.png", path: "/", role: "Viewer", width: 390, height: 900 },
+  { name: "collections-desktop.png", path: "/collections", role: "Viewer", width: 1440, height: 1000 },
+  { name: "collections-mobile-320.png", path: "/collections", role: "Viewer", width: 320, height: 900 },
+  { name: "collections-mobile-390.png", path: "/collections", role: "Viewer", width: 390, height: 900 },
+  { name: "upload-desktop.png", path: "/upload", role: "Contributor", width: 1440, height: 1000 },
   { name: "upload-mobile-320.png", path: "/upload", role: "Contributor", width: 320, height: 900 },
-  { name: "guide-mobile-320.png", path: "/guide", role: "Viewer", width: 320, height: 900 }
+  { name: "upload-mobile-390.png", path: "/upload", role: "Contributor", width: 390, height: 900 },
+  { name: "review-desktop.png", path: "/review", role: "Reviewer", width: 1440, height: 1000 },
+  { name: "review-mobile-320.png", path: "/review", role: "Reviewer", width: 320, height: 900 },
+  { name: "review-mobile-390.png", path: "/review", role: "Reviewer", width: 390, height: 900 },
+  { name: "asset-detail-desktop.png", path: "/assets/368", role: "Viewer", width: 1440, height: 1000 },
+  { name: "detail-mobile-320.png", path: "/assets/368", role: "Viewer", width: 320, height: 900 },
+  { name: "detail-mobile-390.png", path: "/assets/368", role: "Viewer", width: 390, height: 900 },
+  { name: "admin-desktop.png", path: "/admin", role: "DAM Admin", width: 1440, height: 1000 },
+  { name: "admin-mobile-390.png", path: "/admin", role: "DAM Admin", width: 390, height: 900 },
+  { name: "guide-desktop.png", path: "/guide", role: "Viewer", width: 1440, height: 1000 },
+  { name: "guide-mobile-320.png", path: "/guide", role: "Viewer", width: 320, height: 900 },
+  { name: "guide-mobile-390.png", path: "/guide", role: "Viewer", width: 390, height: 900 }
 ];
 
 const qaViewports = [1440, 1280, 1024, 768, 390, 320];
@@ -228,8 +238,8 @@ for (const width of qaViewports) {
   });
   if ((await page.getByLabel("Selected file preview").getByText("qa-drop.jpg").count()) < 1) failures.push("upload file dropzone: dropped file missing from preview");
   await page.getByRole("button", { name: "Clear files" }).click();
-  await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }]);
-  if ((await page.getByLabel("Selected file preview").getByText("qa-photo.jpg").count()) < 1) failures.push("upload file preview: selected file missing");
+  await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.png", mimeType: "image/png", buffer: tinyPng }]);
+  if ((await page.getByLabel("Selected file preview").getByText("qa-photo.png").count()) < 1) failures.push("upload file preview: selected file missing");
   await page.getByRole("button", { name: "Clear files" }).click();
   await page.getByLabel("Title").fill("Browser QA intake");
   await page.getByLabel("Event name").fill("Sabbath media QA");
@@ -260,8 +270,8 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Contributor", 320, 900);
   await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
-  await page.getByLabel("Files").setInputFiles([{ name: "qa-mobile-photo-with-a-long-name.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }]);
-  if ((await page.getByLabel("Selected file preview").getByText("qa-mobile-photo-with-a-long-name.jpg").count()) < 1) failures.push("upload mobile file preview: selected file missing");
+  await page.getByLabel("Files").setInputFiles([{ name: "qa-mobile-photo-with-a-long-name.png", mimeType: "image/png", buffer: tinyPng }]);
+  if ((await page.getByLabel("Selected file preview").getByText("qa-mobile-photo-with-a-long-name.png").count()) < 1) failures.push("upload mobile file preview: selected file missing");
   const mobileUploadOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   if (mobileUploadOverflow) failures.push("upload mobile file preview: horizontal overflow after file selection");
   await context.close();
@@ -370,6 +380,86 @@ for (const shot of requiredShots) {
   await page.screenshot({ path: path.join(outDir, shot.name), fullPage: true });
   await context.close();
 }
+
+async function captureProof(name, role, width, height, pathName, setup) {
+  const { page, context } = await newRolePage(role, width, height);
+  await page.goto(`${base}${pathName}`, { waitUntil: "networkidle" });
+  if (setup) await setup(page);
+  await page.screenshot({ path: path.join(outDir, "primitive-proof", name), fullPage: false });
+  await context.close();
+}
+
+await captureProof("appnav-tubelight-desktop.png", "Viewer", 1440, 720, "/", async (page) => {
+  await page.locator("header").first().scrollIntoViewIfNeeded();
+});
+
+await captureProof("appnav-tubelight-mobile.png", "Viewer", 320, 720, "/", async (page) => {
+  await page.locator("header").first().scrollIntoViewIfNeeded();
+});
+
+await captureProof("command-palette-open.png", "Reviewer", 1440, 900, "/", async (page) => {
+  const commandSearch = await openCommandPalette(page);
+  await commandSearch.fill("pending writes");
+});
+
+await captureProof("library-badges-pagination-filterpills.png", "Viewer", 1440, 1000, "/?view=website-hero", async (page) => {
+  await page.getByLabel("Asset results").scrollIntoViewIfNeeded();
+});
+
+await captureProof("admin-datatable.png", "DAM Admin", 1440, 1000, "/admin", async (page) => {
+  await page.locator("#backlog").scrollIntoViewIfNeeded();
+});
+
+await captureProof("review-datatable-inspector.png", "Reviewer", 1440, 1000, "/review", async (page) => {
+  await page.getByLabel("Review workbench").scrollIntoViewIfNeeded();
+});
+
+await captureProof("media-preview-panel-image.png", "DAM Admin", 1440, 1000, "/assets/1556", async (page) => {
+  await page.getByLabel("image media preview").first().scrollIntoViewIfNeeded();
+});
+
+await captureProof("media-preview-panel-restricted.png", "Viewer", 1440, 1000, "/assets/368", async (page) => {
+  await page.getByLabel("Restricted media preview").first().scrollIntoViewIfNeeded();
+});
+
+await captureProof("media-preview-panel-document.png", "Viewer", 1440, 1000, "/guide", async (page) => {
+  await page.locator("#media-preview-modes").evaluate((node) => {
+    if (node instanceof HTMLDetailsElement) node.open = true;
+  });
+  await page.locator("#media-preview-modes").scrollIntoViewIfNeeded();
+});
+
+await captureProof("asset-actions-menu-open.png", "Viewer", 1440, 900, "/assets/368", async (page) => {
+  await page.getByRole("button", { name: "Asset actions" }).click();
+});
+
+await captureProof("upload-dropzone-tags.png", "Contributor", 1440, 1000, "/upload", async (page) => {
+  await page.getByLabel("Files").setInputFiles([{ name: "primitive-proof-photo.png", mimeType: "image/png", buffer: tinyPng }]);
+  await page.waitForFunction(() => {
+    const img = document.querySelector('[aria-label="Selected file preview"] img');
+    return img && img.complete && img.naturalWidth > 0;
+  });
+  await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
+  await page.keyboard.press("Enter");
+});
+
+await captureProof("toast-feedback.png", "Contributor", 1440, 900, "/upload", async (page) => {
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await page.waitForTimeout(500);
+});
+
+await captureProof("review-hold-confirm-dialog.png", "Reviewer", 1440, 1000, "/review", async (page) => {
+  await page.getByLabel("Review note").fill("Primitive proof confirms source, rights, people, derivative, and sensitive context evidence.");
+  for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
+    await page.getByLabel(label).check();
+  }
+  await page.getByRole("button", { name: "Approve for church-wide use" }).click();
+  await page.waitForSelector("text=Queue pending review write");
+});
+
+await captureProof("state-system-empty-error-loading.png", "Viewer", 1440, 900, "/?q=zzzzzz-no-visible-media-proof", async (page) => {
+  await page.getByText("No visible assets match").scrollIntoViewIfNeeded();
+});
 
 await browser.close();
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight, CheckCircle2, FolderOpen, ShieldAlert } from "lucide-react";
+import { CollectionPreviewPlaceholder } from "@/components/DamStates";
 import { MediaPreview } from "@/components/MediaPreview";
 import type { CatalogCollection } from "@/lib/types";
 
@@ -43,9 +44,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
               ))}
             </div>
           ) : (
-            <div className="grid min-h-40 place-items-center p-4 text-center text-sm font-semibold text-tjc-muted">
-              Preview export pending
-            </div>
+            <CollectionPreviewPlaceholder className="min-h-40 rounded-none" title="Album preview pending" detail="ResourceSpace derivative not exported" />
           )}
         </div>
         <div>

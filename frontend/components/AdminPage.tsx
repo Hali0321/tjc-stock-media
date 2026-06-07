@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Database, Download, Gauge, Layers, ListChecks, Lock, Search, Share2, Tags } from "lucide-react";
+import { Database, Download, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useDemoRole } from "@/components/RoleProvider";
-import type { DamReadinessItem, DamReadinessResult } from "@/lib/types";
+import type { AdminActionItem, DamReadinessItem, DamReadinessResult, IntegrationReadinessItem, VocabularyInsight } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
 function toneClass(tone: "ok" | "warn" | "info") {
@@ -50,7 +51,8 @@ const adminNav = [
   { label: "Backlog", href: "#backlog", icon: ListChecks },
   { label: "Mappings", href: "#mappings", icon: Database },
   { label: "Vocabulary", href: "#vocabulary", icon: Tags },
-  { label: "Portal gate", href: "#portal-gate", icon: Share2 }
+  { label: "Portal gate", href: "#portal-gate", icon: Share2 },
+  { label: "Audit log", href: "#audit-log", icon: ScrollText }
 ];
 
 function AdminLoadingState() {
@@ -132,6 +134,12 @@ export function AdminPage() {
   const writeMapping = data.integrationReadiness.find((item) => item.id === "review-writes");
   const pendingQueue = data.integrationReadiness.find((item) => item.id === "pending-review-writes");
   const requiredFieldRefsPresent = requiredFields.filter((field) => field.resourceSpaceField && field.coverage > 0).length;
+  const topBlockers = [...data.actionBacklog]
+    .sort((a, b) => {
+      const severityRank = { critical: 4, high: 3, medium: 2, low: 1 };
+      return severityRank[b.severity] - severityRank[a.severity] || b.count - a.count;
+    })
+    .slice(0, 3);
   const launchDecisions = [
     {
       question: "Can we read ResourceSpace?",
@@ -158,6 +166,92 @@ export function AdminPage() {
       tone: data.score >= 80 ? "ok" : "info"
     }
   ] as const;
+  const fieldColumns: Array<DataTableColumn<typeof requiredFields[number]>> = [
+    { key: "label", header: "Field", render: (field) => <strong className="text-tjc-ink">{field.label}</strong> },
+    { key: "rs", header: "ResourceSpace field", render: (field) => <code className="truncate text-xs text-tjc-muted">{field.resourceSpaceField}</code> },
+    {
+      key: "coverage",
+      header: "Coverage",
+      render: (field) => (
+        <span className="grid gap-1">
+          <span className="h-2 overflow-hidden rounded-full bg-[#e2e8df]">
+            <span className="block h-full rounded-full bg-tjc-evergreen" style={{ width: `${field.coverage}%` }} />
+          </span>
+          <span className="text-xs font-black tabular-nums text-tjc-ink">{field.coverage}%</span>
+        </span>
+      )
+    },
+    { key: "missing", header: "Missing", className: "text-right", render: (field) => <span className="font-black tabular-nums">{field.missing.toLocaleString()}</span> }
+  ];
+  const backlogColumns: Array<DataTableColumn<AdminActionItem>> = [
+    {
+      key: "label",
+      header: "Blocker",
+      sortValue: (item) => item.label,
+      render: (item) => (
+        <span className="grid gap-1">
+          <strong className="text-tjc-ink">{item.label}</strong>
+          <span className="text-xs font-semibold text-tjc-muted">{item.action}</span>
+        </span>
+      )
+    },
+    {
+      key: "severity",
+      header: "Severity",
+      sortValue: (item) => ({ critical: 4, high: 3, medium: 2, low: 1 }[item.severity]),
+      render: (item) => <span className={cn("w-fit rounded-md border px-2 py-1 text-xs font-black", severityClass(item.severity))}>{item.severity}</span>
+    },
+    { key: "count", header: "Count", className: "text-right", sortValue: (item) => item.count, render: (item) => <span className="font-black tabular-nums">{item.count.toLocaleString()}</span> },
+    { key: "owner", header: "Owner", sortValue: (item) => item.owner, render: (item) => <span className="text-sm font-semibold text-tjc-muted">{item.owner}</span> },
+    {
+      key: "open",
+      header: "Open",
+      render: (item) => item.savedViewId ? (
+        <Link className="inline-flex min-h-8 items-center rounded-lg border border-tjc-line bg-white px-3 text-xs font-black text-tjc-evergreen hover:bg-[#eef7f1]" href={`/?view=${encodeURIComponent(item.savedViewId)}`}>
+          Queue
+        </Link>
+      ) : <span className="text-xs font-semibold text-tjc-muted">Admin</span>
+    }
+  ];
+  const integrationColumns: Array<DataTableColumn<IntegrationReadinessItem>> = [
+    {
+      key: "label",
+      header: "Integration",
+      sortValue: (item) => item.label,
+      render: (item) => (
+        <span className="grid gap-1">
+          <strong className="text-tjc-ink">{item.label}</strong>
+          <span className="text-xs font-semibold leading-snug text-tjc-muted">{item.detail}</span>
+        </span>
+      )
+    },
+    {
+      key: "state",
+      header: "State",
+      sortValue: (item) => (item.ready ? 1 : 0),
+      render: (item) => <span className={cn("w-fit rounded-md border px-2 py-1 text-xs font-black", toneClass(item.ready ? "ok" : "warn"))}>{item.ready ? "Ready" : "Blocked"}</span>
+    },
+    { key: "owner", header: "Owner", sortValue: (item) => item.owner, render: (item) => <span className="text-sm font-semibold text-tjc-muted">{item.owner}</span> }
+  ];
+  const vocabularyColumns: Array<DataTableColumn<VocabularyInsight>> = [
+    { key: "term", header: "Term", sortValue: (term) => term.term, render: (term) => <strong className="text-tjc-ink">{term.term}</strong> },
+    {
+      key: "kind",
+      header: "Kind",
+      sortValue: (term) => term.kind,
+      render: (term) => (
+        <span className={cn(
+          "w-fit rounded-md border px-2 py-1 text-xs font-black",
+          term.kind === "canonical" && "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]",
+          term.kind === "candidate" && "border-[#c8d7e6] bg-[#f2f7fb] text-[#27435b]",
+          term.kind === "drift" && "border-[#ead6a8] bg-[#fff7e5] text-[#725216]"
+        )}>
+          {term.kind}
+        </span>
+      )
+    },
+    { key: "count", header: "Count", className: "text-right", sortValue: (term) => term.count, render: (term) => <span className="font-black tabular-nums">{term.count.toLocaleString()}</span> }
+  ];
 
   function exportReadinessCsv() {
     if (!data) return;
@@ -202,7 +296,7 @@ export function AdminPage() {
       <section id="overview" className="scroll-mt-24 grid gap-4 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
           <span className="text-sm font-black text-tjc-evergreen">DAM Admin</span>
-          <h1 className="mt-2 text-3xl font-black text-tjc-ink md:text-4xl">Production readiness</h1>
+          <h1 className="mt-2 dam-page-title">Production readiness</h1>
           <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Operational truth for ResourceSpace read/write status, download safety, launch blockers, and field coverage.</p>
         </div>
         <div className="grid content-center gap-3 rounded-[1.45rem] border border-[#d6dfd8] bg-white p-4 shadow-[0_14px_34px_rgba(25,34,29,.04)]">
@@ -224,9 +318,26 @@ export function AdminPage() {
         </div>
       </section>
 
-      <section id="launch-gate" className="mt-4 scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white" aria-label="Launch decisions">
+      <section className="mt-4 grid gap-3 lg:grid-cols-3" aria-label="Top readiness blockers">
+        {topBlockers.map((item, index) => (
+          <Link
+            key={item.id}
+            href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
+            className="rounded-[1.35rem] border border-[#d6dfd8] bg-white p-4 shadow-[0_14px_34px_rgba(35,53,111,.045)] transition hover:-translate-y-0.5 hover:border-[#b9c8bf]"
+          >
+            <span className="text-xs font-black uppercase text-tjc-muted">Priority {index + 1}</span>
+            <div className="mt-2 flex items-start justify-between gap-3">
+              <strong className="text-base font-black leading-tight text-tjc-ink">{item.label}</strong>
+              <span className={cn("rounded-full border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{item.action}</p>
+          </Link>
+        ))}
+      </section>
+
+      <section id="launch-gate" className="mt-4 scroll-mt-24 rounded-[1.25rem] border border-[#d6dfd8] bg-white" aria-label="Launch decisions">
         {launchDecisions.map((decision) => (
-          <div className="grid gap-2 border-b border-[#d6dfd8] px-3 py-3 last:border-b-0 md:grid-cols-[15rem_8rem_minmax(0,1fr)]" key={decision.question}>
+          <div className="grid gap-2 border-b border-[#d6dfd8] px-4 py-4 last:border-b-0 md:grid-cols-[15rem_8rem_minmax(0,1fr)]" key={decision.question}>
             <strong className="text-sm text-tjc-ink">{decision.question}</strong>
             <span className={cn("w-fit rounded border px-2 py-0.5 text-xs font-semibold", toneClass(decision.tone))}>{decision.answer}</span>
             <span className="text-sm leading-relaxed text-tjc-muted">{decision.detail}</span>
@@ -234,7 +345,35 @@ export function AdminPage() {
         ))}
       </section>
 
-      <section className="mt-4 grid grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
+      <details className="mt-4 rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4 md:hidden" aria-label="Collapsed admin diagnostics">
+        <summary className="cursor-pointer font-black text-tjc-evergreen">Diagnostics and mapping details</summary>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+          {[
+            ["Approved public", data.metrics.approvedPublic],
+            ["Portal ready", data.metrics.portalReady],
+            ["Needs review", data.metrics.needsReview],
+            ["Rights review", data.metrics.rightsReview]
+          ].map(([label, value]) => (
+            <div className="rounded-xl border border-tjc-line bg-[#fbfcfa] p-3" key={label}>
+              <strong className="block text-xl font-black tabular-nums text-tjc-ink">{Number(value).toLocaleString()}</strong>
+              <span className="text-xs font-semibold text-tjc-muted">{label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 grid gap-2 border-t border-[#d6dfd8] pt-3">
+          {data.integrationReadiness.slice(0, 3).map((item) => (
+            <div className="grid gap-1 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3" key={`mobile-${item.id}`}>
+              <div className="flex items-center justify-between gap-2">
+                <strong className="text-sm text-tjc-ink">{item.label}</strong>
+                <span className={cn("rounded-full border px-2 py-0.5 text-xs font-black", toneClass(item.ready ? "ok" : "warn"))}>{item.ready ? "Ready" : "Blocked"}</span>
+              </div>
+              <p className="text-xs font-semibold leading-relaxed text-tjc-muted">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <section className="mt-4 hidden grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
         <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
         <MetricTile label="Portal ready" value={data.metrics.portalReady} />
         <MetricTile label="Needs review" value={data.metrics.needsReview} />
@@ -247,30 +386,33 @@ export function AdminPage() {
         <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
       </section>
 
-      <section className="mt-4 grid gap-3 border-y border-[#d6dfd8] py-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Operational diagnostics">
-        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
-          <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
-          <strong className="mt-1 block text-sm text-tjc-ink">{data.source.label}</strong>
-          <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{data.source.detail}</p>
-        </div>
-        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
-          <span className="text-xs font-semibold uppercase text-tjc-muted">API read configured</span>
-          <strong className="mt-1 block text-sm text-tjc-ink">{readBridge?.ready ? "yes" : "no"}</strong>
-          <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{readBridge?.detail || "Read bridge unavailable."}</p>
-        </div>
-        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
-          <span className="text-xs font-semibold uppercase text-tjc-muted">API write configured</span>
-          <strong className="mt-1 block text-sm text-tjc-ink">{writeMapping?.ready ? "yes" : "no"}</strong>
-          <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{writeMapping?.detail || "Write mapping unavailable."}</p>
-        </div>
-        <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
-          <span className="text-xs font-semibold uppercase text-tjc-muted">Required field refs</span>
-          <strong className="mt-1 block text-sm text-tjc-ink">{requiredFieldRefsPresent} present / {Math.max(0, requiredFields.length - requiredFieldRefsPresent)} missing</strong>
-          <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Pending review write queue: {pendingQueue?.detail || "none"}</p>
-        </div>
-      </section>
+      <details className="mt-4 hidden rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Operational diagnostics">
+        <summary className="cursor-pointer font-black text-tjc-evergreen">Operational diagnostics</summary>
+        <section className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
+            <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
+            <strong className="mt-1 block text-sm text-tjc-ink">{data.source.label}</strong>
+            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{data.source.detail}</p>
+          </div>
+          <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
+            <span className="text-xs font-semibold uppercase text-tjc-muted">API read configured</span>
+            <strong className="mt-1 block text-sm text-tjc-ink">{readBridge?.ready ? "yes" : "no"}</strong>
+            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{readBridge?.detail || "Read bridge unavailable."}</p>
+          </div>
+          <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
+            <span className="text-xs font-semibold uppercase text-tjc-muted">API write configured</span>
+            <strong className="mt-1 block text-sm text-tjc-ink">{writeMapping?.ready ? "yes" : "no"}</strong>
+            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{writeMapping?.detail || "Write mapping unavailable."}</p>
+          </div>
+          <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
+            <span className="text-xs font-semibold uppercase text-tjc-muted">Required field refs</span>
+            <strong className="mt-1 block text-sm text-tjc-ink">{requiredFieldRefsPresent} present / {Math.max(0, requiredFields.length - requiredFieldRefsPresent)} missing</strong>
+            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Pending review write queue: {pendingQueue?.detail || "none"}</p>
+          </div>
+        </section>
+      </details>
 
-      <section id="pillars" className="mt-4 scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white" aria-label="Production DAM pillars">
+      <section id="pillars" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white md:block" aria-label="Production DAM pillars">
         {data.readiness.map((item) => {
           const Icon = pillarIcon(item.pillar);
           return (
@@ -299,49 +441,65 @@ export function AdminPage() {
         })}
       </section>
 
-      <section id="backlog" className="mt-4 scroll-mt-24 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]" aria-label="Admin work plan">
+      <section id="backlog" className="mt-4 hidden scroll-mt-24 gap-4 md:grid xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]" aria-label="Admin work plan">
         <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><ListChecks size={18} strokeWidth={1.8} aria-hidden="true" /> Action backlog</h2>
-          <div className="mt-3 grid gap-2 md:grid-cols-2">
-            {data.actionBacklog.map((item) => (
-              <Link
-                key={item.id}
-                href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-                className="grid gap-2 border-b border-[#d6dfd8] py-3 transition last:border-b-0 hover:bg-[#f8fbf8]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-semibold uppercase text-tjc-muted">{item.owner}</span>
-                    <strong className="mt-1 block text-sm font-semibold text-tjc-ink">{item.label}</strong>
+          <div className="mt-3">
+            <DataTable
+              label="Production blocker backlog"
+              rows={data.actionBacklog}
+              columns={backlogColumns}
+              getRowKey={(item) => item.id}
+              getSearchText={(item) => `${item.label} ${item.owner} ${item.severity} ${item.action}`}
+              gridTemplateColumns="minmax(12rem,1fr) 5.5rem 4.5rem 6rem 4.5rem"
+              searchable
+              searchPlaceholder="Filter blockers..."
+              initialPageSize={8}
+              pageSizeOptions={[5, 8, 12]}
+              mobileCard={(item) => (
+                <div className="grid gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <strong className="text-sm text-tjc-ink">{item.label}</strong>
+                    <span className={cn("rounded-md border px-2 py-1 text-xs font-black", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
                   </div>
-                  <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
+                  <p className="text-xs font-semibold leading-relaxed text-tjc-muted">{item.action}</p>
+                  <span className="text-xs font-black text-tjc-muted">{item.owner}</span>
                 </div>
-                <p className="text-sm leading-relaxed text-tjc-muted">{item.action}</p>
-              </Link>
-            ))}
+              )}
+            />
           </div>
         </section>
 
         <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Lock size={18} strokeWidth={1.8} aria-hidden="true" /> Integration readiness</h2>
-          <div className="mt-3 grid gap-2">
-            {data.integrationReadiness.map((item) => (
-              <div className="grid gap-2 border-b border-[#d6dfd8] py-3 last:border-b-0" key={item.id}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <strong className="text-sm font-semibold text-tjc-ink">{item.label}</strong>
-                    <span className="mt-1 block text-xs font-semibold uppercase text-tjc-muted">{item.owner}</span>
+          <div className="mt-3">
+            <DataTable
+              label="Integration readiness"
+              rows={data.integrationReadiness}
+              columns={integrationColumns}
+              getRowKey={(item) => item.id}
+              getSearchText={(item) => `${item.label} ${item.owner} ${item.ready ? "ready" : "blocked"} ${item.detail}`}
+              gridTemplateColumns="minmax(12rem,1fr) 5.5rem 6rem"
+              searchable
+              searchPlaceholder="Filter integrations..."
+              initialPageSize={6}
+              pageSizeOptions={[4, 6, 10]}
+              mobileCard={(item) => (
+                <div className="grid gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <strong className="text-sm text-tjc-ink">{item.label}</strong>
+                    <span className={cn("rounded-md border px-2 py-1 text-xs font-black", toneClass(item.ready ? "ok" : "warn"))}>{item.ready ? "Ready" : "Blocked"}</span>
                   </div>
-                  <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", toneClass(item.ready ? "ok" : "warn"))}>{item.ready ? "Ready" : "Blocked"}</span>
+                  <p className="text-xs font-semibold leading-relaxed text-tjc-muted">{item.detail}</p>
+                  <span className="text-xs font-black text-tjc-muted">{item.owner}</span>
                 </div>
-                <p className="text-sm leading-relaxed text-tjc-muted">{item.detail}</p>
-              </div>
-            ))}
+              )}
+            />
           </div>
         </section>
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]">
+      <section className="mt-4 hidden gap-4 md:grid xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]">
         <section id="mappings" className="scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="ResourceSpace field mapping">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
@@ -349,18 +507,23 @@ export function AdminPage() {
               <p className="mt-1 text-sm text-tjc-muted">Required ResourceSpace/export fields for production confidence.</p>
             </div>
           </div>
-          <div className="grid gap-2">
-            {requiredFields.map((field) => (
-              <div className="grid gap-2 border-b border-[#d6dfd8] py-3 last:border-b-0 md:grid-cols-[minmax(10rem,.7fr)_minmax(12rem,.8fr)_minmax(10rem,1fr)_5rem]" key={field.key}>
+          <DataTable
+            label="ResourceSpace required field mapping coverage"
+            rows={requiredFields}
+            columns={fieldColumns}
+            getRowKey={(field) => field.key}
+            gridTemplateColumns="minmax(10rem,.8fr) minmax(12rem,.9fr) minmax(10rem,1fr) 5rem"
+            mobileCard={(field) => (
+              <div className="grid gap-2">
                 <strong className="text-sm text-tjc-ink">{field.label}</strong>
                 <code className="truncate text-xs text-tjc-muted">{field.resourceSpaceField}</code>
-                <span className="h-2 self-center overflow-hidden rounded-full bg-[#e2e8df]">
+                <span className="h-2 overflow-hidden rounded-full bg-[#e2e8df]">
                   <span className="block h-full rounded-full bg-tjc-evergreen" style={{ width: `${field.coverage}%` }} />
                 </span>
-                <span className="text-right text-sm font-semibold tabular-nums text-tjc-ink">{field.coverage}%</span>
+                <span className="text-xs font-black tabular-nums text-tjc-muted">{field.coverage}% coverage / {field.missing.toLocaleString()} missing</span>
               </div>
-            ))}
-          </div>
+            )}
+          />
           <details className="mt-3 border-t border-[#d6dfd8] pt-3">
             <summary className="cursor-pointer text-sm font-semibold text-tjc-evergreen">Optional fields</summary>
             <div className="mt-3 grid gap-2">
@@ -377,27 +540,24 @@ export function AdminPage() {
 
         <section id="vocabulary" className="scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="Controlled vocabulary">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Tags size={18} strokeWidth={1.8} aria-hidden="true" /> Vocabulary control</h2>
-          <div className="mt-3 divide-y divide-[#d6dfd8]">
-            {data.vocabulary.map((term) => (
-              <span
-                className={cn(
-                  "grid grid-cols-[1fr_auto] gap-3 py-2 text-sm",
-                  term.kind === "canonical" && "text-[#22563a]",
-                  term.kind === "candidate" && "text-[#27435b]",
-                  term.kind === "drift" && "text-[#725216]"
-                )}
-                key={`${term.kind}-${term.term}`}
-                title={term.kind}
-              >
-                <strong className="truncate font-semibold">{term.term}</strong>
-                <span className="tabular-nums">{term.count}</span>
-              </span>
-            ))}
+          <div className="mt-3">
+            <DataTable
+              label="Controlled vocabulary table"
+              rows={data.vocabulary}
+              columns={vocabularyColumns}
+              getRowKey={(term) => `${term.kind}-${term.term}`}
+              getSearchText={(term) => `${term.term} ${term.kind}`}
+              gridTemplateColumns="minmax(10rem,1fr) 7rem 5rem"
+              searchable
+              searchPlaceholder="Filter vocabulary..."
+              initialPageSize={8}
+              pageSizeOptions={[8, 12, 20]}
+            />
           </div>
         </section>
       </section>
 
-      <section id="portal-gate" className="mt-4 scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="Portal policy">
+      <section id="portal-gate" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Portal policy">
         <h2 className="flex items-center gap-2 text-xl font-semibold"><Share2 size={18} strokeWidth={1.8} aria-hidden="true" /> Public portal gate</h2>
         <div className="mt-3 grid gap-x-5 gap-y-2 md:grid-cols-2 xl:grid-cols-3">
           {data.portalPolicy.map((policy) => (
@@ -413,6 +573,33 @@ export function AdminPage() {
                 <span className="mt-1 block text-xs leading-relaxed text-tjc-muted">{policy.detail}</span>
               </span>
             </Link>
+          ))}
+        </div>
+      </section>
+
+      <section id="audit-log" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Audit log">
+        <h2 className="flex items-center gap-2 text-xl font-semibold"><ScrollText size={18} strokeWidth={1.8} aria-hidden="true" /> Audit log</h2>
+        <p className="mt-1 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">
+          Read-only portal audit signals. Pending writes are local queue records until ResourceSpace write mapping is configured.
+        </p>
+        <div className="mt-3 divide-y divide-[#d6dfd8] rounded-lg border border-[#d6dfd8]">
+          {data.integrationReadiness.map((item) => (
+            <div className="grid gap-2 px-3 py-3 text-sm md:grid-cols-[12rem_10rem_minmax(0,1fr)]" key={`audit-${item.id}`}>
+              <strong className="text-tjc-ink">{item.label}</strong>
+              <span className={cn("w-fit rounded border px-2 py-0.5 text-xs font-semibold", toneClass(item.ready ? "ok" : "warn"))}>
+                {item.ready ? "Ready" : "Blocked"}
+              </span>
+              <span className="leading-relaxed text-tjc-muted">{item.detail}</span>
+            </div>
+          ))}
+          {data.actionBacklog.slice(0, 5).map((item) => (
+            <div className="grid gap-2 px-3 py-3 text-sm md:grid-cols-[12rem_10rem_minmax(0,1fr)]" key={`audit-backlog-${item.id}`}>
+              <strong className="text-tjc-ink">{item.label}</strong>
+              <span className={cn("w-fit rounded border px-2 py-0.5 text-xs font-semibold", severityClass(item.severity))}>
+                {item.severity}
+              </span>
+              <span className="leading-relaxed text-tjc-muted">{item.count.toLocaleString()} affected. {item.action}</span>
+            </div>
           ))}
         </div>
       </section>

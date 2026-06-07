@@ -18,7 +18,7 @@ export function ReviewTriageStrip({ assets, role, selectedId, onSelect }: Review
   if (!stripAssets.length) return null;
 
   return (
-    <section className="mt-4 overflow-hidden rounded-lg border border-[#cfd7d1] bg-white p-3" aria-label="Visual triage strip">
+    <section className="mt-4 hidden overflow-hidden rounded-lg border border-[#cfd7d1] bg-white p-3 md:block" aria-label="Visual triage strip">
       <div className="flex items-center justify-between gap-3 px-1 pb-3">
         <div>
           <span className="text-xs font-black uppercase tracking-[.06em] text-tjc-muted">Visual triage</span>

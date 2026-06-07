@@ -112,27 +112,14 @@ export function UploadFileDropzone({
             </button>
           </div>
           <div className="mt-2 grid gap-2">
-            {selectedFiles.map((file, index) => {
-              const tooLarge = file.size > LARGE_MEDIA_BYTES;
-              return (
-                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[#d6dfd8] px-1 py-3 last:border-b-0" key={`${file.name}-${file.size}-${index}`}>
-                  {imagePreviewByIndex.has(index) ? (
-                    <img className="h-12 w-12 rounded-md border border-[#d6dfd8] object-cover" src={imagePreviewByIndex.get(index)} alt="" />
-                  ) : tooLarge ? (
-                    <ShieldAlert size={16} strokeWidth={1.8} className="text-[#725216]" aria-hidden="true" />
-                  ) : (
-                    <FileCheck2 size={16} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />
-                  )}
-                  <span className="min-w-0">
-                    <strong className="block truncate text-xs font-semibold text-tjc-ink">{file.name}</strong>
-                    <span className="mt-0.5 block text-[11px] font-medium text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
-                  </span>
-                  <button className="grid h-8 w-8 place-items-center rounded-lg text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={() => onRemove(index)} aria-label={`Remove ${file.name}`}>
-                    <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
-                  </button>
-                </div>
-              );
-            })}
+            {selectedFiles.map((file, index) => (
+              <SelectedFilePreview
+                key={`${file.name}-${file.size}-${index}`}
+                file={file}
+                previewUrl={imagePreviewByIndex.get(index)}
+                onRemove={() => onRemove(index)}
+              />
+            ))}
           </div>
         </section>
       ) : null}
@@ -141,5 +128,39 @@ export function UploadFileDropzone({
         <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{uploadDefaultState.largeMediaMessage}</div>
       ) : null}
     </section>
+  );
+}
+
+export const UploadDropzone = UploadFileDropzone;
+
+export function SelectedFilePreview({ file, previewUrl, onRemove }: { file: File; previewUrl?: string; onRemove: () => void }) {
+  const tooLarge = file.size > LARGE_MEDIA_BYTES;
+  return (
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[#d6dfd8] px-1 py-3 last:border-b-0">
+      {previewUrl ? (
+        <img className="h-12 w-12 rounded-xl border border-[#d6dfd8] object-cover" src={previewUrl} alt="" />
+      ) : tooLarge ? (
+        <span className="grid h-12 w-12 place-items-center rounded-xl border border-[#ead6a8] bg-[#fff8e8] text-[#725216]">
+          <ShieldAlert size={17} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+      ) : (
+        <span className="grid h-12 w-12 place-items-center rounded-xl border border-[#b8d9c6] bg-[#edf8f1] text-tjc-evergreen">
+          <FileCheck2 size={17} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+      )}
+      <span className="min-w-0">
+        <strong className="block truncate text-xs font-black text-tjc-ink">{file.name}</strong>
+        <span className="mt-0.5 block text-[11px] font-semibold text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
+        <span className="mt-1 grid gap-1">
+          <span className="text-[10px] font-black text-tjc-evergreen">Selected for reviewer intake</span>
+          <span className="block h-1.5 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
+            <span className="block h-full w-full rounded-full bg-tjc-blue" />
+          </span>
+        </span>
+      </span>
+      <button className="grid h-9 w-9 place-items-center rounded-lg text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={onRemove} aria-label={`Remove ${file.name}`}>
+        <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+      </button>
+    </div>
   );
 }

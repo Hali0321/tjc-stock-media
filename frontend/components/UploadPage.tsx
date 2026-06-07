@@ -2,12 +2,13 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FolderInput, RotateCcw, Save, ShieldCheck, UploadCloud } from "lucide-react";
-import { InputWithTags } from "@/components/InputWithTags";
+import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
-import { StatusBanner } from "@/components/StatusBanner";
-import { UploadFileDropzone } from "@/components/UploadFileDropzone";
+import { StateBanner } from "@/components/StatusBanner";
+import { UploadDropzone } from "@/components/UploadFileDropzone";
 import { UploadIntakePacket } from "@/components/UploadIntakePacket";
 import { canUpload } from "@/lib/permissions";
+import { toastDraftSaved, toastUploadComplete, toastUploadFailed, toastUploadStarted } from "@/lib/tjc-toasts";
 import { uploadTagSuggestions } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
@@ -45,10 +46,16 @@ export function UploadPage() {
     form.delete("files");
     selectedFiles.forEach((file) => form.append("files", file));
     form.set("role", role);
+    toastUploadStarted(selectedFiles.length ? `${selectedFiles.length} file(s) staged for review.` : "Source-link intake will be reviewed without a browser file.");
     const response = await fetch("/api/upload", { method: "POST", body: form });
     const body = await response.json();
     setMessage(body.message || body.error || "Upload intake checked.");
-    if (response.ok) setReceipt(body);
+    if (response.ok) {
+      setReceipt(body);
+      toastUploadComplete();
+    } else {
+      toastUploadFailed(body.error || "No files were approved or published.");
+    }
   }
 
   function checkFiles(files: FileList | null) {
@@ -56,6 +63,7 @@ export function UploadPage() {
     setSelectedFiles(nextFiles);
     const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
     setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+    if (nextFiles.length) toastUploadStarted(`${nextFiles.length} selected file${nextFiles.length === 1 ? "" : "s"} staged for review.`);
   }
 
   function syncFileInput(nextFiles: File[]) {
@@ -75,20 +83,25 @@ export function UploadPage() {
 
   function addDroppedFiles(files: File[]) {
     syncFileInput([...selectedFiles, ...files]);
+    toastUploadStarted(`${files.length} dropped file${files.length === 1 ? "" : "s"} added to reviewer intake.`);
   }
 
   function removeFile(index: number) {
+    const file = selectedFiles[index];
     syncFileInput(selectedFiles.filter((_, fileIndex) => fileIndex !== index));
+    toastDraftSaved(`${file?.name || "File"} removed from intake.`);
   }
 
   function clearFiles() {
     if (fileInputRef.current) fileInputRef.current.value = "";
     setSelectedFiles([]);
     setLargeWarning("");
+    if (selectedFiles.length) toastDraftSaved("Selected files cleared.");
   }
 
   function saveDraftNotice() {
     setMessage("Draft capture is local-only in this demo. Files still need Submit for review before server intake.");
+    toastDraftSaved("Draft capture is local-only in this demo. Submit for review before server intake.");
   }
 
   if (!ready) {
@@ -142,9 +155,9 @@ export function UploadPage() {
       </section>
 
       <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-        <StatusBanner tone="info" title="Autosave checkpoint">
+        <StateBanner tone="info" title="Autosave checkpoint">
           Context, rights, files, and tags are reviewed together. Submitted media stays Needs Review / Do Not Publish until reviewer evidence is complete.
-        </StatusBanner>
+        </StateBanner>
         <div className="grid content-center rounded-[1.35rem] border border-[#d7e1d9] bg-white px-4 py-3 text-sm shadow-[0_10px_28px_rgba(25,34,29,.035)]">
           <strong className="text-tjc-ink">{selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected</strong>
           <span className="text-xs font-semibold text-tjc-muted">Review visibility: blocked by default</span>
@@ -234,7 +247,7 @@ export function UploadPage() {
             <h2 className="text-lg font-black">3. Files and tags</h2>
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
-          <UploadFileDropzone
+          <UploadDropzone
             inputRef={fileInputRef}
             selectedFiles={selectedFiles}
             onInputFiles={checkFiles}
@@ -247,7 +260,7 @@ export function UploadPage() {
             <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
           </label>
           <div className="mt-4">
-            <InputWithTags
+              <TagInput
               name="tags"
               label="Suggested tags"
               value={suggestedTags}
@@ -293,6 +306,7 @@ export function UploadPage() {
               clearFiles();
               setSuggestedTags("");
               setMessage("File selection and suggested tags cleared.");
+              toastDraftSaved("File selection and suggested tags cleared.");
             }}>
               <RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" />
               Clear all

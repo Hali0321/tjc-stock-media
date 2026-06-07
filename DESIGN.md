@@ -41,7 +41,7 @@ Dribbble DAM density
 
 Reference patterns, adapted without copying:
 
-- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, Animated Loading Skeleton-style loading states, upload dropzone/preview, pagination, maintained tabs, review confirmation dialog, request dialogs, secondary action dropdowns, restrained liquid-glass primary-action depth, and hold-and-release buttons for high-risk review decisions.
+- 21st.dev: Tubelight-style nav, command palette, display cards for operational state, DataTable direction for Admin/Review governance, Animated Loading Skeleton-style loading states, state/banner primitives, upload dropzone/preview, tag input, Sonner-style toasts, pagination, maintained tabs, media preview wrappers, review confirmation dialog, request dialogs, secondary action dropdowns, restrained primary-action depth, and hold-and-release buttons for high-risk review decisions.
 - Dribbble DAM references: dense thumbnail grid, left filter/sidebar rhythm, asset detail panel, table/list toggle, and review/admin information density.
 - Awwwards references: clean photographic hierarchy, image-first detail view, restrained white/evergreen polish, and mobile filter behavior without cinematic storytelling.
 - CodePen interaction references: upload drag/preview/remove states and gallery filtering ideas adapted to DAM reuse states.
@@ -62,7 +62,7 @@ Reference accountability lives in `docs/runs/final-product-critique.md`. Each so
 
 The detailed 21st.dev scouting inventory and decision log live in `docs/ui-system/component-inventory.md` and `docs/ui-system/design-decision-log.md`.
 
-Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DisplayCard`, `StatusBanner`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, `UploadFileDropzone`, and `ImageComparisonPanel`. The safe comparison panel is implemented with role-safe previews only; a true original-vs-approved derivative slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions. Theme Toggle and Apple Tahoe Liquid Glass Button remain deferred; Liquid Glass Button is used only as restrained primary-action inspiration, not as full glass UI.
+Current maintained components from that scouting pass include `AppNav`, `CommandPalette`, `DisplayCard`, `DataTable`, `TjcStatusBadge`, `StatusBanner`, `DamStates`, `MediaPreviewPanel`, `DamTabs`, `DropdownActionMenu`, `AssetActionsMenu`, `HoldReleaseButton`, `InputWithTags`, `PaginationBar`, `LibraryPagination`, `ReviewActionDialog`, `ReuseRequestDialog`, `UploadFileDropzone`, `tjc-toasts`, and `ImageComparisonPanel`. The safe comparison panel is implemented with role-safe previews only; a true original-vs-approved derivative slider remains deferred until ResourceSpace provides safe paired derivatives and preview permissions. Document/video/audio preview modes are implemented as safe shells until ResourceSpace export includes role-safe rows. Theme Toggle is rejected for this pass; infinite scroll is rejected for core DAM workflows.
 
 Avoided:
 
@@ -183,11 +183,16 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 ## Latest QA Evidence
 
-- `npm run typecheck`: passed on 2026-06-06 during final DAM UI pass.
-- Production browser QA refreshed Library, Collections, Detail, Upload, Review, and Guide at 1440px and 320px, plus responsive QA at 1280, 1024, 768, 390, and 320px, with no horizontal page overflow.
+- `npm --prefix frontend run typecheck`: passed on 2026-06-07 after the primitive/mobile density fixes.
+- `npm --prefix frontend run build`: passed on 2026-06-07.
+- `make frontend-check` and `make demo-check`: passed on 2026-06-07 when run sequentially.
+- `make smoke`: passed on 2026-06-07 with Docker/ResourceSpace/MariaDB-not-running warnings only.
+- `make launch-readiness`: passed on 2026-06-07 with `.env` placeholder and 19 GiB free-disk warnings.
+- `BASE_URL=http://localhost:3029 make portal-api-smoke` and `BASE_URL=http://localhost:3029 make portal-browser-qa`: passed on 2026-06-07 from a fresh production Next server with `TJC_STOCK_MEDIA_ROOT` set to the repo root. Browser QA reported 15 pages, 1440/1280/1024/768/390/320 px, 0 failures, 0 warnings, 0 console errors, and 0 network failures.
+- The full screenshot set was refreshed under `docs/screenshots/`, including Library, Collections, Upload, Review, Asset Detail, Admin, Guide, and primitive-proof captures. The capture manifest reports no horizontal page overflow.
 - Role safety API checks remain server-owned: blocked Viewer downloads return 403, missing review evidence returns 400, valid review evidence queues a 202 pending write, and upload intake does not fake file counts.
 - Latest browser QA includes command palette and upload file-preview checks. Expected 400/403 denials are recorded as safety checks.
-- Refreshed screenshot set lives under `docs/screenshots/`.
+- `git diff --check`: passed on 2026-06-07.
 
 ## Anti-AI Checklist
 

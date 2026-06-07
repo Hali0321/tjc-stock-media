@@ -10,7 +10,7 @@ Show that a ministry user can find a rights-safe approved media asset in under 6
 http://localhost:3008
 ```
 
-Use the production Next server for screenshots or stakeholder walkthroughs after `npm run build && npm run start -- --hostname 0.0.0.0 --port 3008`.
+Use a freshly started production Next server for screenshots or stakeholder walkthroughs after `npm --prefix frontend run build`. The final QA pass used `http://localhost:3029` with `TJC_STOCK_MEDIA_ROOT` set to the repo root so ResourceSpace export metadata, not fallback demo data, was active.
 
 ## Script
 
@@ -19,14 +19,14 @@ Use the production Next server for screenshots or stakeholder walkthroughs after
 3. Show the Tubelight-inspired workflow nav, compact command search, `Cmd/Ctrl+K` command palette, use-case shortcuts, clear result count, saved-view/browse rail, filters, sort controls, contact-sheet results, and collection entry points.
 4. Open Collections and show album rows, quiet preview-pending rails, selected collection inspector, stable ID/source/count/date facts, and `Open Library results`.
 5. Open one asset.
-6. Point to the normalized display title, raw ResourceSpace status, portal reuse state, blocker reasons, usage scope, reviewer/date, tags, source/provenance, confidence record, and safe derivative comparison panel.
+6. Point to the normalized display title, `MediaPreviewPanel`, raw ResourceSpace status, portal reuse state, blocker reasons, usage scope, reviewer/date, tags, source/provenance, confidence record, and safe derivative comparison panel.
 7. Show blocked download copy for a non-portal-ready asset and explain `Approved Public` is not enough for portal reuse.
 8. Show `Original/master restricted`.
 9. Switch role to Reviewer.
 10. Open Review.
 11. Open first asset marked `Please review before public sharing` from the demo path.
 12. Show it is not downloadable.
-13. Return to Review and show the workbench: queue tabs, toolbar, contact-sheet triage, selected-asset inspector tabs, and approval actions: `Approve for church-wide use`, `Approve for internal ministry use`, `Archive only`, and `Do not publish externally`.
+13. Return to Review and show the workbench: queue tabs, toolbar, desktop DataTable/tablet-mobile cards, selected-asset inspector tabs, and approval actions: `Approve for church-wide use`, `Approve for internal ministry use`, `Archive only`, and `Do not publish externally`.
 14. Try an action without evidence to show `400` validation, then submit valid checklist/note and explain it queues a `Pending Review Write` until ResourceSpace API write mapping is configured.
 15. Open Upload as Contributor.
 16. Select a sample file to show file preview, type/size, remove/clear controls, selected-file count, autosave checkpoint, bottom action bar, and large-media guidance.
@@ -38,9 +38,9 @@ Use the production Next server for screenshots or stakeholder walkthroughs after
 
 ResourceSpace remains the backend/source of truth. The new portal is the friendly church-facing layer for search, upload intake, and review safety.
 
-The UI is now operational and ministry-warm: compact navigation, Tailwind v4/Inter/Noto visual system, DAM command search, operational saved-view rail, album-style collections, contact-sheet asset records, guided upload with bottom action bar, reviewer workbench, safe derivative comparison, and usage guidance at the point of download.
+The UI is now operational and ministry-warm: compact navigation, Tailwind v4/Inter/Noto visual system, DAM command search, operational saved-view rail, album-style collections, contact-sheet asset records, unified badges/states/toasts, guided upload with bottom action bar, reviewer workbench with DataTable, safe media preview modes, safe derivative comparison, and usage guidance at the point of download.
 
-If the export lacks a preview derivative, the portal labels it as `Preview pending` or `Preview unavailable`; this is honest ResourceSpace/export readiness, not fake media.
+If the export lacks a preview derivative, the portal labels it as an explicit restricted/pending preview state with safe type and collection context; this is honest ResourceSpace/export readiness, not fake media.
 
 Theme toggle is deferred. Light mode remains the designed, verified experience until dark-mode safety labels and contrast get a full pass.
 
@@ -69,6 +69,7 @@ The frontend does not create a second DAM or store secret API keys in the browse
 
 ## Latest Evidence
 
+- 2026-06-07 implementation pass added shared safety badges, DataTable, MediaPreviewPanel, state system, Sonner toast helpers, Admin Audit log, and wrapped Guide mobile jump navigation.
 - Screenshots refreshed under `docs/screenshots/`.
 - 1440, 1280, 1024, 768, 390, and 320 px checks have no horizontal page overflow.
 - Viewer unsafe download and review actions are blocked by server routes.
@@ -76,6 +77,7 @@ The frontend does not create a second DAM or store secret API keys in the browse
 - Valid reviewer evidence creates a local pending-write record and returns `202`; ResourceSpace is not updated until write mapping is configured.
 - Asset Detail and Review inspector tabs are keyboard-accessible and browser QA checks tab `aria-controls` targets.
 - Request original access opens a safety dialog first; it creates only an email draft and does not grant access or write to ResourceSpace.
-- Review queue initially renders 24 loaded rows with an explicit `Show more review items` action so mobile reviewers reach the inspector/action area sooner.
-- Browser QA finished with zero failures, zero warnings, and zero console errors. Expected denied requests are 400/403 safety checks.
+- Review desktop initially renders 24 loaded rows with an explicit `Show more review items` action; mobile uses a compact queue selector and 8-card queue slice so reviewers reach the selected asset/action panel sooner.
+- Browser QA finished with zero failures, zero warnings, zero console errors, and zero network failures. Expected denied requests are 400/403 safety checks.
+- Primitive proof screenshots now include AppNav, CommandPalette, Library badges/pagination/filter pills, Admin DataTable, Review DataTable/inspector, MediaPreviewPanel image/restricted/document shells, AssetActionsMenu, Upload dropzone/tags, toast feedback, Review dialog/hold-confirm path, and state system proof.
 - Extra 390 px screenshots were captured for Library, Collections, Upload, Review, Detail, Guide, and Admin.

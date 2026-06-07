@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, FolderOpen, Images, Users } from "lucide-react";
+import { ArrowRight, Users } from "lucide-react";
+import { CollectionPreviewPlaceholder } from "@/components/DamStates";
 import { MediaPreview } from "@/components/MediaPreview";
 import { cn } from "@/lib/ui";
 
@@ -35,8 +36,8 @@ export function CollectionAlbumCard({
     <button
       type="button"
       className={cn(
-        "group grid min-w-0 gap-4 rounded-[1.35rem] border bg-white px-3 py-3 text-left transition duration-200 hover:border-[#8aa99a] hover:bg-[#fbfdfb] active:translate-y-px sm:grid-cols-[14rem_minmax(0,1fr)_auto]",
-        isActive ? "border-[#0b4b42] bg-[#f6fbf7] shadow-[inset_4px_0_0_#0b4b42]" : "border-[#d4ded7]"
+        "group grid min-w-0 gap-3 rounded-[1.5rem] border bg-white p-3 text-left shadow-[0_14px_34px_rgba(35,53,111,.045)] transition duration-200 hover:-translate-y-0.5 hover:border-[#8aa99a] hover:bg-[#fbfdfb] active:translate-y-px sm:grid-cols-[15rem_minmax(0,1fr)_auto]",
+        isActive ? "border-[#0b4b42] bg-[#f6fbf7] shadow-[inset_4px_0_0_#0b4b42,0_18px_40px_rgba(35,53,111,.07)]" : "border-[#d4ded7]"
       )}
       onClick={onOpen}
       onFocus={onInspect}
@@ -57,15 +58,9 @@ export function CollectionAlbumCard({
           </>
         ) : (
           <>
-            <span className="row-span-2 grid aspect-[4/3] min-w-0 place-items-center rounded-[1rem] border border-[#d6e0d8] bg-[#f7f9f6] text-[#718078]">
-              <FolderOpen size={18} strokeWidth={1.7} />
-            </span>
-            <span className="grid aspect-[4/3] min-w-0 place-items-center rounded-[.85rem] border border-[#d6e0d8] bg-[#f3f6f2] text-[#718078]">
-              <Images size={18} strokeWidth={1.7} />
-            </span>
-            <span className="grid aspect-[4/3] min-w-0 place-items-center rounded-[.85rem] border border-dashed border-[#cbd8cf] bg-[#fbfcfa] text-[10px] font-bold leading-tight text-[#718078]">
-              pending
-            </span>
+            <CollectionPreviewPlaceholder className="row-span-2 aspect-[4/3]" title="Album cover pending" />
+            <CollectionPreviewPlaceholder className="aspect-[4/3]" title="Shelf" />
+            <span className="grid aspect-[4/3] min-w-0 place-items-center rounded-[.85rem] border border-dashed border-[#cbd8cf] bg-[#fbfcfa] text-[10px] font-bold leading-tight text-[#718078]">pending</span>
           </>
         )}
       </span>
@@ -76,8 +71,8 @@ export function CollectionAlbumCard({
           <span>{countLabel}</span>
           <span>{approvalSummary}</span>
           <span>{dateRange}</span>
-          <span>Source: {ministry}</span>
-          <span>Stable ID</span>
+          <span className="hidden md:inline">Source: {ministry}</span>
+          <span className="hidden md:inline">Stable ID</span>
         </span>
         {peopleWarning ? (
           <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#725216]">

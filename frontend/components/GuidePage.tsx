@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { BadgeCheck, CircleHelp, Download, FileText, Image as ImageIcon, MessageCircle, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
+import { MediaPreviewPanel } from "@/components/MediaPreviewPanel";
 
 const guideBlocks = [
   {
@@ -69,6 +70,10 @@ const decisionRows = [
   ["Original/master requested", "Request access. Normal users use approved copies only."]
 ];
 
+function guideSectionId(title: string) {
+  return `guide-${title.toLowerCase().replaceAll(" ", "-").replaceAll("/", "-")}`;
+}
+
 export function GuidePage() {
   const [query, setQuery] = useState("");
   const visibleBlocks = useMemo(() => {
@@ -119,12 +124,19 @@ export function GuidePage() {
         </div>
       </section>
 
+      <nav className="mt-4 flex flex-wrap gap-2 border-b border-[#d6dfd8] pb-3 lg:hidden" aria-label="Guide jump navigation">
+        <a className="rounded-full border border-[#cad8cf] bg-white px-3 py-2 text-sm font-black text-tjc-evergreen" href="#before-downloading">Before downloading</a>
+        {guideBlocks.map((block) => (
+          <a className="rounded-full border border-[#cad8cf] bg-white px-3 py-2 text-sm font-black text-[#3f4a43]" href={`#${guideSectionId(block.title)}`} key={block.title}>{block.title}</a>
+        ))}
+      </nav>
+
       <div className="mt-5 grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
         <aside className="hidden lg:block">
           <nav className="sticky top-24 grid gap-1 text-sm font-semibold text-tjc-muted" aria-label="Guide sections">
             <a className="rounded-md px-2 py-1.5 text-tjc-evergreen hover:bg-[#eef4f0]" href="#before-downloading">Before downloading</a>
             {guideBlocks.map((block) => (
-              <a className="rounded-md px-2 py-1.5 hover:bg-[#eef4f0]" href={`#guide-${block.title.toLowerCase().replaceAll(" ", "-").replaceAll("/", "-")}`} key={block.title}>{block.title}</a>
+              <a className="rounded-md px-2 py-1.5 hover:bg-[#eef4f0]" href={`#${guideSectionId(block.title)}`} key={block.title}>{block.title}</a>
             ))}
           </nav>
         </aside>
@@ -146,7 +158,7 @@ export function GuidePage() {
             {visibleBlocks.map((block) => {
               const Icon = block.icon;
               return (
-              <section id={`guide-${block.title.toLowerCase().replaceAll(" ", "-").replaceAll("/", "-")}`} className="scroll-mt-24 border-b border-[#d6dfd8] py-5" key={block.title}>
+              <section id={guideSectionId(block.title)} className="scroll-mt-24 border-b border-[#d6dfd8] py-5" key={block.title}>
                 <div className="grid gap-3 md:grid-cols-[18rem_1fr]">
                   <div className="grid grid-cols-[auto_1fr] gap-3">
                     <span className="grid h-10 w-10 place-items-center rounded-full border border-[#dbe4dd] bg-white text-tjc-evergreen">
@@ -183,6 +195,36 @@ export function GuidePage() {
               If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
             </p>
           </section>
+
+          <details id="media-preview-modes" className="mt-5 rounded-[1.4rem] border border-[#d6dfd8] bg-white p-4">
+            <summary className="cursor-pointer text-base font-black text-tjc-evergreen">Preview safety states</summary>
+            <p className="mt-2 max-w-[72ch] text-sm font-semibold leading-relaxed text-tjc-muted">
+              The DAM preview panel supports safe image, video, audio, document, restricted, and unknown-file modes. This export currently contains photo records; document and unknown previews stay shell-only until a role-safe derivative exists.
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <MediaPreviewPanel
+                mode="document"
+                alt="Document derivative safety shell"
+                title="PDF/document shell"
+                detail="Prepared for safe exported document derivatives. Original documents remain restricted."
+                compact
+              />
+              <MediaPreviewPanel
+                mode="restricted"
+                alt="Restricted preview policy shell"
+                title="Preview restricted"
+                detail="No role-safe derivative is available. Request review or access instead."
+                compact
+              />
+              <MediaPreviewPanel
+                mode="unknown"
+                alt="Unknown file safety shell"
+                title="Unknown file shell"
+                detail="File type needs a safe derivative before inline preview."
+                compact
+              />
+            </div>
+          </details>
         </div>
       </div>
     </div>

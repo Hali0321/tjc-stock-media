@@ -1,6 +1,37 @@
 # TJC Stock Media UI Design Decision Log
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
+
+## 2026-06-07 - Primitive Proof, Mobile Density, and Final QA
+
+Decision: close final acceptance gaps by deepening existing app-native modules, documenting source status honestly, and validating the rebuild on a fresh production server instead of importing more component code.
+
+Replacement summary:
+
+| Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
+|---|---|---|---|
+| Report-like Admin/Review lists | Shared `DataTable` for serious desktop governance surfaces plus card fallback | Read-only tables surface blockers, mappings, vocabulary, and pending-write constraints without changing API contracts | Tables run on desktop/xl; mobile/tablet gets labelled cards and no clipped controls |
+| Ad hoc toast calls | `tjc-toasts` Sonner helper layer | Toasts announce events but persistent panels/banners still carry safety truth | Toasts stay within viewport; icons/text avoid color-only feedback |
+| Repeated blank restricted placeholders | Unified `RestrictedPreviewPanel` and `MediaPreviewPanel` modes | Restricted previews never expose originals; safe collection/type context explains why preview is blocked | 320px Library uses single-column compact cards; preview states remain readable |
+| Asset Detail media area tied to images only | `MediaPreviewPanel` image/video/audio/document/restricted/unknown wrapper | Only role-safe derivatives render; document/video/audio shells are partial until export data exists | Compact preview mode used on mobile/inspector; no horizontal overflow |
+| Backend-ish status chips | `TjcStatusBadge` primitive plus semantic wrappers | Raw ResourceSpace status, portal reuse, review, rights, visibility, and download state now share one text+icon+tone interface | Badges keep text labels and do not rely on color alone |
+| Admin sidebar omitted audit-log target | `Audit log` nav item and read-only section | Pending writes and integration blockers are visible as audit signals without claiming ResourceSpace persistence | Section uses table-like stacked rows, no horizontal trap |
+| Guide anchor nav desktop-only | Mobile jump navigation row | Usage guidance remains reachable without hiding safety copy | Horizontal chip nav keeps 44px-ish touch targets and avoids crushed desktop layout |
+| Auth-gated/missing 21st registry references | Source-status matrix | Prevents source-level overclaiming while preserving app-native primitive proof | Screenshot evidence links each primitive to real page usage |
+| Mobile Review queue repeated controls | Mobile queue selector plus compact queue slice | Review actions remain in selected asset inspector; pending-write truth unchanged | Selected asset/action panel appears before queue cards, with 8 mobile cards before load-more |
+| 320px Admin nav clipping | Icon-first `AppNav` labels under 360px | Nav semantics and `aria-current` remain intact | No clipped Admin navigation in browser QA |
+
+Verification:
+
+- `npm --prefix frontend run typecheck`: pass.
+- `npm --prefix frontend run build`: pass.
+- `make frontend-check`: pass.
+- `make demo-check`: pass.
+- `make smoke`: pass with Docker/ResourceSpace/MariaDB not running warnings only.
+- `make launch-readiness`: pass with `.env` placeholder and 19 GiB free-disk warnings.
+- `BASE_URL=http://localhost:3029 make portal-api-smoke`: pass.
+- `BASE_URL=http://localhost:3029 make portal-browser-qa`: pass, 15 pages, 1440/1280/1024/768/390/320, zero failures, zero warnings, zero console errors, zero network failures.
+- `git diff --check`: pass.
 
 ## 2026-06-06 - Visual-To-Code Mockup Continuation
 
@@ -25,9 +56,9 @@ Verification:
 - `make frontend-check`: pass when run alone. A previous parallel run collided with another `next build` cache rename and was rerun successfully.
 - `make demo-check`: pass.
 - `make smoke`: pass with Docker/ResourceSpace/MariaDB not running warnings only.
-- `make launch-readiness`: pass with `.env` placeholder and 13 GiB free disk warnings.
-- `BASE_URL=http://127.0.0.1:3008 make portal-api-smoke`: pass.
-- `BASE_URL=http://127.0.0.1:3008 make portal-browser-qa`: pass, 15 pages, 1440/1280/1024/768/390/320, zero failures, zero warnings, zero console errors.
+- `make launch-readiness`: pass with `.env` placeholder and 19 GiB free disk warnings.
+- `BASE_URL=http://localhost:3029 make portal-api-smoke`: pass.
+- `BASE_URL=http://localhost:3029 make portal-browser-qa`: pass, 15 pages, 1440/1280/1024/768/390/320, zero failures, zero warnings, zero console errors.
 
 ## 2026-06-06 - 21st.dev Scouting Pass
 
@@ -112,7 +143,7 @@ Future implementation requirements:
 | Large asset card wells | Contact-sheet tiles | Blocked/download state remains visible without fake media | Grid fits 320 px without horizontal overflow |
 | Plain upload file input | File preview workflow | Upload still enters Needs Review / Do Not Publish | Selected files can be removed before submit |
 | Soft review cards | Review cockpit rows + inspector | Evidence and pending-write state stay explicit | Mobile uses stacked cards without horizontal overflow |
-| Full 80-row review render | Review load-more gate | Queue truth remains visible while reducing mobile scroll before action work | First 24 loaded rows show by default; selected row remains reachable; load-more is explicit |
+| Full 80-row review render | Review load-more gate | Queue truth remains visible while reducing mobile scroll before action work | Desktop starts with 24 loaded rows; mobile starts with 8 compact cards after the selected asset/action panel; load-more is explicit |
 | One long review inspector list | Shared `DamTabs` inspector panels | Checklist, metadata, rights, history, and pending writes remain explicit without burying action evidence | Real tab semantics, arrow-key movement, and horizontal mobile scroll |
 | Asset detail `aria-pressed` section buttons | Shared `DamTabs` detail panels | Use, Source, Review, Files, and Related stay separated as trust record sections | Real tab semantics and keyboard movement replace loose buttons |
 | Direct request `mailto:` links | Focused `ReuseRequestDialog` | Original/master access and review requests clearly do not change ResourceSpace status or pending writes | Focus-trapped dialog, Escape/cancel, and explicit email-draft action |

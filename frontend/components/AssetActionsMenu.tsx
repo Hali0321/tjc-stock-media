@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, ExternalLink, Link as LinkIcon } from "lucide-react";
 import { DropdownActionMenu, type DropdownAction } from "@/components/DropdownActionMenu";
+import { toastSaveFailed, toastShareCopied } from "@/lib/tjc-toasts";
 import type { StockMediaAsset } from "@/lib/types";
 
 type AssetActionsMenuProps = {
@@ -18,13 +19,16 @@ export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace
   async function copyText(value: string, label: string) {
     if (!navigator.clipboard?.writeText) {
       setStatus("Copy unavailable in this browser.");
+      toastSaveFailed("Copy unavailable in this browser.");
       return;
     }
     try {
       await navigator.clipboard.writeText(value);
       setStatus(`${label} copied.`);
+      toastShareCopied(`${label} copied`);
     } catch {
       setStatus(`${label} could not be copied.`);
+      toastSaveFailed(`${label} could not be copied.`);
     }
   }
 

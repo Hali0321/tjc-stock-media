@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, FileLock2, Image as ImageIcon, Mail, Square, View } from "lucide-react";
 import { ReuseRequestDialog } from "@/components/ReuseRequestDialog";
+import { toastDownloadBlocked } from "@/lib/tjc-toasts";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
 import { downloadState } from "@/lib/presentation";
@@ -29,11 +30,27 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   ];
 
   return (
-    <section className="min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Download approved copy">
+    <section className="min-w-0 rounded-[1.35rem] border border-[#d4ded7] bg-white p-4 shadow-[0_16px_38px_rgba(35,53,111,.055)]" aria-label="Download approved copy">
       <div className="mb-3">
-        <h2 className="text-lg font-black">Reuse safely</h2>
+        <h2 className="text-lg font-black">Download and requests</h2>
         <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{state.panelLabel}</p>
       </div>
+      {state.approvedCopy.allowed ? (
+        <a className="mb-3 flex min-h-14 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,61,46,.2)] transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
+          <Download size={17} strokeWidth={1.8} aria-hidden="true" />
+          Download approved web copy
+        </a>
+      ) : (
+        <button
+          className="mb-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-full border border-[#dfbd73] bg-[#fff4d6] px-4 text-sm font-black text-[#6f4608]"
+          type="button"
+          aria-disabled="true"
+          onClick={() => toastDownloadBlocked(state.panelLabel, { label: "View why" })}
+        >
+          <FileLock2 size={17} strokeWidth={1.8} aria-hidden="true" />
+          Download blocked
+        </button>
+      )}
       {state.approvedCopy.allowed && health.missing.length ? (
         <div className="mb-3 rounded-lg border border-[#ead6a8] bg-[#fffaf0] p-3 text-sm leading-snug text-[#725216]">
           Download is allowed by approval status, but production use still has metadata warnings: {health.missing.join(", ")}.
@@ -60,17 +77,17 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             </>
           );
           return option.available ? (
-            <a key={option.label} className="grid min-h-16 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-[#8fc9a9] bg-[#f7fbf8] p-3 text-[#164d34] transition hover:bg-[#eef7f1] active:translate-y-px" href={downloadHref}>
+            <a key={option.label} className="grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-2xl border border-[#8fc9a9] bg-[#f7fbf8] p-3 text-[#164d34] transition hover:bg-[#eef7f1] active:translate-y-px" href={downloadHref}>
               {row}
             </a>
           ) : (
-            <button key={option.label} className={cn("grid min-h-16 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-tjc-line bg-white p-3 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#dfbd73] bg-[#fffaf0] text-[#6f4608]")} type="button" disabled>
+            <button key={option.label} className={cn("grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-2xl border border-tjc-line bg-white p-3 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#dfbd73] bg-[#fffaf0] text-[#6f4608]")} type="button" disabled>
               {row}
             </button>
           );
         })}
       </div>
-      <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#6f4608]">
+      <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#6f4608]">
         <FileLock2 size={18} strokeWidth={1.8} aria-hidden="true" />
         <div>
           <strong className="block font-semibold">Original/master restricted</strong>
@@ -78,15 +95,15 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
         </div>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-lg border border-[#c5d1c9] bg-white px-3 text-center text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-center text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request original access
         </button>
-        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-lg border border-[#c5d1c9] bg-white px-3 text-center text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-center text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Request review
         </button>
-        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-lg border border-[#c5d1c9] bg-white px-3 text-center text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
+        <button className="inline-flex min-h-10 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-center text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
           <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
           Ask media coworker
         </button>

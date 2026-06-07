@@ -41,3 +41,5 @@ export function StatusBanner({ tone = "info", title, children, icon, className }
     </section>
   );
 }
+
+export const StateBanner = StatusBanner;
