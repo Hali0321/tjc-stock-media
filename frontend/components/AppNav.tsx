@@ -27,7 +27,7 @@ export function AppNav({ role }: { role: DemoRole }) {
 
   return (
     <nav
-      className="tubelight-nav flex w-full min-w-0 items-center gap-1 rounded-2xl border border-[#b9c8bf] bg-white/94 p-1 shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_12px_28px_rgba(35,53,111,.06)] backdrop-blur md:justify-center md:rounded-full"
+      className="tubelight-nav fixed bottom-3 left-1/2 z-40 flex w-[calc(100%-1.5rem)] max-w-[25rem] -translate-x-1/2 items-center gap-1 rounded-[1.65rem] border border-[#d5dfda] bg-white/93 p-1.5 shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_24px_70px_rgba(17,24,39,.18)] backdrop-blur-xl md:static md:z-auto md:w-max md:max-w-none md:translate-x-0 md:justify-center md:rounded-full md:border-[#d6dfd9] md:bg-white/82 md:p-1 md:shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_20px_55px_rgba(13,55,47,.10)]"
       aria-label="Primary navigation"
     >
       {visibleItems.map((item) => {
@@ -39,16 +39,23 @@ export function AppNav({ role }: { role: DemoRole }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "relative inline-flex min-h-10 min-w-0 flex-1 items-center justify-center gap-0.5 rounded-xl px-1.5 text-[11px] font-bold text-[#3f4741] transition duration-200 hover:bg-[#f2f6f2] hover:text-tjc-evergreen active:translate-y-px sm:shrink-0 sm:flex-none sm:gap-1.5 sm:px-3 sm:text-sm md:rounded-full",
-              isActive && "bg-[#e6f0eb] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(15,61,46,.08)]",
+              "group relative inline-flex min-h-[4.1rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-visible rounded-[1.25rem] px-1.5 text-[11px] font-black text-[#5b655f] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:text-tjc-evergreen active:scale-[.98] md:min-h-14 md:flex-none md:flex-row md:gap-2 md:rounded-full md:px-7 md:text-base",
+              isActive && "text-tjc-evergreen",
               utility && "border-l border-tjc-line"
             )}
             title={item.label}
             aria-current={isActive ? "page" : undefined}
           >
-            {isActive ? <span className="absolute inset-x-3 bottom-1 h-1 rounded-full bg-tjc-blue" aria-hidden="true" /> : null}
-            <Icon className="relative z-10 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden="true" size={12} strokeWidth={1.8} />
-            <span className="nav-label relative z-10 whitespace-nowrap">{item.label}</span>
+            {isActive ? (
+              <>
+                <span className="absolute inset-0 rounded-[1.25rem] bg-[#e8f6f2] shadow-[inset_0_0_0_1px_rgba(13,121,112,.08),0_18px_34px_rgba(7,132,121,.16)] md:rounded-full" aria-hidden="true" />
+                <span className="absolute -top-1 left-1/2 h-1.5 w-10 -translate-x-1/2 rounded-b-full bg-[#087c75] shadow-[0_0_18px_rgba(8,124,117,.55)] md:-top-2" aria-hidden="true" />
+                <span className="absolute left-1/2 top-0 h-14 w-20 -translate-x-1/2 rounded-full bg-[#19b9a8]/14 blur-xl md:h-16 md:w-28" aria-hidden="true" />
+                <span className="absolute bottom-2 h-1 w-9 rounded-full bg-[#12a294] md:bottom-2.5" aria-hidden="true" />
+              </>
+            ) : null}
+            <Icon className="relative z-10 h-5 w-5 shrink-0 transition duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:-translate-y-0.5 md:h-[18px] md:w-[18px]" aria-hidden="true" strokeWidth={1.9} />
+            <span className="nav-label relative z-10 whitespace-nowrap leading-none">{item.label}</span>
           </Link>
         );
       })}
