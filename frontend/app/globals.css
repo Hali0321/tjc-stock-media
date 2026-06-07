@@ -256,6 +256,13 @@ textarea:focus-visible {
   display: none;
 }
 
+.command-search-input,
+.command-search-input:focus,
+.command-search-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .dam-app-header {
   border-bottom: 0;
   background:

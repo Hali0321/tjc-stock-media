@@ -56,7 +56,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               </a>
             ) : null}
             <label className="flex min-w-0 items-center gap-2">
-              <span id="demo-role-label" className="hidden text-xs font-medium text-tjc-muted sm:inline">Demo role</span>
+              <span id="demo-role-label" className="hidden text-xs font-medium text-tjc-muted 2xl:inline">Demo role</span>
               <select
                 aria-labelledby="demo-role-label"
                 value={role}
