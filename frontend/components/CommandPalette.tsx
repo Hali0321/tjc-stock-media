@@ -199,7 +199,7 @@ export function CommandPalette() {
     <>
       <button
         type="button"
-        className="group hidden min-h-12 w-12 items-center justify-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/92 px-2 text-left text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_16px_40px_rgba(13,55,47,.075)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:border-[#a8c7bb] hover:bg-[#f7fbf8] hover:shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_24px_54px_rgba(13,55,47,.12)] active:scale-[.985] md:inline-flex"
+        className="group hidden min-h-11 w-11 items-center justify-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/90 px-0 text-left text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_16px_40px_rgba(13,55,47,.075)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:border-[#a8c7bb] hover:bg-[#f7fbf8] hover:shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_24px_54px_rgba(13,55,47,.12)] active:scale-[.985] lg:inline-flex 2xl:w-auto 2xl:px-3"
         onClick={openPalette}
         aria-label="Open command palette"
         aria-keyshortcuts="Meta+K Control+K"
@@ -207,11 +207,12 @@ export function CommandPalette() {
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf7f3] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(13,121,112,.08)] transition duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:bg-[#dff3ed]">
           <Search size={16} strokeWidth={1.9} aria-hidden="true" />
         </span>
-        <span className="sr-only">Command</span>
+        <span className="hidden text-sm font-black text-tjc-ink 2xl:inline">Command</span>
+        <kbd className="hidden shrink-0 rounded-lg border border-[#c7d2ca] bg-[#f4f7f4] px-1.5 py-0.5 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset] 2xl:inline">⌘K</kbd>
       </button>
       <button
         type="button"
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d3ded7] bg-white px-3 text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f8f4] active:scale-[.98] md:hidden"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d3ded7] bg-white px-3 text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f8f4] active:scale-[.98] lg:hidden"
         onClick={openPalette}
         aria-label="Open command palette"
         aria-keyshortcuts="Meta+K Control+K"

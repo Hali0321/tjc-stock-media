@@ -138,7 +138,7 @@ Future implementation requirements:
 
 | Old pattern | New pattern | Safety impact | Mobile/accessibility impact |
 |---|---|---|---|
-| Inline primary nav inside app shell | Maintained `AppNav` | Keeps Admin role-gated and core workflows clear | Screen-reader labels preserved when mobile text hides |
+| Flat mixed-control top nav | Centered Tubelight `AppNav` plus secondary Command/Guide/role rail | Keeps core DAM workflows primary while Admin/ResourceSpace remain role-aware through console/menu/commands | `aria-current` preserved; 768px and below use top brand/menu plus fixed bottom nav |
 | Generic saved view cards | Compact display cards | Counts and reuse states stay truthful | Touch targets remain compact but reachable |
 | Large asset card wells | Contact-sheet tiles | Blocked/download state remains visible without fake media | Grid fits 320 px without horizontal overflow |
 | Plain upload file input | File preview workflow | Upload still enters Needs Review / Do Not Publish | Selected files can be removed before submit |

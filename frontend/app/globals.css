@@ -274,11 +274,13 @@ textarea:focus-visible {
   border: 1px solid rgba(210, 220, 214, .92);
   border-radius: 1.5rem;
   background:
-    radial-gradient(circle at 32% 0%, rgba(21, 185, 168, .10), transparent 22%),
+    radial-gradient(circle at 50% 0%, rgba(21, 185, 168, .16), transparent 28%),
+    radial-gradient(circle at 15% 10%, rgba(0, 125, 164, .08), transparent 18%),
     linear-gradient(180deg, rgba(255,255,255,.96), rgba(250,252,249,.92));
   box-shadow:
     0 1px 0 rgba(255,255,255,.96) inset,
-    0 30px 80px rgba(17, 24, 39, .075);
+    0 30px 80px rgba(17, 24, 39, .075),
+    0 24px 70px rgba(13, 121, 112, .065);
 }
 
 .dam-soft-card {
