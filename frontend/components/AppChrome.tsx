@@ -50,7 +50,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <span className="hidden 2xl:inline">Guide</span>
             </Link>
             {role === "DAM Admin" ? (
-              <a className="hidden min-h-11 items-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/90 px-3 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_14px_32px_rgba(25,34,29,.06)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:bg-[#f3f8f4] active:scale-[.985] 2xl:inline-flex" href="http://localhost:8088" target="_blank" rel="noreferrer">
+              <a className="hidden min-h-11 items-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/90 px-3 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_14px_32px_rgba(25,34,29,.06)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:bg-[#f3f8f4] active:scale-[.985] min-[1800px]:inline-flex" href="http://localhost:8088" target="_blank" rel="noreferrer">
                 <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
                 <span>ResourceSpace</span>
               </a>
