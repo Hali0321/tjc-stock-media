@@ -168,10 +168,10 @@ export function MediaPreviewPanel({
         </div>
         {variants.length ? (
           <div className="flex flex-wrap gap-2" aria-label="Preview variants">
-            {variants.map((variant) => (
+            {variants.map((variant, index) => (
               <span
                 className={cn("rounded-full border px-2.5 py-1 text-[11px] font-black", variant.active ? "border-[#0f3d2e] bg-[#e6f0eb] text-tjc-evergreen" : "border-[#d6dfd8] bg-white text-tjc-muted")}
-                key={variant.label}
+                key={`${variant.label}-${variant.src || "variant"}-${index}`}
               >
                 {variant.label}
               </span>

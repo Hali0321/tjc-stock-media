@@ -124,6 +124,34 @@ async function inspectPage(page, expected) {
         right: el.getBoundingClientRect().right
       }))
       .slice(0, 10);
+    const headerControls = [...document.querySelectorAll("header a, header button, header select, header [data-header-control]")]
+      .filter((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && rect.bottom > 0;
+      })
+      .map((el, index) => {
+        const rect = el.getBoundingClientRect();
+        return {
+          index,
+          label: (el.textContent || el.getAttribute("aria-label") || el.tagName).trim().replace(/\s+/g, " ").slice(0, 80),
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom
+        };
+      });
+    const headerOverlaps = [];
+    for (let index = 0; index < headerControls.length; index += 1) {
+      for (let next = index + 1; next < headerControls.length; next += 1) {
+        const a = headerControls[index];
+        const b = headerControls[next];
+        const xOverlap = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const yOverlap = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (xOverlap > 2 && yOverlap > 2) {
+          headerOverlaps.push(`${a.label || a.index} <> ${b.label || b.index}`);
+        }
+      }
+    }
     return {
       expected: expectedPage,
       title: document.title,
@@ -135,6 +163,7 @@ async function inspectPage(page, expected) {
       overflowX: doc.scrollWidth > doc.clientWidth + 1,
       brokenImages,
       clippedControls,
+      headerOverlaps: headerOverlaps.slice(0, 10),
     hasBlockedDownload: visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs portal review"),
       hasReviewBlocker: visibleText.includes("ResourceSpace API write mapping is not configured yet"),
       hasViewerReviewBlock: visibleText.includes("Review workbench requires reviewer access"),
@@ -158,6 +187,7 @@ for (const width of qaViewports) {
     if (!response || response.status() >= 500) failures.push(`${item.label} ${width}: HTTP ${response?.status()}`);
     if (state.overflowX) failures.push(`${item.label} ${width}: horizontal overflow ${state.scrollWidth}/${state.clientWidth}`);
     if (state.clippedControls.length) failures.push(`${item.label} ${width}: clipped controls ${JSON.stringify(state.clippedControls)}`);
+    if (state.headerOverlaps.length) failures.push(`${item.label} ${width}: header controls overlap ${JSON.stringify(state.headerOverlaps)}`);
     if (state.missingTabControls.length) failures.push(`${item.label} ${width}: tab aria-controls missing targets ${state.missingTabControls.join(", ")}`);
     if (state.brokenImages.length) warnings.push(`${item.label} ${width}: broken images ${state.brokenImages.join(", ")}`);
     if (item.label === "detail-approved-viewer" && !state.hasBlockedDownload) failures.push(`${item.label} ${width}: portal-ready blocker missing`);

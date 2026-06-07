@@ -49,7 +49,7 @@ export function AppNav({ role }: { role: DemoRole }) {
               <>
                 <span className="absolute inset-0 rounded-[1.25rem] bg-[#e8f6f2] shadow-[inset_0_0_0_1px_rgba(13,121,112,.08),0_18px_34px_rgba(7,132,121,.16)] lg:rounded-full" aria-hidden="true" />
                 <span className="absolute -top-1 left-1/2 h-1.5 w-11 -translate-x-1/2 rounded-t-full bg-[#087c75] shadow-[0_0_22px_rgba(8,124,117,.65)] lg:-top-2" aria-hidden="true" />
-                <span className="absolute left-1/2 top-0 h-14 w-20 -translate-x-1/2 rounded-full bg-[#19b9a8]/18 blur-xl lg:h-16 lg:w-32" aria-hidden="true" />
+                <span className="absolute left-1/2 top-0 h-12 w-16 -translate-x-1/2 rounded-full bg-[#19b9a8]/16 blur-xl lg:h-14 lg:w-24" aria-hidden="true" />
                 <span className="absolute bottom-2 h-1 w-10 rounded-full bg-[#12a294] shadow-[0_0_14px_rgba(18,162,148,.45)] lg:bottom-2.5" aria-hidden="true" />
               </>
             ) : null}

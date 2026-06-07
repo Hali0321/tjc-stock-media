@@ -41,6 +41,7 @@ const commands: Command[] = [
 
   { id: "start-upload", group: "Workflow", label: "Start upload intake", hint: "Queue new media as Needs Review / Do Not Publish", href: "/upload", keywords: "start upload intake contributor draft submit", icon: UploadCloud, shortcut: "U" },
   { id: "open-review-queue", group: "Workflow", label: "Open review queue", hint: "Inspect assets that need reviewer evidence", href: "/review?queue=pending", keywords: "open review queue pending evidence", icon: ListFilter, shortcut: "R", reviewerOnly: true },
+  { id: "children-youth-queue", group: "Workflow", label: "Open children/youth queue", hint: "Review assets with children or youth visibility risk", href: "/review?queue=children-youth", keywords: "children youth minors queue review people visibility", icon: UserRoundSearch, shortcut: "C Y", reviewerOnly: true },
   { id: "pending-writes", group: "Workflow", label: "Show pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, shortcut: "P", adminOnly: true, tag: "Admin" },
   { id: "request-access", group: "Workflow", label: "Request access", hint: "Review/original access stays a request, not a ResourceSpace write", href: "/guide", keywords: "request access original review coworker permission", icon: HelpCircle, shortcut: "A" }
 ];

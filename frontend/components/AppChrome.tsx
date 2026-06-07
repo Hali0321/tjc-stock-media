@@ -18,8 +18,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="grain-overlay" aria-hidden="true" />
       <header className="dam-app-header sticky top-0 z-40 px-3 py-3 md:px-6 md:py-5">
-        <div className="dam-app-shell relative mx-auto grid min-h-16 w-full max-w-[1760px] gap-3 px-4 py-3 lg:grid-cols-[minmax(12rem,auto)_1fr_minmax(8rem,auto)] lg:items-center lg:px-5 xl:grid-cols-[minmax(15rem,auto)_1fr_minmax(15rem,auto)]">
-          <div className="flex min-w-0 items-center justify-between gap-3 lg:col-start-1">
+        <div className="dam-app-shell relative mx-auto flex min-h-16 w-full max-w-[1760px] items-center justify-between gap-3 px-4 py-3 lg:px-5 xl:gap-4">
+          <div className="flex min-w-0 shrink-0 items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3 lg:max-w-[13.5rem] xl:max-w-none" aria-label="TJC Stock Media home">
               <span className="dam-brand-mark grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] text-[10px] font-black text-white md:h-[3.25rem] md:w-[3.25rem]">TJC</span>
               <span className="min-w-0">
@@ -39,30 +39,36 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
-          <div className="hidden lg:absolute lg:left-1/2 lg:top-1/2 lg:block lg:-translate-x-1/2 lg:-translate-y-1/2">
+          <div className="hidden shrink-0 lg:block">
             <AppNav role={role} />
           </div>
 
-          <div className="hidden min-w-0 items-center justify-end gap-2 lg:col-start-3 lg:flex xl:gap-3">
+          <div className="hidden min-w-0 shrink-0 items-center justify-end gap-2 lg:flex xl:gap-3">
             <CommandPalette />
             <Link href="/guide" className="hidden min-h-11 w-11 items-center justify-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/90 px-0 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_14px_32px_rgba(25,34,29,.06)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:bg-[#f3f8f4] active:scale-[.985] lg:inline-flex 2xl:w-auto 2xl:px-3" aria-label="Open usage guide">
               <HelpCircle aria-hidden="true" size={16} strokeWidth={1.8} />
               <span className="hidden 2xl:inline">Guide</span>
             </Link>
-            <label className="hidden min-w-0 items-center gap-2 xl:flex">
+            {role === "DAM Admin" ? (
+              <a className="hidden min-h-11 items-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/90 px-3 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_14px_32px_rgba(25,34,29,.06)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:bg-[#f3f8f4] active:scale-[.985] 2xl:inline-flex" href="http://localhost:8088" target="_blank" rel="noreferrer">
+                <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
+                <span>ResourceSpace</span>
+              </a>
+            ) : null}
+            <label className="hidden shrink-0 items-center gap-2 xl:flex">
               <span id="demo-role-label" className="sr-only">Demo role</span>
               <select
                 aria-labelledby="demo-role-label"
                 value={role}
                 onChange={(event) => setRole(event.target.value as typeof role)}
-                className="min-h-10 max-w-[9.25rem] rounded-[.9rem] border border-[#d8e0da] bg-[#fbfdfb]/80 px-3 text-sm font-semibold text-[#2f3b34] shadow-[0_1px_0_rgba(255,255,255,.8)_inset]"
+                className="min-h-10 w-[9.25rem] rounded-[.9rem] border border-[#d8e0da] bg-[#fbfdfb]/80 px-3 text-sm font-semibold text-[#2f3b34] shadow-[0_1px_0_rgba(255,255,255,.8)_inset]"
               >
                 {roles.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
             </label>
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#f4f7f4] to-[#d8e1dd] text-sm font-black text-tjc-ink shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">M</span>
+            <span data-header-control="avatar" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#f4f7f4] to-[#d8e1dd] text-sm font-black text-tjc-ink shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">M</span>
           </div>
           {mobileMenuOpen ? (
             <div
