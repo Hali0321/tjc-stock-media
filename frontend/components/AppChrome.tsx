@@ -39,24 +39,24 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden md:absolute md:left-1/2 md:top-1/2 md:block md:-translate-x-1/2 md:-translate-y-1/2">
             <AppNav role={role} />
           </div>
 
           <div className="hidden min-w-0 items-center justify-end gap-3 md:flex">
-            <CommandPalette />
             <Link href="/guide" className="hidden min-h-10 items-center gap-2 rounded-xl border border-[#c1cec5] bg-white/95 px-3 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_10px_24px_rgba(25,34,29,.055)] transition hover:bg-[#f3f8f4] active:translate-y-px md:inline-flex" aria-label="Open usage guide">
               <HelpCircle aria-hidden="true" size={16} strokeWidth={1.8} />
               <span>Guide</span>
             </Link>
             {role === "DAM Admin" ? (
-              <a className="hidden min-h-10 items-center gap-2 rounded-xl border border-[#c1cec5] bg-white/95 px-3 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_10px_24px_rgba(25,34,29,.055)] transition hover:bg-[#f3f8f4] active:translate-y-px lg:inline-flex" href="http://localhost:8088" target="_blank" rel="noreferrer">
+              <a className="hidden min-h-10 items-center gap-2 rounded-xl border border-[#c1cec5] bg-white/95 px-3 text-sm font-bold text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_10px_24px_rgba(25,34,29,.055)] transition hover:bg-[#f3f8f4] active:translate-y-px 2xl:inline-flex" href="http://localhost:8088" target="_blank" rel="noreferrer">
                 <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
                 <span>ResourceSpace</span>
               </a>
             ) : null}
+            <CommandPalette />
             <label className="flex min-w-0 items-center gap-2">
-              <span id="demo-role-label" className="hidden text-xs font-medium text-tjc-muted 2xl:inline">Demo role</span>
+              <span id="demo-role-label" className="sr-only">Demo role</span>
               <select
                 aria-labelledby="demo-role-label"
                 value={role}
