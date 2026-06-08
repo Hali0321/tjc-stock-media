@@ -2,18 +2,18 @@
 
 ## Product Intent
 
-TJC Stock Media is a private enterprise DAM portal for church media operations. The first impression should be: search approved role-safe media, understand trust lanes, submit intake for review, resolve governance work, and keep ResourceSpace as source of truth.
+TJC Stock Media is a governed ministry media operations portal and ResourceSpace companion for church media. The first impression should be: search approved role-safe media, understand trust lanes, submit intake for review, resolve governance work, and keep ResourceSpace/Shared Drive truth visible.
 
 North Star:
 
 ```text
-A TJC user can find a rights-safe approved media asset in under 60 seconds and understand exactly what use is allowed.
+A TJC user can find a rights-safe approved media asset in under 60 seconds and understand exactly what use is allowed, blocked, or waiting on evidence.
 ```
 
 ## Visual Direction
 
-- Conservative enterprise DAM as the base: table-first Library, three-pane Review, governed Collections, intake sessions, and Governance/Ops console.
-- Modern media operations patterns are borrowed only for Review and Governance.
+- Hybrid ministry DAM as the base: enterprise metadata/permission/audit spine, ResourceSpace companion truth layer, and operations workbenches for Intake, Review, and Governance.
+- Modern media operations patterns are borrowed only where queues, evidence, discrepancy work, and governance need them.
 - The old warm/card/photo-first style is no longer sacred. Visual design should feel mature, precise, operational, and trustworthy.
 - Cool-neutral operations surfaces, deep charcoal text, evergreen accent, restrained amber/red safety states.
 - Tailwind v4 utility system with a small global token/base layer.
@@ -22,7 +22,7 @@ A TJC user can find a rights-safe approved media asset in under 60 seconds and u
 - Primary modes are Library, Collections, Intake, Review, and Governance. Guide, command palette, ResourceSpace, and diagnostics stay utility/role-aware.
 - Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
-- Library defaults to a table/list because enterprise DAM work depends on workflow, distribution, rights, people/release, availability, source, and review state.
+- Library defaults are role-aware: Viewers get simplified safe results; Reviewers and DAM Admins get operations tables because workflow, distribution, rights, people/release, sensitivity, availability, source, and sync state matter.
 - Grid/cards remain optional for visual browsing. Each card must answer one question: can I use this or not?
 - Use less explanatory text. Thumbnails, badges, filters, and clear actions should carry the product.
 - Asset detail includes moment-of-use guidance: best used for, please avoid, caption suggestion, credit requirement, and ministry sensitivity.
@@ -37,7 +37,7 @@ Dribbble DAM density
 + restrained operational surfaces
 + Inter/Noto typography
 + ResourceSpace truth layer
-+ TJC safety rules
++ TJC ministry governance rules
 ```
 
 Reference patterns, adapted without copying:
@@ -56,6 +56,7 @@ Reference patterns, adapted without copying:
 - PhotoShelter: albums/events, source attribution, contributor/reviewer separation, and permission-aware downloads.
 - Bynder / Canto / AEM Assets: metadata facets, governance, review lifecycle, renditions, and reporting.
 - ResourceSpace: source-of-truth backend, workflow state, metadata, permissions, admin settings, and asset IDs.
+- Google Shared Drive: master-original custody and source provenance, never broad Viewer original access.
 - Notion: calm documentation and guide readability.
 - Airtable / Linear: dense workflow UI, clear actions, and table/list/detail rhythm.
 
@@ -77,6 +78,8 @@ Avoided:
 - developer console look
 - ResourceSpace clone
 - second metadata UI
+- collections as permission truth
+- Drive membership as original-access workflow
 
 ## Safety UX
 

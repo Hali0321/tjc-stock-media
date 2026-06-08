@@ -2,18 +2,18 @@
 
 ## Purpose
 
-TJC Stock Media is a private church-use enterprise DAM portal for safely finding, reviewing, approving, governing, distributing, and auditing ministry media.
+TJC Stock Media is a governed ministry media operations portal: a private enterprise-DAM companion above ResourceSpace and Google Shared Drive for safely finding, reviewing, approving, governing, distributing, and auditing church media.
 
 The product sits above ResourceSpace and Google Shared Drive:
 
 - ResourceSpace is the source of truth for DAM records, metadata, workflow state, review status, permissions, and approved asset metadata.
 - Google Shared Drive keeps master originals and long-term source storage.
-- TJC Stock Media is the role-aware portal for safe reuse, contributor intake, reviewer decisions, governance, and operational visibility.
+- TJC Stock Media is the role-aware policy overlay for safe reuse, contributor intake, reviewer decisions, governance, discrepancy handling, request workflows, and operational visibility.
 
 North Star:
 
 ```text
-A TJC user can find a rights-safe approved ministry media asset in under 60 seconds and understand exactly what use is allowed.
+A TJC user can find a rights-safe approved ministry media asset in under 60 seconds and understand exactly what use is allowed, what is blocked, and what evidence supports the decision.
 ```
 
 ## Non-goals
@@ -31,6 +31,7 @@ TJC Stock Media is not:
 - Replacement for Google Shared Drive master originals.
 - Replacement for ResourceSpace as source of truth.
 - Decorative church media showcase.
+- Generic enterprise DAM clone.
 
 ## Primary Users
 
@@ -71,6 +72,8 @@ Manages launch readiness, ResourceSpace mapping, taxonomy, integrations, pending
 8. Upload never publishes. Upload submits for review only.
 9. Unsafe Viewer downloads remain blocked.
 10. Original/master access remains restricted.
+11. Disagreements between portal state, ResourceSpace, and Shared Drive become visible discrepancy work, not silent UI overrides.
+12. Collections, campaigns, packages, and saved views never become permission truth.
 
 ## Lifecycle Model
 
@@ -79,6 +82,15 @@ Enterprise DAM lifecycle:
 ```text
 ingest -> enrich metadata -> review -> approve/use -> distribute internally -> audit/archive
 ```
+
+Ministry governance overlays every lifecycle step:
+
+- Children/youth visibility and consent evidence.
+- Pastoral or sensitive worship context.
+- Sermon, teaching, music, and third-party design restrictions.
+- Local-church-only versus church-wide versus internet-public scope.
+- Translation or multilingual metadata needs.
+- Re-review date, retention, archive, and legal-hold needs.
 
 Minimum states:
 
@@ -98,6 +110,8 @@ Minimum states:
 - Pending ResourceSpace write
 - ResourceSpace write failed
 - Synced
+- Discrepancy open
+- Re-review required
 
 ## Permission Model
 
@@ -107,6 +121,7 @@ Permissions are role-based and server-enforced.
 - Contributor sees intake drafts, submitted status, missing-info requests, and reviewer feedback.
 - Reviewer sees review queues, evidence, blocker detail, decision history, and pending-write state.
 - DAM Admin sees sync, mapping, ResourceSpace IDs, field coverage, integration health, audit, and launch gates.
+- Original requests are formal request objects, not Drive membership shortcuts or informal email approval.
 
 Frontend hiding is not permission enforcement. API routes must enforce role policy.
 
@@ -127,8 +142,26 @@ Every reusable asset must answer:
 - When was it reviewed?
 - What credit/source is required?
 - What usage should be avoided?
+- Is pastoral or sensitive ministry context present?
+- Is re-review required by date?
 
 Trust comes from evidence, not visual softness.
+
+## Ministry Risk Controls
+
+High-risk media requires explicit fields and review gates:
+
+- Children/youth identifiable.
+- Guardian, organizer, or ministry-owner consent evidence located.
+- Sacramental, worship, pastoral, counseling, prayer, illness, grief, or private-setting context.
+- Music, sermon, teaching, or third-party design rights present.
+- Web/social allowed.
+- Slides/newsletter/internal-only allowed.
+- Local-church-only.
+- Translation or multilingual label available.
+- Re-review required by date.
+
+These controls are first-class governance facts. They are not buried in free-text notes.
 
 ## Status Lanes
 
@@ -161,6 +194,10 @@ Verified, Incomplete, Conflict, ResourceSpace, Shared Drive, Manual intake, Dupl
 ### Sync
 
 Read-only export, Pending write, Failed, Retrying, Synced, Mapping missing.
+
+### Sensitivity
+
+General ministry, Children/youth, Pastoral/private, Sacramental/worship, Music/teaching rights, Third-party design, Re-review required.
 
 ## Core Modes
 

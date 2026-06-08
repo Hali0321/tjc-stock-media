@@ -2,7 +2,7 @@
 
 North Star: a TJC user can find, trust, request, or review a ministry media asset without confusing demo state with final ResourceSpace truth.
 
-This repo sets up a local ResourceSpace DAM prototype and a private TJC-facing Next.js portal for True Jesus Church stock media operations. Google Shared Drive remains the master-original warehouse. ResourceSpace is the source of truth for assets, metadata, search, rights review, and approval fields. The Next.js portal is the governed workbench for Library, Intake, Review, Collections, Asset Detail, and Governance; it does not replace ResourceSpace or become a second DAM.
+This repo sets up a local ResourceSpace DAM prototype and a private TJC-facing Next.js portal for True Jesus Church ministry media governance. Google Shared Drive remains the master-original warehouse. ResourceSpace is the source of truth for assets, metadata, search, rights review, and approval fields. The Next.js portal is the governed workbench for Library, Intake, Review, Collections, Asset Detail, and Governance; it does not replace ResourceSpace or become a second DAM.
 
 ```text
 Legacy sources
@@ -151,7 +151,7 @@ Open TJC Stock Media portal:
 
 Latest UI pass: 2026-06-08 enterprise DAM architecture pass over the launch-polish baseline.
 
-The portal now targets a conservative enterprise DAM model: private media operations shell, table-first Library, governed internal Collections, contributor Intake sessions, three-pane Review workbench, Asset Detail trust record, Governance/Ops console, command palette, unified state/toast primitives, and user-facing Guide flows.
+The portal now targets a hybrid ministry DAM model: enterprise metadata/permission/audit spine, ResourceSpace companion truth layer, private media operations shell, role-aware Library results, governed internal Collections, contributor Intake sessions, Review workbench, Asset Detail trust record, Governance/Ops console, command palette, unified state/toast primitives, and user-facing Guide flows.
 
 Safety remains unchanged: ResourceSpace is still source of truth, Google Shared Drive keeps master originals, pending review writes are local/not final, uploads stay `Needs Review / Do Not Publish`, unsafe Viewer downloads remain blocked, and original/master access remains restricted.
 

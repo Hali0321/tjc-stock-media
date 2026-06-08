@@ -11,6 +11,7 @@ import {
   assetNeedsStaleApprovalReview,
   buildDuplicateGroupCounts
 } from "@/lib/asset-governance";
+import { auditLogDiagnostics } from "@/lib/audit-log";
 import { getActiveMediaSource } from "@/lib/media-source";
 import { hasResourceSpaceApiConfig } from "@/lib/env";
 import { pendingReviewWriteDiagnostics } from "@/lib/pending-review-writes";
@@ -249,11 +250,13 @@ function buildActionBacklog({
 function buildIntegrationReadiness({
   status,
   approvedPublic,
-  portalReady
+  portalReady,
+  auditEvents
 }: {
   status: Awaited<ReturnType<typeof getActiveMediaSource>>["status"];
   approvedPublic: number;
   portalReady: number;
+  auditEvents: ReturnType<typeof auditLogDiagnostics>;
 }): IntegrationReadinessItem[] {
   const pending = pendingReviewWriteDiagnostics();
   const apiConfigured = hasResourceSpaceApiConfig();
@@ -280,6 +283,15 @@ function buildIntegrationReadiness({
       ready: pending.count === 0,
       owner: "DAM Admin",
       detail: `${pending.count.toLocaleString()} pending write${pending.count === 1 ? "" : "s"}. Last attempt: ${pending.lastAttemptAt || "none"}. Last error: ${pending.lastError || "none"}.`
+    },
+    {
+      id: "audit-log",
+      label: "Portal audit log",
+      ready: auditEvents.count > 0,
+      owner: "DAM Admin",
+      detail: auditEvents.count
+        ? `${auditEvents.count.toLocaleString()} recent audit event${auditEvents.count === 1 ? "" : "s"}. Latest event: ${auditEvents.latestAt || "none"}.`
+        : "No local portal audit events recorded yet. Production still needs durable identity-backed audit storage."
     },
     {
       id: "auth",
@@ -341,6 +353,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
   const duplicateCandidates = assets.filter((asset) => assetIsDuplicateCandidate(asset, duplicateGroupCounts)).length;
   const renditionGaps = assets.filter(assetHasRenditionGap).length;
   const staleApprovals = assets.filter((asset) => assetNeedsStaleApprovalReview(asset)).length;
+  const auditLog = auditLogDiagnostics();
 
   const sourceCoverage = 100 - ratio(missingSource, assetCount);
   const rightsCoverage = 100 - ratio(rightsReview, assetCount);
@@ -482,6 +495,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
       staleApprovals,
       duplicateCandidates
     }),
-    integrationReadiness: buildIntegrationReadiness({ status, approvedPublic, portalReady })
+    integrationReadiness: buildIntegrationReadiness({ status, approvedPublic, portalReady, auditEvents: auditLog }),
+    auditLog
   };
 }

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { NextRequest, NextResponse } from "next/server";
+import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById } from "@/lib/catalog";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
@@ -19,6 +20,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Asset not found", source }, { status: 404 });
   }
   if (!canDownloadApprovedCopy(role, asset)) {
+    appendAuditEvent({
+      type: "denied_download",
+      role,
+      assetId: asset.id,
+      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      status: "denied",
+      summary: "Approved copy download denied; original/master remains restricted.",
+      details: { source: source.label, sourceDetail: source.detail, assetStatus: asset.status }
+    });
     return NextResponse.json(
       {
         error: "Not approved for this role. Original/master files stay restricted.",
@@ -36,6 +46,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const bytes = fs.readFileSync(filePath);
     const safeTitle = asset.title.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 80) || `asset-${id}`;
+    appendAuditEvent({
+      type: "approved_download",
+      role,
+      assetId: asset.id,
+      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      status: "allowed",
+      summary: "Approved copy downloaded.",
+      details: { source: source.label, sourceDetail: source.detail, fileName: `${safeTitle}-approved-copy.jpg` }
+    });
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": "image/jpeg",

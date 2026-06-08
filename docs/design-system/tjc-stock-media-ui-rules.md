@@ -14,7 +14,7 @@ The UI must not lie about whether an asset is safe, approved, written, or downlo
 
 ## Design Thesis
 
-Private enterprise DAM interface, neutral operations surfaces, evergreen action color, dense but readable governance information, and minimal decorative motion. This is workflow software for repeated church media tasks, not a marketing site or photo gallery.
+Hybrid ministry DAM interface: enterprise metadata/permission/audit spine, ResourceSpace companion truth layer, neutral operations surfaces, evergreen action color, dense but readable governance information, and minimal decorative motion. This is workflow software for repeated church media tasks, not a marketing site or photo gallery.
 
 ## Token Rules
 
@@ -99,6 +99,23 @@ Never collapse safety into one vague badge. Enterprise DAM trust uses separate l
 | Availability | Download available, Preview only, Rendition missing, Original restricted, Preview unavailable |
 | Source | Verified, Incomplete, Conflict, ResourceSpace, Shared Drive, Manual intake, Duplicate candidate |
 | Sync | Read-only export, Pending write, Failed, Retrying, Synced, Mapping missing |
+| Sensitivity | General ministry, Children/youth, Pastoral/private, Sacramental/worship, Music/teaching rights, Third-party design, Re-review required |
+
+## Ministry Risk Rules
+
+The UI must expose ministry-specific risk as structured state, not vague notes.
+
+| Risk | Rule |
+|---|---|
+| Children/youth | Public-facing use requires explicit reviewer clearance and consent/organizer evidence |
+| Pastoral/private context | Requires senior or DAM Admin review before broad reuse |
+| Sacramental/worship context | Show usage scope and avoid casual repurposing |
+| Sermon/teaching/music rights | Treat as rights-specific evidence, not generic media metadata |
+| Third-party graphics | Block external reuse until ownership or license is verified |
+| Local-church-only | Do not relabel as church-wide or internet-public |
+| Re-review date | Surface expiry and route stale approvals to Governance |
+
+Collections, campaigns, packages, and saved views never grant permission. Asset-level policy still decides download and reuse.
 
 ## CTA Hierarchy
 

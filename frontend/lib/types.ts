@@ -265,6 +265,17 @@ export type IntegrationReadinessItem = {
   owner: "ResourceSpace" | "Google Shared Drive" | "DAM Admin" | "Reviewers";
 };
 
+export type AuditEventSummary = {
+  id: string;
+  type: string;
+  createdAt: string;
+  role: DemoRole;
+  status: "allowed" | "denied" | "blocked" | "queued" | "preview";
+  assetId?: string;
+  resourceSpaceId?: string;
+  summary: string;
+};
+
 export type AssetGovernancePassport = {
   score: number;
   decision: string;
@@ -314,6 +325,13 @@ export type DamReadinessResult = {
   portalPolicy: PortalPolicyCheck[];
   actionBacklog: AdminActionItem[];
   integrationReadiness: IntegrationReadinessItem[];
+  auditLog: {
+    count: number;
+    latestAt?: string;
+    denied: number;
+    queued: number;
+    recent: AuditEventSummary[];
+  };
 };
 
 export type SearchResult = {

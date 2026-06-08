@@ -24,7 +24,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <span className="dam-brand-mark grid h-9 w-9 shrink-0 place-items-center rounded-[.8rem] text-[9px] font-black text-white md:h-10 md:w-10">TJC</span>
               <span className="min-w-0">
                 <strong className="block truncate text-sm font-black tracking-[-.01em] md:text-base">TJC Stock Media</strong>
-                <small className="hidden max-w-[13rem] truncate text-[11px] font-semibold leading-snug text-tjc-muted lg:block">Private media operations DAM</small>
+                <small className="hidden max-w-[13rem] truncate text-[11px] font-semibold leading-snug text-tjc-muted lg:block">Ministry media governance</small>
               </span>
             </Link>
             <button

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById, getReviewQueue } from "@/lib/catalog";
 import { createPendingReviewWrite, latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview, normalizeRole } from "@/lib/permissions";
@@ -82,6 +83,14 @@ export async function POST(request: NextRequest) {
   const assetId = normalizeAssetId(body.id);
 
   if (!canReview(role)) {
+    appendAuditEvent({
+      type: "review_denied",
+      role,
+      assetId: assetId || undefined,
+      status: "denied",
+      summary: "Review action denied for role.",
+      details: { action: body.action || null, reason: "role-cannot-review" }
+    });
     return NextResponse.json({ error: "Reviewer controls are unavailable for this role." }, { status: 403 });
   }
   if (!assetId || !body.action) {
@@ -101,6 +110,15 @@ export async function POST(request: NextRequest) {
   const note = typeof body.notes === "string" ? body.notes : "";
   const missingEvidence = missingEvidenceFields(body.action, checklist, note);
   if (missingEvidence.length) {
+    appendAuditEvent({
+      type: "review_evidence_incomplete",
+      role,
+      assetId: asset.id,
+      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      status: "blocked",
+      summary: "Review decision blocked by missing evidence.",
+      details: { action: body.action, missingEvidence }
+    });
     return NextResponse.json({ error: "Review evidence is incomplete.", missingEvidence, source }, { status: 400 });
   }
 
@@ -113,6 +131,19 @@ export async function POST(request: NextRequest) {
     note,
     checklist,
     blockers: reuse.blockers.map((item) => item.label)
+  });
+  appendAuditEvent({
+    type: "review_pending_write_queued",
+    role,
+    assetId: asset.id,
+    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    status: "queued",
+    summary: "Review decision queued as local pending ResourceSpace write.",
+    details: {
+      action: body.action,
+      requestedStatus: action?.targetStatus || asset.status,
+      pendingWriteId: pending.id
+    }
   });
   return NextResponse.json(
     {

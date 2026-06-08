@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { appendAuditEvent } from "@/lib/audit-log";
 import { canUpload, normalizeRole } from "@/lib/permissions";
 import { normalizeTextField } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
@@ -10,6 +11,13 @@ export async function POST(request: NextRequest) {
   const form = await request.formData();
   const role = normalizeRole(String(form.get("role") || "Viewer"));
   if (!canUpload(role)) {
+    appendAuditEvent({
+      type: "upload_denied",
+      role,
+      status: "denied",
+      summary: "Upload intake denied for role.",
+      details: { reason: "role-cannot-submit" }
+    });
     return NextResponse.json({ error: "This role can search approved media but cannot upload." }, { status: 403 });
   }
 
@@ -61,6 +69,13 @@ export async function POST(request: NextRequest) {
 
   const largeFiles = files.filter((file) => file.size > LARGE_MEDIA_BYTES);
   if (largeFiles.length) {
+    appendAuditEvent({
+      type: "upload_submitted",
+      role,
+      status: "blocked",
+      summary: "Large-media intake routed away from browser upload.",
+      details: { eventName, fileCount: files.length, largeFileCount: largeFiles.length, sourceLink: sourceLink || null }
+    });
     return NextResponse.json({
       status: "large-media-intake",
       message: uploadDefaultState.largeMediaMessage,
@@ -77,6 +92,14 @@ export async function POST(request: NextRequest) {
     /unknown|needs review/i.test(usageRights) && "Usage rights unclear",
     /church-wide|public/i.test(approvalSuggestion) && (!/permission confirmed|tjc-owned/i.test(usageRights) || peopleVisible === "Unknown" || minorsVisible !== "No") && "Public approval suggestion conflicts with rights/people fields"
   ].filter((warning): warning is string => Boolean(warning));
+
+  appendAuditEvent({
+    type: "upload_submitted",
+    role,
+    status: "preview",
+    summary: "Intake validated for DAM review; no ResourceSpace write performed.",
+    details: { eventName, fileCount: files.length, sourceLink: sourceLink || null, reviewWarnings }
+  });
 
   return NextResponse.json({
     status: "validated",

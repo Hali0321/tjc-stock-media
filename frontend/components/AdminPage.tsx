@@ -691,6 +691,39 @@ export function AdminPage() {
         <p className="mt-1 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">
           Read-only portal audit signals. Pending writes are local queue records until ResourceSpace write mapping is configured.
         </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-4">
+          {[
+            ["events", data.auditLog.count],
+            ["denied/blocked", data.auditLog.denied],
+            ["queued writes", data.auditLog.queued],
+            ["latest", data.auditLog.latestAt ? new Date(data.auditLog.latestAt).toLocaleDateString() : "none"]
+          ].map(([label, value]) => (
+            <div className="rounded-lg border border-[#d6dfd8] bg-[#fbfcfa] p-3" key={label}>
+              <strong className="block text-lg font-black tabular-nums text-tjc-ink">{typeof value === "number" ? value.toLocaleString() : value}</strong>
+              <span className="mt-0.5 block text-xs font-semibold text-tjc-muted">{label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 overflow-hidden rounded-lg border border-[#d6dfd8]">
+          <div className="grid grid-cols-[11rem_8rem_minmax(0,1fr)_9rem] gap-3 border-b border-[#d6dfd8] bg-[#eef2f3] px-3 py-2 text-xs font-black uppercase text-[#536057]">
+            <span>Time</span><span>Status</span><span>Event</span><span>Asset</span>
+          </div>
+          {data.auditLog.recent.length ? data.auditLog.recent.map((event) => (
+            <div className="grid grid-cols-[11rem_8rem_minmax(0,1fr)_9rem] gap-3 border-b border-[#d6dfd8] px-3 py-3 text-sm last:border-b-0" key={event.id}>
+              <span className="text-xs font-semibold text-tjc-muted">{new Date(event.createdAt).toLocaleString()}</span>
+              <span className={cn("h-fit w-fit rounded border px-2 py-0.5 text-xs font-black", event.status === "allowed" || event.status === "preview" ? toneClass("ok") : event.status === "queued" ? toneClass("info") : toneClass("warn"))}>
+                {event.status}
+              </span>
+              <span className="min-w-0">
+                <strong className="block truncate text-tjc-ink">{event.type.replaceAll("_", " ")}</strong>
+                <span className="mt-0.5 block truncate text-xs font-semibold text-tjc-muted">{event.summary}</span>
+              </span>
+              <span className="truncate text-xs font-black text-tjc-muted">{event.resourceSpaceId || event.assetId || "system"}</span>
+            </div>
+          )) : (
+            <div className="px-3 py-4 text-sm font-semibold text-tjc-muted">No local portal audit events recorded yet.</div>
+          )}
+        </div>
         <div className="mt-3 divide-y divide-[#d6dfd8] rounded-lg border border-[#d6dfd8]">
           {data.integrationReadiness.map((item) => (
             <div className="grid gap-2 px-3 py-3 text-sm md:grid-cols-[12rem_10rem_minmax(0,1fr)]" key={`audit-${item.id}`}>
