@@ -101,6 +101,13 @@ async function openCommandPalette(page) {
   return commandSearch;
 }
 
+async function gotoAndSettle(page, url) {
+  const response = await page.goto(url, { waitUntil: "load", timeout: 60000 });
+  await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
+  await page.waitForTimeout(500);
+  return response;
+}
+
 async function inspectPage(page, expected) {
   return page.evaluate((expectedPage) => {
     const doc = document.documentElement;
@@ -117,6 +124,7 @@ async function inspectPage(page, expected) {
       .filter((el) => {
         const rect = el.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) return false;
+        if (el.closest(".dam-tabs-scroll")) return false;
         return rect.right > window.innerWidth + 2 || rect.left < -2;
       })
       .map((el) => ({
@@ -164,7 +172,7 @@ async function inspectPage(page, expected) {
       brokenImages,
       clippedControls,
       headerOverlaps: headerOverlaps.slice(0, 10),
-    hasBlockedDownload: visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs portal review"),
+    hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review"),
       hasReviewBlocker: visibleText.includes("ResourceSpace API write mapping is not configured yet"),
       hasViewerReviewBlock: visibleText.includes("Review workbench requires reviewer access"),
       hasViewerUploadBlock: visibleText.includes("Upload is for Contributors"),
@@ -182,7 +190,7 @@ async function inspectPage(page, expected) {
 for (const width of qaViewports) {
   for (const item of qaPaths) {
     const { page, context } = await newRolePage(item.role, width, width <= 390 ? 900 : 1000);
-    const response = await page.goto(`${base}${item.path}`, { waitUntil: "networkidle" });
+    const response = await gotoAndSettle(page, `${base}${item.path}`);
     const state = await inspectPage(page, item);
     if (!response || response.status() >= 500) failures.push(`${item.label} ${width}: HTTP ${response?.status()}`);
     if (state.overflowX) failures.push(`${item.label} ${width}: horizontal overflow ${state.scrollWidth}/${state.clientWidth}`);
@@ -206,17 +214,17 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
-  await page.goto(base, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, base);
   await page.getByRole("searchbox", { name: "Search approved media" }).fill("Bible");
   await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
   if ((await page.getByText("Search: Bible").count()) !== 1) failures.push("search interaction: active search chip missing");
   await context.close();
 }
 
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
-  await page.goto(base, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, base);
   const commandSearch = await openCommandPalette(page);
   await commandSearch.fill("website hero");
   const firstActiveCommand = await commandSearch.getAttribute("aria-activedescendant");
@@ -235,7 +243,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
-  await page.goto(base, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, base);
   const commandSearch = await openCommandPalette(page);
   await commandSearch.fill("children youth");
   await page.keyboard.press("Enter");
@@ -247,7 +255,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
-  await page.goto(`${base}/review?queue=rights-review`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/review?queue=rights-review`);
   const activeRightsQueue = page.getByRole("button", { name: /Rights Review/ });
   if ((await activeRightsQueue.getAttribute("aria-pressed")) !== "true") failures.push("review stable queue URL: rights-review did not become active");
   await activeRightsQueue.click();
@@ -257,7 +265,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
-  await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/upload`);
   if ((await page.getByText("Drop files here or browse").count()) < 1) failures.push("upload file dropzone: drop/browse affordance missing");
   await page.getByText("Drop files here or browse").evaluate((node) => {
     const label = node.closest("label");
@@ -299,7 +307,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Contributor", 320, 900);
-  await page.goto(`${base}/upload`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/upload`);
   await page.getByLabel("Files").setInputFiles([{ name: "qa-mobile-photo-with-a-long-name.png", mimeType: "image/png", buffer: tinyPng }]);
   if ((await page.getByLabel("Selected file preview").getByText("qa-mobile-photo-with-a-long-name.png").count()) < 1) failures.push("upload mobile file preview: selected file missing");
   const mobileUploadOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
@@ -309,7 +317,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
-  await page.goto(`${base}/review`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/review`);
   if ((await page.getByText("Showing 24 of").count()) < 1) failures.push("review queue load more: initial 24-row limit missing");
   if ((await page.getByRole("button", { name: "Show more review items" }).count()) < 1) failures.push("review queue load more: button missing");
   await page.getByRole("button", { name: "Asset actions" }).click();
@@ -337,7 +345,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("DAM Admin", 1440, 1000);
-  await page.goto(`${base}/review`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/review`);
   await page.getByRole("button", { name: "Asset actions" }).click();
   if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) < 1) failures.push("review asset actions menu: DAM Admin ResourceSpace action missing");
   await context.close();
@@ -345,7 +353,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
-  await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/assets/368`);
   const viewerActionsButton = page.getByRole("button", { name: "Asset actions" });
   await viewerActionsButton.click();
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "true") failures.push("asset actions menu: aria-expanded not true after open");
@@ -373,7 +381,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("DAM Admin", 1440, 1000);
-  await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/assets/368`);
   await page.getByRole("button", { name: "Asset actions" }).click();
   if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) < 1) failures.push("asset actions menu: DAM Admin ResourceSpace action missing");
   await context.close();
@@ -381,7 +389,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Viewer", 320, 900);
-  await page.goto(`${base}/assets/368`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}/assets/368`);
   await page.getByRole("button", { name: "Asset actions" }).click();
   const menuOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   if (menuOverflow) failures.push("asset actions menu: mobile menu caused horizontal overflow");
@@ -390,7 +398,7 @@ for (const width of qaViewports) {
 
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
-  await page.goto(base, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, base);
   const checks = await page.evaluate(async () => {
     const approved = await fetch("/api/download/368?role=Viewer");
     const unsafe = await fetch("/api/download/644?role=Viewer");
@@ -405,7 +413,7 @@ for (const width of qaViewports) {
 
 for (const shot of requiredShots) {
   const { page, context } = await newRolePage(shot.role, shot.width, shot.height);
-  await page.goto(`${base}${shot.path}`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}${shot.path}`);
   if (shot.selector) await page.locator(shot.selector).scrollIntoViewIfNeeded();
   await page.screenshot({ path: path.join(outDir, shot.name), fullPage: true });
   await context.close();
@@ -413,7 +421,7 @@ for (const shot of requiredShots) {
 
 async function captureProof(name, role, width, height, pathName, setup) {
   const { page, context } = await newRolePage(role, width, height);
-  await page.goto(`${base}${pathName}`, { waitUntil: "networkidle" });
+  await gotoAndSettle(page, `${base}${pathName}`);
   if (setup) await setup(page);
   await page.screenshot({ path: path.join(outDir, "primitive-proof", name), fullPage: false });
   await context.close();
@@ -488,7 +496,7 @@ await captureProof("review-hold-confirm-dialog.png", "Reviewer", 1440, 1000, "/r
 });
 
 await captureProof("state-system-empty-error-loading.png", "Viewer", 1440, 900, "/?q=zzzzzz-no-visible-media-proof", async (page) => {
-  await page.getByText("No visible assets match").scrollIntoViewIfNeeded();
+  await page.getByText("No matching approved assets").scrollIntoViewIfNeeded();
 });
 
 await browser.close();

@@ -18,6 +18,7 @@ function actionConfig(action?: ToastAction) {
 
 export function toastUploadStarted(detail = "Preparing contributor intake for review.") {
   return toast.info("Upload intake started", {
+    id: "upload-intake-started",
     description: detail,
     duration: 6000,
     icon: <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -25,7 +26,9 @@ export function toastUploadStarted(detail = "Preparing contributor intake for re
 }
 
 export function toastUploadComplete(action?: ToastAction) {
+  toast.dismiss("upload-intake-started");
   return toast.success("Intake received", {
+    id: "upload-intake-complete",
     description: "Media remains Needs Review / Do Not Publish until reviewer approval.",
     action: actionConfig(action),
     icon: <CheckCircle2 size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -33,7 +36,9 @@ export function toastUploadComplete(action?: ToastAction) {
 }
 
 export function toastUploadFailed(detail = "No files were approved or published.", action?: ToastAction) {
+  toast.dismiss("upload-intake-started");
   return toast.error("Intake failed", {
+    id: "upload-intake-failed",
     description: detail,
     action: actionConfig(action),
     icon: <XCircle size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -42,6 +47,7 @@ export function toastUploadFailed(detail = "No files were approved or published.
 
 export function toastDraftSaved(detail = "Draft stays local until Submit for review.", action?: ToastAction) {
   return toast.success("Draft saved locally", {
+    id: "draft-saved",
     description: detail,
     action: actionConfig(action),
     icon: <Save size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -64,7 +70,7 @@ export function toastReviewQueued(action?: ToastAction) {
 }
 
 export function toastDownloadBlocked(detail: string, action?: ToastAction) {
-  return toast.warning("Download blocked", {
+  return toast.warning("Download unavailable", {
     description: detail,
     action: actionConfig(action),
     icon: <Download size={16} strokeWidth={1.8} aria-hidden="true" />

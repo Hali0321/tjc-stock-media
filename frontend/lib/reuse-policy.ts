@@ -24,7 +24,7 @@ const blockerLabels: Record<ReuseState, string> = {
   "blocked-rights": "Rights or consent unclear",
   "blocked-people-minors": "People/minors review required",
   "blocked-reviewer-date": "Reviewer/date missing",
-  "blocked-derivative": "Approved derivative missing",
+  "blocked-derivative": "Approved copy missing",
   "blocked-sensitive": "Sensitive context needs reviewer",
   "blocked-archive": "Archive only",
   "blocked-do-not-use": "Do not use"
@@ -101,14 +101,14 @@ export function buildReuseDecision(asset: StockMediaAsset): ReuseDecision {
       : internalReady
         ? "Internal ready"
         : assetIsApproved(asset)
-          ? "Needs portal review"
+          ? "Needs review"
           : blockerLabels[state];
 
   return {
     state,
     label,
     summary: publicReady
-      ? "Source, rights, people/minors, review, and derivative checks pass."
+      ? "Source, rights, people/minors, review, and approved-copy checks pass."
       : internalReady
         ? "Approved for internal ministry use with required checks complete."
         : blockers.length

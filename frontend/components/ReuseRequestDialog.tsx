@@ -27,8 +27,8 @@ const requestCopy: Record<ReuseRequestKind, { kicker: string; title: string; bod
   },
   review: {
     kicker: "Reviewer help",
-    title: "Request portal review",
-    body: "A reviewer must resolve source, rights, people/minors, usage scope, and derivative readiness before blocked assets become reusable.",
+    title: "Request review",
+    body: "A reviewer must resolve source, rights, people/minors, usage scope, and approved-copy readiness before blocked assets become reusable.",
     action: "Open review request"
   },
   coworker: {
@@ -51,6 +51,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
       onClose={onCancel}
       closeLabel="Close request dialog"
       maxWidthClassName="max-w-xl"
+      tone={kind === "original" ? "warning" : "neutral"}
       footer={(
         <>
           <button className="inline-flex min-h-10 items-center rounded-xl border border-tjc-line bg-white px-4 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={onCancel}>
@@ -94,7 +95,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
                 <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-xs font-semibold text-[#725216]" key={blocker}>{blocker}</span>
               ))
             ) : (
-              <span className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2 py-1 text-xs font-semibold text-[#22563a]">No current portal blockers</span>
+              <span className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2 py-1 text-xs font-semibold text-[#22563a]">No current blockers</span>
             )}
           </div>
         </section>

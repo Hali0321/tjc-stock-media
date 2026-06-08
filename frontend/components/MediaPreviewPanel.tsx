@@ -59,7 +59,7 @@ export function MediaPreviewPanel({
         <RestrictedPreviewPanel
           title={title || "Preview restricted"}
           detail={detail || "No role-safe derivative is available. Original/master remains restricted and reuse is governed by the trust record."}
-          className={cn(compact ? "min-h-52" : "min-h-[22rem]")}
+          className={cn(compact ? "min-h-44 md:min-h-52" : "min-h-72 md:min-h-[28rem] xl:min-h-[32rem]")}
         />
       </section>
     );
@@ -67,7 +67,7 @@ export function MediaPreviewPanel({
 
   return (
     <section className={cn("overflow-hidden rounded-[1.6rem] border border-[#cfd7d1] bg-white p-3 shadow-[0_18px_46px_rgba(35,53,111,.07)]", className)} aria-label={`${resolvedMode} media preview`}>
-      <div className={cn("relative overflow-hidden rounded-[1.25rem] border border-[#dbe4dd] bg-[#f5f8f5]", compact ? "min-h-56" : "min-h-[24rem]")}>
+      <div className={cn("relative overflow-hidden rounded-[1.25rem] border border-[#dbe4dd] bg-[#f5f8f5]", compact ? "min-h-44 md:min-h-56" : "min-h-[24rem] md:min-h-[30rem] xl:min-h-[34rem]")}>
         {resolvedMode === "image" ? (
           <div className="grid h-full min-h-[inherit] place-items-center">
             <MediaPreview

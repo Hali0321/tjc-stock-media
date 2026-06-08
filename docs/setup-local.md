@@ -52,4 +52,4 @@ This setup is local only. It does not prove:
 
 Those belong to Phase 2 after workflow proof.
 
-For the controlled internal launch path, use `docs/launch-plan.md` and `docs/production-runbook.md`. The launch machine should be a fresh church PC/NAS install restored from a verified backup, not a direct copy of Hali's local `.runtime` folder.
+For the controlled internal launch path, use `docs/launch-plan.md` and `docs/production-runbook.md`. The launch machine should be a fresh church PC/NAS install restored from a verified backup, not a direct copy of any developer's local `.runtime` folder.

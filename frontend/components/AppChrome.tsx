@@ -17,14 +17,14 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh] w-full overflow-x-hidden bg-tjc-bg text-tjc-ink">
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="grain-overlay" aria-hidden="true" />
-      <header className="dam-app-header sticky top-0 z-40 px-3 py-3 md:px-6 md:py-5">
-        <div className="dam-app-shell relative mx-auto flex min-h-16 w-full max-w-[1760px] items-center justify-between gap-3 px-4 py-3 lg:px-5 xl:gap-4">
+      <header className="dam-app-header sticky top-0 z-40 px-3 py-2.5 md:px-6 md:py-4">
+        <div className="dam-app-shell relative mx-auto flex min-h-14 w-full max-w-[1760px] items-center justify-between gap-3 px-3.5 py-2.5 lg:px-4 xl:gap-4">
           <div className="flex min-w-0 shrink-0 items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3 lg:max-w-[13.5rem] xl:max-w-none" aria-label="TJC Stock Media home">
-              <span className="dam-brand-mark grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] text-[10px] font-black text-white md:h-[3.25rem] md:w-[3.25rem]">TJC</span>
+              <span className="dam-brand-mark grid h-9 w-9 shrink-0 place-items-center rounded-[.8rem] text-[9px] font-black text-white md:h-10 md:w-10">TJC</span>
               <span className="min-w-0">
-                <strong className="block truncate text-base font-black tracking-[-.01em] md:text-lg">TJC Stock Media</strong>
-                <small className="hidden max-w-[13rem] truncate text-xs font-semibold leading-snug text-tjc-muted lg:block">ResourceSpace-backed ministry DAM</small>
+                <strong className="block truncate text-sm font-black tracking-[-.01em] md:text-base">TJC Stock Media</strong>
+                <small className="hidden max-w-[13rem] truncate text-[11px] font-semibold leading-snug text-tjc-muted lg:block">ResourceSpace-backed ministry DAM</small>
               </span>
             </Link>
             <button
@@ -103,12 +103,14 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           ) : null}
         </div>
       </header>
-      <div className="lg:hidden">
+      <main id="main-content" className="relative z-10 min-w-0 pb-24 md:pb-0">{children}</main>
+      <div className="relative z-20 px-3 pb-4 lg:hidden">
         <AppNav role={role} />
       </div>
-      <main id="main-content" className="relative z-10 min-w-0 pb-24 md:pb-0">{children}</main>
       <Toaster
-        position="bottom-right"
+        position="bottom-center"
+        offset={{ bottom: "7.25rem" }}
+        mobileOffset={{ bottom: "calc(var(--app-mobile-nav-height) + var(--app-mobile-safe-bottom) + 1.25rem)", left: ".75rem", right: ".75rem" }}
         toastOptions={{
           classNames: {
             toast: "rounded-2xl border border-[#d6dfd8] bg-white text-tjc-ink shadow-[0_18px_50px_rgba(17,24,39,.16)]",

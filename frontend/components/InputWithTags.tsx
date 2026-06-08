@@ -70,7 +70,7 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
   }
 
   return (
-    <div className="grid gap-2 text-sm font-semibold text-tjc-ink">
+    <div className="grid gap-2 text-sm font-semibold text-tjc-ink" data-component="InputWithTags">
       <div className="flex items-center justify-between gap-2">
         <label htmlFor={id}>{label}</label>
         {required ? <span className="text-xs font-semibold text-[#7a5a19]">Required</span> : null}
@@ -128,7 +128,7 @@ export function InputWithTags({ name, label, value, onChange, suggestions, place
         </div>
       ) : null}
       <p className="text-xs leading-relaxed text-tjc-muted" id={helperId}>
-        {helperText || "Use existing ministry taxonomy terms where possible. Press Enter or comma to add a tag."}
+        {helperText || "Use existing ministry taxonomy terms where possible. Press Enter or comma to add a tag; Backspace removes the last chip when the field is empty."}
       </p>
       <p className={cn("text-xs font-semibold leading-relaxed text-[#8b391f]", !error && "sr-only")} id={errorId} role="status">
         {error || "No tag validation errors."}

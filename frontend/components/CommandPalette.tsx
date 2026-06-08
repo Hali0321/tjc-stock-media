@@ -1,6 +1,7 @@
 "use client";
 
 import { type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Archive, FileSearch, FolderOpen, HelpCircle, KeyRound, ListFilter, Search, Send, Settings2, ShieldAlert, ShieldCheck, Tags, UploadCloud, UserRoundSearch, X } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -16,33 +17,34 @@ type Command = {
   group: "Go to" | "Find" | "Saved views" | "Workflow";
   shortcut?: string;
   tag?: string;
+  access?: "Admin" | "Reviewer";
   adminOnly?: boolean;
   reviewerOnly?: boolean;
 };
 
 const commands: Command[] = [
   { id: "go-library", group: "Go to", label: "Library", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "library home assets contact sheet", icon: Search, shortcut: "G L" },
-  { id: "go-albums", group: "Go to", label: "Albums", hint: "Browse ministry albums and collection shelves", href: "/collections", keywords: "albums collections events", icon: FolderOpen, shortcut: "G A" },
+  { id: "go-collections", group: "Go to", label: "Collections", hint: "Browse ministry collections", href: "/collections", keywords: "albums collections events", icon: FolderOpen, shortcut: "G C" },
   { id: "go-upload", group: "Go to", label: "Upload", hint: "Open contributor intake for review", href: "/upload", keywords: "upload intake contributor submit files", icon: UploadCloud, shortcut: "G U" },
   { id: "go-review", group: "Go to", label: "Review", hint: "Open reviewer governance workbench", href: "/review", keywords: "review governance queue evidence", icon: ShieldAlert, shortcut: "G R" },
   { id: "go-guide", group: "Go to", label: "Guide", hint: "Open use guidance and policy notes", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle, shortcut: "G ?" },
-  { id: "go-admin", group: "Go to", label: "Admin", hint: "Open readiness console and blockers", href: "/admin", keywords: "admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, tag: "Admin" },
+  { id: "go-admin", group: "Go to", label: "Admin", hint: "Open readiness console and blockers", href: "/admin", keywords: "admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Admin", tag: "Admin" },
 
   { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Library search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
   { id: "find-rs-id", group: "Find", label: "Search ResourceSpace ID", hint: "Type a numeric RS ID to open an exported asset record", href: "/", keywords: "resourcespace id reference ref search number", icon: KeyRound, shortcut: "RS #" },
   { id: "find-collection", group: "Find", label: "Search by collection", hint: "Find assets by album, event, ministry, or stable collection", href: "/collections", keywords: "collection album event ministry stable id", icon: Tags, shortcut: "C" },
   { id: "find-blocked", group: "Find", label: "Search blocked downloads", hint: "Show assets blocked by reuse or download policy", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish needs review", icon: ShieldAlert, shortcut: "B" },
 
-  { id: "portal-ready", group: "Saved views", label: "Portal Ready", hint: "Assets passing stricter TJC portal reuse policy", href: "/?view=portal-ready", keywords: "public safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },
-  { id: "needs-review", group: "Saved views", label: "Needs Portal Review", hint: "Candidates missing evidence, rights, or approved copy", href: "/?view=needs-review", keywords: "needs portal review missing evidence rights approval", icon: ShieldAlert, shortcut: "2" },
+  { id: "portal-ready", group: "Saved views", label: "Portal Ready", hint: "Assets passing stricter TJC portal reuse policy", href: "/?view=approved-church-wide", keywords: "public safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },
+  { id: "needs-review", group: "Saved views", label: "Needs Review", hint: "Candidates missing evidence, rights, or approved copy", href: "/?view=needs-review", keywords: "needs portal review missing evidence rights approval", icon: ShieldAlert, shortcut: "2" },
   { id: "no-people", group: "Saved views", label: "No People", hint: "Lower-risk visuals with no visible people", href: "/?view=no-people", keywords: "no people empty plants bible safe", icon: UserRoundSearch, shortcut: "3" },
   { id: "website-hero", group: "Saved views", label: "Website Hero", hint: "Hero/banner candidates for web and slides", href: "/?view=website-hero", keywords: "hero banner web header website", icon: FileSearch, shortcut: "4" },
   { id: "recently-approved", group: "Saved views", label: "Recently Approved", hint: "Newest reviewed items in role-safe Library", href: "/?view=recently-approved", keywords: "recently approved newest reviewed", icon: Archive, shortcut: "5" },
 
   { id: "start-upload", group: "Workflow", label: "Start upload intake", hint: "Queue new media as Needs Review / Do Not Publish", href: "/upload", keywords: "start upload intake contributor draft submit", icon: UploadCloud, shortcut: "U" },
-  { id: "open-review-queue", group: "Workflow", label: "Open review queue", hint: "Inspect assets that need reviewer evidence", href: "/review?queue=pending", keywords: "open review queue pending evidence", icon: ListFilter, shortcut: "R", reviewerOnly: true },
-  { id: "children-youth-queue", group: "Workflow", label: "Open children/youth queue", hint: "Review assets with children or youth visibility risk", href: "/review?queue=children-youth", keywords: "children youth minors queue review people visibility", icon: UserRoundSearch, shortcut: "C Y", reviewerOnly: true },
-  { id: "pending-writes", group: "Workflow", label: "Show pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, shortcut: "P", adminOnly: true, tag: "Admin" },
+  { id: "open-review-queue", group: "Workflow", label: "Open review queue", hint: "Inspect assets that need reviewer evidence", href: "/review?queue=pending", keywords: "open review queue pending evidence", icon: ListFilter, shortcut: "R", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
+  { id: "children-youth-queue", group: "Workflow", label: "Open children/youth queue", hint: "Review assets with children or youth visibility risk", href: "/review?queue=children-youth", keywords: "children youth minors queue review people visibility", icon: UserRoundSearch, shortcut: "C Y", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
+  { id: "pending-writes", group: "Workflow", label: "Show pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, shortcut: "P", adminOnly: true, access: "Admin", tag: "Admin" },
   { id: "request-access", group: "Workflow", label: "Request access", hint: "Review/original access stays a request, not a ResourceSpace write", href: "/guide", keywords: "request access original review coworker permission", icon: HelpCircle, shortcut: "A" }
 ];
 
@@ -58,6 +60,7 @@ export function CommandPalette() {
   const dialogRef = useRef<HTMLElement>(null);
   const lastActiveRef = useRef<HTMLElement | null>(null);
   const reviewer = role === "Reviewer" || role === "DAM Admin";
+  const hiddenRoleCommandCount = commands.filter((command) => (command.adminOnly && role !== "DAM Admin") || (command.reviewerOnly && !reviewer)).length;
 
   const visibleCommands = useMemo(() => {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -108,6 +111,8 @@ export function CommandPalette() {
     });
     return groups.filter((group) => group.items.length);
   }, [visibleCommands]);
+
+  const selectedCommand = visibleCommands[selectedIndex];
 
   const openPalette = useCallback(() => {
     lastActiveRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -180,10 +185,10 @@ export function CommandPalette() {
   function onInputKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setSelectedIndex((current) => Math.min(current + 1, Math.max(visibleCommands.length - 1, 0)));
+      setSelectedIndex((current) => visibleCommands.length ? (current + 1) % visibleCommands.length : 0);
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      setSelectedIndex((current) => Math.max(current - 1, 0));
+      setSelectedIndex((current) => visibleCommands.length ? (current - 1 + visibleCommands.length) % visibleCommands.length : 0);
     } else if (event.key === "Home") {
       event.preventDefault();
       setSelectedIndex(0);
@@ -221,31 +226,32 @@ export function CommandPalette() {
         <Search size={16} strokeWidth={1.8} aria-hidden="true" />
         <span>Search commands</span>
       </button>
-      {open ? (
+      {open && typeof document !== "undefined" ? createPortal((
         <div className="fixed inset-0 z-[80] bg-[#07100d]/36 p-3 backdrop-blur-[5px]" role="presentation" onMouseDown={closePalette}>
           <section
             ref={dialogRef}
-            className="mx-auto mt-10 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-[#9fb4a8] bg-[#fbfdfb] shadow-[0_30px_100px_rgba(7,16,13,.32),0_1px_0_rgba(255,255,255,.95)_inset] md:mt-16"
+            className="mx-auto mt-8 w-full max-w-5xl overflow-hidden rounded-[1.65rem] border border-[#9fb4a8] bg-[#fbfdfb] shadow-[0_34px_110px_rgba(7,16,13,.34),0_1px_0_rgba(255,255,255,.95)_inset] md:mt-14"
             role="dialog"
             aria-modal="true"
-            aria-label="Command palette"
+            aria-labelledby="command-palette-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="border-b border-[#c7d3cb] bg-white px-4 pb-4 pt-3 sm:px-5">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <label className="text-xs font-black uppercase tracking-[.14em] text-tjc-muted" htmlFor="command-search">DAM Launcher</label>
+                  <label id="command-palette-title" className="text-xs font-black uppercase tracking-[.14em] text-tjc-muted" htmlFor="command-search">DAM Launcher</label>
                   <p className="mt-0.5 hidden text-xs font-semibold text-tjc-muted sm:block">Jump, find, saved views, and review workflows stay policy-aware.</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
+                  <span className="hidden rounded-full border border-[#c9d6ce] bg-[#f6faf7] px-2.5 py-1 text-[11px] font-black text-tjc-evergreen sm:inline-flex">Role: {role}</span>
                   <kbd className="hidden rounded-lg border border-[#c7d2ca] bg-[#f4f7f4] px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset] sm:inline">⌘K</kbd>
                   <kbd className="hidden rounded-lg border border-[#c7d2ca] bg-[#f4f7f4] px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset] sm:inline">Ctrl K</kbd>
-                <button className="grid h-9 w-9 place-items-center rounded-xl text-tjc-muted transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f6f2] active:scale-[.97]" type="button" onClick={closePalette} aria-label="Close command palette">
-                  <X size={16} strokeWidth={1.8} aria-hidden="true" />
-                </button>
+                  <button className="grid h-9 w-9 place-items-center rounded-xl text-tjc-muted transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f6f2] active:scale-[.97]" type="button" onClick={closePalette} aria-label="Close command palette">
+                    <X size={16} strokeWidth={1.8} aria-hidden="true" />
+                  </button>
                 </div>
               </div>
-              <div className="grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[1.15rem] border border-[#c9d6ce] bg-[#fbfdfb] px-4 shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_14px_34px_rgba(25,34,29,.06)] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] focus-within:border-[#0d7970] focus-within:ring-4 focus-within:ring-[#16a99a]/12">
+              <div className="grid min-h-[4.75rem] grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[1.2rem] border border-[#c9d6ce] bg-[#fbfdfb] px-4 shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_16px_40px_rgba(25,34,29,.075)] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] focus-within:border-[#0d7970] focus-within:ring-4 focus-within:ring-[#16a99a]/12" data-command-proof="search-height">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-[#edf7f3] text-tjc-evergreen">
                   <Search size={19} strokeWidth={1.8} aria-hidden="true" />
                 </span>
@@ -261,6 +267,8 @@ export function CommandPalette() {
                   aria-activedescendant={visibleCommands[selectedIndex] ? `command-option-${visibleCommands[selectedIndex].id}` : undefined}
                   aria-controls="command-results"
                   aria-expanded={open}
+                  aria-haspopup="listbox"
+                  aria-autocomplete="list"
                   role="combobox"
                 />
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef7f1] text-tjc-evergreen" aria-hidden="true">
@@ -269,61 +277,68 @@ export function CommandPalette() {
               </div>
             </div>
             <div className="max-h-[62dvh] overflow-y-auto p-3 sm:p-4">
-              {visibleCommands.length ? (
-                <div className="grid gap-4 md:grid-cols-2" id="command-results" role="listbox" aria-label="Command results">
-                  {groupedCommands.map((group) => (
-                    <section className="grid gap-1.5" key={group.group} aria-label={group.group}>
-                      <div className="flex items-center gap-2 px-2">
-                        <h3 className="text-[11px] font-black uppercase tracking-[.12em] text-tjc-muted">{group.group}</h3>
-                        <span className="h-px flex-1 bg-[#dce5df]" aria-hidden="true" />
-                      </div>
-                      {group.items.map((command) => {
-                        const index = visibleCommands.findIndex((item) => item.id === command.id);
-                        const Icon = command.icon;
-                        const selected = index === selectedIndex;
-                        return (
-                          <button
-                            type="button"
-                            key={command.id}
-                            id={`command-option-${command.id}`}
-                            className={cn(
-                              "grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[1rem] px-3 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
-                              selected ? "bg-[#e6f7f3] ring-1 ring-[#83c8bd] shadow-[inset_4px_0_0_#07857b,0_12px_32px_rgba(13,121,112,.10)]" : ""
-                            )}
-                            role="option"
-                            aria-selected={selected}
-                            onClick={() => runCommand(command)}
-                            onMouseEnter={() => setSelectedIndex(index)}
-                          >
-                            <span className={cn("grid h-11 w-11 place-items-center rounded-xl border border-[#c5d0c8] bg-white text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset]", selected && "border-[#9accc3] bg-white")}>
-                              <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
-                            </span>
-                            <span className="min-w-0">
-                              <strong className="block truncate text-[15px] font-black text-tjc-ink">{command.label}</strong>
-                              <span className="mt-0.5 block truncate text-xs font-semibold text-tjc-muted">{command.hint}</span>
-                            </span>
-                            <span className="hidden items-center gap-2 lg:inline-flex">
-                              {command.tag ? <span className="rounded-full border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[11px] font-black text-[#725216]">{command.tag}</span> : null}
-                              {command.shortcut ? <kbd className="rounded-lg border border-[#d7e0da] bg-white px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">{command.shortcut}</kbd> : null}
-                              {selected ? <span className="rounded-full bg-tjc-evergreen px-2 py-1 text-[11px] font-black text-white">Enter</span> : null}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </section>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-sm font-medium text-tjc-muted">No matching commands.</div>
-              )}
+              <div id="command-results" role="listbox" aria-label="Command results">
+                {visibleCommands.length ? (
+                  <div className="grid gap-4 md:grid-cols-2" data-command-proof="command-groups">
+                    {groupedCommands.map((group) => (
+                      <section className="grid gap-1.5" key={group.group} aria-label={group.group}>
+                        <div className="flex items-center gap-2 px-2">
+                          <h3 className="text-[11px] font-black uppercase tracking-[.12em] text-tjc-muted">{group.group}</h3>
+                          <span className="h-px flex-1 bg-[#dce5df]" aria-hidden="true" />
+                          <span className="text-[11px] font-black text-tjc-muted">{group.items.length}</span>
+                        </div>
+                        {group.items.map((command) => {
+                          const index = visibleCommands.findIndex((item) => item.id === command.id);
+                          const Icon = command.icon;
+                          const selected = index === selectedIndex;
+                          return (
+                            <button
+                              type="button"
+                              key={command.id}
+                              id={`command-option-${command.id}`}
+                              className={cn(
+                                "group/command relative grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[1.05rem] px-3 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
+                                selected ? "bg-[#e4f8f4] ring-1 ring-[#79c9bd] shadow-[inset_4px_0_0_#07857b,0_14px_34px_rgba(13,121,112,.12)]" : ""
+                              )}
+                              data-command-proof={selected ? "selected-row" : undefined}
+                              role="option"
+                              aria-selected={selected}
+                              tabIndex={-1}
+                              onClick={() => runCommand(command)}
+                              onMouseEnter={() => setSelectedIndex(index)}
+                            >
+                              {selected ? <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-[#07857b] shadow-[0_0_18px_rgba(7,133,123,.45)]" aria-hidden="true" /> : null}
+                              <span className={cn("grid h-11 w-11 place-items-center rounded-xl border border-[#c5d0c8] bg-white text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] group-hover/command:border-[#9accc3]", selected && "border-[#9accc3] bg-white")}>
+                                <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                              </span>
+                              <span className="min-w-0">
+                                <strong className="block truncate text-[15px] font-black text-tjc-ink">{command.label}</strong>
+                                <span className="mt-0.5 block truncate text-xs font-semibold text-tjc-muted">{command.hint}</span>
+                              </span>
+                              <span className="hidden items-center gap-2 sm:inline-flex" data-command-proof={command.access ? "role-restricted-command shortcut-placement" : "shortcut-placement"}>
+                                {command.tag ? <span className={cn("rounded-full border px-2 py-1 text-[11px] font-black", command.access === "Admin" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b9d4e1] bg-[#eef8fb] text-[#24546b]")}>{command.tag}</span> : null}
+                                {command.shortcut ? <kbd className="rounded-lg border border-[#d7e0da] bg-white px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">{command.shortcut}</kbd> : null}
+                                {selected ? <span className="rounded-full bg-tjc-evergreen px-2 py-1 text-[11px] font-black text-white">Enter</span> : null}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-sm font-medium text-tjc-muted">No matching commands.</div>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#c7d3cb] bg-[#f5f8f5] px-4 py-3 text-xs font-semibold text-tjc-muted sm:px-5">
-              <span>↑↓ move. Enter opens selected. Esc closes.</span>
-              <span>ResourceSpace writes remain pending until field mapping is configured.</span>
+              <span>↑↓ move. Enter opens {selectedCommand ? selectedCommand.label : "selected command"}. Esc closes.</span>
+              <span data-command-proof="footer-safety-copy">ResourceSpace writes remain pending until field mapping is configured.</span>
+              {hiddenRoleCommandCount ? <span>{hiddenRoleCommandCount} role-restricted commands hidden for {role}.</span> : <span>Admin and reviewer commands visible for {role}.</span>}
             </div>
           </section>
         </div>
-      ) : null}
+      ), document.body) : null}
     </>
   );
 }

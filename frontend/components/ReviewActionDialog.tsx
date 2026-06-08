@@ -43,6 +43,7 @@ export function ReviewActionDialog({
       description="Queue a local pending review write. ResourceSpace is not updated until API field mapping is configured."
       onClose={onCancel}
       maxWidthClassName="max-w-2xl"
+      tone="warning"
       footer={(
         <>
           <button className="inline-flex min-h-10 items-center rounded-xl border border-tjc-line bg-white px-4 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={onCancel}>

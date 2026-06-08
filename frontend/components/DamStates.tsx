@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, CloudOff, FileLock2, FolderOpen, Image as ImageIcon, Info, Loader2, LockKeyhole, SearchX, UploadCloud } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CloudOff, EyeOff, FileLock2, FolderOpen, Image as ImageIcon, Info, Loader2, SearchX, ShieldAlert, UploadCloud, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/ui";
 
@@ -130,15 +130,78 @@ export function AdminConfigMissingState(props: Omit<DamStateProps, "variant" | "
   return <StateCard {...props} variant="blocked" tone="danger" />;
 }
 
+function restrictedPreviewCopy(title?: string, detail?: string) {
+  const haystack = `${title || ""} ${detail || ""}`.toLowerCase();
+  if (/people|minor|children|youth/.test(haystack)) {
+    return {
+      icon: <Users size={22} strokeWidth={1.8} aria-hidden="true" />,
+      title: title || "People/minors review required",
+      reason: "People visibility needs reviewer confirmation before preview or download.",
+      action: "Open review queue",
+      tone: "bg-[#fff8e8] text-[#725216]",
+      ring: "bg-[#f3d994]/55"
+    };
+  }
+  if (/right|consent/.test(haystack)) {
+    return {
+      icon: <ShieldAlert size={22} strokeWidth={1.8} aria-hidden="true" />,
+      title: title || "Rights review required",
+      reason: "Rights or consent evidence is unclear, so reuse stays blocked.",
+      action: "Request review",
+      tone: "bg-[#fff0ef] text-[#7d2d2a]",
+      ring: "bg-[#e9b6b3]/50"
+    };
+  }
+  if (/original|master|hidden/.test(haystack)) {
+    return {
+      icon: <FileLock2 size={22} strokeWidth={1.8} aria-hidden="true" />,
+      title: title || "Original/master hidden",
+      reason: "Master file remains restricted; use approved copies only.",
+      action: "Request original access",
+      tone: "bg-[#f2f7fb] text-[#27435b]",
+      ring: "bg-[#b9cede]/50"
+    };
+  }
+  if (/pending/.test(haystack)) {
+    return {
+      icon: <ImageIcon size={22} strokeWidth={1.8} aria-hidden="true" />,
+      title: title || "Preview pending",
+      reason: "Derivative preview is staged for export or review.",
+      action: "Check again later",
+      tone: "bg-[#edf8f1] text-[#22563a]",
+      ring: "bg-[#b8d9c6]/55"
+    };
+  }
+  return {
+    icon: <EyeOff size={22} strokeWidth={1.8} aria-hidden="true" />,
+    title: title || "No derivative exported",
+    reason: detail || "No role-safe display derivative is available.",
+    action: "Review needed",
+    tone: "bg-[#eef4f0] text-tjc-evergreen",
+    ring: "bg-white/58"
+  };
+}
+
 export function RestrictedPreviewPanel({ title = "Preview restricted", detail, className }: Partial<StateProps>) {
+  const copy = restrictedPreviewCopy(title, detail);
   return (
-    <div className={cn("dam-preview-grid relative grid h-full min-h-44 w-full place-items-center overflow-hidden p-4 text-center", className)}>
-      <div className="relative z-[1] grid max-w-[22rem] justify-items-center gap-2 rounded-[1.125rem] border border-white/80 bg-white/74 px-4 py-3 shadow-[0_18px_42px_rgba(35,53,111,.09)]">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-white text-tjc-evergreen shadow-[0_8px_18px_rgba(15,61,46,.10)]">
-          <LockKeyhole size={18} strokeWidth={1.8} aria-hidden="true" />
+    <div
+      className={cn(
+        "relative grid h-full min-h-44 w-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_50%_22%,rgba(255,255,255,.96),rgba(237,243,240,.74)_42%,rgba(214,223,216,.82)_100%)] p-5 text-center",
+        className
+      )}
+    >
+      <div className={cn("absolute inset-x-10 top-8 h-28 rounded-full blur-2xl", copy.ring)} aria-hidden="true" />
+      <div className="absolute inset-4 rounded-[1rem] border border-white/72" aria-hidden="true" />
+      <div className="relative z-[1] grid max-w-[24rem] justify-items-center gap-3 rounded-[1.125rem] border border-white/88 bg-white/84 px-5 py-5 shadow-[0_20px_50px_rgba(35,53,111,.10)] backdrop-blur-sm">
+        <span className={cn("grid h-14 w-14 place-items-center rounded-full shadow-[0_12px_24px_rgba(15,61,46,.12)]", copy.tone)}>
+          {copy.icon}
         </span>
-        <strong className="text-xs font-black leading-tight text-tjc-ink">{title}</strong>
-        {detail ? <span className="text-xs font-semibold leading-snug text-tjc-muted">{detail}</span> : null}
+        <div>
+          <strong className="text-base font-black leading-tight text-tjc-ink">{copy.title}</strong>
+          <span className="mt-2 block text-sm font-semibold leading-relaxed text-tjc-muted">{copy.reason}</span>
+        </div>
+        <span className="rounded-full border border-[#d6dfd8] bg-[#fbfcfa] px-3 py-1 text-xs font-black text-tjc-evergreen">{copy.action}</span>
       </div>
     </div>
   );
@@ -158,7 +221,7 @@ export function AssetPreviewPlaceholder({ title = "Preview pending", detail, cla
   );
 }
 
-export function CollectionPreviewPlaceholder({ title = "Album preview pending", detail, className }: Partial<StateProps>) {
+export function CollectionPreviewPlaceholder({ title = "Collection preview pending", detail, className }: Partial<StateProps>) {
   return (
     <div className={cn("relative grid h-full min-h-28 w-full place-items-center overflow-hidden rounded-[1rem] bg-[#e6f0eb] p-3 text-center", className)}>
       <div className="absolute inset-2 rounded-[.8rem] border border-white/72" aria-hidden="true" />

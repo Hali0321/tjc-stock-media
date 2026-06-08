@@ -10,6 +10,7 @@ import { UploadIntakePacket } from "@/components/UploadIntakePacket";
 import { canUpload } from "@/lib/permissions";
 import { toastDraftSaved, toastUploadComplete, toastUploadFailed, toastUploadStarted } from "@/lib/tjc-toasts";
 import { uploadTagSuggestions } from "@/lib/upload-tags";
+import { cn } from "@/lib/ui";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 type UploadReceipt = {
@@ -25,6 +26,12 @@ type UploadReceipt = {
 const inputClass = "min-h-10 w-full min-w-0 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
+const uploadMobileSteps = [
+  { title: "Context", detail: "Title, event, date, ministry, source." },
+  { title: "People and rights", detail: "Visibility, youth, rights, restrictions." },
+  { title: "Files or source", detail: "File, source link, tags, notes." },
+  { title: "Review and submit", detail: "Packet summary and safety check." }
+] as const;
 
 export function UploadPage() {
   const { role, ready } = useDemoRole();
@@ -32,16 +39,93 @@ export function UploadPage() {
   const [largeWarning, setLargeWarning] = useState("");
   const [receipt, setReceipt] = useState<UploadReceipt | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [sourceLink, setSourceLink] = useState("");
   const [suggestedTags, setSuggestedTags] = useState("");
+  const [mobileStep, setMobileStep] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sourceLinkRef = useRef<HTMLInputElement>(null);
+  const filesSectionRef = useRef<HTMLElement>(null);
+  const receiptRef = useRef<HTMLElement>(null);
   const allowed = ready && canUpload(role);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const hasValidSourceLink = useMemo(() => {
+    const value = sourceLink.trim();
+    if (!value) return false;
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }, [sourceLink]);
+  const hasFileOrSource = selectedFiles.length > 0 || hasValidSourceLink;
+
+  function findUploadStepIssue(stepIndex: number) {
+    const container = formRef.current?.querySelector<HTMLElement>(`[data-upload-step="${stepIndex}"]`);
+    const missingControl = Array.from(container?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]") || [])
+      .find((control) => !control.disabled && !String(control.value || "").trim());
+    if (missingControl) {
+      return { step: stepIndex, control: missingControl, message: `Complete ${uploadMobileSteps[stepIndex].title} before continuing.` };
+    }
+    if (stepIndex === 2 && sourceLink.trim() && !hasValidSourceLink) {
+      return { step: stepIndex, control: sourceLinkRef.current || undefined, message: "Use a full http or https source link." };
+    }
+    if (stepIndex === 2 && !hasFileOrSource) {
+      return { step: stepIndex, control: sourceLinkRef.current || undefined, message: "Add a file or source link before continuing." };
+    }
+    if (stepIndex === 2 && !suggestedTags.trim()) {
+      return { step: stepIndex, message: "Add at least one suggested tag before continuing." };
+    }
+    return null;
+  }
+
+  function showUploadStepIssue(issue: ReturnType<typeof findUploadStepIssue>) {
+    if (!issue) return;
+    setMobileStep(issue.step);
+    setMessage(issue.message);
+    window.setTimeout(() => {
+      issue.control?.focus({ preventScroll: true });
+      issue.control?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 0);
+  }
+
+  function continueMobileStep() {
+    const issue = findUploadStepIssue(mobileStep);
+    if (issue) {
+      showUploadStepIssue(issue);
+      return;
+    }
+    setMessage("");
+    setMobileStep((current) => Math.min(uploadMobileSteps.length - 1, current + 1));
+  }
+
+  function focusFileOrSource() {
+    setMessage("Add a file or source link before submitting.");
+    const target = sourceLinkRef.current || document.querySelector<HTMLInputElement>('input[name="sourceLink"]');
+    if (target) {
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      window.setTimeout(() => target.focus({ preventScroll: true }), 150);
+      return;
+    }
+    filesSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     setReceipt(null);
+    const firstIssue = [0, 1, 2].map((step) => findUploadStepIssue(step)).find(Boolean) || null;
+    if (firstIssue) {
+      showUploadStepIssue(firstIssue);
+      return;
+    }
+    if (!hasFileOrSource) {
+      focusFileOrSource();
+      return;
+    }
     const form = new FormData(event.currentTarget);
     form.delete("files");
     selectedFiles.forEach((file) => form.append("files", file));
@@ -52,7 +136,8 @@ export function UploadPage() {
     setMessage(body.message || body.error || "Upload intake checked.");
     if (response.ok) {
       setReceipt(body);
-      toastUploadComplete();
+      setTimeout(() => receiptRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 0);
+      toastUploadComplete({ label: "View summary", onClick: () => receiptRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }) });
     } else {
       toastUploadFailed(body.error || "No files were approved or published.");
     }
@@ -164,8 +249,24 @@ export function UploadPage() {
         </div>
       </div>
 
-      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_27rem]" onSubmit={submit}>
-        <section className="dam-soft-card min-w-0 self-start p-4">
+      <section className="mt-4 rounded-[1.25rem] border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Upload steps">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <span className="text-xs font-black text-tjc-evergreen">Step {mobileStep + 1} of {uploadMobileSteps.length}</span>
+            <h2 className="mt-1 text-xl font-black leading-tight text-tjc-ink">{uploadMobileSteps[mobileStep].title}</h2>
+            <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{uploadMobileSteps[mobileStep].detail}</p>
+          </div>
+          <span className="rounded-full border border-[#d6dfd8] bg-[#f8fbf8] px-3 py-1 text-xs font-black tabular-nums text-tjc-evergreen">{mobileStep + 1}/{uploadMobileSteps.length}</span>
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-1" aria-hidden="true">
+          {uploadMobileSteps.map((step, index) => (
+            <span className={cn("h-1.5 rounded-full", index <= mobileStep ? "bg-tjc-evergreen" : "bg-[#dbe4dd]")} key={step.title} />
+          ))}
+        </div>
+      </section>
+
+      <form ref={formRef} className="upload-intake-layout mt-4 grid gap-3" onSubmit={submit} noValidate>
+        <section data-upload-step="0" className={cn("upload-context-card dam-soft-card min-w-0 self-start p-4", mobileStep !== 0 && "max-md:hidden")}>
           <div className="mb-4">
             <h2 className="text-lg font-black">1. Context</h2>
             <p className="text-sm font-semibold text-tjc-muted">Help reviewers understand where this media came from.</p>
@@ -194,7 +295,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="dam-soft-card self-start p-4">
+        <section data-upload-step="1" className={cn("upload-people-card dam-soft-card min-w-0 self-start p-4", mobileStep !== 1 && "max-md:hidden")}>
           <div className="mb-4">
             <h2 className="text-lg font-black">2. People and rights</h2>
             <p className="text-sm font-semibold text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
@@ -242,11 +343,16 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="dam-soft-card min-w-0 self-start p-4">
+        <section data-upload-step="2" ref={filesSectionRef} className={cn("upload-files-card dam-soft-card min-w-0 scroll-mt-24 self-start p-4", mobileStep !== 2 && "max-md:hidden")}>
           <div className="mb-4">
             <h2 className="text-lg font-black">3. Files and tags</h2>
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
+          {!hasFileOrSource ? (
+            <div className="mb-3 rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-snug text-[#725216]" role="status">
+              Required before submit: add a file or paste a Google Drive / ResourceSpace link.
+            </div>
+          ) : null}
           <UploadDropzone
             inputRef={fileInputRef}
             selectedFiles={selectedFiles}
@@ -257,7 +363,8 @@ export function UploadPage() {
           />
           <label className={`${labelClass} mt-4`}>
             Existing Google / ResourceSpace link
-            <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
+            <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
+            {sourceLink.trim() && !hasValidSourceLink ? <span className="text-xs font-semibold text-[#7a5a19]">Use a full http or https source link.</span> : null}
           </label>
           <div className="mt-4">
               <TagInput
@@ -268,7 +375,7 @@ export function UploadPage() {
               required
               placeholder="Bible, fellowship, welcome, youth..."
               suggestions={uploadTagSuggestions}
-              helperText="Use existing visible-content or TJC terms. Reviewers approve final taxonomy before ResourceSpace updates."
+              helperText="Use existing visible-content or TJC terms. Press Enter or comma to add; Backspace removes the last chip when the field is empty. Reviewers approve final taxonomy before ResourceSpace updates."
             />
           </div>
           <label className={`${labelClass} mt-4`}>
@@ -288,14 +395,14 @@ export function UploadPage() {
           </div>
         </section>
 
-        <div className="xl:col-span-3">
-          <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} largeWarning={largeWarning} />
+        <div data-upload-step="3" className={cn("upload-packet-card min-w-0", mobileStep !== 3 && "max-md:hidden")}>
+          <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} hasSourceLink={hasValidSourceLink} largeWarning={largeWarning} />
         </div>
 
-        <section className="sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:grid-cols-[1fr_auto] xl:col-span-3" aria-label="Upload actions">
+        <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:grid-cols-[1fr_auto]" aria-label="Upload actions" data-component="UploadBottomActionBar">
           <div className="grid content-center">
             <strong className="text-sm font-black text-tjc-ink">Submit for reviewer intake</strong>
-            <span className="text-xs font-semibold text-tjc-muted">No upload bypasses review. Approved copies are created only after reviewer decision.</span>
+            <span className="text-xs font-semibold text-tjc-muted">{hasFileOrSource ? "No upload bypasses review. Approved copies are created only after reviewer decision." : "Add a file or source link before submitting."}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
@@ -305,22 +412,43 @@ export function UploadPage() {
             <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
               clearFiles();
               setSuggestedTags("");
-              setMessage("File selection and suggested tags cleared.");
-              toastDraftSaved("File selection and suggested tags cleared.");
+              setSourceLink("");
+              setMessage("File selection, source link, and suggested tags cleared.");
+              toastDraftSaved("File selection, source link, and suggested tags cleared.");
             }}>
               <RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" />
               Clear all
             </button>
-            <button className="inline-flex min-h-11 min-w-[12rem] items-center justify-center gap-2 dam-button-primary px-5 text-base font-black transition active:translate-y-px" type="submit" aria-label="Submit intake">
+            {mobileStep > 0 ? (
+              <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px md:hidden" type="button" onClick={() => setMobileStep((current) => Math.max(0, current - 1))}>
+                Back
+              </button>
+            ) : null}
+            {mobileStep < uploadMobileSteps.length - 1 ? (
+              <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-tjc-evergreen px-5 text-sm font-black text-white transition hover:bg-[#0d4a37] active:translate-y-px md:hidden" type="button" onClick={continueMobileStep}>
+                Next
+              </button>
+            ) : null}
+            <button
+              className={cn(
+                "inline-flex min-h-11 min-w-[12rem] items-center justify-center gap-2 dam-button-primary px-5 text-base font-black transition active:translate-y-px",
+                mobileStep < uploadMobileSteps.length - 1 && "max-md:hidden",
+                !hasFileOrSource && "cursor-not-allowed !border-[#c5d1c9] !bg-[#edf1ed] !text-[#69746d] !shadow-none hover:!bg-[#edf1ed]"
+              )}
+              type={hasFileOrSource ? "submit" : "button"}
+              aria-label="Submit intake"
+              aria-disabled={!hasFileOrSource}
+              onClick={!hasFileOrSource ? focusFileOrSource : undefined}
+            >
               <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
               Submit for review
             </button>
           </div>
         </section>
-        {message ? <div className="rounded-xl border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
+        {message ? <div className="upload-message-card rounded-xl border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen">{message}</div> : null}
 
         {receipt ? (
-          <section className="grid gap-4 rounded-md border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto] xl:col-span-3" aria-label="Upload receipt">
+          <section ref={receiptRef} className="upload-receipt-card grid gap-4 rounded-md border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto]" aria-label="Final submission summary" data-component="UploadFinalSubmissionSummary">
             <CheckCircle2 size={22} strokeWidth={1.8} aria-hidden="true" />
             <div>
               <h2 className="text-xl font-semibold">Intake received</h2>

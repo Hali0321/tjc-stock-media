@@ -64,7 +64,7 @@ Curated copies/exports, not the only master archive
 - ResourceSpace is the DAM/search/review/download layer.
 - Church IT/admin owns the live system.
 - Appointed ministry reviewers approve public/internal use.
-- Hali/build team prepares setup and handoff, but is not long-term production owner.
+- Prototype build owners prepare setup and handoff, but are not long-term production owners.
 
 ## Launch Blockers
 
@@ -73,7 +73,7 @@ Launch is blocked until all items pass:
 1. Church PC/NAS fresh install works.
 2. ResourceSpace restore from backup works on a clean host.
 3. Cloudflare Access protects the site.
-4. Hali's Mac can be turned off.
+4. The local prototype machine can be turned off.
 5. Backup job runs automatically.
 6. Restore test is documented.
 7. Contributor upload goes to `Needs Review / Do Not Publish`.
@@ -227,7 +227,7 @@ Not allowed:
 - Restore DB/filestore/config from prototype backup.
 - Admin login works.
 - Sample assets display.
-- Hali Mac off test passes.
+- Local prototype machine off test passes.
 
 ### Week 3 - Access And Permissions
 
@@ -270,7 +270,7 @@ Not allowed:
 
 Infrastructure:
 
-- [ ] Church PC/NAS runs without Hali Mac.
+- [ ] Church PC/NAS runs without the local prototype machine.
 - [ ] Docker services auto-start after reboot.
 - [ ] Storage has enough free headroom.
 - [ ] Backup target is separate from main storage.
@@ -332,4 +332,3 @@ Training:
 - [ ] Five-minute demo done.
 - [ ] Reviewer guide done.
 - [ ] Admin runbook done.
-

@@ -30,7 +30,7 @@ export function StatusBanner({ tone = "info", title, children, icon, className }
   const Icon = icon || fallbackIcon(tone);
 
   return (
-    <section className={cn("grid grid-cols-[auto_1fr] gap-3 rounded-lg border p-3", toneClass(tone), className)} role="status">
+    <section className={cn("grid grid-cols-[auto_1fr] gap-3 rounded-lg border p-3", toneClass(tone), className)} role="status" data-component="StateBanner">
       <span className="grid h-9 w-9 place-items-center rounded-md bg-white/65">
         <Icon size={18} strokeWidth={1.9} aria-hidden="true" />
       </span>

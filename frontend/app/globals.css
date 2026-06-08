@@ -21,6 +21,10 @@
 
 :root {
   color-scheme: light;
+  --app-header-height: 88px;
+  --app-mobile-nav-height: 76px;
+  --app-mobile-nav-gap: 18px;
+  --app-mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * {
@@ -79,17 +83,23 @@ textarea:focus-visible {
   position: fixed;
   left: 1rem;
   top: .75rem;
-  z-index: 80;
+  z-index: 10000;
   transform: translateY(-150%);
+  opacity: 0;
+  pointer-events: none;
   border-radius: 999px;
   background: #123f3a;
   color: white;
   padding: .65rem 1rem;
   font-weight: 760;
+  transition: transform 140ms ease, opacity 140ms ease;
 }
 
-.skip-link:focus {
+.skip-link:focus,
+.skip-link:focus-visible {
   transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .grain-overlay {
@@ -162,6 +172,16 @@ textarea:focus-visible {
   letter-spacing: 0;
   color: #111827;
   text-wrap: balance;
+}
+
+.asset-detail-title {
+  display: -webkit-box;
+  max-width: 980px;
+  overflow: hidden;
+  font-size: clamp(2.25rem, 1.2rem + 3.2vw, 4.5rem);
+  line-height: .95;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .dam-section-title {
@@ -257,6 +277,16 @@ textarea:focus-visible {
   display: none;
 }
 
+.dam-tabs-scroll {
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dam-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .tubelight-nav {
     position: relative;
@@ -295,16 +325,15 @@ textarea:focus-visible {
 }
 
 .dam-app-shell {
-  border: 1px solid rgba(210, 220, 214, .92);
-  border-radius: 1.5rem;
+  border: 1px solid rgba(210, 220, 214, .86);
+  border-radius: 1.25rem;
   background:
-    radial-gradient(circle at 50% 0%, rgba(21, 185, 168, .16), transparent 28%),
-    radial-gradient(circle at 15% 10%, rgba(0, 125, 164, .08), transparent 18%),
-    linear-gradient(180deg, rgba(255,255,255,.96), rgba(250,252,249,.92));
+    radial-gradient(circle at 50% 0%, rgba(21, 185, 168, .08), transparent 24%),
+    linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,252,249,.9));
   box-shadow:
-    0 1px 0 rgba(255,255,255,.96) inset,
-    0 30px 80px rgba(17, 24, 39, .075),
-    0 24px 70px rgba(13, 121, 112, .065);
+    0 1px 0 rgba(255,255,255,.95) inset,
+    0 18px 50px rgba(17, 24, 39, .055),
+    0 14px 38px rgba(13, 121, 112, .035);
 }
 
 .dam-soft-card {
@@ -323,7 +352,7 @@ textarea:focus-visible {
   background:
     linear-gradient(145deg, rgba(255,255,255,.2), transparent 42%),
     linear-gradient(160deg, #007da4 0%, #0f3d2e 58%, #23356f 100%);
-  box-shadow: 0 14px 28px rgba(0,125,164,.22);
+  box-shadow: 0 10px 22px rgba(0,125,164,.16);
 }
 
 .dam-studio {
@@ -418,6 +447,10 @@ textarea:focus-visible {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
 }
 
+.dam-asset-card-mobile-badges {
+  display: none;
+}
+
 .dam-data-table {
   overflow: hidden;
   border: 1px solid rgba(229, 231, 234, .96);
@@ -443,9 +476,75 @@ textarea:focus-visible {
   font-weight: 760;
 }
 
+.review-selected-preview > div:first-child {
+  min-height: 10.5rem;
+}
+
+.review-selected-preview img,
+.review-selected-preview video {
+  max-height: 14rem;
+}
+
+.upload-intake-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1280px) {
+  .upload-intake-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(24rem, .72fr);
+    grid-template-areas:
+      "context people files"
+      "packet packet files"
+      "actions actions actions"
+      "message message message"
+      "receipt receipt receipt";
+    align-items: start;
+  }
+
+  .upload-context-card {
+    grid-area: context;
+  }
+
+  .upload-people-card {
+    grid-area: people;
+  }
+
+  .upload-files-card {
+    grid-area: files;
+  }
+
+  .upload-packet-card {
+    grid-area: packet;
+  }
+
+  .upload-actions-card {
+    grid-area: actions;
+  }
+
+  .upload-message-card {
+    grid-area: message;
+  }
+
+  .upload-receipt-card {
+    grid-area: receipt;
+  }
+}
+
 @media (min-width: 768px) {
   .dam-shell {
     padding: 1.5rem 1.5rem 3.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .dam-shell,
+  main#main-content {
+    padding-bottom: calc(
+      var(--app-mobile-nav-height) +
+      var(--app-mobile-nav-gap) +
+      var(--app-mobile-safe-bottom) +
+      32px
+    );
   }
 }
 
@@ -462,12 +561,135 @@ textarea:focus-visible {
 
   .dam-contact-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .55rem;
+    gap: .65rem;
   }
 
   .dam-contact-grid article {
     border-radius: .85rem;
     box-shadow: 0 8px 18px rgba(35, 53, 111, .045);
+  }
+}
+
+@media (max-width: 429px) {
+  .dam-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .7rem;
+  }
+
+  .dam-contact-grid > div {
+    min-width: 0;
+  }
+
+  .dam-contact-grid .dam-asset-card {
+    display: grid;
+    grid-template-columns: minmax(7.75rem, 38%) minmax(0, 1fr);
+    min-height: 9.75rem;
+  }
+
+  .dam-contact-grid .dam-asset-card-media {
+    aspect-ratio: auto;
+    min-height: 100%;
+    height: 100%;
+  }
+
+  .dam-contact-grid .dam-preview-grid {
+    min-height: 100%;
+    padding: .5rem;
+  }
+
+  .dam-contact-grid .dam-preview-grid::before {
+    inset: .45rem;
+    background-size: 18px 18px;
+  }
+
+  .dam-contact-grid .dam-preview-grid > div {
+    max-width: 4.75rem;
+    gap: .35rem;
+    padding: .5rem;
+    border-radius: .9rem;
+  }
+
+  .dam-contact-grid .dam-preview-grid > div span {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .dam-contact-grid .dam-preview-grid > div strong,
+  .dam-contact-grid .dam-preview-grid > div span:not(:first-child) {
+    display: none;
+  }
+
+  .dam-contact-grid .dam-asset-card-body {
+    border-top: 0;
+    border-left: 1px solid #d6dfd8;
+    padding: .75rem;
+    gap: .5rem;
+  }
+
+  .dam-contact-grid .dam-asset-card-primary,
+  .dam-contact-grid .dam-asset-card-blocker {
+    display: none;
+  }
+
+  .dam-contact-grid .dam-asset-card-mobile-badges {
+    display: flex;
+  }
+
+  .dam-contact-grid .dam-asset-card-mobile-badges [data-badge-size="xs"] {
+    height: 1.5rem;
+    padding-inline: .45rem;
+    font-size: .625rem;
+  }
+
+  .dam-contact-grid .dam-asset-card-title {
+    font-size: .8125rem;
+    line-height: 1.15;
+  }
+
+  .dam-contact-grid .dam-asset-card-subtitle {
+    font-size: .6875rem;
+  }
+
+  .dam-contact-grid .dam-asset-card-meta {
+    font-size: .6875rem;
+  }
+
+  .dam-contact-grid .dam-asset-card-use-line {
+    display: none;
+  }
+
+  .dam-contact-grid .dam-asset-card-preview-action {
+    right: .5rem;
+    bottom: .5rem;
+    width: auto;
+    height: 1.875rem;
+    min-height: 1.875rem;
+    padding-inline: .625rem;
+  }
+
+  .dam-contact-grid .dam-asset-card-preview-action span {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: nowrap;
+  }
+
+  .dam-contact-select {
+    left: .5rem;
+    right: auto;
+    top: .5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: .75rem;
+  }
+
+  .dam-contact-select input {
+    width: .875rem;
+    height: .875rem;
   }
 }
 

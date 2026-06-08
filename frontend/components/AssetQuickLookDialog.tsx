@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Download, ExternalLink, FileLock2, ShieldAlert, X } from "lucide-react";
+import { Download, ExternalLink, FileLock2, ShieldAlert } from "lucide-react";
+import { Dialog } from "@/components/Dialog";
 import { MediaPreview } from "@/components/MediaPreview";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
@@ -17,8 +17,6 @@ type AssetQuickLookDialogProps = {
 };
 
 export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickLookDialogProps) {
-  const dialogRef = useRef<HTMLElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
   const display = assetPresentation(asset, role);
   const state = downloadState(asset, role);
   const preview = detailImageUrl(asset, role);
@@ -26,52 +24,20 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const primaryBlocker = state.reuse.blockers[0]?.label || state.approvedCopy.reason || "Reviewer approval required before reuse.";
 
-  useEffect(() => {
-    if (!open) return;
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const id = window.setTimeout(() => closeRef.current?.focus(), 0);
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a, button, [tabindex]:not([tabindex="-1"])'))
-        .filter((item) => !item.hasAttribute("disabled") && item.tabIndex !== -1);
-      const first = focusable[0];
-      const last = focusable.at(-1);
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.clearTimeout(id);
-      window.removeEventListener("keydown", onKeyDown);
-      window.setTimeout(() => previous?.focus(), 0);
-    };
-  }, [onClose, open]);
-
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#07100d]/42 p-3 backdrop-blur-[5px]" role="presentation" onMouseDown={onClose}>
-      <section
-        ref={dialogRef}
-        className="grid max-h-[92dvh] w-full max-w-6xl overflow-hidden rounded-lg border border-[#9fb4a8] bg-white shadow-[0_24px_80px_rgba(7,16,13,.24)] lg:grid-cols-[minmax(0,1.25fr)_24rem]"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`quick-look-${asset.id}-title`}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
+    <Dialog
+      open={open}
+      title={display.title}
+      description={display.cardSubtitle}
+      onClose={onClose}
+      closeLabel="Close quick preview"
+      maxWidthClassName="max-w-6xl"
+      className="[&_[data-dialog-panel]]:p-0"
+      tone={state.approvedCopy.allowed ? "success" : "warning"}
+    >
+      <div className="grid gap-0 lg:grid-cols-[minmax(0,1.25fr)_24rem]">
         <div className="min-h-0 overflow-y-auto bg-white p-3">
           <div className="relative aspect-[4/3] min-h-64 overflow-hidden rounded-lg border border-[#d6dfd8] bg-[#eef1ed]">
             <MediaPreview
@@ -86,7 +52,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
           </div>
           <div className="mt-3 grid gap-2 border-t border-[#d6dfd8] pt-3 text-tjc-ink">
             <span className="text-xs font-black uppercase tracking-[.06em] text-tjc-muted">Quick look</span>
-            <h2 id={`quick-look-${asset.id}-title`} className="text-2xl font-black leading-tight">{display.title}</h2>
+            <h3 className="text-2xl font-black leading-tight">{display.title}</h3>
             <p className="text-sm font-semibold leading-relaxed text-tjc-muted">{display.cardSubtitle}</p>
           </div>
         </div>
@@ -97,15 +63,6 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
               <span className="text-sm font-black text-tjc-evergreen">Reuse decision</span>
               <strong className="mt-1 block text-xl leading-tight text-tjc-ink">{state.reuse.label}</strong>
             </div>
-            <button
-              ref={closeRef}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-tjc-line bg-white text-tjc-muted transition hover:bg-[#eef7f1] hover:text-tjc-evergreen"
-              type="button"
-              onClick={onClose}
-              aria-label="Close quick preview"
-            >
-              <X size={16} strokeWidth={1.9} aria-hidden="true" />
-            </button>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
@@ -123,7 +80,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
             <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#6f4608]">
               <FileLock2 size={18} strokeWidth={1.9} aria-hidden="true" />
               <span>
-                <strong className="block text-sm font-black">Download blocked</strong>
+                <strong className="block text-sm font-black">Download unavailable</strong>
                 <span className="mt-1 block text-sm font-semibold leading-snug">{state.panelLabel}</span>
               </span>
             </div>
@@ -172,7 +129,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
             ))}
           </div>
         </aside>
-      </section>
-    </div>
+      </div>
+    </Dialog>
   );
 }
