@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Database, FolderOpen, Search, ShieldCheck, Users } from "lucide-react";
+import { Database, FolderOpen, Search, ShieldCheck, Users } from "lucide-react";
 import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
 import { CollectionShelfInspector } from "@/components/CollectionShelfInspector";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -32,6 +32,7 @@ export function CollectionsPage() {
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
+  const mobileInspectorRef = useRef<HTMLDivElement>(null);
 
   const apiUrl = useMemo(() => `/api/assets/search?role=${encodeURIComponent(role)}&sort=Approved+first&limit=36`, [role]);
 
@@ -81,17 +82,26 @@ export function CollectionsPage() {
     router.push(`/?collection=${encodeURIComponent(collection.id)}`);
   }
 
+  function inspectCollection(collectionId: string) {
+    setSelectedCollectionId(collectionId);
+    window.setTimeout(() => {
+      if (window.innerWidth < 1024) {
+        mobileInspectorRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
+    }, 0);
+  }
+
   return (
     <div className="dam-shell">
-      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Collections workspace">
+      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5" aria-label="Collections workspace">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-black text-tjc-evergreen">
             <FolderOpen size={17} strokeWidth={1.8} aria-hidden="true" />
-            Albums and ministry contexts
+            Collections and ministry contexts
           </div>
           <h1 className="mt-2 dam-page-title">Collections</h1>
           <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">
-            Browse ministry albums first, then open Library to confirm per-asset reuse before publication.
+            Browse collections first, then open Library to confirm each asset before publication.
           </p>
           <form className="mt-4 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={19} strokeWidth={1.8} />
@@ -105,7 +115,7 @@ export function CollectionsPage() {
               name="q"
               type="search"
             />
-            <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search</button>
+            <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search collections</button>
           </form>
           {submittedQuery ? (
             <button className="mt-2 inline-flex min-h-8 items-center rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
@@ -118,45 +128,6 @@ export function CollectionsPage() {
           ) : null}
         </div>
 
-        <div className="hidden min-w-0 content-start gap-3 border-t border-[#d6dfd8] pt-4 xl:grid xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-sm font-black text-tjc-evergreen">ResourceSpace export</span>
-              <strong className="mt-1 block text-sm font-semibold text-tjc-ink">{result?.source.label || "Loading source"}</strong>
-              <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">{result?.source.detail || "Loading ResourceSpace source state."}</p>
-            </div>
-            <Database className="shrink-0 text-tjc-evergreen" size={19} strokeWidth={1.8} aria-hidden="true" />
-          </div>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-2 border-y border-[#d6dfd8] py-3 text-sm sm:grid-cols-4">
-            {[
-              { label: "collections", value: collections.length, tone: "ok" as const, icon: FolderOpen },
-              { label: "album assets", value: totalCollectionAssets, tone: "info" as const, icon: Database },
-              { label: "people flags", value: peopleWarnings, tone: peopleWarnings ? "warn" as const : "ok" as const, icon: Users },
-              { label: "approved", value: result?.counts.approved ?? "-", tone: "ok" as const, icon: ShieldCheck }
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div className="min-w-0" key={item.label}>
-                  <div className="flex items-center gap-1.5 text-tjc-muted">
-                    <Icon size={13} strokeWidth={1.8} aria-hidden="true" />
-                    <span className="truncate text-[11px] font-semibold uppercase">{item.label}</span>
-                  </div>
-                  <strong className="mt-0.5 block text-lg font-black tabular-nums text-tjc-ink">{item.value}</strong>
-                </div>
-              );
-            })}
-          </div>
-          {strongestCollection ? (
-            <button className="flex min-w-0 items-center justify-between gap-3 rounded-md px-0 py-2 text-left transition hover:bg-[#eef7f1] hover:px-2" type="button" onClick={() => openCollection(strongestCollection)}>
-              <span className="min-w-0">
-                <span className="block text-xs font-black uppercase tracking-[.08em] text-tjc-muted">Largest album</span>
-                <strong className="mt-1 block truncate text-sm font-black text-tjc-ink">{strongestCollection.name}</strong>
-                <span className="mt-1 block text-xs font-semibold text-tjc-muted">{strongestCollection.countLabel} / {strongestCollection.approvalSummary}</span>
-              </span>
-              <ArrowUpRight className="shrink-0 text-tjc-evergreen" size={17} strokeWidth={1.8} aria-hidden="true" />
-            </button>
-          ) : null}
-        </div>
       </section>
 
       {error ? (
@@ -169,11 +140,11 @@ export function CollectionsPage() {
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-[#d6dfd8] pb-3">
             <div>
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Album shelves</h2>
+              <h2 className="text-sm font-semibold text-tjc-evergreen">Collections</h2>
               <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Counts, dates, source, approval summary, and people/minors warning come from current export metadata.</p>
             </div>
             <span className="text-xs font-semibold text-tjc-muted">
-              {loading ? "Loading albums" : `${collections.length} shown`}
+              {loading ? "Loading collections" : `${collections.length} shown`}
             </span>
           </div>
           <nav className="mb-3 flex flex-wrap gap-2 border-b border-[#d6dfd8] pb-3 text-sm font-semibold" aria-label="Collection use cases">
@@ -200,36 +171,56 @@ export function CollectionsPage() {
           ) : null}
           <div className="grid gap-3">
             {collections.map((collection) => (
-              <CollectionAlbumCard
-                key={collection.id}
-                name={collection.name}
-                description={collection.description}
-                countLabel={collection.countLabel}
-                dateRange={collection.dateRange}
-                ministry={collection.ministry}
-                approvalSummary={collection.approvalSummary}
-                peopleWarning={collection.peopleWarning}
-                images={collection.images}
-                isActive={selectedCollection?.id === collection.id}
-                onInspect={() => setSelectedCollectionId(collection.id)}
-                onOpen={() => openCollection(collection)}
-              />
+              <Fragment key={collection.id}>
+                <CollectionAlbumCard
+                  name={collection.name}
+                  description={collection.description}
+                  countLabel={collection.countLabel}
+                  dateRange={collection.dateRange}
+                  ministry={collection.ministry}
+                  approvalSummary={collection.approvalSummary}
+                  peopleWarning={collection.peopleWarning}
+                  images={collection.images}
+                  isActive={selectedCollection?.id === collection.id}
+                  inspectLabel={role === "Viewer" ? "View details" : "Inspect metadata"}
+                  onInspect={() => inspectCollection(collection.id)}
+                  onOpen={() => openCollection(collection)}
+                />
+                {selectedCollection?.id === collection.id ? (
+                  <div ref={mobileInspectorRef} className="scroll-mt-24 lg:hidden">
+                    <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
+                  </div>
+                ) : null}
+              </Fragment>
             ))}
           </div>
         </div>
 
-        <aside className="grid min-w-0 gap-3 lg:sticky lg:top-24 lg:self-start" aria-label="Collection governance">
+        <aside className="hidden min-w-0 gap-3 lg:sticky lg:top-[calc(var(--app-header-height)+1.25rem)] lg:grid lg:max-h-[calc(100vh-var(--app-header-height)-2rem)] lg:self-start lg:overflow-auto" aria-label="Collection governance">
           <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
-          <details className="rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 text-sm lg:hidden">
+          <details className="rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 text-sm">
             <summary className="cursor-pointer font-black text-tjc-evergreen">ResourceSpace export</summary>
             <div className="mt-3 grid gap-2 text-tjc-muted">
               <strong className="text-tjc-ink">{result?.source.label || "Loading source"}</strong>
               <p className="text-xs font-semibold leading-relaxed">{result?.source.detail || "Loading ResourceSpace source state."}</p>
-              <div className="grid grid-cols-2 gap-2">
-                <span>{collections.length} collections</span>
-                <span>{totalCollectionAssets} album assets</span>
-                <span>{peopleWarnings} people flags</span>
-                <span>{result?.counts.approved ?? "-"} approved</span>
+              <div className="grid grid-cols-2 gap-2 text-xs font-black">
+                {[
+                  { label: "collections", value: collections.length, icon: FolderOpen },
+                  { label: "album assets", value: totalCollectionAssets, icon: Database },
+                  { label: "people flags", value: peopleWarnings, icon: Users },
+                  { label: "approved", value: result?.counts.approved ?? "-", icon: ShieldCheck }
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <span className="rounded-xl border border-[#dbe5de] bg-[#fbfcfa] p-2" key={item.label}>
+                      <span className="flex items-center gap-1.5 text-tjc-muted">
+                        <Icon size={12} strokeWidth={1.8} aria-hidden="true" />
+                        {item.label}
+                      </span>
+                      <strong className="mt-1 block text-sm tabular-nums text-tjc-ink">{item.value}</strong>
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </details>

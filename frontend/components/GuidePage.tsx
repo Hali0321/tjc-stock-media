@@ -1,47 +1,47 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BadgeCheck, CircleHelp, Download, FileText, Image as ImageIcon, MessageCircle, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
+import { BadgeCheck, CircleHelp, Download, FileLock2, FileText, Image as ImageIcon, MessageCircle, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
 import { MediaPreviewPanel } from "@/components/MediaPreviewPanel";
 
 const guideBlocks = [
   {
-    title: "How to search",
+    title: "Search approved media",
     icon: Search,
     body: "Start with ministry need first: Bible Study, fellowship, worship, flowers, website hero, slides, newsletter, no people, or event name.",
     doText: "Combine use case and safety terms, such as website hero no people.",
     avoidText: "Do not search only by old filenames unless a DAM admin asks for source tracing."
   },
   {
-    title: "How to know if something is approved",
+    title: "Download an approved image",
     icon: BadgeCheck,
     body: "Use raw ResourceSpace status and portal reuse state together. ResourceSpace approval alone is not enough for public reuse.",
     doText: "Use Portal ready or Internal ready assets inside their stated scope.",
     avoidText: "Do not treat Please review before public sharing, Archive only, or Contains children/youth as publishable."
   },
   {
-    title: "Church-wide vs internal",
+    title: "Share internally",
     icon: ShieldCheck,
     body: "Church-wide assets can support public ministry communication. Internal assets stay within coworkers, recap decks, and local ministry coordination.",
     doText: "Choose internal assets for team updates, planning, and private recap material.",
     avoidText: "Do not move internal media into public posts, web pages, or printed outreach without another review."
   },
   {
-    title: "Photo use",
+    title: "Use media on website/social",
     icon: ImageIcon,
     body: "Keep ministry context intact. Cropping, contrast, and layout choices should preserve worship, service, fellowship, and event meaning.",
     doText: "Use portal-ready images for newsletters, slides, local updates, and website articles.",
     avoidText: "Do not crop in a way that changes ministry context or isolates people without clear reason."
   },
   {
-    title: "Logo and graphic use",
+    title: "Use logos and graphics",
     icon: FileText,
     body: "Use approved logo, template, and graphic files when available. Source and version matter for public-facing work.",
     doText: "Use latest approved copy or ask a media coworker for the right file.",
     avoidText: "Do not recreate logos from screenshots, old flyers, or social posts."
   },
   {
-    title: "Children/youth",
+    title: "Check children/youth",
     icon: Users,
     body: "Children/youth visibility requires extra care. Portal blocks unsafe downloads and calls out risk labels.",
     doText: "Ask a reviewer before public sharing when children/youth may be visible.",
@@ -55,7 +55,14 @@ const guideBlocks = [
     avoidText: "Do not remove provenance notes when handing media to another coworker."
   },
   {
-    title: "Large media intake",
+    title: "Request original",
+    icon: FileLock2,
+    body: "Original/master files stay in ResourceSpace and Google Shared Drive. Normal users work from approved copies unless a ministry use case requires source access.",
+    doText: "Request original access with ResourceSpace ID, reason, and usage scope.",
+    avoidText: "Do not treat original access as normal download or bypass approved-copy review."
+  },
+  {
+    title: "Upload new media",
     icon: UploadCloud,
     body: "Video/audio over 100 MB uses Shared Drive Incoming or admin intake, then ResourceSpace indexing.",
     doText: "Send large files through approved intake path so checksum, source, and review state remain traceable.",
@@ -124,14 +131,49 @@ export function GuidePage() {
         </div>
       </section>
 
-      <nav className="mt-4 flex flex-wrap gap-2 border-b border-[#d6dfd8] pb-3 lg:hidden" aria-label="Guide jump navigation">
-        <a className="rounded-full border border-[#cad8cf] bg-white px-3 py-2 text-sm font-black text-tjc-evergreen" href="#before-downloading">Before downloading</a>
-        {guideBlocks.map((block) => (
-          <a className="rounded-full border border-[#cad8cf] bg-white px-3 py-2 text-sm font-black text-[#3f4a43]" href={`#${guideSectionId(block.title)}`} key={block.title}>{block.title}</a>
-        ))}
-      </nav>
+      <section className="mt-4 grid gap-3 lg:hidden" aria-label="Task-based guide" data-component="GuideMobileTaskPicker">
+        <div className="border-b border-[#d6dfd8] pb-3">
+          <h2 className="text-base font-black text-tjc-ink">What are you trying to do?</h2>
+          <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">Open one task. Ask a media coworker when source, children/youth, or approval is unclear.</p>
+        </div>
+        <div className="grid gap-2">
+          {visibleBlocks.map((block) => {
+            const Icon = block.icon;
+            return (
+              <details className="rounded-2xl border border-[#d6dfd8] bg-white p-3" key={block.title}>
+                <summary className="grid cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl border border-[#dbe4dd] bg-[#f8fbf8] text-tjc-evergreen">
+                    <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                  </span>
+                  <span className="font-black text-tjc-ink">{block.title}</span>
+                </summary>
+                <p className="mt-3 text-sm font-semibold leading-relaxed text-tjc-muted">{block.body}</p>
+                <div className="mt-3 grid gap-2 text-sm">
+                  <p className="rounded-xl border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
+                    <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
+                    {block.doText}
+                  </p>
+                  <p className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
+                    <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
+                    {block.avoidText}
+                  </p>
+                </div>
+              </details>
+            );
+          })}
+        </div>
+        {!visibleBlocks.length ? (
+          <div className="rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide tasks match that search.</div>
+        ) : null}
+        <section className="rounded-[1.4rem] border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworkerMobile">
+          <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Ask a media coworker</h2>
+          <p className="mt-2 text-sm leading-relaxed">
+            If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review.
+          </p>
+        </section>
+      </section>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <div className="mt-5 hidden gap-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
         <aside className="hidden lg:block">
           <nav className="sticky top-24 grid gap-1 text-sm font-semibold text-tjc-muted" aria-label="Guide sections">
             <a className="rounded-md px-2 py-1.5 text-tjc-evergreen hover:bg-[#eef4f0]" href="#before-downloading">Before downloading</a>
@@ -169,12 +211,12 @@ export function GuidePage() {
                     <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
                     </div>
                   </div>
-                  <div className="grid gap-3 text-sm md:grid-cols-2">
-                    <p className="leading-relaxed text-[#24583d]">
+                  <div className="grid gap-3 text-sm md:grid-cols-2" data-component="GuideDoAvoidSpacing">
+                    <p className="rounded-xl border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
                       <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
                       {block.doText}
                     </p>
-                    <p className="leading-relaxed text-[#725216]">
+                    <p className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
                       <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
                       {block.avoidText}
                     </p>
@@ -189,7 +231,7 @@ export function GuidePage() {
             <div className="mt-4 rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
           ) : null}
 
-          <section className="mt-5 rounded-[1.4rem] border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]">
+          <section className="mt-5 rounded-[1.4rem] border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworker">
             <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Ask a media coworker</h2>
             <p className="mt-2 text-sm leading-relaxed">
               If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.

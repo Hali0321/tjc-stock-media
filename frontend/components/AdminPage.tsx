@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Database, Download, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
+import { AlertTriangle, Database, Download, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { AdminActionItem, DamReadinessItem, DamReadinessResult, IntegrationReadinessItem, VocabularyInsight } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -44,16 +45,23 @@ function MetricTile({ label, value }: { label: string; value?: number }) {
   );
 }
 
+function zeroCountLabel(item: AdminActionItem) {
+  return item.owner === "DAM Admin" ? "View policy" : "No open items";
+}
+
 const adminNav = [
   { label: "Overview", href: "#overview", icon: Gauge },
   { label: "Launch gate", href: "#launch-gate", icon: Lock },
   { label: "Pillars", href: "#pillars", icon: Layers },
-  { label: "Backlog", href: "#backlog", icon: ListChecks },
+  { label: "Action backlog", href: "#backlog", icon: ListChecks },
   { label: "Mappings", href: "#mappings", icon: Database },
   { label: "Vocabulary", href: "#vocabulary", icon: Tags },
   { label: "Portal gate", href: "#portal-gate", icon: Share2 },
   { label: "Audit log", href: "#audit-log", icon: ScrollText }
 ];
+
+const adminTabs = ["Overview", "Mapping", "Action backlog", "Audit", "Launch Gate"] as const;
+type AdminTab = (typeof adminTabs)[number];
 
 function AdminLoadingState() {
   return (
@@ -81,6 +89,7 @@ export function AdminPage() {
   const { role, ready } = useDemoRole();
   const [data, setData] = useState<DamReadinessResult | null>(null);
   const [error, setError] = useState("");
+  const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("Action backlog");
 
   useEffect(() => {
     if (!ready || role !== "DAM Admin") return;
@@ -206,11 +215,15 @@ export function AdminPage() {
     {
       key: "open",
       header: "Open",
-      render: (item) => item.savedViewId ? (
+      render: (item) => item.count > 0 && item.savedViewId ? (
         <Link className="inline-flex min-h-8 items-center rounded-lg border border-tjc-line bg-white px-3 text-xs font-black text-tjc-evergreen hover:bg-[#eef7f1]" href={`/?view=${encodeURIComponent(item.savedViewId)}`}>
-          Queue
+          Review queue
         </Link>
-      ) : <span className="text-xs font-semibold text-tjc-muted">Admin</span>
+      ) : (
+        <span className={cn("inline-flex min-h-8 items-center rounded-lg border px-3 text-xs font-black", item.count === 0 ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-tjc-line bg-white text-tjc-muted")}>
+          {item.count === 0 ? zeroCountLabel(item) : "Admin"}
+        </span>
+      )
     }
   ];
   const integrationColumns: Array<DataTableColumn<IntegrationReadinessItem>> = [
@@ -278,11 +291,21 @@ export function AdminPage() {
           <span className="px-3 pb-2 text-xs font-black uppercase text-tjc-muted">Admin</span>
           {adminNav.map((item) => {
             const Icon = item.icon;
+            const tabForItem: AdminTab =
+              item.label === "Mappings" || item.label === "Vocabulary"
+                ? "Mapping"
+                : item.label === "Action backlog"
+                  ? "Action backlog"
+                  : item.label === "Audit log"
+                    ? "Audit"
+                    : item.label === "Launch gate" || item.label === "Portal gate"
+                      ? "Launch Gate"
+                      : "Overview";
             return (
-              <a className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" href={item.href} key={item.href}>
+              <button className={cn("inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-left text-sm font-semibold transition hover:bg-[#eef7f1] hover:text-tjc-evergreen", activeAdminTab === tabForItem ? "bg-[#e5f6f2] text-tjc-evergreen" : "text-[#3f4a43]")} type="button" onClick={() => setActiveAdminTab(tabForItem)} key={item.href}>
                 <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
                 {item.label}
-              </a>
+              </button>
             );
           })}
           <div className="mt-6 border-t border-[#d6dfd8] px-3 pt-4 text-xs leading-relaxed text-tjc-muted">
@@ -296,17 +319,29 @@ export function AdminPage() {
       <section id="overview" className="scroll-mt-24 grid gap-4 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
           <span className="text-sm font-black text-tjc-evergreen">DAM Admin</span>
-          <h1 className="mt-2 dam-page-title">Production readiness</h1>
-          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Operational truth for ResourceSpace read/write status, download safety, launch blockers, and field coverage.</p>
+          <h1 className="mt-2 dam-page-title">Launch blocked</h1>
+          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Reviewer and contributor pilot remains safe for curated workflows. Full production launch waits on the blockers below.</p>
+          <ol className="mt-4 grid gap-2 text-sm font-black text-[#6f4608]">
+            {[
+              "ResourceSpace write mapping",
+              "Real authentication / SSO",
+              "Rights and consent review coverage"
+            ].map((blocker, index) => (
+              <li className="grid grid-cols-[auto_1fr] gap-2 rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3" key={blocker}>
+                <span className="tabular-nums">{index + 1}.</span>
+                <span>{blocker}</span>
+              </li>
+            ))}
+          </ol>
         </div>
         <div className="grid content-center gap-3 rounded-[1.45rem] border border-[#d6dfd8] bg-white p-4 shadow-[0_14px_34px_rgba(25,34,29,.04)]">
           <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-tjc-evergreen">
-              <Gauge size={19} strokeWidth={1.8} aria-hidden="true" />
-              Readiness score
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#7d2d2a]">
+              <AlertTriangle size={19} strokeWidth={1.8} aria-hidden="true" />
+              Launch gate status
             </div>
-            <strong className="mt-1 block text-4xl font-black tabular-nums text-tjc-ink">{data.score}%</strong>
-            <span className="mt-1 block text-sm font-semibold text-tjc-muted">{data.assetCount.toLocaleString()} assets checked from {data.source.label}</span>
+            <strong className="mt-1 block text-3xl font-black text-tjc-ink">Blocked</strong>
+            <span className="mt-1 block text-sm font-semibold text-tjc-muted">Readiness score {data.score}% across {data.assetCount.toLocaleString()} assets from {data.source.label}</span>
             <span className="mt-3 block h-2 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
               <span className={cn("block h-full rounded-full", scoreTone(data.score) === "ok" ? "bg-[#2f7d55]" : scoreTone(data.score) === "info" ? "bg-[#5a7f95]" : "bg-[#d64545]")} style={{ width: `${Math.max(3, Math.min(data.score, 100))}%` }} />
             </span>
@@ -318,6 +353,21 @@ export function AdminPage() {
         </div>
       </section>
 
+      <DamTabs
+        tabs={adminTabs}
+        active={activeAdminTab}
+        onChange={setActiveAdminTab}
+        ariaLabel="Admin readiness sections"
+        idPrefix="admin-readiness"
+        className="mt-4"
+      />
+
+      <section
+        id={damTabPanelId("admin-readiness", "Overview")}
+        role="tabpanel"
+        aria-labelledby={damTabId("admin-readiness", "Overview")}
+        hidden={activeAdminTab !== "Overview"}
+      >
       <section className="mt-4 grid gap-3 lg:grid-cols-3" aria-label="Top readiness blockers">
         {topBlockers.map((item, index) => (
           <Link
@@ -334,7 +384,14 @@ export function AdminPage() {
           </Link>
         ))}
       </section>
+      </section>
 
+      <section
+        id={damTabPanelId("admin-readiness", "Launch Gate")}
+        role="tabpanel"
+        aria-labelledby={damTabId("admin-readiness", "Launch Gate")}
+        hidden={activeAdminTab !== "Launch Gate"}
+      >
       <section id="launch-gate" className="mt-4 scroll-mt-24 rounded-[1.25rem] border border-[#d6dfd8] bg-white" aria-label="Launch decisions">
         {launchDecisions.map((decision) => (
           <div className="grid gap-2 border-b border-[#d6dfd8] px-4 py-4 last:border-b-0 md:grid-cols-[15rem_8rem_minmax(0,1fr)]" key={decision.question}>
@@ -343,6 +400,7 @@ export function AdminPage() {
             <span className="text-sm leading-relaxed text-tjc-muted">{decision.detail}</span>
           </div>
         ))}
+      </section>
       </section>
 
       <details className="mt-4 rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4 md:hidden" aria-label="Collapsed admin diagnostics">
@@ -373,7 +431,7 @@ export function AdminPage() {
         </div>
       </details>
 
-      <section className="mt-4 hidden grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid md:grid-cols-5 xl:grid-cols-10" aria-label="DAM operating metrics">
+      <section className={cn("mt-4 hidden grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid md:grid-cols-5 xl:grid-cols-10", activeAdminTab !== "Overview" && "md:hidden")} aria-label="DAM operating metrics">
         <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
         <MetricTile label="Portal ready" value={data.metrics.portalReady} />
         <MetricTile label="Needs review" value={data.metrics.needsReview} />
@@ -386,7 +444,7 @@ export function AdminPage() {
         <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
       </section>
 
-      <details className="mt-4 hidden rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Operational diagnostics">
+      <details className={cn("mt-4 hidden rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 md:block", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Operational diagnostics">
         <summary className="cursor-pointer font-black text-tjc-evergreen">Operational diagnostics</summary>
         <section className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4">
@@ -412,7 +470,7 @@ export function AdminPage() {
         </section>
       </details>
 
-      <section id="pillars" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white md:block" aria-label="Production DAM pillars">
+      <section id="pillars" className={cn("mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white md:block", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Production DAM pillars">
         {data.readiness.map((item) => {
           const Icon = pillarIcon(item.pillar);
           return (
@@ -441,7 +499,44 @@ export function AdminPage() {
         })}
       </section>
 
-      <section id="backlog" className="mt-4 hidden scroll-mt-24 gap-4 md:grid xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]" aria-label="Admin work plan">
+      <section
+        id={damTabPanelId("admin-readiness", "Action backlog")}
+        role="tabpanel"
+        aria-labelledby={damTabId("admin-readiness", "Action backlog")}
+        hidden={activeAdminTab !== "Action backlog"}
+      >
+      <section className="mt-4 grid gap-3 md:hidden" aria-label="Mobile production blocker backlog" data-component="AdminMobileQueueContent">
+        <div className="rounded-[1.2rem] border border-[#ead6a8] bg-[#fff8e8] p-4 text-[#725216]">
+          <h2 className="text-base font-black">Top blockers</h2>
+          <p className="mt-1 text-sm font-semibold leading-relaxed">
+            Launch is blocked until these ResourceSpace and policy queues are cleared.
+          </p>
+        </div>
+        {topBlockers.map((item) => (
+          <Link
+            className={cn("grid gap-2 rounded-[1.1rem] border border-[#d6dfd8] bg-white p-4 shadow-[0_12px_30px_rgba(35,53,111,.04)]", item.count === 0 && "pointer-events-none")}
+            href={item.count > 0 && item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
+            key={`mobile-backlog-${item.id}`}
+            aria-disabled={item.count === 0}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-sm font-black leading-tight text-tjc-ink">{item.label}</strong>
+              <span className={cn("shrink-0 rounded-full border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>
+                {item.count.toLocaleString()}
+              </span>
+            </div>
+            <p className="text-sm font-semibold leading-relaxed text-tjc-muted">{item.action}</p>
+            <span className="text-xs font-black uppercase tracking-[.06em] text-tjc-evergreen">{item.count === 0 ? zeroCountLabel(item) : `${item.owner} · ${item.severity}`}</span>
+          </Link>
+        ))}
+        <div className="grid gap-2 rounded-[1.1rem] border border-[#c8d7e6] bg-[#f2f7fb] p-4 text-[#27435b]">
+          <strong className="text-sm font-black">Launch decision</strong>
+          <span className="text-sm font-semibold leading-relaxed">
+            Reviewer/contributor pilot is safe for curated workflows; full production remains blocked by ResourceSpace write mapping and real auth.
+          </span>
+        </div>
+      </section>
+      <section id="backlog" className={cn("mt-4 hidden scroll-mt-24 gap-4 md:grid xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]", activeAdminTab !== "Action backlog" && "md:hidden")} aria-label="Admin work plan">
         <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><ListChecks size={18} strokeWidth={1.8} aria-hidden="true" /> Action backlog</h2>
           <div className="mt-3">
@@ -463,7 +558,7 @@ export function AdminPage() {
                     <span className={cn("rounded-md border px-2 py-1 text-xs font-black", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
                   </div>
                   <p className="text-xs font-semibold leading-relaxed text-tjc-muted">{item.action}</p>
-                  <span className="text-xs font-black text-tjc-muted">{item.owner}</span>
+                  <span className="text-xs font-black text-tjc-muted">{item.count === 0 ? zeroCountLabel(item) : item.owner}</span>
                 </div>
               )}
             />
@@ -498,9 +593,16 @@ export function AdminPage() {
           </div>
         </section>
       </section>
+      </section>
 
-      <section className="mt-4 hidden gap-4 md:grid xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]">
-        <section id="mappings" className="scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="ResourceSpace field mapping">
+      <section
+        id={damTabPanelId("admin-readiness", "Mapping")}
+        role="tabpanel"
+        aria-labelledby={damTabId("admin-readiness", "Mapping")}
+        hidden={activeAdminTab !== "Mapping"}
+      >
+      <section className={cn("mt-4 hidden gap-4 md:grid xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]", activeAdminTab !== "Mapping" && "md:hidden")}>
+        <section id="mappings" className={cn("scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4", activeAdminTab !== "Mapping" && "hidden")} aria-label="ResourceSpace field mapping">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-xl font-semibold"><Database size={18} strokeWidth={1.8} aria-hidden="true" /> Field mapping coverage</h2>
@@ -556,8 +658,9 @@ export function AdminPage() {
           </div>
         </section>
       </section>
+      </section>
 
-      <section id="portal-gate" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Portal policy">
+      <section id="portal-gate" className={cn("mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4 md:block", activeAdminTab !== "Launch Gate" && "md:hidden")} aria-label="Portal policy">
         <h2 className="flex items-center gap-2 text-xl font-semibold"><Share2 size={18} strokeWidth={1.8} aria-hidden="true" /> Public portal gate</h2>
         <div className="mt-3 grid gap-x-5 gap-y-2 md:grid-cols-2 xl:grid-cols-3">
           {data.portalPolicy.map((policy) => (
@@ -577,6 +680,12 @@ export function AdminPage() {
         </div>
       </section>
 
+      <section
+        id={damTabPanelId("admin-readiness", "Audit")}
+        role="tabpanel"
+        aria-labelledby={damTabId("admin-readiness", "Audit")}
+        hidden={activeAdminTab !== "Audit"}
+      >
       <section id="audit-log" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Audit log">
         <h2 className="flex items-center gap-2 text-xl font-semibold"><ScrollText size={18} strokeWidth={1.8} aria-hidden="true" /> Audit log</h2>
         <p className="mt-1 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">
@@ -602,6 +711,7 @@ export function AdminPage() {
             </div>
           ))}
         </div>
+      </section>
       </section>
       </main>
     </div>

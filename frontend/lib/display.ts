@@ -13,8 +13,11 @@ export function normalizeAssetTitle(rawTitle: string, originalFilename?: string,
   const source = rawTitle || originalFilename || "Untitled asset";
   const cleaned = source
     .replace(/^copy of\s+/i, "")
+    .replace(/^\d{3,6}\s*x\s*\d{3,6}\b/i, "")
     .replace(/\.(jpe?g|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac|pdf)$/i, "")
-    .replace(/\b(cleanup|edited|final|copy)\b/gi, "")
+    .replace(/\b(cleanup|edited|final|copy|uncropped|raw)\b/gi, "")
+    .replace(/\btheappbuilder\s+icon\b/gi, "")
+    .replace(/\b\d{1,2}(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\d{2,4}\b/gi, "")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();

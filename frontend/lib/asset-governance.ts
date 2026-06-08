@@ -193,7 +193,7 @@ function assetDecision(asset: StockMediaAsset) {
   if (assetIsBlocked(asset)) return "Do not use";
   if (assetNeedsReview(asset)) return "Needs review";
   if (assetIsArchiveOnly(asset)) return "Archive only";
-  if (asset.status === "Approved Public" && asset.downloadPolicy === "approved-copy-allowed") return hasTrustWarnings ? "Needs portal review" : "Portal ready";
+  if (asset.status === "Approved Public" && asset.downloadPolicy === "approved-copy-allowed") return hasTrustWarnings ? "Needs review" : "Portal ready";
   if (asset.status === "Approved Internal") return hasTrustWarnings ? "Needs internal review" : "Internal ministry only";
   return "Ask reviewer";
 }

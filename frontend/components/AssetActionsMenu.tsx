@@ -10,9 +10,10 @@ type AssetActionsMenuProps = {
   asset: StockMediaAsset;
   resourceSpaceUrl: string | null;
   canOpenResourceSpace: boolean;
+  label?: string;
 };
 
-export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace }: AssetActionsMenuProps) {
+export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace, label = "Asset actions" }: AssetActionsMenuProps) {
   const [status, setStatus] = useState("");
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
 
@@ -60,5 +61,5 @@ export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace
     });
   }
 
-  return <DropdownActionMenu label="Asset actions" actions={actions} status={status} />;
+  return <DropdownActionMenu label={label} actions={actions} status={status} />;
 }

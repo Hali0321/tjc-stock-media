@@ -16,7 +16,7 @@ master warehouse / selected originals / organized storage
         | manual import now
         | Phase 2: Google Drive connector or StaticSync-style workflow
         v
-ResourceSpace prototype on Hali Mac
+ResourceSpace local prototype
 DAM index / tags / search / review / downloads
         |
         v
@@ -28,7 +28,7 @@ Portal-ready reuse is computed separately from raw ResourceSpace approval.
 
 ## Clone And Local Setup
 
-Teammates can clone this repo and work from it normally:
+Clone the repo and install dependencies:
 
 ```bash
 git clone https://github.com/Hali0321/tjc-stock-media.git
@@ -70,7 +70,7 @@ Local-only files are intentionally not committed:
 - generated PNG screenshots
 - `frontend/node_modules/` and `.next/`
 
-This means a fresh clone has the full project code, docs, scripts, Docker config, ResourceSpace helpers, and portal frontend, but each teammate still needs their own local runtime data or metadata export.
+This means a fresh clone has the full project code, docs, scripts, Docker config, ResourceSpace helpers, portal frontend, and safe fallback demo data. Each local environment still needs its own `.env`, ResourceSpace runtime data, or metadata export for full-fidelity media/search behavior.
 
 ## Launch Plan
 
@@ -85,7 +85,7 @@ Key launch wording:
 with tiered archive import and partial human review.
 ```
 
-Launch is blocked until a church-owned PC/NAS can run ResourceSpace without Hali's Mac, Cloudflare Access protects the site, backups restore on a clean host, large media has an admin intake path, and unreviewed assets cannot be mistaken for approved media.
+Launch is blocked until a church-owned PC/NAS can run ResourceSpace independently, Cloudflare Access protects the site, backups restore on a clean host, large media has an admin intake path, and unreviewed assets cannot be mistaken for approved media.
 
 ## First Batch
 
@@ -149,13 +149,13 @@ Open TJC Stock Media portal:
 
 ## Current Frontend State
 
-Latest UI pass: 2026-06-07 app-native 21st primitive swap, mobile density, screenshots, and QA continuation.
+Latest UI pass: 2026-06-08 launch-polish verification, app-native DAM workflows, mobile density, screenshots, and QA continuation.
 
 The portal now uses a warm-neutral DAM system with rounded workflow navigation, `Cmd/Ctrl+K` command palette, Library saved-view rail, DAM contact sheet, album-style Collections, contributor Upload intake with selected-file preview and bottom action bar, Review governance workbench with desktop DataTable/tablet-mobile cards, Asset Detail trust record with `MediaPreviewPanel`, calm Admin readiness console with DataTables, unified status/state/toast primitives, and editorial Guide rows.
 
 Safety remains unchanged: ResourceSpace is still source of truth, Google Shared Drive keeps master originals, pending review writes are local/not final, uploads stay `Needs Review / Do Not Publish`, unsafe Viewer downloads remain blocked, and original/master access remains restricted.
 
-Refreshed screenshots live under `docs/screenshots/`, including desktop plus 320/390 mobile captures and primitive proofs under `docs/screenshots/primitive-proof/`. Latest `portal-browser-qa` checked 15 routes across 1440/1280/1024/768/390/320, refreshed 20 required page screenshots, and reported zero failures, zero warnings, zero console errors, and zero network failures from `http://localhost:3029`.
+Refreshed screenshots live under `docs/screenshots/`, including desktop plus 320/390 mobile captures and primitive proofs under `docs/screenshots/primitive-proof/`. Latest `portal-browser-qa` checked 15 routes across 1440/1280/1024/768/390/320, refreshed 20 required page screenshots, and reported zero failures, zero warnings, zero console errors, and zero network failures from `http://localhost:3047`.
 
 Current local prototype login:
 
@@ -295,7 +295,7 @@ This is a local prototype. It does not prove 24/7 uptime, production security, r
 - Library 320px now uses a single-column 12-card page for readability; 390px keeps the denser contact-sheet feel.
 - Review mobile now uses a compact queue selector and 8 visible queue cards before load-more; desktop/xl keeps a real Review DataTable and load-more workflow.
 - `docs/ui-system/21st-primitive-implementation-matrix.md` records the primitive/source-status proof, including auth-gated or unavailable references without source-level overclaiming.
-- Fresh QA ran against `http://localhost:3029` with `TJC_STOCK_MEDIA_ROOT` set to the repo root. Required screenshots and primitive proofs were refreshed under `docs/screenshots/`.
+- Fresh QA ran against `http://localhost:3047` with `TJC_STOCK_MEDIA_ROOT` set to the repo root. Required screenshots and primitive proofs were refreshed under `docs/screenshots/`.
 
 ## LM Photos Completion
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type DragEvent, type RefObject } from "react";
-import { FileCheck2, ShieldAlert, Trash2, UploadCloud } from "lucide-react";
+import { CheckCircle2, Clock3, FileCheck2, ShieldAlert, Trash2, UploadCloud } from "lucide-react";
 import { cn } from "@/lib/ui";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
@@ -63,6 +63,7 @@ export function UploadFileDropzone({
     <section
       className="grid gap-3"
       aria-label="File upload and preview"
+      data-component="UploadFileDropzone"
       onDragEnter={(event) => handleDrag(event, true)}
       onDragOver={(event) => handleDrag(event, true)}
       onDragLeave={() => setDragging(false)}
@@ -103,9 +104,12 @@ export function UploadFileDropzone({
       </label>
 
       {selectedFiles.length ? (
-        <section className="rounded-lg border border-[#b8c8bf] bg-white p-3" aria-label="Selected file preview">
+        <section className="rounded-lg border border-[#b8c8bf] bg-white p-3" aria-label="Selected file preview" data-component="SelectedFilePreviewList">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-tjc-ink">{selectedFiles.length} selected file{selectedFiles.length === 1 ? "" : "s"}</h3>
+            <div>
+              <h3 className="text-sm font-black text-tjc-ink">{selectedFiles.length} staged file{selectedFiles.length === 1 ? "" : "s"}</h3>
+              <p className="mt-0.5 text-xs font-semibold text-tjc-muted">Selected locally. Waiting for Submit for review.</p>
+            </div>
             <button className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={onClear}>
               <Trash2 size={13} strokeWidth={1.8} aria-hidden="true" />
               Clear files
@@ -136,7 +140,7 @@ export const UploadDropzone = UploadFileDropzone;
 export function SelectedFilePreview({ file, previewUrl, onRemove }: { file: File; previewUrl?: string; onRemove: () => void }) {
   const tooLarge = file.size > LARGE_MEDIA_BYTES;
   return (
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-[#d6dfd8] px-1 py-3 last:border-b-0">
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-[#d6dfd8] px-1 py-3 last:border-b-0" data-component="SelectedFilePreview" aria-label={`${file.name} staged for reviewer intake`}>
       {previewUrl ? (
         <img className="h-12 w-12 rounded-xl border border-[#d6dfd8] object-cover" src={previewUrl} alt="" />
       ) : tooLarge ? (
@@ -149,12 +153,25 @@ export function SelectedFilePreview({ file, previewUrl, onRemove }: { file: File
         </span>
       )}
       <span className="min-w-0">
-        <strong className="block truncate text-xs font-black text-tjc-ink">{file.name}</strong>
+        <span className="mb-1 flex flex-wrap items-center gap-1.5">
+          <strong className="min-w-0 max-w-full truncate text-xs font-black text-tjc-ink">{file.name}</strong>
+          <span className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full border border-[#dfbd73] bg-[#fff8e8] px-2 text-[10px] font-black text-[#6f4608]">
+            <Clock3 size={11} strokeWidth={1.8} aria-hidden="true" />
+            Staged
+          </span>
+        </span>
         <span className="mt-0.5 block text-[11px] font-semibold text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
-        <span className="mt-1 grid gap-1">
-          <span className="text-[10px] font-black text-tjc-evergreen">Selected for reviewer intake</span>
-          <span className="block h-1.5 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
-            <span className="block h-full w-full rounded-full bg-tjc-blue" />
+        <span className="mt-2 grid gap-1.5" aria-label="Staged progress: selected, waiting for submit, then reviewer intake">
+          <span className="flex flex-wrap items-center gap-1.5 text-[10px] font-black text-tjc-evergreen">
+            <CheckCircle2 size={12} strokeWidth={1.8} aria-hidden="true" />
+            Selected locally
+            <span className="text-[#7a5a19]">Submit next</span>
+            <span className="text-tjc-muted">Review after submit</span>
+          </span>
+          <span className="grid h-1.5 grid-cols-3 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
+            <span className="bg-tjc-evergreen" />
+            <span className="bg-[#dfbd73]" />
+            <span className="bg-[#d7dfd9]" />
           </span>
         </span>
       </span>

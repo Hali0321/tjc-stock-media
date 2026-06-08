@@ -70,8 +70,8 @@ export const savedViewDefinitions: SavedViewDefinition[] = [
   },
   {
     id: "batch-approved-blockers",
-    label: "Needs portal review",
-    description: "ResourceSpace-approved assets that still have portal reuse blockers.",
+    label: "Needs review",
+    description: "ResourceSpace-approved assets that still have reuse blockers.",
     reason: "Keeps batch approval separate from actual public-safe reuse.",
     match: (asset) => asset.status === "Approved Public" && !assetIsPortalReady(asset)
   },

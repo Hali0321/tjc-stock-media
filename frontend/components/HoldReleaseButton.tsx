@@ -88,7 +88,7 @@ export function HoldReleaseButton({
         style={{ transition: holding ? `width ${holdMs}ms linear` : "width 140ms ease-out" }}
         aria-hidden="true"
       />
-      <span className="relative z-10 inline-flex items-center justify-center gap-2">{children}</span>
+      <span className="relative z-10 inline-flex min-w-0 flex-wrap items-center justify-center gap-2 whitespace-normal text-center">{children}</span>
     </button>
   );
 }

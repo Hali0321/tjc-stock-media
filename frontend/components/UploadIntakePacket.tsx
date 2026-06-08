@@ -8,6 +8,7 @@ import { cn } from "@/lib/ui";
 type UploadIntakePacketProps = {
   selectedFiles: File[];
   suggestedTags: string;
+  hasSourceLink?: boolean;
   largeWarning?: string;
 };
 
@@ -17,14 +18,14 @@ function formatBytes(value: number) {
   return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
 }
 
-export function UploadIntakePacket({ selectedFiles, suggestedTags, largeWarning }: UploadIntakePacketProps) {
+export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink = false, largeWarning }: UploadIntakePacketProps) {
   const tags = parseUploadTags(suggestedTags);
   const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
   const hasLargeFile = selectedFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
   const checklist = [
     { label: "Context", detail: "Title, event, date, ministry, source", complete: true },
     { label: "People and rights", detail: "Required fields block unknown public reuse", complete: true },
-    { label: "Files", detail: selectedFiles.length ? `${selectedFiles.length} selected / ${formatBytes(totalBytes)}` : "File or source link required", complete: selectedFiles.length > 0 },
+    { label: "Files", detail: selectedFiles.length ? `${selectedFiles.length} selected / ${formatBytes(totalBytes)}` : hasSourceLink ? "Source link captured" : "File or source link required", complete: selectedFiles.length > 0 || hasSourceLink },
     { label: "Tags", detail: tags.length ? `${tags.length} taxonomy term${tags.length === 1 ? "" : "s"}` : "Choose taxonomy terms", complete: tags.length > 0 }
   ];
 
