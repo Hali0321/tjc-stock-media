@@ -10,17 +10,18 @@ type CollectionShelfInspectorProps = {
   collection?: CatalogCollection;
   totalCollections: number;
   onOpen: (collection: CatalogCollection) => void;
+  opsView?: boolean;
 };
 
-export function CollectionShelfInspector({ collection, totalCollections, onOpen }: CollectionShelfInspectorProps) {
+export function CollectionShelfInspector({ collection, totalCollections, onOpen, opsView = false }: CollectionShelfInspectorProps) {
   if (!collection) {
     return (
-      <section className="grid min-h-64 place-items-center rounded-md border border-[#d4ded7] bg-white p-4 text-center" aria-label="Selected collection">
+      <section className="grid min-h-64 place-items-center rounded-md border border-[#d4ded7] bg-white p-4 text-center" aria-label="Selected package">
         <div className="grid max-w-xs justify-items-center gap-2">
           <FolderOpen size={30} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />
-          <h2 className="text-base font-semibold text-tjc-ink">Select a collection</h2>
+          <h2 className="text-base font-semibold text-tjc-ink">Select a package</h2>
           <p className="text-sm leading-relaxed text-tjc-muted">
-            Deliver package context loads from the same ResourceSpace export as Find.
+          {opsView ? "Package context loads from the approved media export used by Find." : "Choose a ministry package, then open Find results to check each media item."}
           </p>
         </div>
       </section>
@@ -31,7 +32,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
   const hasAssets = collection.count > 0;
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#d4ded7] bg-white" aria-label={`${collection.name} collection inspector`}>
+    <section className="overflow-hidden rounded-md border border-[#d4ded7] bg-white" aria-label={`${collection.name} package inspector`}>
       <div className="grid gap-4">
         <div className="relative overflow-hidden bg-[#f6f8f5]" aria-hidden="true">
           {collection.images.length ? (
@@ -49,13 +50,13 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
             <CollectionPreviewPlaceholder className="min-h-64 rounded-none" title={collection.name} detail="Cover pending" />
           )}
           <span className="absolute left-4 top-4 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
-            Selected collection
+            Selected package
           </span>
         </div>
         <div className="px-4">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[.08em] text-tjc-muted">
+          {opsView ? <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[.08em] text-tjc-muted">
             <span>{collection.id}</span>
-          </div>
+          </div> : null}
           <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
             <h2 className="text-2xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
             <TjcStatusBadge
@@ -63,7 +64,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
               status={hasPeopleWarning ? "people-review" : "selected"}
               tone={hasPeopleWarning ? "warning" : "success"}
               icon={hasPeopleWarning ? ShieldAlert : CheckCircle2}
-              label={hasPeopleWarning ? "Needs people review" : "Collection selected"}
+              label={hasPeopleWarning ? "Needs people review" : "Package selected"}
               size="xs"
             />
           </div>
@@ -75,7 +76,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
             { label: "Assets", value: collection.countLabel, icon: Images },
             { label: "Approval", value: collection.approvalSummary, icon: CheckCircle2 },
             { label: "Range", value: collection.dateRange, icon: CalendarDays },
-            { label: "Source", value: collection.ministry, icon: Database }
+            { label: opsView ? "Source" : "Owner", value: collection.ministry, icon: Database }
           ].map((item) => {
             const Icon = item.icon;
             return (
@@ -94,14 +95,14 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen 
           <div className="flex items-start gap-2">
             {hasPeopleWarning ? <ShieldAlert size={17} strokeWidth={1.8} aria-hidden="true" /> : <CheckCircle2 size={17} strokeWidth={1.8} aria-hidden="true" />}
             <div>
-              <strong className="block text-sm font-semibold">{hasPeopleWarning ? collection.peopleWarning : hasAssets ? "No collection-level people/minors warning" : "This collection has no approved assets yet"}</strong>
+              <strong className="block text-sm font-semibold">{hasPeopleWarning ? collection.peopleWarning : hasAssets ? "No package-level people/minors warning" : "This package has no approved assets yet"}</strong>
               <span className="mt-1 block text-xs leading-relaxed">{hasAssets ? "Confirm per-asset reuse in Find before publication." : "It will appear in Find when assets are approved."}</span>
             </div>
           </div>
         </div>
 
         <p className="px-4 text-xs font-semibold leading-relaxed text-tjc-muted">
-          Search intent: {collection.searchQuery}. {totalCollections} collections in current export.
+          {opsView ? `Search intent: ${collection.searchQuery}. ${totalCollections} packages in current export.` : `${totalCollections} packages available. Open Find results to confirm item-level approval before reuse.`}
         </p>
 
         {hasAssets ? (

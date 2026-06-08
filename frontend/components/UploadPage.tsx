@@ -39,7 +39,7 @@ const intakeTemplates = [
   { id: "sermon", label: "Sermon / teaching", detail: "Teaching context, speaker/source, usage scope" },
   { id: "graphics", label: "Graphics / flyers", detail: "Template, font/license, channel fit" },
   { id: "music", label: "Hymn / music", detail: "Copyright basis and recording rights" },
-  { id: "source-link", label: "Source link only", detail: "Shared Drive or ResourceSpace reference" }
+  { id: "source-link", label: "Source link only", detail: "Drive folder, media record, or approved source link" }
 ] as const;
 
 export function UploadPage() {
@@ -61,6 +61,7 @@ export function UploadPage() {
   const filesSectionRef = useRef<HTMLElement>(null);
   const receiptRef = useRef<HTMLElement>(null);
   const allowed = ready && canUpload(role);
+  const opsView = role === "Reviewer" || role === "DAM Admin";
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const hasValidSourceLink = useMemo(() => {
@@ -235,9 +236,9 @@ export function UploadPage() {
   }
 
   function saveDraftNotice() {
-    setMessage("Draft capture is local-only in this demo. Files still need Submit for DAM review before server intake.");
+    setMessage("Draft capture is local-only in this demo. Files still need Submit for DAM review before review starts.");
     setDraftSaved(true);
-    toastDraftSaved("Draft capture is local-only in this demo. Submit for DAM review before server intake.");
+    toastDraftSaved("Draft capture is local-only in this demo. Submit for DAM review before review starts.");
   }
 
   if (!ready) {
@@ -248,16 +249,16 @@ export function UploadPage() {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
         <section className="min-w-0 dam-card p-5">
-          <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 dam-page-title">Intake is for Contributors</h1>
+          <span className="text-sm font-semibold text-tjc-evergreen">Send media</span>
+          <h1 className="mt-2 dam-page-title">Send media requires Contributor access</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
         </section>
         <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
           <UploadCloud size={30} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
           <div>
-            <h2 className="text-xl font-semibold">Contribution flow</h2>
+            <h2 className="text-xl font-semibold">Send-for-review flow</h2>
             <p className="mt-1 text-tjc-muted">Context first, then people and rights, then files and tags. Reviewers approve before anyone can reuse media.</p>
-            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Contributor, Reviewer, or DAM Admin to open intake.</span>
+            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Contributor, Reviewer, or DAM Admin to send media for review.</span>
           </div>
         </section>
       </div>
@@ -268,9 +269,11 @@ export function UploadPage() {
     <div className="dam-shell max-w-[1600px]">
       <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 lg:grid-cols-[minmax(0,1fr)_38rem]">
         <div>
-          <span className="text-sm font-black text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 dam-page-title">Intake session</h1>
-          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">Create a reviewer packet. This does not publish media or write final ResourceSpace metadata.</p>
+          <span className="text-sm font-black text-tjc-evergreen">Send media</span>
+          <h1 className="mt-2 dam-page-title">Send media for review</h1>
+          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">
+            {opsView ? "Create a reviewer packet. This does not publish media or write final ResourceSpace metadata." : "Create a reviewer packet. This will not be published until reviewed."}
+          </p>
         </div>
         <div className="grid gap-2 border-t border-[#d6dfd8] pt-4 sm:grid-cols-3 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0" aria-label="Upload workflow">
           {[
@@ -292,7 +295,7 @@ export function UploadPage() {
 
       <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
         <StateBanner tone="info" title="Autosave checkpoint">
-          Context, rights, files, and tags are reviewed together. Submitted media stays Needs Review / Do Not Publish until reviewer evidence is complete.
+          Context, rights, files, and tags are reviewed together. Submitted media stays Needs Review / Do Not Publish until a reviewer approves reuse.
         </StateBanner>
         <div className="grid content-center rounded-md border border-[#d7e1d9] bg-white px-4 py-3 text-sm">
           <strong className="text-tjc-ink">{selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected</strong>
@@ -304,7 +307,7 @@ export function UploadPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-sm font-black text-tjc-evergreen">Choose intake type</h2>
-            <p className="mt-1 text-xs font-semibold text-tjc-muted">Template choice routes risk expectations. It does not publish media.</p>
+            <p className="mt-1 text-xs font-semibold text-tjc-muted">Template choice helps reviewers know what to check. It does not publish media.</p>
           </div>
           <span className="rounded-md border border-[#d6dfd8] bg-[#f8fbf8] px-2.5 py-1 text-xs font-black text-tjc-muted">Desktop intake</span>
         </div>
@@ -369,7 +372,7 @@ export function UploadPage() {
           </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Source / photographer {requiredHint}</span>
-            <input className={inputClass} name="source" placeholder="lm.photo@tjc.org, volunteer name, or Shared Drive folder" required />
+            <input className={inputClass} name="source" placeholder="lm.photo@tjc.org, volunteer name, Drive folder, or source note" required />
           </label>
         </section>
 
@@ -428,7 +431,7 @@ export function UploadPage() {
           </div>
           {!hasFileOrSource ? (
             <div className="mb-3 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-snug text-[#725216]" role="status">
-              Required before submit: add a file or paste a Google Drive / ResourceSpace link.
+              Required before submit: add a file or paste a Drive/media source link.
             </div>
           ) : null}
           <UploadDropzone
@@ -440,8 +443,8 @@ export function UploadPage() {
             onClear={clearFiles}
           />
           <label className={`${labelClass} mt-4`}>
-            Existing Google / ResourceSpace link
-            <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
+            {opsView ? "Existing Google / ResourceSpace link" : "Existing Drive or media link"}
+            <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder={opsView ? "https://drive.google.com/... or ResourceSpace ref" : "https://drive.google.com/... or media link"} value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
             {sourceLink.trim() && !hasValidSourceLink ? <span className="text-xs font-semibold text-[#7a5a19]">Use a full http or https source link.</span> : null}
           </label>
           <div className="mt-4">
@@ -453,7 +456,7 @@ export function UploadPage() {
               required
               placeholder="Bible, fellowship, welcome, youth..."
               suggestions={uploadTagSuggestions}
-              helperText="Use existing visible-content or TJC terms. Press Enter or comma to add; Backspace removes the last chip when the field is empty. Reviewers approve final taxonomy before ResourceSpace updates."
+              helperText={opsView ? "Use existing visible-content or TJC terms. Press Enter or comma to add; Backspace removes the last chip when the field is empty. Reviewers approve final taxonomy before ResourceSpace updates." : "Use visible-content or TJC terms. Press Enter or comma to add; Backspace removes the last chip when the field is empty. Reviewers approve final tags."}
             />
           </div>
           <label className={`${labelClass} mt-4`}>
@@ -529,7 +532,7 @@ export function UploadPage() {
         </section>
 
         <div data-upload-step="3" className={cn("upload-packet-card min-w-0", mobileStep !== 3 && "max-md:hidden")}>
-          <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} hasSourceLink={hasValidSourceLink} largeWarning={largeWarning} />
+          <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} hasSourceLink={hasValidSourceLink} largeWarning={largeWarning} opsView={opsView} />
         </div>
 
         <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-md border border-[#cbd8cf] bg-white p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
@@ -594,7 +597,9 @@ export function UploadPage() {
                 <div><dt className="text-xs font-semibold">Files</dt><dd>{receipt.fileCount ?? 0}</dd></div>
                 <div><dt className="text-xs font-semibold">Source link</dt><dd>{receipt.sourceLink ? "Captured" : "Not provided"}</dd></div>
               </dl>
-              <p className="mt-3 text-sm">Persistence mode: server-routed demo/export intake. ResourceSpace API write mapping must be configured for production writes.</p>
+              <p className="mt-3 text-sm">
+                {opsView ? "Persistence mode: server-routed demo/export intake. ResourceSpace API write mapping must be configured for production writes." : "Send-for-review only. This receipt does not approve or publish media."}
+              </p>
               {receipt.reviewWarnings?.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {receipt.reviewWarnings.map((warning) => (

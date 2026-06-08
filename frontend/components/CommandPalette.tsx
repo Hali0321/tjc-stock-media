@@ -24,15 +24,15 @@ type Command = {
 
 const commands: Command[] = [
   { id: "go-library", group: "Go to", label: "Find", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "find library home assets contact sheet", icon: Search, shortcut: "G F" },
-  { id: "go-collections", group: "Go to", label: "Deliver", hint: "Open governed ministry delivery packages", href: "/collections", keywords: "deliver collections campaign ministry governed portals events", icon: FolderOpen, shortcut: "G D" },
-  { id: "go-upload", group: "Go to", label: "Intake", hint: "Open contributor intake session", href: "/upload", keywords: "intake upload contributor submit files", icon: UploadCloud, shortcut: "G U" },
-  { id: "go-review", group: "Go to", label: "Review", hint: "Open reviewer governance workbench", href: "/review", keywords: "review governance queue evidence", icon: ShieldAlert, shortcut: "G R" },
+  { id: "go-collections", group: "Go to", label: "Packages", hint: "Open curated ministry packages", href: "/collections", keywords: "deliver collections campaign ministry governed portals events packages", icon: FolderOpen, shortcut: "G P" },
+  { id: "go-upload", group: "Go to", label: "Send media", hint: "Open contributor send-for-review flow", href: "/upload", keywords: "intake upload contributor submit files send media", icon: UploadCloud, shortcut: "G U" },
+  { id: "go-review", group: "Go to", label: "Review inbox", hint: "Open reviewer operations workbench", href: "/review", keywords: "review governance queue evidence inbox", icon: ShieldAlert, shortcut: "G R" },
   { id: "go-guide", group: "Go to", label: "Guide", hint: "Open use guidance and policy notes", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle, shortcut: "G ?" },
   { id: "go-admin", group: "Go to", label: "Governance", hint: "Open operations console and blockers", href: "/admin", keywords: "governance admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Governance", tag: "Governance" },
 
   { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Find search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
-  { id: "find-rs-id", group: "Find", label: "Search ResourceSpace ID", hint: "Type a numeric RS ID to open an exported asset record", href: "/", keywords: "resourcespace id reference ref search number", icon: KeyRound, shortcut: "RS #" },
-  { id: "find-collection", group: "Find", label: "Search deliver packages", hint: "Find governed sets by event, ministry, campaign, or stable collection", href: "/collections", keywords: "deliver collection campaign event ministry stable id", icon: Tags, shortcut: "C" },
+  { id: "find-rs-id", group: "Find", label: "Search media record ID", hint: "Type a numeric record ID to open a media record", href: "/", keywords: "resourcespace media record id reference ref search number", icon: KeyRound, shortcut: "ID" },
+  { id: "find-collection", group: "Find", label: "Search packages", hint: "Find curated packages by event, ministry, or campaign", href: "/collections", keywords: "deliver collection campaign event ministry stable id packages", icon: Tags, shortcut: "C" },
   { id: "find-blocked", group: "Find", label: "Search blocked downloads", hint: "Show assets blocked by reuse or download policy", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish needs review", icon: ShieldAlert, shortcut: "B" },
 
   { id: "portal-ready", group: "Saved views", label: "External ready", hint: "Assets approved for external ministry use", href: "/?view=approved-church-wide", keywords: "external ministry safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },
@@ -41,11 +41,11 @@ const commands: Command[] = [
   { id: "website-hero", group: "Saved views", label: "Website Hero", hint: "Hero/banner candidates for web and slides", href: "/?view=website-hero", keywords: "hero banner web header website", icon: FileSearch, shortcut: "4" },
   { id: "recently-approved", group: "Saved views", label: "Recently Approved", hint: "Newest reviewed items in role-safe Find", href: "/?view=recently-approved", keywords: "recently approved newest reviewed", icon: Archive, shortcut: "5" },
 
-  { id: "start-upload", group: "Workflow", label: "Start intake session", hint: "Submit new media for DAM review", href: "/upload", keywords: "start intake upload contributor draft submit", icon: UploadCloud, shortcut: "U" },
+  { id: "start-upload", group: "Workflow", label: "Send new media", hint: "Submit new media for DAM review", href: "/upload", keywords: "start intake upload contributor draft submit send media", icon: UploadCloud, shortcut: "U" },
   { id: "open-review-queue", group: "Workflow", label: "Open review queue", hint: "Inspect assets that need reviewer evidence", href: "/review?queue=pending", keywords: "open review queue pending evidence", icon: ListFilter, shortcut: "R", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
   { id: "children-youth-queue", group: "Workflow", label: "Open children/youth queue", hint: "Review assets with children or youth visibility risk", href: "/review?queue=children-youth", keywords: "children youth minors queue review people visibility", icon: UserRoundSearch, shortcut: "C Y", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
   { id: "pending-writes", group: "Workflow", label: "Show pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, shortcut: "P", adminOnly: true, access: "Governance", tag: "Governance" },
-  { id: "request-access", group: "Workflow", label: "Request access", hint: "Review/original access stays a request, not a ResourceSpace write", href: "/guide", keywords: "request access original review coworker permission", icon: HelpCircle, shortcut: "A" }
+  { id: "request-access", group: "Workflow", label: "Request access", hint: "Review and source-file access stay requests until approved", href: "/guide", keywords: "request access original review coworker permission", icon: HelpCircle, shortcut: "A" }
 ];
 
 const groupOrder: Command["group"][] = ["Go to", "Find", "Saved views", "Workflow"];
@@ -76,8 +76,8 @@ export function CommandPalette() {
       base.unshift({
         id: `resource-${resourceId}`,
         group: "Find",
-        label: `Open ResourceSpace ID ${resourceId}`,
-        hint: "Open asset detail by exported ID/reference",
+        label: reviewer ? `Open ResourceSpace ID ${resourceId}` : `Open media record ${resourceId}`,
+        hint: reviewer ? "Open asset detail by exported ID/reference" : "Open media record by ID",
         href: `/assets/${resourceId}`,
         keywords: resourceId,
         icon: KeyRound,
@@ -239,7 +239,7 @@ export function CommandPalette() {
             <div className="border-b border-[#c7d3cb] bg-white px-4 pb-4 pt-3 sm:px-5">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <label id="command-palette-title" className="text-xs font-black uppercase tracking-[.14em] text-tjc-muted" htmlFor="command-search">DAM Launcher</label>
+                  <label id="command-palette-title" className="text-xs font-black uppercase tracking-[.14em] text-tjc-muted" htmlFor="command-search">{reviewer ? "Operations launcher" : "Find launcher"}</label>
                   <p className="mt-0.5 hidden text-xs font-semibold text-tjc-muted sm:block">Jump, find, saved views, and review workflows stay policy-aware.</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -262,7 +262,7 @@ export function CommandPalette() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={onInputKeyDown}
-                  placeholder="Search assets, RS ID, collection, saved view..."
+                  placeholder={reviewer ? "Search assets, RS ID, package, saved view..." : "Search media, record ID, package, saved view..."}
                   aria-label="Command search"
                   aria-activedescendant={visibleCommands[selectedIndex] ? `command-option-${visibleCommands[selectedIndex].id}` : undefined}
                   aria-controls="command-results"
@@ -332,7 +332,7 @@ export function CommandPalette() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#c7d3cb] bg-[#f5f8f5] px-4 py-3 text-xs font-semibold text-tjc-muted sm:px-5">
               <span>↑↓ move. Enter opens {selectedCommand ? selectedCommand.label : "selected command"}. Esc closes.</span>
-              <span data-command-proof="footer-safety-copy">ResourceSpace writes remain pending until field mapping is configured.</span>
+              <span data-command-proof="footer-safety-copy">{reviewer ? "ResourceSpace writes remain pending until field mapping is configured." : "Downloads and source-file access stay governed by review."}</span>
               {hiddenRoleCommandCount ? <span>{hiddenRoleCommandCount} role-restricted commands hidden for {role}.</span> : <span>Governance and reviewer commands visible for {role}.</span>}
             </div>
           </section>

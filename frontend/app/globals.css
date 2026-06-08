@@ -39,7 +39,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   background:
     linear-gradient(90deg, rgba(16, 50, 42, .045) 1px, transparent 1px),
     linear-gradient(180deg, oklch(97% .006 160) 0%, oklch(94% .009 160) 100%);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderOpen, Gauge, Search, ShieldCheck, UploadCloud, type LucideIcon } from "lucide-react";
+import { FolderOpen, Gauge, HelpCircle, Search, ShieldCheck, UploadCloud, type LucideIcon } from "lucide-react";
 import type { DemoRole } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
@@ -13,13 +13,41 @@ type AppNavItem = {
   adminOnly?: boolean;
 };
 
-const navItems: AppNavItem[] = [
+const findAndUseNav: AppNavItem[] = [
   { href: "/", label: "Find", icon: Search },
-  { href: "/collections", label: "Deliver", icon: FolderOpen },
-  { href: "/upload", label: "Intake", icon: UploadCloud },
-  { href: "/review", label: "Review", icon: ShieldCheck },
-  { href: "/admin", label: "Govern", icon: Gauge, adminOnly: true }
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/guide", label: "Help", icon: HelpCircle }
 ];
+
+const contributorNav: AppNavItem[] = [
+  { href: "/", label: "Find", icon: Search },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/upload", label: "Send", icon: UploadCloud },
+  { href: "/guide", label: "Help", icon: HelpCircle }
+];
+
+const reviewerNav: AppNavItem[] = [
+  { href: "/review", label: "Review", icon: ShieldCheck },
+  { href: "/", label: "Ops", icon: Search },
+  { href: "/upload", label: "Send", icon: UploadCloud },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/guide", label: "Help", icon: HelpCircle }
+];
+
+const adminNav: AppNavItem[] = [
+  { href: "/admin", label: "Govern", icon: Gauge, adminOnly: true },
+  { href: "/review", label: "Review", icon: ShieldCheck },
+  { href: "/", label: "Ops", icon: Search },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/guide", label: "Help", icon: HelpCircle }
+];
+
+function navItemsForRole(role: DemoRole) {
+  if (role === "DAM Admin") return adminNav;
+  if (role === "Reviewer") return reviewerNav;
+  if (role === "Contributor") return contributorNav;
+  return findAndUseNav;
+}
 
 type AppNavProps = {
   role: DemoRole;
@@ -28,7 +56,7 @@ type AppNavProps = {
 
 export function AppNav({ role, variant = "mobile" }: AppNavProps) {
   const pathname = usePathname();
-  const visibleItems = navItems.filter((item) => !item.adminOnly || role === "DAM Admin");
+  const visibleItems = navItemsForRole(role).filter((item) => !item.adminOnly || role === "DAM Admin");
   const rail = variant === "rail";
 
   return (

@@ -10,6 +10,7 @@ type UploadIntakePacketProps = {
   suggestedTags: string;
   hasSourceLink?: boolean;
   largeWarning?: string;
+  opsView?: boolean;
 };
 
 function formatBytes(value: number) {
@@ -18,7 +19,7 @@ function formatBytes(value: number) {
   return `${Math.max(1, Math.round(value / 1024)).toLocaleString()} KB`;
 }
 
-export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink = false, largeWarning }: UploadIntakePacketProps) {
+export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink = false, largeWarning, opsView = false }: UploadIntakePacketProps) {
   const tags = parseUploadTags(suggestedTags);
   const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
   const hasLargeFile = selectedFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
@@ -36,7 +37,9 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
           <span className="text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Reviewer packet</span>
           <h2 className="mt-1 text-xl font-black text-tjc-ink">Ready for intake review</h2>
           <p className="mt-1 max-w-[62ch] text-sm font-semibold leading-relaxed text-tjc-muted">
-            This packet summarizes what reviewers receive. It does not approve, publish, or write final ResourceSpace metadata.
+            {opsView
+              ? "This packet summarizes what reviewers receive. It does not approve, publish, or write final ResourceSpace metadata."
+              : "This packet summarizes what reviewers receive. It does not approve or publish media."}
           </p>
         </div>
         <span className="inline-flex min-h-9 items-center gap-2 rounded-md border border-[#dfbd73] bg-[#fff8e8] px-3 text-xs font-black text-[#725216]">
@@ -70,7 +73,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
             <span>
               <strong className="block text-sm font-black">Persistence mode</strong>
               <span className="mt-1 block text-xs font-semibold leading-snug text-current/75">
-                Server-routed intake only. Production writes still need ResourceSpace API field mapping.
+                {opsView ? "Server-routed intake only. Production writes still need ResourceSpace API field mapping." : "Send-for-review only. A reviewer must approve media before anyone can reuse it."}
               </span>
             </span>
           </div>

@@ -88,7 +88,7 @@ export function UploadFileDropzone({
           </span>
           <span className="text-lg font-black text-tjc-ink">{dragging ? "Release to add files" : "Drop files here or browse"}</span>
           <span id="upload-file-help" className="max-w-[28rem] text-sm font-semibold leading-relaxed text-tjc-muted">
-            Photos, graphics, documents, video, and audio still enter Needs Review / Do Not Publish. Large media uses Shared Drive Incoming.
+            Photos, graphics, documents, video, and audio still enter Needs Review / Do Not Publish. Large files use the large-media intake path.
           </span>
         </span>
         <input
@@ -160,7 +160,7 @@ export function SelectedFilePreview({ file, previewUrl, onRemove }: { file: File
             Staged
           </span>
         </span>
-        <span className="mt-0.5 block text-[11px] font-semibold text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / use Shared Drive Incoming" : ""}</span>
+        <span className="mt-0.5 block text-[11px] font-semibold text-tjc-muted">{file.type || "unknown type"} / {formatBytes(file.size)}{tooLarge ? " / large-media intake" : ""}</span>
         <span className="mt-2 grid gap-1.5" aria-label="Staged progress: selected, waiting for submit, then reviewer intake">
           <span className="flex flex-wrap items-center gap-1.5 text-[10px] font-black text-tjc-evergreen">
             <CheckCircle2 size={12} strokeWidth={1.8} aria-hidden="true" />

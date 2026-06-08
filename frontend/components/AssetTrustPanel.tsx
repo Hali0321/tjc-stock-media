@@ -8,8 +8,9 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
   const display = assetPresentation(asset, role);
   const downloadable = display.download.approvedCopy.allowed;
   const hasWarnings = display.confidence.some((item) => item.tone === "warn");
+  const opsView = role === "Reviewer" || role === "DAM Admin";
   const primaryFacts = display.trustFacts.slice(0, 6);
-  const lanes = [
+  const opsLanes = [
     { label: "Workflow", value: display.download.reuse.label },
     { label: "Distribution", value: asset.usageScope },
     { label: "Rights", value: asset.rightsStatus && !/unknown|needs review|review required/i.test(asset.rightsStatus) ? "Rights verified" : "Rights unverified" },
@@ -17,6 +18,14 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
     { label: "Availability", value: downloadable ? "Download available" : "Preview only" },
     { label: "Source", value: asset.sourceSystem || asset.sourcePlatform || asset.sourceAccount ? "Source verified" : "Source incomplete" }
   ];
+  const viewerLanes = [
+    { label: "Use", value: display.download.reuse.label },
+    { label: "Scope", value: asset.usageScope },
+    { label: "Rights", value: asset.rightsStatus && !/unknown|needs review|review required/i.test(asset.rightsStatus) ? "Rights verified" : "Rights need review" },
+    { label: "People/youth", value: asset.peopleRisk && asset.peopleRisk !== "Unknown" ? asset.peopleRisk : "Needs check" },
+    { label: "Download", value: downloadable ? "Approved copy available" : "Review first" }
+  ];
+  const lanes = opsView ? opsLanes : viewerLanes;
   return (
     <section className={cn(
       "rounded-md border p-4",
@@ -30,13 +39,13 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
           {downloadable && !hasWarnings ? <CheckCircle2 size={22} strokeWidth={1.8} aria-hidden="true" /> : <ShieldAlert size={22} strokeWidth={1.8} aria-hidden="true" />}
         </span>
         <div>
-          <h2 className="text-sm font-black text-tjc-ink">Trust summary</h2>
-          <strong className="mt-1 block text-xl font-black leading-tight">{downloadable && !hasWarnings ? "Evidence complete" : "Evidence needs review"}</strong>
-          <span className="mt-1 block text-sm font-semibold leading-snug">{downloadable && !hasWarnings ? "Source, rights, review, visibility, and approved-copy checks support reuse." : display.download.reuse.summary}</span>
+          <h2 className="text-sm font-black text-tjc-ink">{opsView ? "Trust summary" : "Use check"}</h2>
+          <strong className="mt-1 block text-xl font-black leading-tight">{downloadable && !hasWarnings ? "Ready within guidance" : "Review needed first"}</strong>
+          <span className="mt-1 block text-sm font-semibold leading-snug">{downloadable && !hasWarnings ? "Approval, rights, visibility, and safe-copy checks support reuse." : display.download.reuse.summary}</span>
         </div>
       </div>
       <div className="mt-4 grid gap-2 rounded-md border border-[#d6dfd8] bg-white p-3" aria-label="Trust matrix status lanes" data-badge-slot="detail-trust-summary">
-        <h3 className="text-xs font-black uppercase text-tjc-muted">Trust matrix</h3>
+        <h3 className="text-xs font-black uppercase text-tjc-muted">{opsView ? "Trust matrix" : "Quick checks"}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <ReuseStateBadge asset={asset} size="sm" />
           <RightsBadge asset={asset} size="sm" />
@@ -52,8 +61,8 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
           ))}
         </dl>
       </div>
-      <details className="mt-3 rounded-md border border-[#d6dfd8] bg-white p-3 text-sm" open={role !== "Viewer"}>
-        <summary className="cursor-pointer font-black text-tjc-evergreen"><span className="inline-flex items-center gap-2"><ClipboardCheck size={15} strokeWidth={1.8} aria-hidden="true" /> {role === "Viewer" ? "Show details" : "Trust checklist"}</span></summary>
+      <details className="mt-3 rounded-md border border-[#d6dfd8] bg-white p-3 text-sm" open={opsView}>
+        <summary className="cursor-pointer font-black text-tjc-evergreen"><span className="inline-flex items-center gap-2"><ClipboardCheck size={15} strokeWidth={1.8} aria-hidden="true" /> {opsView ? "Trust checklist" : "Show review details"}</span></summary>
         <dl className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {primaryFacts.map((fact) => (
             <div key={fact.label} className="rounded-md border border-[#d6dfd8] bg-white p-3">

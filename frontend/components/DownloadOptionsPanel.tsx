@@ -17,6 +17,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   const [blockedDialogOpen, setBlockedDialogOpen] = useState(false);
   const state = downloadState(asset, role);
   const health = assetMetadataHealth(asset);
+  const opsView = role === "Reviewer" || role === "DAM Admin";
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const assetTitle = asset.title || asset.resourceSpaceId || asset.id;
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
@@ -29,7 +30,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
     { label: "Web image", detail: "Approved web copy for websites and newsletters.", icon: ImageIcon, available: state.approvedCopy.allowed, kind: "download" as const },
     { label: "Slide", detail: "Use approved copy in sermon slides and presentation decks.", icon: View, available: state.approvedCopy.allowed, kind: "download" as const },
     { label: "Social", detail: "Use approved copy for social posts where policy allows.", icon: Square, available: state.approvedCopy.allowed, kind: "download" as const },
-    { label: "Original request", detail: "Original/master access stays a request, never a direct download.", icon: FileLock2, available: true, kind: "request" as const }
+    { label: opsView ? "Original request" : "Source-file request", detail: opsView ? "Original/master access stays a request, never a direct download." : "Source-file access stays a request, never a direct download.", icon: FileLock2, available: true, kind: "request" as const }
   ];
 
   return (
@@ -112,8 +113,10 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
       {(state.approvedCopy.allowed || role !== "Viewer") ? <div className="mt-3 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#6f4608]">
         <FileLock2 size={18} strokeWidth={1.8} aria-hidden="true" />
         <div>
-          <strong className="block font-semibold">Original/master restricted</strong>
-          <span className="mt-1 block text-sm leading-snug">Master files stay in ResourceSpace and Google Shared Drive. Normal users receive approved copies only.</span>
+          <strong className="block font-semibold">{opsView ? "Original/master restricted" : "Source file restricted"}</strong>
+          <span className="mt-1 block text-sm leading-snug">
+            {opsView ? "Master files stay in ResourceSpace and Google Shared Drive. Normal users receive approved copies only." : "Use approved copies. Source files require a separate access request."}
+          </span>
         </div>
       </div> : null}
       {requestKind ? (
@@ -126,13 +129,14 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
           portalReuseState={state.reuse.label}
           blockers={state.reuse.blockers.map((blocker) => blocker.label)}
           mailtoHref={requestLinks[requestKind]}
+          opsView={opsView}
           onCancel={() => setRequestKind(null)}
         />
       ) : null}
       <Dialog
         open={blockedDialogOpen}
         title="Download unavailable"
-        description="This asset cannot be downloaded until portal reuse checks pass. ResourceSpace approval alone is not portal permission."
+        description={opsView ? "This asset cannot be downloaded until portal reuse checks pass. ResourceSpace approval alone is not portal permission." : "This media cannot be downloaded until review clears reuse checks."}
         onClose={() => setBlockedDialogOpen(false)}
         maxWidthClassName="max-w-xl"
         tone="warning"
@@ -156,19 +160,21 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             <div>
               <span className="text-xs font-semibold text-tjc-muted">Asset</span>
               <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-              <span className="mt-1 block text-xs font-semibold text-tjc-muted">ResourceSpace ID {resourceSpaceId}</span>
+              <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Media record ${resourceSpaceId}`}</span>
             </div>
             <div>
-              <span className="text-xs font-semibold text-tjc-muted">Current state</span>
-              <strong className="mt-1 block text-sm text-tjc-ink">{asset.status}</strong>
-              <span className="mt-1 block text-xs font-semibold text-tjc-muted">{state.reuse.label}</span>
+              <span className="text-xs font-semibold text-tjc-muted">{opsView ? "Current state" : "Use state"}</span>
+              <strong className="mt-1 block text-sm text-tjc-ink">{opsView ? asset.status : state.reuse.label}</strong>
+              {opsView ? <span className="mt-1 block text-xs font-semibold text-tjc-muted">{state.reuse.label}</span> : null}
             </div>
           </div>
           <div className="grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]" data-dialog-safety-panel="true">
             <FileLock2 size={18} strokeWidth={1.8} aria-hidden="true" />
             <div>
               <strong className="block text-sm">No active download was exposed</strong>
-              <span className="mt-1 block text-sm leading-relaxed">Viewer download remains blocked by source, rights, people/minors, reviewer/date, approved-copy, and role checks. Original/master files stay restricted.</span>
+              <span className="mt-1 block text-sm leading-relaxed">
+                {opsView ? "Viewer download remains blocked by source, rights, people/minors, reviewer/date, approved-copy, and role checks. Original/master files stay restricted." : "Download remains blocked by source, rights, people/youth, review, safe-copy, and role checks. Source files stay restricted."}
+              </span>
             </div>
           </div>
           <section className="rounded-md border border-tjc-line bg-white p-3" aria-label="Download blocker reasons">

@@ -15,8 +15,8 @@ const guideBlocks = [
   {
     title: "Download an approved image",
     icon: BadgeCheck,
-    body: "Use raw ResourceSpace status and portal reuse state together. ResourceSpace approval alone is not enough for public reuse.",
-    doText: "Use Portal ready or Internal ready assets inside their stated scope.",
+    body: "Check the use guidance before downloading. Approval must match your audience and channel.",
+    doText: "Use external-ready or internal-ready media inside its stated scope.",
     avoidText: "Do not treat Please review before public sharing, Archive only, or Contains children/youth as publishable."
   },
   {
@@ -37,7 +37,7 @@ const guideBlocks = [
     title: "Use logos and graphics",
     icon: FileText,
     body: "Use approved logo, template, and graphic files when available. Source and version matter for public-facing work.",
-    doText: "Use latest approved copy or ask a media coworker for the right file.",
+    doText: "Use latest approved copy or request review for the right file.",
     avoidText: "Do not recreate logos from screenshots, old flyers, or social posts."
   },
   {
@@ -50,21 +50,21 @@ const guideBlocks = [
   {
     title: "Credit/source",
     icon: Download,
-    body: "Source, photographer, collection, and ResourceSpace ID stay with each asset record for traceability.",
+    body: "Source, photographer, package, and media record stay with each asset for traceability.",
     doText: "Keep required credit notes with final layout or caption.",
     avoidText: "Do not remove provenance notes when handing media to another coworker."
   },
   {
     title: "Request original",
     icon: FileLock2,
-    body: "Original/master files stay in ResourceSpace and Google Shared Drive. Normal users work from approved copies unless a ministry use case requires source access.",
-    doText: "Request original access with ResourceSpace ID, reason, and usage scope.",
+    body: "Source files stay restricted. Normal users work from approved copies unless a ministry use case requires source access.",
+    doText: "Request source-file access with media record, reason, and usage scope.",
     avoidText: "Do not treat original access as normal download or bypass approved-copy review."
   },
   {
     title: "Upload new media",
     icon: UploadCloud,
-    body: "Video/audio over 100 MB uses Shared Drive Incoming or admin intake, then ResourceSpace indexing.",
+    body: "Video/audio over 100 MB uses the large-media intake path before review.",
     doText: "Send large files through approved intake path so checksum, source, and review state remain traceable.",
     avoidText: "Do not force large video/audio through browser upload or place it directly into master folders."
   }
@@ -73,7 +73,7 @@ const guideBlocks = [
 const decisionRows = [
   ["Need public flyer or website image", "Use Portal ready and download approved web copy."],
   ["Need coworker recap or planning deck", "Use Internal ready, if audience stays internal."],
-  ["People, children/youth, or source unclear", "Pause and ask a media coworker or reviewer."],
+  ["People, children/youth, or source unclear", "Pause and request DAM review."],
   ["Original/master requested", "Request access. Normal users use approved copies only."]
 ];
 
@@ -110,7 +110,7 @@ export function GuidePage() {
               </span>
               <div>
                 <h2 className="text-base font-black text-[#27435b]">When in doubt, ask</h2>
-                <p className="mt-1 text-sm font-semibold leading-relaxed">Approval, source, children/youth, or original access uncertainty should move to review, not guessing.</p>
+                <p className="mt-1 text-sm font-semibold leading-relaxed">Approval, source, children/youth, or source-file uncertainty should move to review, not guessing.</p>
               </div>
             </div>
           </section>
@@ -123,7 +123,7 @@ export function GuidePage() {
               className="min-h-10 min-w-0 bg-transparent text-sm font-medium text-tjc-ink placeholder:text-[#7f8a82]"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search children, source, public, original..."
+              placeholder="Search children, source, public, source file..."
               type="search"
             />
             </span>
@@ -134,7 +134,7 @@ export function GuidePage() {
       <section className="mt-4 grid gap-3 lg:hidden" aria-label="Task-based guide" data-component="GuideMobileTaskPicker">
         <div className="border-b border-[#d6dfd8] pb-3">
           <h2 className="text-base font-black text-tjc-ink">What are you trying to do?</h2>
-          <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">Open one task. Ask a media coworker when source, children/youth, or approval is unclear.</p>
+          <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">Open one task. Request DAM review when source, children/youth, or approval is unclear.</p>
         </div>
         <div className="grid gap-2">
           {visibleBlocks.map((block) => {
@@ -166,9 +166,9 @@ export function GuidePage() {
           <div className="rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide tasks match that search.</div>
         ) : null}
         <section className="rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworkerMobile">
-          <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Ask a media coworker</h2>
+          <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Request DAM review</h2>
           <p className="mt-2 text-sm leading-relaxed">
-            If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review.
+              If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review.
           </p>
         </section>
       </section>
@@ -232,7 +232,7 @@ export function GuidePage() {
           ) : null}
 
           <section className="mt-5 rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworker">
-            <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Ask a media coworker</h2>
+            <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Request DAM review</h2>
             <p className="mt-2 text-sm leading-relaxed">
               If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
             </p>
@@ -241,21 +241,21 @@ export function GuidePage() {
           <details id="media-preview-modes" className="mt-5 rounded-md border border-[#d6dfd8] bg-white p-4">
             <summary className="cursor-pointer text-base font-black text-tjc-evergreen">Preview safety states</summary>
             <p className="mt-2 max-w-[72ch] text-sm font-semibold leading-relaxed text-tjc-muted">
-              The DAM preview panel supports safe image, video, audio, document, restricted, and unknown-file modes. This export currently contains photo records; document and unknown previews stay shell-only until a role-safe derivative exists.
+              The preview panel supports safe image, video, audio, document, restricted, and unknown-file modes. Document and unknown previews stay shell-only until a safe copy exists.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <MediaPreviewPanel
                 mode="document"
                 alt="Document derivative safety shell"
                 title="PDF/document shell"
-                detail="Prepared for safe exported document derivatives. Original documents remain restricted."
+                detail="Prepared for safe document copies. Source documents remain restricted."
                 compact
               />
               <MediaPreviewPanel
                 mode="restricted"
                 alt="Restricted preview policy shell"
                 title="Preview restricted"
-                detail="No role-safe derivative is available. Request review or access instead."
+                detail="No safe preview is available. Request review or access instead."
                 compact
               />
               <MediaPreviewPanel

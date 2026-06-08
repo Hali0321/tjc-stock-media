@@ -171,6 +171,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   const [submittingReview, setSubmittingReview] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
+  const selectedWorkspaceRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
 
   useEffect(() => {
@@ -226,6 +227,39 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     setPendingAction(null);
     setAuditPreview(null);
   }, [activeQueue, selectedId]);
+
+  function resetSelectedWorkspace({ bringIntoView = false }: { bringIntoView?: boolean } = {}) {
+    const workspace = selectedWorkspaceRef.current;
+    if (!workspace || typeof window === "undefined") return;
+    workspace.scrollTop = 0;
+    workspace.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (bringIntoView) {
+      const alignWorkspaceBelowHeader = () => {
+        const currentWorkspace = selectedWorkspaceRef.current;
+        if (!currentWorkspace) return;
+        const appHeader = window.getComputedStyle(document.documentElement).getPropertyValue("--app-header-height");
+        const headerOffset = Number.parseFloat(appHeader) || 0;
+        const targetTop = window.scrollY + currentWorkspace.getBoundingClientRect().top - headerOffset - 12;
+        const root = document.documentElement;
+        const priorScrollBehavior = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
+        window.scrollTo(0, Math.max(0, targetTop));
+        root.style.scrollBehavior = priorScrollBehavior;
+      };
+      alignWorkspaceBelowHeader();
+      window.requestAnimationFrame(() => {
+        alignWorkspaceBelowHeader();
+        window.setTimeout(alignWorkspaceBelowHeader, 100);
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedId) return;
+    setActiveInspectorTab("Overview");
+    setEvidenceOpen(true);
+    resetSelectedWorkspace({ bringIntoView: typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches });
+  }, [selectedId]);
 
   useEffect(() => {
     const compactMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
@@ -302,6 +336,21 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   function selectQueue(queueId: ReviewQueueId) {
     setActiveQueue(queueId);
     router.replace(`/review?queue=${queueId}`, { scroll: false });
+  }
+
+  function inspectAsset(assetId: string) {
+    const bringIntoView = typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches;
+    if (assetId === selectedId) {
+      setActiveInspectorTab("Overview");
+      setEvidenceOpen(true);
+      resetSelectedWorkspace({ bringIntoView });
+      return;
+    }
+    setSelectedId(assetId);
+    if (bringIntoView) {
+      resetSelectedWorkspace({ bringIntoView: true });
+      window.setTimeout(() => resetSelectedWorkspace({ bringIntoView: true }), 0);
+    }
   }
 
   async function confirmPendingAction() {
@@ -427,7 +476,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
         <section className="dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 text-3xl font-semibold">Review workbench requires reviewer access</h1>
+          <h1 className="mt-2 text-3xl font-semibold">Review inbox requires reviewer access</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
         </section>
         <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
@@ -435,7 +484,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           <div>
             <h2 className="text-xl font-semibold">What reviewers check</h2>
             <p className="mt-1 text-tjc-muted">Approval status, source/provenance, people visibility, children/youth risk, rights notes, usage guidance, and download eligibility.</p>
-            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Reviewer or DAM Admin to inspect the governance workbench.</span>
+            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Reviewer or DAM Admin to inspect the operations workbench.</span>
           </div>
         </section>
       </div>
@@ -447,7 +496,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_30rem]">
         <div>
           <span className="text-sm font-black text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 dam-page-title">Review workbench</h1>
+          <h1 className="mt-2 dam-page-title">Review inbox</h1>
           <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted max-sm:line-clamp-2">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
         <div className="grid content-center gap-1 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
@@ -534,7 +583,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
+      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
         <aside className="hidden min-w-0 2xl:grid 2xl:content-start 2xl:gap-3" aria-label="Review queue groups">
           <section className="sticky top-24 grid gap-2 rounded-lg border border-[#c9d4d5] bg-white p-3">
             <div>
@@ -593,7 +642,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   asset={asset}
                   role={role}
                   selected={selectedAsset?.id === asset.id}
-                  onInspect={setSelectedId}
+                  onInspect={inspectAsset}
                 />
               ))}
               {data && !data.assets.length ? <div className="p-8 text-tjc-muted">No assets in this queue.</div> : null}
@@ -609,7 +658,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-hidden self-start rounded-md border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-24 xl:max-h-[calc(100vh-var(--app-header-height)-3rem)] xl:overflow-auto" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
+          <aside ref={selectedWorkspaceRef} className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-md border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
             <section className="grid gap-3" aria-label="Selected asset review summary">
               <MediaPreviewPanel className="review-selected-preview" asset={selectedAsset} src={selectedPreview} alt={selectedAsset.thumbnailAlt} title={assetPresentation(selectedAsset, role).title} compact />
               <div>

@@ -52,7 +52,7 @@ export function CollectionAlbumCard({
   const hasPeopleWarning = Boolean(peopleWarning);
   const hasAssets = !countLabel.startsWith("0 ");
   const statusTone = hasPeopleWarning ? "warning" : hasAssets ? "success" : "neutral";
-  const statusLabel = hasPeopleWarning ? "People review" : hasAssets ? "Collection ready" : "No assets yet";
+  const statusLabel = hasPeopleWarning ? "People review" : hasAssets ? "Package ready" : "No assets yet";
 
   return (
     <article
@@ -60,7 +60,7 @@ export function CollectionAlbumCard({
         "group relative grid min-w-0 gap-4 overflow-hidden rounded-md border bg-white p-3 text-left transition hover:border-[#8aa99a] hover:bg-[#fbfdfb] md:grid-cols-[minmax(12rem,16rem)_minmax(0,1fr)]",
         isActive ? "border-[#0b4b42] bg-[#f6fbf7] ring-1 ring-inset ring-[#8fb2a5]" : "border-[#d4ded7]"
       )}
-      aria-label={`${name} collection card`}
+      aria-label={`${name} package card`}
       onPointerEnter={onInspect}
     >
       <button className="absolute inset-0 z-[1] hidden rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f4f45] md:block" type="button" onClick={onInspect} aria-label={`Select ${name}`} />
@@ -79,8 +79,8 @@ export function CollectionAlbumCard({
         ) : (
           <>
             <AlbumPlaceholder name={name} className="row-span-2 aspect-[4/3]" title={name} label="Cover pending" />
-            <AlbumPlaceholder name={`${name}-shelf`} className="aspect-[4/3]" title="Collection" label="Preview" />
-            <AlbumPlaceholder name={`${name}-stable`} className="aspect-[4/3]" title="Stable ID" label="Export" />
+            <AlbumPlaceholder name={`${name}-shelf`} className="aspect-[4/3]" title="Package" label="Preview" />
+            <AlbumPlaceholder name={`${name}-stable`} className="aspect-[4/3]" title="Media kit" label="Preview" />
           </>
         )}
       </div>

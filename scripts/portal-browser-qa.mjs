@@ -174,9 +174,9 @@ async function inspectPage(page, expected) {
       headerOverlaps: headerOverlaps.slice(0, 10),
     hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review"),
       hasReviewBlocker: visibleText.includes("ResourceSpace API write mapping is not configured yet"),
-      hasViewerReviewBlock: visibleText.includes("Review workbench requires reviewer access"),
-      hasViewerUploadBlock: visibleText.includes("Intake is for Contributors"),
-      hasAdminBlock: visibleText.includes("Admin cockpit requires DAM Admin role"),
+      hasViewerReviewBlock: visibleText.includes("Review inbox requires reviewer access"),
+      hasViewerUploadBlock: visibleText.includes("Send media requires Contributor access"),
+      hasAdminBlock: visibleText.includes("Governance requires DAM Admin role"),
       hasOriginalFilenameOnCard: [...document.querySelectorAll('[aria-label="Source metadata"]')].some((el) => (el.textContent || "").includes("Original:")),
       missingTabControls: [...document.querySelectorAll('[role="tab"][aria-controls]')]
         .map((el) => el.getAttribute("aria-controls"))
@@ -226,7 +226,7 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/?q=zzzzzz-no-visible-media-proof`);
   if ((await page.getByTestId("library-empty-state").getByText("No matching approved assets").count()) < 1) failures.push("viewer-library-empty-to-collections: empty copy missing");
-  await page.getByRole("link", { name: "Open collections" }).click();
+  await page.getByRole("link", { name: "Open packages" }).click();
   await page.waitForURL(/\/collections/, { timeout: 10000 });
   await page.getByRole("button", { name: /View details|Inspect metadata/ }).first().click();
   await page.getByRole("button", { name: /Open (Find|Library) results/ }).first().click();
@@ -238,11 +238,11 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/assets/368`);
-  if ((await page.getByText("Needs review before use").count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
+  if ((await page.getByText("Review required before use").count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
   if ((await page.getByTestId("asset-download-unavailable").getByText("Download unavailable").count()) < 1) failures.push("viewer-asset-blocked-request-review: unavailable download state missing");
   await page.getByTestId("asset-primary-request-review").click();
   if ((await page.getByRole("dialog", { name: "Request review" }).count()) < 1) failures.push("viewer-asset-blocked-request-review: request dialog did not open");
-  if ((await page.getByText("ResourceSpace status, portal reuse state, and pending review writes do not change here.").count()) < 1) failures.push("viewer-asset-blocked-request-review: no-fake-persistence copy missing");
+  if ((await page.getByText("Download access and review status do not change here.").count()) < 1) failures.push("viewer-asset-blocked-request-review: no-fake-persistence copy missing");
   await context.close();
 }
 
@@ -313,7 +313,7 @@ for (const width of qaViewports) {
   await page.getByLabel("Usage rights").selectOption("TJC-owned / permission confirmed");
   await page.getByLabel("Suggested approval direction").selectOption("Likely internal ministry use only");
   await page.getByLabel("Consent/restrictions").fill("No consent restrictions; no people visible.");
-  await page.getByLabel("Existing Google / ResourceSpace link").fill("https://drive.google.com/example");
+  await page.getByLabel("Existing Drive or media link").fill("https://drive.google.com/example");
   if ((await page.getByLabel("Suggested tags suggestions", { exact: true }).getByRole("button", { name: "Bible" }).count()) < 1) failures.push("upload tag input: taxonomy suggestions missing");
   await page.getByLabel("Suggested tags", { exact: true }).fill("qa");
   await page.keyboard.press("Enter");
@@ -375,7 +375,7 @@ for (const width of qaViewports) {
   if ((await page.getByText("Files or source").count()) < 1) failures.push("contributor-upload-stepper: step 3 did not appear");
   await page.getByRole("button", { name: "Next" }).click();
   if ((await page.getByText("Complete Files or source before continuing.").count()) < 1) failures.push("contributor-upload-stepper: file/source validation missing");
-  await page.getByLabel("Existing Google / ResourceSpace link").fill("https://drive.google.com/mobile-stepper-qa");
+  await page.getByLabel("Existing Drive or media link").fill("https://drive.google.com/mobile-stepper-qa");
   await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
   await page.keyboard.press("Enter");
   await page.getByLabel("Intake notes").fill("Mobile QA source-link intake ready for reviewer packet.");
@@ -400,6 +400,27 @@ for (const width of qaViewports) {
     return { position: style.position, overflowY: style.overflowY, maxHeight: style.maxHeight };
   });
   if (reviewWorkspaceBehavior.position !== "sticky" && !["auto", "scroll"].includes(reviewWorkspaceBehavior.overflowY)) failures.push("review console: right workspace is not sticky or internally scrollable");
+  const reviewWorkspace = page.getByTestId("review-current-workspace");
+  await page.evaluate(() => window.scrollTo(0, 1300));
+  await page.waitForTimeout(250);
+  const stickyFollow = await reviewWorkspace.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const style = window.getComputedStyle(node);
+    return { top: rect.top, stickyTop: parseFloat(style.top), scrollTop: node.scrollTop };
+  });
+  if (stickyFollow.top < stickyFollow.stickyTop - 3 || stickyFollow.top > stickyFollow.stickyTop + 16) failures.push(`review console: right workspace did not follow page scroll (${Math.round(stickyFollow.top)} vs ${Math.round(stickyFollow.stickyTop)})`);
+  await page.getByRole("tab", { name: "Metadata", exact: true }).click();
+  const forcedPanelScroll = await reviewWorkspace.evaluate((node) => {
+    node.scrollTop = 360;
+    return node.scrollTop;
+  });
+  if (forcedPanelScroll < 40) failures.push("review console: right workspace does not have internal scroll");
+  await page.getByRole("button", { name: "Review", exact: true }).first().click();
+  await page.waitForTimeout(250);
+  const resetPanelState = await reviewWorkspace.evaluate((node) => ({ scrollTop: node.scrollTop, top: node.getBoundingClientRect().top }));
+  const overviewSelected = await page.getByRole("tab", { name: "Overview", exact: true }).getAttribute("aria-selected");
+  if (resetPanelState.scrollTop > 3) failures.push(`review console: right workspace did not reset to top after selecting asset (${resetPanelState.scrollTop})`);
+  if (overviewSelected !== "true") failures.push("review console: selecting a new asset did not reset inspector to Overview");
   if ((await page.getByTestId("review-decision-requirements").count()) !== 1) failures.push("review console: decision lock panel should appear once");
   if ((await page.getByText(/disabled because/).count()) > 0) failures.push("review console: repeated verbose disabled reason copy returned");
   if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("review console: pending-write warning missing");
@@ -445,6 +466,12 @@ for (const width of qaViewports) {
   if ((await page.getByText(/Approve for church-wide use disabled because/).count()) > 0) failures.push("reviewer-decision-workflow: repeated disabled reason copy returned");
   if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("reviewer-decision-workflow: pending-write warning missing");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("reviewer-decision-workflow: fake ResourceSpace success visible");
+  await page.getByRole("button", { name: "Review", exact: true }).first().click();
+  await page.waitForTimeout(250);
+  const mobileWorkspaceAfterSelect = await currentWorkspace.boundingBox();
+  const mobileWorkspaceScrollTop = await currentWorkspace.evaluate((node) => node.scrollTop);
+  if (!mobileWorkspaceAfterSelect || mobileWorkspaceAfterSelect.y < -4 || mobileWorkspaceAfterSelect.y > 120) failures.push("reviewer-decision-workflow: selecting queue item should return current workspace to view on mobile");
+  if (mobileWorkspaceScrollTop > 3) failures.push(`reviewer-decision-workflow: current workspace did not reset to top on mobile (${mobileWorkspaceScrollTop})`);
   await page.getByLabel("Review note").fill("Mobile QA confirms source, rights, people, derivative, and sensitive context evidence.");
   for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
     await page.getByLabel(label).check();
@@ -491,10 +518,10 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/assets/368`);
-  const viewerActionsButton = page.getByRole("button", { name: "Asset actions" });
+  const viewerActionsButton = page.getByRole("button", { name: "Record actions" });
   await viewerActionsButton.click();
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "true") failures.push("asset actions menu: aria-expanded not true after open");
-  if ((await page.getByRole("menuitem", { name: /Copy ResourceSpace ID/ }).count()) < 1) failures.push("asset actions menu: copy ResourceSpace ID missing");
+  if ((await page.getByRole("menuitem", { name: /Copy media record ID/ }).count()) < 1) failures.push("asset actions menu: copy media record ID missing");
   if ((await page.getByRole("menuitem", { name: /Copy portal link/ }).count()) < 1) failures.push("asset actions menu: copy portal link missing");
   if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) > 0) failures.push("asset actions menu: Viewer can see ResourceSpace admin action");
   await page.keyboard.press("ArrowDown");
@@ -503,15 +530,15 @@ for (const width of qaViewports) {
   await page.keyboard.press("Escape");
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "false") failures.push("asset actions menu: Escape did not close menu");
   const focusedAfterEscape = await page.evaluate(() => document.activeElement?.textContent || "");
-  if (!focusedAfterEscape.includes("Asset actions")) failures.push("asset actions menu: focus did not return after Escape");
+  if (!focusedAfterEscape.includes("Record actions")) failures.push("asset actions menu: focus did not return after Escape");
   await page.getByRole("tab", { name: "Files", exact: true }).click();
-  if ((await page.getByText("Original filename").count()) < 1) failures.push("asset detail tabs: Files panel missing original filename row");
+  if ((await page.getByText("Source filename").count()) < 1) failures.push("asset detail tabs: Files panel missing source filename row");
   await page.getByRole("tab", { name: "Files", exact: true }).press("ArrowRight");
   if ((await page.getByRole("heading", { name: "Related", exact: true }).count()) < 1) failures.push("asset detail tabs: ArrowRight did not open Related panel");
   await page.getByRole("button", { name: "Request original access", exact: true }).click();
   if ((await page.getByRole("dialog", { name: "Request original access" }).count()) < 1) failures.push("request original dialog: dialog did not open");
-  if ((await page.getByText("This request does not grant access automatically.").count()) < 1) failures.push("request original dialog: safety copy missing");
-  if ((await page.getByText("ResourceSpace status, portal reuse state, and pending review writes do not change here.").count()) < 1) failures.push("request original dialog: no-fake-persistence copy missing");
+  if ((await page.getByText("This request asks the media team for access and does not grant access automatically.").count()) < 1) failures.push("request original dialog: safety copy missing");
+  if ((await page.getByText("Download access and review status do not change here.").count()) < 1) failures.push("request original dialog: no-fake-persistence copy missing");
   await page.getByRole("button", { name: "Close request dialog" }).click();
   await context.close();
 }
@@ -527,7 +554,7 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 320, 900);
   await gotoAndSettle(page, `${base}/assets/368`);
-  await page.getByRole("button", { name: "Asset actions" }).click();
+  await page.getByRole("button", { name: "Record actions" }).click();
   const menuOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   if (menuOverflow) failures.push("asset actions menu: mobile menu caused horizontal overflow");
   await context.close();
@@ -606,7 +633,7 @@ await captureProof("media-preview-panel-document.png", "Viewer", 1440, 1000, "/g
 });
 
 await captureProof("asset-actions-menu-open.png", "Viewer", 1440, 900, "/assets/368", async (page) => {
-  await page.getByRole("button", { name: "Asset actions" }).click();
+  await page.getByRole("button", { name: "Record actions" }).click();
 });
 
 await captureProof("upload-dropzone-tags.png", "Contributor", 1440, 1000, "/upload", async (page) => {

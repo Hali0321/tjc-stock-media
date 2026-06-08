@@ -120,8 +120,8 @@ export function AdminPage() {
     return (
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
         <section className="dam-card p-5">
-          <span className="text-sm font-semibold text-tjc-evergreen">DAM Admin</span>
-          <h1 className="mt-2 text-3xl font-semibold">Admin cockpit requires DAM Admin role</h1>
+          <span className="text-sm font-semibold text-tjc-evergreen">Governance</span>
+          <h1 className="mt-2 text-3xl font-semibold">Governance requires DAM Admin role</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Field mapping, portal readiness, vocabulary control, stale approvals, and duplicate cleanup are admin-only.</p>
           <span className="mt-4 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Switch demo role to DAM Admin to inspect readiness.</span>
         </section>

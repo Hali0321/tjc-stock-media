@@ -15,6 +15,7 @@ type ReuseRequestDialogProps = {
   portalReuseState: string;
   blockers: string[];
   mailtoHref: string;
+  opsView?: boolean;
   onCancel: () => void;
 };
 
@@ -39,15 +40,22 @@ const requestCopy: Record<ReuseRequestKind, { kicker: string; title: string; bod
   }
 };
 
-export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, rawStatus, portalReuseState, blockers, mailtoHref, onCancel }: ReuseRequestDialogProps) {
+export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, rawStatus, portalReuseState, blockers, mailtoHref, opsView = false, onCancel }: ReuseRequestDialogProps) {
   const copy = requestCopy[kind];
   const visibleBlockers = useMemo(() => blockers.slice(0, 8), [blockers]);
+  const description = opsView
+    ? copy.body
+    : kind === "original"
+      ? "Source files stay restricted. This request asks the media team for access and does not grant access automatically."
+      : kind === "review"
+        ? "A reviewer must clear source, rights, people/youth, usage scope, and safe-copy checks before this media becomes reusable."
+        : "Use this when approval, source, people/youth, or ministry context is unclear.";
 
   return (
     <Dialog
       open={open}
       title={copy.title}
-      description={copy.body}
+      description={description}
       onClose={onCancel}
       closeLabel="Close request dialog"
       maxWidthClassName="max-w-xl"
@@ -70,12 +78,12 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
           <div>
             <span className="text-xs font-semibold text-tjc-muted">Asset</span>
             <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-            <span className="mt-1 block text-xs font-semibold text-tjc-muted">ResourceSpace ID {resourceSpaceId}</span>
+            <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Media record ${resourceSpaceId}`}</span>
           </div>
           <div>
-            <span className="text-xs font-semibold text-tjc-muted">Current state</span>
-            <strong className="mt-1 block text-sm text-tjc-ink">{rawStatus}</strong>
-            <span className="mt-1 block text-xs font-semibold text-tjc-muted">{portalReuseState}</span>
+            <span className="text-xs font-semibold text-tjc-muted">{opsView ? "Current state" : "Use state"}</span>
+            <strong className="mt-1 block text-sm text-tjc-ink">{opsView ? rawStatus : portalReuseState}</strong>
+            {opsView ? <span className="mt-1 block text-xs font-semibold text-tjc-muted">{portalReuseState}</span> : null}
           </div>
         </div>
 
@@ -83,7 +91,11 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
           {kind === "original" ? <FileLock2 size={18} strokeWidth={1.8} aria-hidden="true" /> : <ShieldAlert size={18} strokeWidth={1.8} aria-hidden="true" />}
           <div>
             <strong className="block text-sm">{kind === "original" ? "Original access is restricted" : "This does not approve reuse"}</strong>
-            <span className="mt-1 block text-sm leading-relaxed">The request opens an email draft only. ResourceSpace status, portal reuse state, and pending review writes do not change here.</span>
+            <span className="mt-1 block text-sm leading-relaxed">
+              {opsView
+                ? "The request opens an email draft only. ResourceSpace status, portal reuse state, and pending review writes do not change here."
+                : "The request opens an email draft only. Download access and review status do not change here."}
+            </span>
           </div>
         </div>
 

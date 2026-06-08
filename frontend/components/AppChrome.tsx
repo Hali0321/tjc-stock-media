@@ -13,17 +13,21 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const { role, setRole } = useDemoRole();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const canSeeTruthStrip = role === "Reviewer" || role === "DAM Admin";
+  const shellName = canSeeTruthStrip ? "Operations" : "Find and Use";
   const topContextItems = canSeeTruthStrip
     ? ["ResourceSpace truth", "Shared Drive masters", "Local pending writes"]
     : role === "Contributor"
-      ? ["Draft intake", "Reviewer packet", "Submit for review"]
-      : ["Safe approved media", "Ministry packages", "Request review"];
+      ? ["Send media", "Describe source", "Submit for review"]
+      : ["Find approved media", "Use ministry packages", "Ask for review"];
   const railFacts = canSeeTruthStrip
     ? ["Source truth visible", "Writes pending until mapped", "Originals restricted"]
-    : ["Unsafe downloads blocked", "Originals restricted", "Use approved copies"];
+    : ["Approved copies only", "Children/youth protected", "When unsure, request review"];
+  const footerFacts = canSeeTruthStrip
+    ? ["ResourceSpace remains source of truth.", "Google Shared Drive keeps master originals.", "Pending writes are not final truth."]
+    : ["Use approved copies.", "Children/youth media stays protected.", "When unsure, request DAM review."];
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-x-hidden bg-tjc-bg text-tjc-ink">
+    <div className="min-h-[100dvh] w-full overflow-x-clip bg-tjc-bg text-tjc-ink">
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="grain-overlay" aria-hidden="true" />
       <header className="dam-app-header sticky top-0 z-40 px-3 py-2.5 md:px-6 md:py-3">
@@ -33,7 +37,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <span className="dam-brand-mark grid h-9 w-9 shrink-0 place-items-center rounded-[.8rem] text-[9px] font-black text-white md:h-10 md:w-10">TJC</span>
               <span className="min-w-0">
                 <strong className="block truncate text-sm font-black tracking-[-.01em] md:text-base">TJC Stock Media</strong>
-                <small className="hidden max-w-[13rem] truncate text-[11px] font-semibold leading-snug text-tjc-muted lg:block">Ministry media governance</small>
+                <small className="hidden max-w-[13rem] truncate text-[11px] font-semibold leading-snug text-tjc-muted lg:block">{shellName}</small>
               </span>
             </Link>
             <button
@@ -118,7 +122,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       </header>
       <aside className="dam-app-rail fixed left-4 top-[5.85rem] z-30 hidden w-[12.5rem] rounded-md border border-[#c7d1cc] bg-[#f4f6f3] p-3 min-[1400px]:block">
         <div className="mb-3 border-b border-[#d3dbd6] pb-3">
-          <span className="text-[11px] font-black uppercase tracking-[.08em] text-tjc-muted">Modes</span>
+          <span className="text-[11px] font-black uppercase tracking-[.08em] text-tjc-muted">{shellName}</span>
           <strong className="mt-1 block text-sm font-black text-tjc-ink">{role}</strong>
         </div>
         <AppNav role={role} variant="rail" />
@@ -144,9 +148,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       />
       <footer className="relative z-10 mx-auto flex w-full max-w-[1760px] flex-wrap gap-3 border-t border-tjc-line px-3 pb-8 pt-3 text-sm text-tjc-muted md:px-5 min-[1400px]:ml-[14rem] min-[1400px]:w-[calc(100%-14rem)]">
         <Link href="/guide" className="font-semibold text-tjc-evergreen">Usage guide</Link>
-        <span>ResourceSpace remains source of truth.</span>
-        <span>Google Shared Drive keeps master originals.</span>
-        <span>Demo role switch is not production auth.</span>
+        {footerFacts.map((fact) => <span key={fact}>{fact}</span>)}
+        {canSeeTruthStrip ? <span>Demo role switch is not production auth.</span> : null}
       </footer>
     </div>
   );

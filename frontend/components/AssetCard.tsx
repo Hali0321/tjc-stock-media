@@ -52,6 +52,7 @@ export function AssetCard({
   const previewDetail = display.image
     ? undefined
     : `${asset.collection || "Collection"} · ${display.download.reuse.blockers[0]?.label || display.download.approvedCopy.reason || "Reviewer-only until reuse checks pass."}`;
+  const opsView = role === "Reviewer" || role === "DAM Admin";
 
   return (
     <article className="dam-asset-card group flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-[#cad8cf] bg-white transition duration-200 hover:border-[#7ca792] hover:bg-[#fbfdfb]">
@@ -104,7 +105,7 @@ export function AssetCard({
         </div>
         <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-t border-[#eef1ef] pt-2 text-[10px] font-bold leading-snug text-tjc-muted max-sm:hidden" aria-label="Source metadata">
           <span className="truncate">{canDownload ? "Approved copy" : "Reuse requires review"}</span>
-          <span className="rounded-md bg-[#f6f8f5] px-2 py-1 tabular-nums text-[#6f7a72]">{asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export"}</span>
+          <span className="rounded-md bg-[#f6f8f5] px-2 py-1 tabular-nums text-[#6f7a72]">{opsView ? asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export" : "Use guidance"}</span>
         </div>
       </div>
       <AssetQuickLookDialog asset={asset} role={role} open={quickLookOpen} onClose={() => setQuickLookOpen(false)} />
