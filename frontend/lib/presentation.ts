@@ -80,7 +80,8 @@ export function assetDisplayTitle(asset: StockMediaAsset) {
 }
 
 export function provenanceSummary(asset: StockMediaAsset, role: DemoRole) {
-  const source = asset.sourceAccount || asset.sourceSystem || asset.collection || "ResourceSpace";
+  const opsView = role === "Reviewer" || role === "DAM Admin";
+  const source = asset.sourceAccount || (opsView ? asset.sourceSystem : undefined) || asset.collection || (opsView ? "ResourceSpace" : "Media archive");
   const origin = asset.eventName || asset.sourcePlatform || asset.collection;
   const adminDecision = decideAccess(role, "viewOriginalMetadata", asset);
   return {
@@ -200,9 +201,10 @@ function bestUseCopy(asset: StockMediaAsset) {
 export function trustFacts(asset: StockMediaAsset, role: DemoRole) {
   const provenance = provenanceSummary(asset, role);
   const reuse = buildReuseDecision(asset);
+  const opsView = role === "Reviewer" || role === "DAM Admin";
   return [
-    { label: "ResourceSpace status", value: statusToUserLabel(asset.status) },
-    { label: "Portal reuse state", value: `${reuse.label} - ${reuse.summary}` },
+    { label: opsView ? "ResourceSpace status" : "Approval state", value: statusToUserLabel(asset.status) },
+    { label: opsView ? "Portal reuse state" : "Use guidance state", value: `${reuse.label} - ${reuse.summary}` },
     { label: "Usage scope", value: usageScopeToUserLabel(asset.usageScope) },
     { label: "Source / provenance", value: provenance.publicLabel },
     { label: "Reviewer", value: asset.reviewer && asset.reviewedDate ? `${asset.reviewer} - ${asset.reviewedDate}` : "Review pending" },

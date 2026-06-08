@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderOpen, Gauge, Search, ShieldCheck, UploadCloud, type LucideIcon } from "lucide-react";
+import { FolderOpen, Gauge, HelpCircle, Search, ShieldCheck, UploadCloud, type LucideIcon } from "lucide-react";
 import type { DemoRole } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
@@ -13,21 +13,60 @@ type AppNavItem = {
   adminOnly?: boolean;
 };
 
-const navItems: AppNavItem[] = [
-  { href: "/", label: "Library", icon: Search },
-  { href: "/collections", label: "Collections", icon: FolderOpen },
-  { href: "/upload", label: "Upload", icon: UploadCloud },
-  { href: "/review", label: "Review", icon: ShieldCheck },
-  { href: "/admin", label: "Admin", icon: Gauge, adminOnly: true }
+const findAndUseNav: AppNavItem[] = [
+  { href: "/", label: "Find", icon: Search },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/guide", label: "Help", icon: HelpCircle }
 ];
 
-export function AppNav({ role }: { role: DemoRole }) {
+const contributorNav: AppNavItem[] = [
+  { href: "/", label: "Find", icon: Search },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/upload", label: "Send", icon: UploadCloud },
+  { href: "/guide", label: "Help", icon: HelpCircle }
+];
+
+const reviewerNav: AppNavItem[] = [
+  { href: "/review", label: "Review", icon: ShieldCheck },
+  { href: "/", label: "Ops", icon: Search },
+  { href: "/upload", label: "Send", icon: UploadCloud },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/guide", label: "Help", icon: HelpCircle }
+];
+
+const adminNav: AppNavItem[] = [
+  { href: "/admin", label: "Govern", icon: Gauge, adminOnly: true },
+  { href: "/review", label: "Review", icon: ShieldCheck },
+  { href: "/", label: "Ops", icon: Search },
+  { href: "/collections", label: "Packages", icon: FolderOpen },
+  { href: "/guide", label: "Help", icon: HelpCircle }
+];
+
+function navItemsForRole(role: DemoRole) {
+  if (role === "DAM Admin") return adminNav;
+  if (role === "Reviewer") return reviewerNav;
+  if (role === "Contributor") return contributorNav;
+  return findAndUseNav;
+}
+
+type AppNavProps = {
+  role: DemoRole;
+  variant?: "rail" | "mobile";
+};
+
+export function AppNav({ role, variant = "mobile" }: AppNavProps) {
   const pathname = usePathname();
-  const visibleItems = navItems.filter((item) => !item.adminOnly || role === "DAM Admin");
+  const visibleItems = navItemsForRole(role).filter((item) => !item.adminOnly || role === "DAM Admin");
+  const rail = variant === "rail";
 
   return (
     <nav
-      className="tubelight-nav mx-auto flex w-full max-w-[29rem] items-center gap-1 rounded-[1.65rem] border border-[#d5dfda] bg-white/93 p-1.5 shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_18px_48px_rgba(17,24,39,.14)] backdrop-blur-xl lg:static lg:z-auto lg:w-max lg:max-w-none lg:translate-x-0 lg:justify-center lg:gap-1.5 lg:rounded-full lg:border-[#d6dfd9] lg:bg-white/86 lg:p-1.5 lg:shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_24px_70px_rgba(13,55,47,.14)] 2xl:gap-2"
+      className={cn(
+        "tubelight-nav mx-auto flex w-full items-center border border-[#c9d4d5] bg-white",
+        rail
+          ? "max-w-none flex-col gap-1 rounded-none border-0 bg-transparent p-0 shadow-none"
+          : "max-w-[34rem] gap-1 rounded-[.55rem] p-1 shadow-[0_10px_24px_rgba(17,24,39,.08)]"
+      )}
       aria-label="Primary navigation"
     >
       {visibleItems.map((item) => {
@@ -39,22 +78,23 @@ export function AppNav({ role }: { role: DemoRole }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "group relative inline-flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-visible rounded-[1.1rem] px-1.5 text-[11px] font-black text-[#5b655f] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:text-tjc-evergreen active:scale-[.98] lg:min-h-14 lg:flex-none lg:flex-row lg:gap-1.5 lg:rounded-full lg:px-5 lg:text-sm 2xl:gap-2 2xl:px-7 2xl:text-base",
+              "group relative inline-flex min-w-0 flex-1 items-center text-sm font-bold text-[#5b655f] transition-colors duration-200 ease-out hover:text-tjc-evergreen active:translate-y-px",
+              rail
+                ? "min-h-10 w-full flex-none justify-start gap-2 rounded-md px-3"
+                : "min-h-14 flex-col justify-center gap-1 rounded-[.45rem] px-1.5 text-[11px]",
               isActive && "text-tjc-evergreen",
-              utility && "border-l border-tjc-line"
+              utility && (rail ? "mt-2 border-t border-tjc-line pt-3" : "border-l border-tjc-line")
             )}
             title={item.label}
             aria-current={isActive ? "page" : undefined}
           >
             {isActive ? (
               <>
-                <span className="absolute inset-0 rounded-[1.25rem] bg-[#e8f6f2] shadow-[inset_0_0_0_1px_rgba(13,121,112,.08),0_18px_34px_rgba(7,132,121,.16)] lg:rounded-full" aria-hidden="true" />
-                <span className="absolute -top-1 left-1/2 h-1.5 w-11 -translate-x-1/2 rounded-t-full bg-[#087c75] shadow-[0_0_22px_rgba(8,124,117,.65)] lg:-top-2" aria-hidden="true" />
-                <span className="absolute left-1/2 top-0 h-12 w-16 -translate-x-1/2 rounded-full bg-[#19b9a8]/16 blur-xl lg:h-14 lg:w-24" aria-hidden="true" />
-                <span className="absolute bottom-2 h-1 w-10 rounded-full bg-[#12a294] shadow-[0_0_14px_rgba(18,162,148,.45)] lg:bottom-2.5" aria-hidden="true" />
+                <span className={cn("absolute inset-0 bg-[#dfece6] shadow-[inset_0_0_0_1px_rgba(13,63,57,.12)]", rail ? "rounded-md" : "rounded-[.45rem]")} aria-hidden="true" />
+                {!rail ? <span className="absolute inset-x-3 bottom-1.5 h-0.5 rounded-sm bg-[#0b5950]" aria-hidden="true" /> : null}
               </>
             ) : null}
-            <Icon className="relative z-10 h-5 w-5 shrink-0 transition duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:-translate-y-0.5 lg:h-[18px] lg:w-[18px]" aria-hidden="true" strokeWidth={1.9} />
+            <Icon className={cn("relative z-10 shrink-0", rail ? "h-[17px] w-[17px]" : "h-5 w-5")} aria-hidden="true" strokeWidth={1.9} />
             <span className="nav-label relative z-10 whitespace-nowrap leading-none">{item.label}</span>
           </Link>
         );

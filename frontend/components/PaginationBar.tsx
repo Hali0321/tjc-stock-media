@@ -41,7 +41,7 @@ export function PaginationBar({ rangeStart, rangeEnd, total, pageSize, loading, 
         key={page}
         type="button"
         className={cn(
-          "grid h-9 min-w-9 place-items-center rounded-full border px-2 text-sm font-black tabular-nums transition active:translate-y-px",
+          "grid h-9 min-w-9 place-items-center rounded-md border px-2 text-sm font-black tabular-nums transition active:translate-y-px",
           selected ? "border-[#007da4] bg-[#e6f0eb] text-tjc-evergreen" : "border-tjc-line bg-white text-[#3e4741] hover:bg-[#eef7f1]"
         )}
         aria-current={selected ? "page" : undefined}
@@ -54,7 +54,7 @@ export function PaginationBar({ rangeStart, rangeEnd, total, pageSize, loading, 
   }
 
   return (
-    <nav className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-[#d8dfd5] bg-white/95 px-3 py-2.5 shadow-[0_1px_0_rgba(32,34,31,.04)]" aria-label="Pagination">
+    <nav className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#d8dfd5] bg-white px-3 py-2.5" aria-label="Pagination">
       <div className="grid gap-0.5">
         <strong className="text-sm font-black text-tjc-ink">{loading ? "Loading results" : rangeText}</strong>
         <span className="text-xs font-semibold text-tjc-muted">Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}</span>
@@ -63,7 +63,7 @@ export function PaginationBar({ rangeStart, rangeEnd, total, pageSize, loading, 
         <button
           type="button"
           className={cn(
-            "inline-flex min-h-9 items-center gap-1.5 rounded-full border border-tjc-line px-3 text-sm font-black transition",
+            "inline-flex min-h-9 items-center gap-1.5 rounded-md border border-tjc-line px-3 text-sm font-black transition",
             disabledPrevious ? "cursor-not-allowed bg-[#f6f7f5] text-[#8b958d]" : "bg-white text-tjc-evergreen hover:bg-[#eef7f1] active:translate-y-px"
           )}
           onClick={() => onPage(currentPage - 1)}
@@ -90,7 +90,7 @@ export function PaginationBar({ rangeStart, rangeEnd, total, pageSize, loading, 
         <button
           type="button"
           className={cn(
-            "inline-flex min-h-9 items-center gap-1.5 rounded-full border border-tjc-line px-3 text-sm font-black transition",
+            "inline-flex min-h-9 items-center gap-1.5 rounded-md border border-tjc-line px-3 text-sm font-black transition",
             disabledNext ? "cursor-not-allowed bg-[#f6f7f5] text-[#8b958d]" : "bg-white text-tjc-evergreen hover:bg-[#eef7f1] active:translate-y-px"
           )}
           onClick={() => onPage(currentPage + 1)}

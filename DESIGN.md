@@ -2,26 +2,28 @@
 
 ## Product Intent
 
-TJC Stock Media is a practical media library for ministry teams. The first impression should be: search approved church media, understand safety status, download only what is allowed, and upload new material for review.
+TJC Stock Media is a governed ministry media operations portal and ResourceSpace companion for church media. The first impression should be: search approved role-safe media, understand trust lanes, submit intake for review, resolve governance work, and keep ResourceSpace/Shared Drive truth visible.
 
 North Star:
 
 ```text
-A TJC user can find a rights-safe approved media asset in under 60 seconds.
+A TJC user can find a rights-safe approved media asset in under 60 seconds and understand exactly what use is allowed, blocked, or waiting on evidence.
 ```
 
 ## Visual Direction
 
-- Photo-first library, not admin dashboard.
-- Warm off-white background, deep charcoal text, evergreen accent, sage selected states, restrained amber/red safety states.
+- Hybrid ministry DAM as the base: enterprise metadata/permission/audit spine, ResourceSpace companion truth layer, and operations workbenches for Intake, Review, and Governance.
+- Modern media operations patterns are borrowed only where queues, evidence, discrepancy work, and governance need them.
+- The old warm/card/photo-first style is no longer sacred. Visual design should feel mature, precise, operational, and trustworthy.
+- Cool-neutral operations surfaces, deep charcoal text, evergreen accent, restrained amber/red safety states.
 - Tailwind v4 utility system with a small global token/base layer.
 - Inter plus Noto Sans TC fallback via `next/font/google`; Geist Mono reserved for technical IDs and tabular figures.
-- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, Library saved-view rail, collection entry points, filter drawer, sort controls, and asset contact sheet high on page.
-- Tubelight-inspired workflow navigation for Library, Collections, Upload, and Review is implemented as maintained `AppNav`. Guide, command palette, ResourceSpace, and Admin diagnostics stay utility/role-aware.
+- App-like shell with persistent navigation, utility role switch, compact command search, use-case shortcuts, Library facet/table workspace, governed collection entry points, filter drawer, sort controls, and optional visual grid.
+- Primary modes are Library, Collections, Intake, Review, and Governance. Guide, command palette, ResourceSpace, and diagnostics stay utility/role-aware.
 - Command palette provides `Cmd/Ctrl+K` navigation for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, guide, and admin diagnostics.
 - Status labels use warm text plus color. Color never carries meaning alone.
-- Cards stay simple: thumbnail, short status, title, usage label, collection/event, one tag, download state.
-- Deeper metadata moves to hover/focus and asset detail so the library feels like a media product, not a database.
+- Library defaults are role-aware: Viewers get simplified safe results; Reviewers and DAM Admins get operations tables because workflow, distribution, rights, people/release, sensitivity, availability, source, and sync state matter.
+- Grid/cards remain optional for visual browsing. Each card must answer one question: can I use this or not?
 - Use less explanatory text. Thumbnails, badges, filters, and clear actions should carry the product.
 - Asset detail includes moment-of-use guidance: best used for, please avoid, caption suggestion, credit requirement, and ministry sensitivity.
 
@@ -30,13 +32,12 @@ Best combined direction:
 ```text
 Dribbble DAM density
 + 21st.dev workflow components
-+ Tubelight Navbar
++ enterprise workspace navigation
 + Display Cards for operational state
-+ restrained liquid/glass for nav and primary actions
-+ Awwwards photographic restraint
++ restrained operational surfaces
 + Inter/Noto typography
 + ResourceSpace truth layer
-+ TJC safety rules
++ TJC ministry governance rules
 ```
 
 Reference patterns, adapted without copying:
@@ -49,12 +50,13 @@ Reference patterns, adapted without copying:
 - Monet: calm light-theme admin/guide sections, diagnostics, production blockers, and workflow explanation patterns.
 - Pinterest moodboard: archive/upload visual rhythm only; no direct layout copying.
 - AI design tools: research/prototyping only. No generated church people, fake ministry media, or production AI dependency.
-- Google Photos / Apple Photos: minimal chrome, image-first browsing, fast visual scanning.
+- Google Photos / Apple Photos: useful only for secondary visual browsing, not the primary enterprise Library model.
 - Brandfolder: approval clarity, asset safety, permissions, and download controls.
 - Frontify: usage guidance, brand rules, Do/Avoid guidance, and lifecycle clarity.
 - PhotoShelter: albums/events, source attribution, contributor/reviewer separation, and permission-aware downloads.
 - Bynder / Canto / AEM Assets: metadata facets, governance, review lifecycle, renditions, and reporting.
 - ResourceSpace: source-of-truth backend, workflow state, metadata, permissions, admin settings, and asset IDs.
+- Google Shared Drive: master-original custody and source provenance, never broad Viewer original access.
 - Notion: calm documentation and guide readability.
 - Airtable / Linear: dense workflow UI, clear actions, and table/list/detail rhythm.
 
@@ -76,6 +78,8 @@ Avoided:
 - developer console look
 - ResourceSpace clone
 - second metadata UI
+- collections as permission truth
+- Drive membership as original-access workflow
 
 ## Safety UX
 
@@ -140,7 +144,7 @@ Current UI tokens live in `frontend/app/globals.css`.
 
 | Token | Value / rule |
 |---|---|
-| Background | warm off-white `#f7f4ef`; no dark gradient or beige/yellow dashboard treatment |
+| Background | neutral operations surface; no beige lock-in, dark gradient, or public SaaS gloss |
 | Surface | white with restrained borders; minimal shadow |
 | Text | deep charcoal `#171b19` |
 | Muted text | gray-green `#5a635f` |
@@ -152,8 +156,8 @@ Current UI tokens live in `frontend/app/globals.css`.
 | Archive only | muted purple/gray |
 | Do not publish externally | muted red |
 | Spacing scale | 4px rhythm, mostly 8/12/16/24px |
-| Card radius | mostly 12-24px depending surface; rounder controls without childish bubble UI |
-| Chip radius | compact rounded pills for controls and tags |
+| Card radius | smaller operational radii by default; larger cards only for repeated items and modals |
+| Chip radius | compact, status-specific, and used sparingly |
 | Shadow | minimal soft lift only; no fake-premium heavy shadow |
 | Typography | Inter + Noto Sans TC fallback, compact app hierarchy, no giant marketing landing hero |
 | Buttons | evergreen primary, neutral secondary/action chips |
@@ -168,14 +172,14 @@ Current UI tokens live in `frontend/app/globals.css`.
 - Saved DAM views are compact action cards with count and purpose, not long documentation cards.
 - Featured collections render as compact album thumbnail collages with count/date/scope signals, avoiding oversized low-resolution derivatives.
 - Search result copy uses `Showing first 84 of 2,290 matching assets` style language.
-- Responsive media grid uses contact-sheet columns: up to 6 wide desktop, 4-5 standard desktop, 3 tablet, and 2 at mobile widths.
+- Table/list is default. Responsive media grid remains available as visual browsing mode.
 - Assets without exported preview derivatives show `Preview pending`/`Preview unavailable` states instead of broken-image placeholders. This is honest data readiness, not fabricated media.
 - Raw filenames are not mutated; a display helper normalizes titles such as `Copy Of Img 0625` to `Image 0625` while preserving original filename in detail metadata.
 - Final 320px Library QA shows search and results without horizontal overflow or clipped controls.
 
 ## Workflow Screens
 
-- Upload uses a guided intake workflow with Context, People and rights, Files and tags, required-field markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt copy.
+- Intake uses a guided session workflow with Context, People and rights, Files and tags, required-field markers, reviewer packet, large-media guidance, and blocked-until-review receipt copy.
 - Upload previews selected files before submit, shows type/size, flags files over 100 MB for Shared Drive Incoming, and lets contributors remove/clear selected files.
 - Review uses a professional workbench layout: compact governance metrics, queue tabs, dense review rows, smaller workflow actions, selected-asset inspector, evidence checklist, audit preview, pending write state, and desktop-only GSAP motion skipped for reduced-motion users.
 - Guide is a searchable secondary usage guide with download decision rows and Do/Avoid blocks.

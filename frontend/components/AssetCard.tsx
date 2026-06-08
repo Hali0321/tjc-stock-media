@@ -52,12 +52,12 @@ export function AssetCard({
   const previewDetail = display.image
     ? undefined
     : `${asset.collection || "Collection"} · ${display.download.reuse.blockers[0]?.label || display.download.approvedCopy.reason || "Reviewer-only until reuse checks pass."}`;
+  const opsView = role === "Reviewer" || role === "DAM Admin";
 
   return (
-    <article className="dam-asset-card group flex h-full min-h-0 flex-col overflow-hidden rounded-[1.25rem] border border-[#cad8cf] bg-white shadow-[0_12px_30px_rgba(35,53,111,.045)] transition duration-200 hover:-translate-y-0.5 hover:border-[#7ca792] hover:shadow-[0_18px_42px_rgba(35,53,111,.08)] max-sm:rounded-[.85rem]">
+    <article className="dam-asset-card group flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-[#cad8cf] bg-white transition duration-200 hover:border-[#7ca792] hover:bg-[#fbfdfb]">
       <div className={cn("dam-asset-card-media relative overflow-hidden bg-[#edf2ed]", mediaAspectClass(variant))}>
         <Link href={`/assets/${asset.id}`} className="absolute inset-0 block" aria-label={`Open ${display.title}`}>
-          <span className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(255,255,255,0)_58%,rgba(247,250,247,.88))]" aria-hidden="true" />
           <MediaPreview
             src={display.image}
             alt={asset.thumbnailAlt}
@@ -66,11 +66,11 @@ export function AssetCard({
             imgClassName="transition duration-300 ease-out group-hover:scale-[1.02]"
           />
         </Link>
-        <span className="dam-asset-card-primary absolute left-2 top-2 z-[2] max-w-[calc(100%-1rem)] backdrop-blur" data-badge-slot="asset-card-primary">
+        <span className="dam-asset-card-primary absolute left-2 top-2 z-[2] max-w-[calc(100%-1rem)]" data-badge-slot="asset-card-primary">
           <ReuseStateBadge asset={asset} size="xs" />
         </span>
         <button
-          className="dam-asset-card-preview-action absolute bottom-2 right-2 z-[2] inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[#c5d3ca] bg-white/90 px-2.5 text-[11px] font-black text-tjc-evergreen backdrop-blur transition hover:bg-[#eef7f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px max-sm:h-8 max-sm:w-8 max-sm:px-0"
+          className="dam-asset-card-preview-action absolute bottom-2 right-2 z-[2] inline-flex min-h-8 items-center gap-1.5 rounded-md border border-[#c5d3ca] bg-white px-2.5 text-[11px] font-black text-tjc-evergreen transition hover:bg-[#eef7f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-px max-sm:h-8 max-sm:w-8 max-sm:px-0"
           type="button"
           onClick={() => setQuickLookOpen(true)}
           aria-haspopup="dialog"
@@ -100,12 +100,12 @@ export function AssetCard({
           <ReuseStateBadge asset={asset} size="xs" />
         </div>
         <div className="dam-asset-card-meta grid gap-1 text-xs leading-snug text-tjc-muted max-sm:text-[10px]">
+          <span className={cn("dam-asset-card-use-line line-clamp-1 rounded-md border px-2 py-1 text-[13px] font-black max-sm:text-[11px]", canDownload && !hasWarnings ? "border-[#b8d9c6] bg-[#edf8f1] text-[#164d34]" : "border-[#ead6a8] bg-[#fff8e8] text-[#704707]")}>{canDownload && !hasWarnings ? "Safe to reuse" : blocker}</span>
           <span className="truncate font-semibold">{asset.collection || display.cardSubtitle}</span>
-          <span className={cn("dam-asset-card-use-line line-clamp-1 border-l-2 pl-2 font-black", canDownload && !hasWarnings ? "border-[#7db58f] text-[#164d34]" : "border-[#d09a31] text-[#704707]")}>{blocker}</span>
         </div>
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-t border-[#eef1ef] pt-2 text-[11px] font-bold leading-snug text-tjc-muted max-sm:hidden" aria-label="Source metadata">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-t border-[#eef1ef] pt-2 text-[10px] font-bold leading-snug text-tjc-muted max-sm:hidden" aria-label="Source metadata">
           <span className="truncate">{canDownload ? "Approved copy" : "Reuse requires review"}</span>
-          <span className="rounded-full bg-[#f3f6f2] px-2 py-1 tabular-nums">{asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export"}</span>
+          <span className="rounded-md bg-[#f6f8f5] px-2 py-1 tabular-nums text-[#6f7a72]">{opsView ? asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export" : "Use guidance"}</span>
         </div>
       </div>
       <AssetQuickLookDialog asset={asset} role={role} open={quickLookOpen} onClose={() => setQuickLookOpen(false)} />

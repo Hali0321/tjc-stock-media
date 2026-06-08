@@ -16,7 +16,7 @@ export function SavedViewCard({
       type="button"
       className={cn(
         "group relative grid min-h-24 w-full min-w-0 overflow-hidden rounded-lg border border-[#c5d1c9] bg-white p-3 text-left transition duration-200 hover:border-[#85ad9a] hover:bg-[#f8fbf8] active:translate-y-px",
-        active && "border-[#0b4b42] bg-[#f4faf6] text-tjc-evergreen shadow-[inset_3px_0_0_#0b4b42]"
+        active && "border-[#0b4b42] bg-[#f4faf6] text-tjc-evergreen ring-1 ring-inset ring-[#8fb2a5]"
       )}
       onClick={onOpen}
     >

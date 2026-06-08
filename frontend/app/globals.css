@@ -6,22 +6,22 @@
 @theme {
   --font-sans: var(--font-geist), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --color-tjc-ink: #111827;
-  --color-tjc-muted: #6b7280;
-  --color-tjc-bg: #f7f4ef;
-  --color-tjc-panel: #ffffff;
-  --color-tjc-line: #e5e7ea;
-  --color-tjc-evergreen: #0f3d2e;
-  --color-tjc-evergreen-2: #062d24;
-  --color-tjc-gold: #9a650e;
-  --color-tjc-blue: #007da4;
-  --color-tjc-blue-deep: #23356f;
-  --color-tjc-red: #9a2f2d;
+  --color-tjc-ink: oklch(20% .018 160);
+  --color-tjc-muted: oklch(47% .018 160);
+  --color-tjc-bg: oklch(95% .009 160);
+  --color-tjc-panel: oklch(98% .006 160);
+  --color-tjc-line: oklch(86% .012 160);
+  --color-tjc-evergreen: oklch(31% .07 165);
+  --color-tjc-evergreen-2: oklch(22% .052 165);
+  --color-tjc-gold: oklch(48% .09 72);
+  --color-tjc-blue: oklch(43% .075 223);
+  --color-tjc-blue-deep: oklch(29% .065 250);
+  --color-tjc-red: oklch(42% .095 25);
 }
 
 :root {
   color-scheme: light;
-  --app-header-height: 88px;
+  --app-header-height: 82px;
   --app-mobile-nav-height: 76px;
   --app-mobile-nav-gap: 18px;
   --app-mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -39,13 +39,19 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   background:
-    radial-gradient(circle at 8% -12%, rgba(0, 125, 164, .10), transparent 28rem),
-    linear-gradient(180deg, #fbfaf7 0%, #f7f4ef 44%, #f3f0eb 100%);
-  color: #111827;
+    linear-gradient(90deg, rgba(16, 50, 42, .045) 1px, transparent 1px),
+    linear-gradient(180deg, oklch(97% .006 160) 0%, oklch(94% .009 160) 100%);
+  background-size: 56px 56px, auto;
+  color: oklch(20% .018 160);
   font-family: var(--font-geist), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: oklch(82% .045 165);
+  color: oklch(18% .018 160);
 }
 
 img {
@@ -87,7 +93,7 @@ textarea:focus-visible {
   transform: translateY(-150%);
   opacity: 0;
   pointer-events: none;
-  border-radius: 999px;
+  border-radius: .35rem;
   background: #123f3a;
   color: white;
   padding: .65rem 1rem;
@@ -108,7 +114,7 @@ textarea:focus-visible {
   inset: 0;
   z-index: 0;
   display: block;
-  opacity: .16;
+  opacity: .08;
   mix-blend-mode: multiply;
   background-image:
     linear-gradient(rgba(17,24,39,.022) 1px, transparent 1px),
@@ -139,22 +145,22 @@ textarea:focus-visible {
 }
 
 .dam-shell {
-  width: min(100%, 1760px);
+  width: min(100%, 1840px);
   margin-inline: auto;
   padding: 1rem .85rem 3.25rem;
 }
 
 .dam-panel {
-  border: 1px solid rgba(221, 227, 222, .96);
-  border-radius: 1.5rem;
-  background: rgba(255, 255, 255, .94);
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 16px 40px rgba(25,34,29,.045);
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .55rem;
+  background: oklch(98% .006 160);
+  box-shadow: none;
 }
 
 .dam-panel-muted {
-  border: 1px solid rgba(221, 227, 222, .94);
-  border-radius: 1.125rem;
-  background: #f8faf8;
+  border: 1px solid oklch(85% .012 160);
+  border-radius: .45rem;
+  background: oklch(95% .008 160);
 }
 
 .dam-kicker {
@@ -166,9 +172,9 @@ textarea:focus-visible {
 }
 
 .dam-page-title {
-  font-size: clamp(2.15rem, 1.3rem + 2vw, 4rem);
-  line-height: .98;
-  font-weight: 820;
+  font-size: clamp(2rem, 1.35rem + 1.55vw, 3.35rem);
+  line-height: 1;
+  font-weight: 850;
   letter-spacing: 0;
   color: #111827;
   text-wrap: balance;
@@ -178,8 +184,8 @@ textarea:focus-visible {
   display: -webkit-box;
   max-width: 980px;
   overflow: hidden;
-  font-size: clamp(2.25rem, 1.2rem + 3.2vw, 4.5rem);
-  line-height: .95;
+  font-size: clamp(2.1rem, 1.2rem + 2.8vw, 4rem);
+  line-height: .98;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -192,54 +198,53 @@ textarea:focus-visible {
 }
 
 .dam-card {
-  border: 1px solid rgba(221, 227, 222, .96);
-  border-radius: 1.125rem;
-  background: rgba(255,255,255,.96);
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 14px 34px rgba(25,34,29,.04);
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .55rem;
+  background: oklch(98% .006 160);
+  box-shadow: none;
 }
 
 .dam-lift {
-  border: 1px solid rgba(209, 216, 212, .96);
-  border-radius: .75rem;
-  background: #fff;
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .45rem;
+  background: oklch(98% .006 160);
 }
 
 .dam-workbench {
-  border: 1px solid rgba(209, 216, 212, .98);
-  border-radius: 1.125rem;
-  background: #fff;
+  border: 1px solid oklch(83% .014 160);
+  border-radius: .55rem;
+  background: oklch(98% .006 160);
 }
 
 .dam-section-bar {
-  border: 1px solid rgba(205, 215, 208, .96);
-  border-radius: .75rem;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,250,247,.96));
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 12px 32px rgba(25,34,29,.055);
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .45rem;
+  background: oklch(96% .008 160);
+  box-shadow: none;
 }
 
 .dam-card-quiet {
-  border: 1px solid rgba(216, 223, 213, .92);
-  border-radius: .75rem;
-  background: rgba(250,251,248,.92);
+  border: 1px solid oklch(85% .012 160);
+  border-radius: .45rem;
+  background: oklch(96% .008 160);
 }
 
 .dam-control {
-  border: 1px solid rgba(209, 216, 212, .98);
-  border-radius: 999px;
-  background: rgba(255,255,255,.96);
-  box-shadow: inset 0 -1px 0 rgba(23,27,25,.035);
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .45rem;
+  background: oklch(98% .006 160);
+  box-shadow: none;
 }
 
 .dam-button-primary {
-  border: 1px solid #007da4;
-  border-radius: 999px;
-  background: #007da4;
-  color: white;
+  border: 1px solid oklch(31% .07 165);
+  border-radius: .45rem;
+  background: oklch(31% .07 165);
+  color: oklch(98% .006 160);
 }
 
 .dam-button-primary:hover {
-  background: #23356f;
+  background: oklch(24% .055 165);
 }
 
 .dam-risk-warn {
@@ -291,22 +296,12 @@ textarea:focus-visible {
   .tubelight-nav {
     position: relative;
     inset: auto;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(247, 251, 248, .88));
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.98) inset,
-      0 18px 50px rgba(13, 55, 47, .12);
+    background: transparent;
+    box-shadow: none;
   }
 
   .tubelight-nav::before {
-    content: "";
-    position: absolute;
-    inset: -1rem 18% auto;
-    z-index: -1;
-    height: 2.25rem;
-    border-radius: 999px;
-    background: radial-gradient(ellipse at center, rgba(21, 185, 168, .24), rgba(21, 185, 168, 0) 68%);
-    pointer-events: none;
+    content: none;
   }
 }
 
@@ -318,57 +313,55 @@ textarea:focus-visible {
 }
 
 .dam-app-header {
-  border-bottom: 0;
-  background:
-    linear-gradient(180deg, rgba(252,253,250,.96), rgba(252,253,250,.78) 72%, rgba(252,253,250,0));
-  backdrop-filter: blur(18px);
+  border-bottom: 1px solid oklch(84% .014 160);
+  background: oklch(96% .008 160 / .96);
+  backdrop-filter: blur(14px);
 }
 
 .dam-app-shell {
-  border: 1px solid rgba(210, 220, 214, .86);
-  border-radius: 1.25rem;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(21, 185, 168, .08), transparent 24%),
-    linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,252,249,.9));
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.95) inset,
-    0 18px 50px rgba(17, 24, 39, .055),
-    0 14px 38px rgba(13, 121, 112, .035);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dam-app-rail {
+  box-shadow: 0 1px 0 oklch(100% 0 0 / .7) inset;
+}
+
+.dam-top-context {
+  box-shadow: inset 0 -1px 0 oklch(100% 0 0 / .55);
 }
 
 .dam-soft-card {
-  border: 1px solid rgba(221, 227, 222, .96);
-  border-radius: 1.5rem;
-  background: rgba(255, 255, 255, .96);
-  box-shadow: 0 12px 30px rgba(25, 34, 29, .035);
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .55rem;
+  background: oklch(98% .006 160);
+  box-shadow: none;
 }
 
 .dam-pill {
-  border-radius: 999px;
+  border-radius: .35rem;
 }
 
 .dam-brand-mark {
-  border: 1px solid rgba(255,255,255,.2);
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.2), transparent 42%),
-    linear-gradient(160deg, #007da4 0%, #0f3d2e 58%, #23356f 100%);
-  box-shadow: 0 10px 22px rgba(0,125,164,.16);
+  border: 1px solid oklch(24% .055 165);
+  background: oklch(31% .07 165);
+  box-shadow: none;
 }
 
 .dam-studio {
-  border: 1px solid rgba(190, 203, 195, .95);
-  border-radius: 1.5rem;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.7), rgba(246,248,245,.96)),
-    #f4f6f2;
-  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 30px 90px rgba(25,34,29,.08);
+  border: 1px solid oklch(82% .014 160);
+  border-radius: .55rem;
+  background: oklch(97% .007 160);
+  box-shadow: none;
 }
 
 .dam-contact-sheet {
-  border: 1px solid rgba(200, 212, 205, .92);
-  border-radius: 1.5rem;
-  background: rgba(255,255,255,.88);
-  box-shadow: 0 18px 50px rgba(35, 53, 111, .06);
+  border: 1px solid oklch(82% .014 160);
+  border-radius: .55rem;
+  background: oklch(98% .006 160);
+  box-shadow: none;
 }
 
 .dam-inspector {
@@ -378,68 +371,54 @@ textarea:focus-visible {
 }
 
 .dam-status-pill {
-  border-radius: 999px;
-  border: 1px solid rgba(204, 213, 207, .92);
-  background: rgba(255,255,255,.9);
-  box-shadow: 0 1px 0 rgba(255,255,255,.88) inset;
+  border-radius: .35rem;
+  border: 1px solid oklch(84% .014 160);
+  background: oklch(98% .006 160);
+  box-shadow: none;
 }
 
 .dam-readable-banner {
-  border-radius: .95rem;
-  border: 1px solid rgba(217, 178, 90, .65);
-  background: linear-gradient(180deg, #fff8e8, #fff3d1);
+  border-radius: .45rem;
+  border: 1px solid oklch(78% .075 76);
+  background: oklch(94% .03 82);
   color: #6f4608;
-  box-shadow: 0 1px 0 rgba(255,255,255,.85) inset;
+  box-shadow: none;
 }
 
 .dam-preview-grid {
-  background:
-    radial-gradient(circle at 18% 16%, rgba(255,255,255,.96), transparent 24%),
-    radial-gradient(circle at 82% 86%, rgba(0,125,164,.10), transparent 32%),
-    linear-gradient(180deg, #f7faf7 0%, #e6f0eb 100%);
+  background: oklch(94% .012 160);
 }
 
 .dam-preview-grid::before {
   content: "";
   position: absolute;
   inset: .75rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255,255,255,.78);
+  border-radius: .45rem;
+  border: 1px solid oklch(84% .014 160);
   background:
-    linear-gradient(90deg, rgba(17,24,39,.035) 1px, transparent 1px),
-    linear-gradient(rgba(17,24,39,.03) 1px, transparent 1px);
+    linear-gradient(90deg, oklch(70% .01 160 / .22) 1px, transparent 1px),
+    linear-gradient(oklch(70% .01 160 / .18) 1px, transparent 1px);
   background-size: 28px 28px;
-  mask-image: radial-gradient(circle at 50% 50%, black, transparent 72%);
   pointer-events: none;
 }
 
 .dam-preview-grid.dam-preview-variant-2 {
-  background:
-    radial-gradient(circle at 76% 18%, rgba(255,255,255,.96), transparent 24%),
-    radial-gradient(circle at 18% 84%, rgba(111,142,104,.16), transparent 34%),
-    linear-gradient(180deg, #f8faf5 0%, #edf3e8 100%);
+  background: oklch(95% .011 180);
 }
 
 .dam-preview-grid.dam-preview-variant-3 {
-  background:
-    radial-gradient(circle at 24% 78%, rgba(255,255,255,.96), transparent 25%),
-    radial-gradient(circle at 84% 18%, rgba(217,178,90,.18), transparent 34%),
-    linear-gradient(180deg, #faf8f0 0%, #ece7dc 100%);
+  background: oklch(94% .018 82);
 }
 
 .dam-preview-grid.dam-preview-variant-4 {
-  background:
-    radial-gradient(circle at 20% 18%, rgba(255,255,255,.96), transparent 24%),
-    radial-gradient(circle at 84% 72%, rgba(69,101,125,.16), transparent 34%),
-    linear-gradient(180deg, #f7faf9 0%, #e6edf0 100%);
+  background: oklch(94% .015 230);
 }
 
 .contact-sheet-board {
-  border: 1px solid rgba(190, 204, 196, .82);
-  border-radius: 1.5rem;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.82), rgba(241,247,242,.92));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 22px 70px rgba(35,53,111,.08);
+  border: 1px solid oklch(82% .014 160);
+  border-radius: .55rem;
+  background: oklch(97% .007 160);
+  box-shadow: none;
 }
 
 .dam-contact-grid {
@@ -453,9 +432,9 @@ textarea:focus-visible {
 
 .dam-data-table {
   overflow: hidden;
-  border: 1px solid rgba(229, 231, 234, .96);
-  border-radius: 1rem;
-  background: #fff;
+  border: 1px solid oklch(84% .014 160);
+  border-radius: .45rem;
+  background: oklch(98% .006 160);
 }
 
 .dam-data-row {
@@ -491,14 +470,15 @@ textarea:focus-visible {
 
 @media (min-width: 1280px) {
   .upload-intake-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(24rem, .72fr);
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, 30rem);
     grid-template-areas:
-      "context people files"
-      "packet packet files"
-      "actions actions actions"
-      "message message message"
-      "receipt receipt receipt";
+      "context files"
+      "people files"
+      "packet files"
+      "message files"
+      "receipt receipt";
     align-items: start;
+    gap: .85rem;
   }
 
   .upload-context-card {

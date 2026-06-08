@@ -19,7 +19,7 @@ export const uploadDefaultState = {
   status: "Needs Review / Do Not Publish",
   message: "New media starts in review. A reviewer approves it before anyone can reuse it.",
   largeMediaMessage:
-    "Video/audio over 100 MB goes to Shared Drive Incoming. It will still be tracked in TJC Stock Media after admin import."
+    "Video/audio over 100 MB uses the large-media intake path. It still needs review before reuse."
 };
 
 export const reviewActions = [

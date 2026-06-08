@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Download, ExternalLink, FileLock2, ShieldAlert } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
 import { MediaPreview } from "@/components/MediaPreview";
-import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
+import { ReuseStateBadge, StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { assetPresentation, confidenceStates, detailImageUrl, downloadState, provenanceSummary } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
@@ -23,6 +23,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
   const source = provenanceSummary(asset, role);
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const primaryBlocker = state.reuse.blockers[0]?.label || state.approvedCopy.reason || "Reviewer approval required before reuse.";
+  const opsView = role === "Reviewer" || role === "DAM Admin";
 
   if (!open) return null;
 
@@ -60,15 +61,15 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
         <aside className="min-h-0 overflow-y-auto p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-sm font-black text-tjc-evergreen">Reuse decision</span>
+              <span className="text-sm font-black text-tjc-evergreen">{opsView ? "Reuse decision" : "Can I use this?"}</span>
               <strong className="mt-1 block text-xl leading-tight text-tjc-ink">{state.reuse.label}</strong>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <StatusBadge status={asset.status} />
+            {opsView ? <StatusBadge status={asset.status} /> : <ReuseStateBadge asset={asset} size="sm" />}
             <UsageBadge scope={asset.usageScope} />
-            <span className="rounded-full border border-[#cad8cf] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen tabular-nums">RS {asset.resourceSpaceId || asset.id}</span>
+            <span className="rounded-md border border-[#cad8cf] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen tabular-nums">{opsView ? `RS ${asset.resourceSpaceId || asset.id}` : "Use guidance"}</span>
           </div>
 
           {state.approvedCopy.allowed ? (
@@ -88,7 +89,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
 
           <Link className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-tjc-line bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`}>
             <ExternalLink size={16} strokeWidth={1.9} aria-hidden="true" />
-            Open trust record
+            {opsView ? "Open trust record" : "Open use guidance"}
           </Link>
 
           <dl className="mt-4 grid gap-3">

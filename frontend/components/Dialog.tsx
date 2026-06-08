@@ -93,7 +93,7 @@ export function Dialog({
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 z-[90] grid bg-[#07100d]/40 p-3 backdrop-blur-[6px]",
+        "fixed inset-0 z-[90] grid bg-[#07100d]/42 p-3",
         placement === "right" ? "place-items-stretch justify-items-end" : placement === "bottom" ? "items-end justify-items-center" : "place-items-center"
       )}
       role="presentation"
@@ -103,8 +103,8 @@ export function Dialog({
       <section
         ref={dialogRef}
         className={cn(
-          "grid max-h-[92dvh] w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[1.5rem] border border-[#b9c8bf] bg-white shadow-[0_34px_110px_rgba(7,16,13,.28),0_1px_0_rgba(255,255,255,.95)_inset]",
-          placement === "right" && "h-full max-h-full rounded-[1.25rem]",
+          "grid max-h-[92dvh] w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-md border border-[#b9c8bf] bg-white shadow-[0_24px_70px_rgba(7,16,13,.22)]",
+          placement === "right" && "h-full max-h-full rounded-md",
           placement === "bottom" && "min-h-[82dvh] max-h-[88dvh] rounded-b-none",
           maxWidthClassName,
           className
@@ -118,11 +118,11 @@ export function Dialog({
       >
         <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-tjc-line bg-[#fbfcfa] px-5 py-4">
           <div>
-            <span className={cn("mb-3 block h-1 w-14 rounded-full", toneAccent(tone))} aria-hidden="true" />
+            <span className={cn("mb-3 block h-1 w-14 rounded-sm", toneAccent(tone))} aria-hidden="true" />
             <h2 id={titleId} className="text-2xl font-black leading-tight text-tjc-ink">{title}</h2>
             {description ? <p id={descriptionId} className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">{description}</p> : null}
           </div>
-          <button ref={closeRef} className="grid h-10 w-10 place-items-center rounded-xl border border-[#d7e0da] bg-white text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-evergreen focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16a99a]/18" type="button" onClick={onClose} aria-label={closeLabel}>
+          <button ref={closeRef} className="grid h-10 w-10 place-items-center rounded-md border border-[#d7e0da] bg-white text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-evergreen focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a99a]/24" type="button" onClick={onClose} aria-label={closeLabel}>
             <X size={17} strokeWidth={1.8} aria-hidden="true" />
           </button>
         </div>

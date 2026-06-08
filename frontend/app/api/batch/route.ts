@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById } from "@/lib/catalog";
 import { canReview, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetIds } from "@/lib/request-validation";
@@ -17,6 +18,13 @@ export async function POST(request: NextRequest) {
   const assetIds = normalizeAssetIds(body.assetIds);
 
   if (!canReview(role)) {
+    appendAuditEvent({
+      type: "batch_action_denied",
+      role,
+      status: "denied",
+      summary: "Batch governance action denied for role.",
+      details: { action: body.action || null, assetCount: assetIds.length }
+    });
     return NextResponse.json({ error: "Bulk governance actions require Reviewer or DAM Admin role." }, { status: 403 });
   }
   if (!body.action || !supportedActions.has(body.action)) {
@@ -34,6 +42,14 @@ export async function POST(request: NextRequest) {
   }
 
   const timestamp = new Date().toISOString();
+
+  appendAuditEvent({
+    type: "batch_action_previewed",
+    role,
+    status: "preview",
+    summary: "Batch governance action previewed; no ResourceSpace write performed.",
+    details: { action: body.action, assetCount: found.length }
+  });
 
   return NextResponse.json({
     ok: false,

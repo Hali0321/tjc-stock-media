@@ -58,7 +58,7 @@ function RelatedStrip({ assets, role }: { assets: StockMediaAsset[]; role: DemoR
   if (!visibleRelated.length) {
     return (
       <div className="rounded-xl border border-[#d6dfd8] bg-[#f8faf8] p-4 text-sm font-semibold leading-relaxed text-tjc-muted">
-        Related previews are unavailable for this role. Open Library after review clears a role-safe approved copy.
+        Related previews are unavailable for this role. Open Find after review clears a role-safe approved copy.
       </div>
     );
   }
@@ -86,6 +86,7 @@ function RelatedStrip({ assets, role }: { assets: StockMediaAsset[]; role: DemoR
 function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
   const [requestKind, setRequestKind] = useState<RequestKind | null>(null);
   const display = assetPresentation(asset, role);
+  const opsView = role === "Reviewer" || role === "DAM Admin";
   const state = display.download;
   const decision = state.reuse;
   const approved = state.approvedCopy.allowed;
@@ -102,15 +103,15 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
   return (
     <section
       className={cn(
-        "rounded-[1.45rem] border p-4 shadow-[0_22px_52px_rgba(35,53,111,.08)]",
+        "rounded-md border p-4",
         approved ? "border-[#9fcfb4] bg-[#f0faf4]" : "border-[#dfbd73] bg-[#fff7df]"
       )}
       aria-label="Reuse decision record"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <span className="text-xs font-black text-tjc-evergreen">Reuse decision</span>
-          <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{approved ? "Approved copy can be reused" : "Needs review before use"}</h2>
+          <span className="text-xs font-black text-tjc-evergreen">{opsView ? "Reuse decision" : "Can I use this?"}</span>
+          <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{approved ? "Approved copy can be reused" : "Review required before use"}</h2>
         </div>
         <ReuseStateBadge asset={asset} size="sm" />
       </div>
@@ -129,37 +130,39 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <DownloadBadge asset={asset} size="sm" />
+        <span data-testid="asset-download-unavailable">
+          <DownloadBadge asset={asset} size="sm" />
+        </span>
         <TjcStatusBadge
           domain="source"
           status="original-master-restricted"
           tone="neutral"
           icon={FileLock2}
-          label="Original/master restricted"
-          tooltip="Original/master files remain in ResourceSpace and Google Shared Drive."
+          label={opsView ? "Original/master restricted" : "Source file restricted"}
+          tooltip={opsView ? "Original/master files remain in ResourceSpace and Google Shared Drive." : "Source files stay restricted. Use approved copies only."}
           size="sm"
         />
         {decision.blockers.length ? <BlockerBadge asset={asset} size="sm" /> : null}
       </div>
 
-      <div className="mt-4 grid gap-2 rounded-2xl border border-white/75 bg-white/68 p-3">
+      <div className="mt-4 grid gap-2 rounded-md border border-[#d8e1da] bg-white p-3">
         {approved ? (
-          <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
+          <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
             <Download size={16} strokeWidth={1.8} aria-hidden="true" />
             Download approved copy
           </a>
         ) : (
-          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
+          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" data-testid="asset-primary-request-review" onClick={() => setRequestKind("review")}>
             <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
-            Request review
+            Request DAM review
           </button>
         )}
         <div className="grid gap-2 sm:grid-cols-2">
-          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
+          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
             <Mail size={15} strokeWidth={1.8} aria-hidden="true" />
-            Ask media coworker
+            Ask media team
           </button>
-          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
+          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
             <FileLock2 size={15} strokeWidth={1.8} aria-hidden="true" />
             Request original access
           </button>
@@ -180,6 +183,7 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
           portalReuseState={state.reuse.label}
           blockers={decision.blockers.map((blocker) => blocker.label)}
           mailtoHref={requestLinks[requestKind]}
+          opsView={opsView}
           onCancel={() => setRequestKind(null)}
         />
       ) : null}
@@ -189,7 +193,7 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
 
 function GovernancePassportSection({ passport }: { passport: ReturnType<typeof assetGovernancePassport> }) {
   return (
-    <details className="min-w-0 rounded-[1.2rem] border border-[#d4ded7] bg-white p-4" aria-label="Governance passport">
+    <details className="min-w-0 rounded-md border border-[#d4ded7] bg-white p-4" aria-label="Governance passport">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -211,13 +215,13 @@ function GovernancePassportSection({ passport }: { passport: ReturnType<typeof a
       </div>
       {passport.blockers.length || passport.warnings.length ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <div className="border-l-2 border-[#d09a31] pl-3 text-[#725216]">
+          <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]">
             <strong className="flex items-center gap-2 text-sm font-semibold"><AlertTriangle size={15} strokeWidth={1.8} aria-hidden="true" /> Portal blockers</strong>
             <div className="mt-2 grid gap-1">
               {(passport.blockers.length ? passport.blockers : ["None"]).map((item) => <span className="text-xs font-semibold" key={item}>{item}</span>)}
             </div>
           </div>
-          <div className="border-l-2 border-[#9fb6c8] pl-3 text-[#27435b]">
+          <div className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
             <strong className="flex items-center gap-2 text-sm font-semibold"><Info size={15} strokeWidth={1.8} aria-hidden="true" /> Improvement notes</strong>
             <div className="mt-2 grid gap-1">
               {(passport.warnings.length ? passport.warnings : ["None"]).map((item) => <span className="text-xs font-semibold" key={item}>{item}</span>)}
@@ -289,7 +293,7 @@ export function AssetDetailPage({ id }: { id: string }) {
       <div className="px-3 py-5 md:px-5">
         <Link href="/" className="inline-flex min-h-10 items-center gap-2 dam-card px-3 text-sm font-semibold text-tjc-evergreen">
           <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
-          Back to library
+          Back to Find
         </Link>
         <ErrorState className="mt-5" title="Asset did not load" detail={error} />
       </div>
@@ -305,6 +309,7 @@ export function AssetDetailPage({ id }: { id: string }) {
   const provenance = provenanceSummary(asset, role);
   const canSeeOriginal = decideAccess(role, "viewOriginalMetadata", asset).allowed;
   const canOpenResourceSpace = decideAccess(role, "viewResourceSpaceAdminLink", asset).allowed;
+  const opsView = role === "Reviewer" || role === "DAM Admin";
   const preview = detailImageUrl(asset, role);
   const passport = assetGovernancePassport(asset);
   const visibleDetailTabs: readonly DetailTab[] = role === "Viewer" ? viewerDetailTabs : detailTabs;
@@ -316,23 +321,25 @@ export function AssetDetailPage({ id }: { id: string }) {
       imageUrl: index === 0 ? preview : collectionImageUrl(item, role)
     }))
     .filter((item) => Boolean(item.imageUrl));
-  const comparisonDeferredReason = "Image comparison deferred: current export has role-safe display and download copies, but no paired before/after approved copy. Showing a slider would imply master comparison access.";
+  const comparisonDeferredReason = opsView
+    ? "Image comparison deferred: current export has role-safe display and download copies, but no paired before/after approved copy. Showing a slider would imply master comparison access."
+    : "Image comparison is unavailable for this media record. Use the approved copy and guidance shown here.";
 
   return (
     <div className="dam-shell">
       <Link href="/" className="inline-flex min-h-10 items-center gap-2 dam-card px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px">
         <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
-        Back to library
+        Back to Find
       </Link>
       <section className="mt-4 min-w-0 border-b border-[#d6dfd8] pb-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-sm font-black text-tjc-evergreen">{asset.collection}</span>
+            <span className="text-sm font-black text-tjc-evergreen">{opsView ? asset.collection : "Media record / Use guidance"}</span>
             <h1 className="asset-detail-title mt-2">{display.title}</h1>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-relaxed text-tjc-muted">{provenance.publicLabel}</p>
           </div>
           <div className="w-full sm:w-auto">
-            <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl} canOpenResourceSpace={canOpenResourceSpace} />
+            <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={opsView} label={opsView ? "Asset actions" : "Record actions"} />
           </div>
         </div>
       </section>
@@ -344,7 +351,9 @@ export function AssetDetailPage({ id }: { id: string }) {
             src={preview}
             alt={asset.thumbnailAlt}
             title={display.title}
-            detail={preview ? "Role-safe display copy. Original/master remains restricted." : "No display copy is exported for this role. Reuse is still governed by the trust record."}
+            detail={opsView
+              ? (preview ? "Role-safe display copy. Original/master remains restricted." : "No display copy is exported for this role. Reuse is still governed by the trust record.")
+              : (preview ? "Safe display copy. Download depends on the use guidance." : "Preview unavailable for this record. Check the use guidance before sharing.")}
             variants={thumbnailVariants.map(({ item, index, imageUrl }) => ({
               label: index === 0 ? "Current" : assetPresentation(item, role).title,
               src: imageUrl,
@@ -358,7 +367,7 @@ export function AssetDetailPage({ id }: { id: string }) {
                 <Link
                   href={index === 0 ? `/assets/${asset.id}` : `/assets/${item.id}`}
                   key={`${item.id}-${index}`}
-                  className={cn("grid h-16 min-w-0 place-items-center overflow-hidden rounded-2xl border bg-white transition hover:border-[#9fb8ae]", index === 0 ? "border-[#0f3d2e] shadow-[inset_0_0_0_2px_#e6f0eb]" : "border-[#d6dfd8]")}
+                  className={cn("grid h-16 min-w-0 place-items-center overflow-hidden rounded-md border bg-white transition hover:border-[#9fb8ae]", index === 0 ? "border-[#0f3d2e] ring-1 ring-inset ring-[#9fb8ae]" : "border-[#d6dfd8]")}
                   aria-label={index === 0 ? "Current asset preview" : `Open related asset ${assetPresentation(item, role).title}`}
                 >
                   <MediaPreview src={imageUrl} alt={item.thumbnailAlt} imgClassName="h-full w-full object-cover" className="px-1" />
@@ -384,13 +393,13 @@ export function AssetDetailPage({ id }: { id: string }) {
             <section id={damTabPanelId("asset-detail-desktop", "Source")} role="tabpanel" aria-labelledby={damTabId("asset-detail-desktop", "Source")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Source and provenance" hidden={activeTab !== "Source"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><Info size={18} strokeWidth={1.8} aria-hidden="true" /> Source and provenance</h2>
               <dl className="grid gap-3">
-                <div className={factItemClass}><dt className={factTermClass}>Source system</dt><dd className={factDescClass}>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Source / photographer</dt><dd className={factDescClass}>{asset.sourceAccount || asset.collection || "Not exported"}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Event / collection</dt><dd className={factDescClass}>{asset.eventName || asset.collection}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>{opsView ? "Source system" : "Media source"}</dt><dd className={factDescClass}>{opsView ? asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export" : asset.sourceAccount || asset.collection || "Media archive"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>Source / photographer</dt><dd className={factDescClass}>{asset.sourceAccount || asset.collection || "Not provided"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>{opsView ? "Event / collection" : "Event / package"}</dt><dd className={factDescClass}>{asset.eventName || asset.collection}</dd></div>
+                {opsView ? <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div> : <div className={factItemClass}><dt className={factTermClass}>Media record</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div>}
               </dl>
             </section>
-            <section id={damTabPanelId("asset-detail-desktop", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail-desktop", "Review")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Review status" hidden={activeTab !== "Review"}>
+            {opsView ? <section id={damTabPanelId("asset-detail-desktop", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail-desktop", "Review")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Review status" hidden={activeTab !== "Review"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><History size={18} strokeWidth={1.8} aria-hidden="true" /> Review record</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{asset.reviewer || "Not reviewed"}</dd></div>
@@ -399,13 +408,13 @@ export function AssetDetailPage({ id }: { id: string }) {
                 <div className={factItemClass}><dt className={factTermClass}>Missing fields</dt><dd className={factDescClass}>{display.reviewFacts.missingFields.length ? display.reviewFacts.missingFields.join(", ") : "None for current export"}</dd></div>
               </dl>
               <p className="mt-3 rounded-md bg-[#f3f6f0] p-3 text-sm text-tjc-muted">{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
-            </section>
+            </section> : null}
             <section id={damTabPanelId("asset-detail-desktop", "Files")} role="tabpanel" aria-labelledby={damTabId("asset-detail-desktop", "Files")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="File options" hidden={activeTab !== "Files"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><FileText size={18} strokeWidth={1.8} aria-hidden="true" /> Files</h2>
               <div className="mb-4 grid gap-2 rounded-xl border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
                 <div className="flex flex-wrap items-center gap-2">
                   <TjcStatusBadge domain="download" status="comparison-deferred" tone="info" icon={ImageIcon} label="Image comparison deferred" size="sm" />
-                  <TjcStatusBadge domain="source" status="master-hidden" tone="neutral" icon={FileLock2} label="Master hidden" size="sm" />
+                <TjcStatusBadge domain="source" status="master-hidden" tone="neutral" icon={FileLock2} label={opsView ? "Master hidden" : "Source file restricted"} size="sm" />
                 </div>
                 <p className="text-sm font-semibold leading-relaxed">{comparisonDeferredReason}</p>
               </div>
@@ -414,13 +423,13 @@ export function AssetDetailPage({ id }: { id: string }) {
                 <div className={factItemClass}><dt className={factTermClass}>Format</dt><dd className={factDescClass}>{asset.fileExtension?.toUpperCase() || "Not exported"}</dd></div>
                 <div className={factItemClass}><dt className={factTermClass}>Dimensions</dt><dd className={factDescClass}>{asset.imageDimensions || "Not exported"}</dd></div>
                 <div className={factItemClass}><dt className={factTermClass}>File size</dt><dd className={factDescClass}>{formatBytes(asset.fileSizeBytes)}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Original filename</dt><dd className={factDescClass}>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Hidden for this role"}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Checksum</dt><dd className={factDescClass}>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>{opsView ? "Original filename" : "Source filename"}</dt><dd className={factDescClass}>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Restricted for this role"}</dd></div>
+                {opsView ? <div className={factItemClass}><dt className={factTermClass}>Checksum</dt><dd className={factDescClass}>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div> : null}
               </dl>
             </section>
           </section>
           <section className="mt-5 hidden min-w-0 gap-4 xl:grid" aria-label="Desktop asset governance continuation">
-            <GovernancePassportSection passport={passport} />
+            {opsView ? <GovernancePassportSection passport={passport} /> : null}
             <AssetTagsSection asset={asset} />
             <RelatedAssetsSection related={related} role={role} />
           </section>
@@ -430,7 +439,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           <ReuseDecisionRecord asset={asset} role={role} />
           <DownloadOptionsPanel asset={asset} role={role} />
           <AssetTrustPanel asset={asset} role={role} />
-          <section className="hidden rounded-[1.2rem] border border-[#d4ded7] bg-white p-4 xl:block" aria-label="ResourceSpace source actions">
+          {opsView ? <section className="hidden rounded-md border border-[#d4ded7] bg-white p-4 xl:block" aria-label="ResourceSpace source actions">
             <h2 className="text-sm font-black text-tjc-evergreen">ResourceSpace source</h2>
             <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">Secondary admin actions. Delivery decisions stay above.</p>
             <div className="mt-3">
@@ -438,10 +447,11 @@ export function AssetDetailPage({ id }: { id: string }) {
                 asset={asset}
                 resourceSpaceUrl={data.resourceSpaceUrl}
                 canOpenResourceSpace={canOpenResourceSpace}
+                canExposeResourceSpaceId
                 label="Source actions"
               />
             </div>
-          </section>
+          </section> : null}
         </aside>
       </section>
 
@@ -460,17 +470,17 @@ export function AssetDetailPage({ id }: { id: string }) {
           <section id={damTabPanelId("asset-detail", "Source")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Source")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Source and provenance" hidden={activeTab !== "Source"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><Info size={18} strokeWidth={1.8} aria-hidden="true" /> Source and provenance</h2>
               <dl className="grid gap-3">
-                <div className={factItemClass}><dt className={factTermClass}>Source system</dt><dd className={factDescClass}>{asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>{opsView ? "Source system" : "Media source"}</dt><dd className={factDescClass}>{opsView ? asset.sourceSystem || asset.sourcePlatform || "ResourceSpace export" : asset.sourceAccount || asset.collection || "Media archive"}</dd></div>
                 <div className={factItemClass}><dt className={factTermClass}>Source / photographer</dt><dd className={factDescClass}>{asset.sourceAccount || asset.collection || "Not exported"}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Event / collection</dt><dd className={factDescClass}>{asset.eventName || asset.collection}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>{opsView ? "Event / collection" : "Event / package"}</dt><dd className={factDescClass}>{asset.eventName || asset.collection}</dd></div>
                 <div className={factItemClass}><dt className={factTermClass}>Captured / event date</dt><dd className={factDescClass}>{asset.capturedDate || asset.eventDate || "Not exported"}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div>
+                {opsView ? <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div> : <div className={factItemClass}><dt className={factTermClass}>Media record</dt><dd className={factDescClass}>{asset.resourceSpaceId || asset.id}</dd></div>}
                 {canSeeOriginal ? <div className={factItemClass}><dt className={factTermClass}>Original import path</dt><dd className={factDescClass}>{asset.sourcePath || "Source path not exported"}</dd></div> : null}
                 {canSeeOriginal ? <div className={factItemClass}><dt className={factTermClass}>Master Drive path</dt><dd className={factDescClass}>{asset.masterDrivePath || "Visible after Shared Drive staging"}</dd></div> : null}
               </dl>
           </section>
 
-          <section id={damTabPanelId("asset-detail", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Review")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Review status" hidden={activeTab !== "Review"}>
+          {opsView ? <section id={damTabPanelId("asset-detail", "Review")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Review")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="Review status" hidden={activeTab !== "Review"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><History size={18} strokeWidth={1.8} aria-hidden="true" /> Review record</h2>
               <dl className="grid gap-3">
                 <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{asset.reviewer || "Not reviewed"}</dd></div>
@@ -494,7 +504,7 @@ export function AssetDetailPage({ id }: { id: string }) {
                 ))}
               </div>
               <p className="mt-3 rounded-md bg-[#f3f6f0] p-3 text-sm text-tjc-muted">{asset.rightsNotes || "No reviewer notes exported yet. Ask a media coworker if public use is unclear."}</p>
-          </section>
+          </section> : null}
 
           <section id={damTabPanelId("asset-detail", "Files")} role="tabpanel" aria-labelledby={damTabId("asset-detail", "Files")} className="mt-3 min-w-0 rounded-lg border border-[#d4ded7] bg-white p-4" aria-label="File options" hidden={activeTab !== "Files"}>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold"><FileText size={18} strokeWidth={1.8} aria-hidden="true" /> Files</h2>
@@ -505,13 +515,13 @@ export function AssetDetailPage({ id }: { id: string }) {
                 src={preview}
                 alt={asset.thumbnailAlt}
                 title={`${asset.mediaType} preview`}
-                detail="Safe approved-copy preview only. Original/master remains hidden unless policy grants access."
+                detail={opsView ? "Safe approved-copy preview only. Original/master remains hidden unless policy grants access." : "Safe preview only. Source files stay restricted unless access is approved."}
                 compact
               />
               <div className="mb-4 grid gap-2 rounded-xl border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
                 <div className="flex flex-wrap items-center gap-2">
                   <TjcStatusBadge domain="download" status="comparison-deferred" tone="info" icon={ImageIcon} label="Image comparison deferred" size="sm" />
-                  <TjcStatusBadge domain="source" status="master-hidden" tone="neutral" icon={FileLock2} label="Master hidden" size="sm" />
+                  <TjcStatusBadge domain="source" status="master-hidden" tone="neutral" icon={FileLock2} label={opsView ? "Master hidden" : "Source file restricted"} size="sm" />
                 </div>
                 <p className="text-sm font-semibold leading-relaxed">{comparisonDeferredReason}</p>
               </div>
@@ -520,8 +530,8 @@ export function AssetDetailPage({ id }: { id: string }) {
                 <div className={factItemClass}><dt className={factTermClass}>Format</dt><dd className={factDescClass}>{asset.fileExtension?.toUpperCase() || "Not exported"}</dd></div>
                 <div className={factItemClass}><dt className={factTermClass}>Dimensions</dt><dd className={factDescClass}>{asset.imageDimensions || "Not exported"}</dd></div>
                 <div className={factItemClass}><dt className={factTermClass}>File size</dt><dd className={factDescClass}>{formatBytes(asset.fileSizeBytes)}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Original filename</dt><dd className={factDescClass}>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Hidden for this role"}</dd></div>
-                <div className={factItemClass}><dt className={factTermClass}>Checksum</dt><dd className={factDescClass}>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div>
+                <div className={factItemClass}><dt className={factTermClass}>{opsView ? "Original filename" : "Source filename"}</dt><dd className={factDescClass}>{canSeeOriginal ? asset.originalFilename || "Not exported" : "Restricted for this role"}</dd></div>
+                {opsView ? <div className={factItemClass}><dt className={factTermClass}>Checksum</dt><dd className={factDescClass}>{canSeeOriginal ? asset.checksumSha256 || "Not exported" : "Hidden for this role"}</dd></div> : null}
               </dl>
               <div className="mt-4 grid gap-2 border-t border-tjc-line pt-3">
                 {passport.renditions.map((item) => (
@@ -539,7 +549,7 @@ export function AssetDetailPage({ id }: { id: string }) {
       </section>
 
       <section className="mt-5 grid gap-4 xl:hidden">
-          <GovernancePassportSection passport={passport} />
+          {opsView ? <GovernancePassportSection passport={passport} /> : null}
           <AssetTagsSection asset={asset} />
       </section>
 

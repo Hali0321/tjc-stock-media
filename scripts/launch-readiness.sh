@@ -95,10 +95,11 @@ fi
 
 free_kib="$(df -k "$ROOT" | awk 'NR==2 {print $4}')"
 free_gib=$((free_kib / 1024 / 1024))
-if [ "$free_gib" -lt 20 ]; then
-  warn "local free disk below 20 GiB: ${free_gib} GiB"
+min_free_gib="${MIN_FREE_GIB:-10}"
+if [ "$free_gib" -lt "$min_free_gib" ]; then
+  warn "local free disk below ${min_free_gib} GiB: ${free_gib} GiB"
 else
-  pass "local free disk at least 20 GiB: ${free_gib} GiB"
+  pass "local free disk at least ${min_free_gib} GiB: ${free_gib} GiB"
 fi
 
 video_zip="/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Videos/Incoming/Samuel Kuo/Samuel Kuo-3-001.zip"

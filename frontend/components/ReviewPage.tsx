@@ -3,23 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, Database, ExternalLink, FileWarning, Info, Lock, ShieldCheck, ShieldX, Users } from "lucide-react";
+import { Database, ExternalLink, Info, ShieldCheck, ShieldX } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { DisplayCard } from "@/components/DisplayCard";
 import { HoldToConfirmButton } from "@/components/HoldReleaseButton";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
-import { MediaPreview } from "@/components/MediaPreview";
 import { MediaPreviewPanel } from "@/components/MediaPreviewPanel";
 import { ReviewActionDialog } from "@/components/ReviewActionDialog";
 import { ReviewQueueAssetCard } from "@/components/ReviewQueueAssetCard";
-import { ReviewTriageStrip } from "@/components/ReviewTriageStrip";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { toastPendingWriteQueued, toastReviewQueued, toastSaveFailed } from "@/lib/tjc-toasts";
 import { missingReviewFields, reviewActions, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
@@ -66,24 +62,22 @@ type AuditPreview = {
   assetId: string;
 };
 
-const governanceCards = [
-  { key: "pendingReview", label: "Pending review", icon: ShieldCheck },
-  { key: "childrenYouth", label: "Children/youth", icon: Users },
-  { key: "missingSource", label: "Missing source", icon: FileWarning },
-  { key: "rightsReview", label: "Rights review", icon: Lock },
-  { key: "duplicateCandidates", label: "Duplicates", icon: Archive },
-  { key: "aiEnrichment", label: "AI enrichment", icon: Info },
-  { key: "taxonomyDrift", label: "Taxonomy drift", icon: FileWarning },
-  { key: "renditionGaps", label: "Rendition gaps", icon: Database },
-  { key: "staleApprovals", label: "Stale approval", icon: Archive },
-  { key: "archiveCandidates", label: "Archive candidates", icon: Archive }
-] as const;
-
 const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Pending write"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
 const desktopReviewRowsPageSize = 24;
 const mobileReviewRowsPageSize = 8;
 const highRiskActionIds = new Set(["archive-only", "do-not-publish"]);
+const keyReviewerQueueIds: ReviewQueueId[] = ["pending", "rights-review", "children-youth", "usage-guidance", "archive-candidates"];
+const advancedMetricCards: Array<{ key: keyof Governance; label: string }> = [
+  { key: "missingSource", label: "Missing source" },
+  { key: "duplicateCandidates", label: "Duplicates" },
+  { key: "aiEnrichment", label: "AI enrichment" },
+  { key: "taxonomyDrift", label: "Taxonomy drift" },
+  { key: "renditionGaps", label: "Rendition gaps" },
+  { key: "staleApprovals", label: "Stale approval" },
+  { key: "missingRequiredFields", label: "Missing required fields" },
+  { key: "approvedThisMonth", label: "Approved this month" }
+];
 
 const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
 const factTermClass = "text-xs font-semibold text-tjc-evergreen";
@@ -98,6 +92,7 @@ const checklistLabels: Array<[keyof ReviewEvidenceChecklist, string]> = [
   ["sensitiveContextChecked", "Sensitive context checked"],
   ["creditRequirementChecked", "Credit requirement checked"]
 ];
+const checklistLabelByField = Object.fromEntries(checklistLabels) as Record<keyof ReviewEvidenceChecklist, string>;
 
 const emptyChecklist: ReviewEvidenceChecklist = {
   sourceConfirmed: false,
@@ -129,6 +124,19 @@ function reviewNextCheckLabel(asset: StockMediaAsset) {
   if (missing.includes("usage guidance")) return "Add guidance";
   if (missing.includes("reviewer") || missing.includes("review date")) return "Record reviewer";
   return "Decision ready";
+}
+
+function reviewDecisionLanes(asset: StockMediaAsset) {
+  const missing = missingReviewFields(asset);
+  const risks = reviewRiskFlags(asset);
+  const lane = (label: string, blocked: boolean, detail: string) => ({ label, blocked, detail });
+  return [
+    lane("Rights", missing.includes("consent") || risks.includes("Rights unclear") || !asset.rightsStatus, asset.rightsStatus || "Rights evidence needed"),
+    lane("People/minors", missing.includes("people/minors") || /child|youth|minor/i.test(asset.peopleRisk || ""), asset.peopleRisk || "Visibility unknown"),
+    lane("Source", missing.includes("source"), sourceSummary(asset)),
+    lane("Derivative", missing.includes("derivative"), asset.imageUrls?.download || asset.downloadPolicy.includes("approved-copy") ? "Approved copy available" : "Approved rendition missing"),
+    lane("Usage", missing.includes("usage guidance"), asset.usageGuidance || asset.usageScope)
+  ];
 }
 
 function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
@@ -163,6 +171,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   const [submittingReview, setSubmittingReview] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const workbenchRef = useRef<HTMLElement>(null);
+  const selectedWorkspaceRef = useRef<HTMLElement>(null);
   const reviewer = ready && canReview(role);
 
   useEffect(() => {
@@ -201,6 +210,16 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   const selectedPendingWrite = selectedAsset ? data?.pendingWrites[selectedAsset.id] : undefined;
   const selectedPreview = selectedAsset ? detailImageUrl(selectedAsset, role) : undefined;
   const visibleReviewAssets = useMemo(() => (data?.assets || []).slice(0, visibleReviewCount), [data?.assets, visibleReviewCount]);
+  const keyReviewerQueues = useMemo(() => {
+    const summaries = data?.queues || [];
+    return keyReviewerQueueIds
+      .map((queueId) => summaries.find((queue) => queue.id === queueId))
+      .filter(Boolean) as QueueSummary[];
+  }, [data?.queues]);
+  const advancedQueues = useMemo(() => {
+    const keyIds = new Set(keyReviewerQueueIds);
+    return (data?.queues || []).filter((queue) => !keyIds.has(queue.id));
+  }, [data?.queues]);
 
   useEffect(() => {
     setReviewNote("");
@@ -208,6 +227,39 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     setPendingAction(null);
     setAuditPreview(null);
   }, [activeQueue, selectedId]);
+
+  function resetSelectedWorkspace({ bringIntoView = false }: { bringIntoView?: boolean } = {}) {
+    const workspace = selectedWorkspaceRef.current;
+    if (!workspace || typeof window === "undefined") return;
+    workspace.scrollTop = 0;
+    workspace.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (bringIntoView) {
+      const alignWorkspaceBelowHeader = () => {
+        const currentWorkspace = selectedWorkspaceRef.current;
+        if (!currentWorkspace) return;
+        const appHeader = window.getComputedStyle(document.documentElement).getPropertyValue("--app-header-height");
+        const headerOffset = Number.parseFloat(appHeader) || 0;
+        const targetTop = window.scrollY + currentWorkspace.getBoundingClientRect().top - headerOffset - 12;
+        const root = document.documentElement;
+        const priorScrollBehavior = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
+        window.scrollTo(0, Math.max(0, targetTop));
+        root.style.scrollBehavior = priorScrollBehavior;
+      };
+      alignWorkspaceBelowHeader();
+      window.requestAnimationFrame(() => {
+        alignWorkspaceBelowHeader();
+        window.setTimeout(alignWorkspaceBelowHeader, 100);
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedId) return;
+    setActiveInspectorTab("Overview");
+    setEvidenceOpen(true);
+    resetSelectedWorkspace({ bringIntoView: typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches });
+  }, [selectedId]);
 
   useEffect(() => {
     const compactMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
@@ -286,6 +338,21 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     router.replace(`/review?queue=${queueId}`, { scroll: false });
   }
 
+  function inspectAsset(assetId: string) {
+    const bringIntoView = typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches;
+    if (assetId === selectedId) {
+      setActiveInspectorTab("Overview");
+      setEvidenceOpen(true);
+      resetSelectedWorkspace({ bringIntoView });
+      return;
+    }
+    setSelectedId(assetId);
+    if (bringIntoView) {
+      resetSelectedWorkspace({ bringIntoView: true });
+      window.setTimeout(() => resetSelectedWorkspace({ bringIntoView: true }), 0);
+    }
+  }
+
   async function confirmPendingAction() {
     if (!selectedAsset || !pendingAction) return;
     const timestamp = new Date().toISOString();
@@ -319,98 +386,20 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   const confirmedChecklistLabels = checklistLabels.filter(([field]) => checklist[field]).map(([, label]) => label);
   const selectedAuditPreview = selectedAsset && auditPreview?.assetId === selectedAsset.id ? auditPreview : null;
-  const reviewTableColumns: Array<DataTableColumn<StockMediaAsset>> = [
-    {
-      key: "preview",
-      header: "Preview",
-      render: (asset) => (
-        <button
-          className={cn("review-media-reveal block aspect-[4/3] w-24 overflow-hidden rounded-xl border bg-[#eef1ed] text-left transition hover:border-[#9fb8ae]", selectedAsset?.id === asset.id ? "border-[#0f3d2e] ring-2 ring-[#dceee5]" : "border-tjc-line")}
-          type="button"
-          onClick={() => setSelectedId(asset.id)}
-          aria-label={`Inspect ${assetPresentation(asset, role).title}`}
-          aria-pressed={selectedAsset?.id === asset.id}
-        >
-          <MediaPreview src={assetPresentation(asset, role).image} alt={asset.thumbnailAlt} className="px-2" loading="eager" />
-        </button>
-      )
-    },
-    {
-      key: "asset",
-      header: "Asset title / RS ID",
-      sortValue: (asset) => assetPresentation(asset, role).title,
-      render: (asset) => (
-        <span className="grid gap-1">
-          <button className="line-clamp-2 text-left text-sm font-black text-tjc-ink hover:text-tjc-evergreen" type="button" onClick={() => setSelectedId(asset.id)}>
-            {assetPresentation(asset, role).title}
-          </button>
-          <span className="text-xs font-semibold text-tjc-muted">RS {asset.resourceSpaceId || asset.id} · {asset.collection}</span>
-        </span>
-      )
-    },
-    {
-      key: "submitter",
-      header: "Submitter",
-      sortValue: (asset) => asset.sourceAccount || asset.sourceSystem || "",
-      render: (asset) => <span className="line-clamp-2 text-sm font-semibold text-tjc-muted">{asset.sourceAccount || asset.sourceSystem || "Source pending"}</span>
-    },
-    {
-      key: "queue",
-      header: "Queue / blockers",
-      sortValue: (asset) => reviewRiskFlags(asset)[0] || "",
-      render: (asset) => (
-        <span className="grid gap-1">
-          <strong className="text-xs font-black text-[#725216]">{reviewRiskFlags(asset)[0] || "Standard review"}</strong>
-          <span className="line-clamp-1 text-xs font-semibold text-tjc-muted">{missingReviewFields(asset).length ? `${missingReviewFields(asset).length} missing fields` : "Fields ready"}</span>
-        </span>
-      )
-    },
-    {
-      key: "action",
-      header: "Action",
-      render: (asset) => (
-        <span className="flex justify-end">
-          <button className="min-h-9 rounded-lg border border-tjc-line bg-white px-3 text-xs font-black text-tjc-evergreen hover:bg-[#eef7f1]" type="button" onClick={() => setSelectedId(asset.id)}>
-            Review
-          </button>
-        </span>
-      )
-    }
-  ];
   const completedEvidenceCount = checklistLabels.filter(([field]) => checklist[field]).length;
+  const reviewNoteReady = reviewNote.trim().length > 10;
+  const decisionRequirements = [
+    ...checklistLabels.map(([field, label]) => ({ id: String(field), label, complete: checklist[field] })),
+    { id: "reviewNote", label: "Review note added", complete: reviewNoteReady }
+  ];
+  const completedRequirementCount = decisionRequirements.filter((item) => item.complete).length;
+  const missingRequirementLabels = decisionRequirements.filter((item) => !item.complete).map((item) => item.label);
+  const formatMissingEvidence = (missing: string[]) => missing
+    .map((field) => field === "reviewNote" ? "Review note added" : checklistLabelByField[field as keyof ReviewEvidenceChecklist] || field)
+    .join(", ");
   const reviewEvidenceControls = (
     <div className="min-w-0 max-w-full" data-component="ReviewActionEvidencePanel">
-      <h3 className="text-sm font-semibold text-tjc-evergreen">Decision</h3>
-      <div className="mt-2 grid min-w-0 max-w-full gap-2" data-component="ReviewActionButtons">
-        {reviewActions.map((action) => {
-          const missing = missingEvidenceFor(action);
-          const title = missing.length ? `Missing: ${missing.join(", ")}` : "Review evidence and queue pending write";
-          const icon = action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />;
-          if (highRiskActionIds.has(action.id)) {
-            return (
-              <div key={action.id} data-component="HoldButtonLocation">
-                <HoldToConfirmButton
-                  disabled={!reviewer || missing.length > 0}
-                  title={missing.length ? title : `Hold to queue ${action.label}`}
-                  ariaLabel={`Hold to queue ${action.label}`}
-                  onComplete={() => requestAction(action)}
-                  className="w-full min-w-0 justify-center whitespace-normal text-center"
-                >
-                  {icon}
-                  Hold to queue {action.label}
-                </HoldToConfirmButton>
-              </div>
-            );
-          }
-          return (
-            <button className="inline-flex min-h-9 min-w-0 items-center justify-center gap-2 whitespace-normal rounded-xl border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55" key={action.id} type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
-              {icon}
-              {action.label}
-            </button>
-          );
-        })}
-      </div>
-      <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Review evidence</h3>
+      <h3 className="text-sm font-semibold text-tjc-evergreen">Review evidence</h3>
       <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
         Review note
         <textarea
@@ -429,6 +418,51 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </label>
         ))}
       </div>
+      <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Decision</h3>
+      <section
+        className={cn("mt-2 rounded-xl border p-3 text-sm", missingRequirementLabels.length ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b8d9c6] bg-[#f3fbf6] text-[#24583d]")}
+        data-testid="review-decision-requirements"
+        aria-label="Decision requirements"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <strong className="font-black">{missingRequirementLabels.length ? "Decision locked" : "Decision ready"}</strong>
+          <span className="rounded-md bg-white px-2 py-1 text-xs font-black tabular-nums">{completedRequirementCount}/{decisionRequirements.length} complete</span>
+        </div>
+        <p className="mt-1 text-xs font-semibold leading-relaxed">
+          {missingRequirementLabels.length ? `Complete before approval: ${missingRequirementLabels.slice(0, 4).join(", ")}${missingRequirementLabels.length > 4 ? ` and ${missingRequirementLabels.length - 4} more` : ""}.` : "Evidence and note are ready for a pending review write."}
+        </p>
+      </section>
+      <div className="mt-2 grid min-w-0 max-w-full gap-2" data-component="ReviewActionButtons" data-testid="review-disabled-decision-group">
+        {reviewActions.map((action) => {
+          const missing = missingEvidenceFor(action);
+          const title = missing.length ? `Missing: ${formatMissingEvidence(missing)}` : "Review evidence and queue pending write";
+          const icon = action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />;
+          if (highRiskActionIds.has(action.id)) {
+            return (
+              <div key={action.id} data-component="HoldButtonLocation">
+                <HoldToConfirmButton
+                  disabled={!reviewer || missing.length > 0}
+                  title={missing.length ? title : `Hold to queue ${action.label}`}
+                  ariaLabel={`Hold to queue ${action.label}`}
+                  onComplete={() => requestAction(action)}
+                  className="w-full min-w-0 justify-center whitespace-normal text-center disabled:opacity-45"
+                >
+                  {icon}
+                  Hold to queue {action.label}
+                </HoldToConfirmButton>
+              </div>
+            );
+          }
+          return (
+            <div className="grid gap-1" key={action.id}>
+              <button className="inline-flex min-h-9 w-full min-w-0 max-w-full items-center justify-center gap-2 whitespace-normal rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#f8faf8] disabled:text-[#77827a] disabled:opacity-55" type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
+                {icon}
+                {action.label}
+              </button>
+            </div>
+          );
+        })}
+      </div>
       {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
     </div>
   );
@@ -442,7 +476,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
         <section className="dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 text-3xl font-semibold">Review workbench requires reviewer access</h1>
+          <h1 className="mt-2 text-3xl font-semibold">Review inbox requires reviewer access</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Reviewers check source, rights, people/minors, usage scope, duplicates, and archive decisions before reuse.</p>
         </section>
         <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
@@ -450,7 +484,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           <div>
             <h2 className="text-xl font-semibold">What reviewers check</h2>
             <p className="mt-1 text-tjc-muted">Approval status, source/provenance, people visibility, children/youth risk, rights notes, usage guidance, and download eligibility.</p>
-            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Reviewer or DAM Admin to inspect the governance workbench.</span>
+            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Reviewer or DAM Admin to inspect the operations workbench.</span>
           </div>
         </section>
       </div>
@@ -462,7 +496,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_30rem]">
         <div>
           <span className="text-sm font-black text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 dam-page-title">Review workbench</h1>
+          <h1 className="mt-2 dam-page-title">Review inbox</h1>
           <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted max-sm:line-clamp-2">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
         </div>
         <div className="grid content-center gap-1 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
@@ -481,27 +515,6 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           Review action is ready, but ResourceSpace API write mapping is not configured yet. Actions stay server-routed until field mapping is live.
         </StatusBanner>
       ) : null}
-
-      <details className="mt-4 hidden rounded-[1.25rem] border border-[#d6dfd8] bg-white p-4 md:hidden" aria-label="Governance metrics">
-        <summary className="cursor-pointer font-black text-tjc-evergreen">Queue metrics</summary>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {governanceCards.slice(0, 4).map((card) => {
-            const Icon = card.icon;
-            return (
-              <DisplayCard key={card.key} icon={Icon} label={card.label} value={data?.governance[card.key] ?? "-"} tone={card.key === "pendingReview" || card.key === "rightsReview" ? "warn" : "info"} />
-            );
-          })}
-        </div>
-      </details>
-
-      <section className="mt-4 hidden grid-cols-2 gap-2 md:grid md:grid-cols-5 xl:grid-cols-10" aria-label="Governance metrics">
-        {governanceCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <DisplayCard key={card.key} icon={Icon} label={card.label} value={data?.governance[card.key] ?? "-"} tone={card.key === "pendingReview" || card.key === "rightsReview" ? "warn" : "info"} />
-          );
-        })}
-      </section>
 
       <section className="mt-4 rounded-lg border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Review queues">
         <label className="grid gap-1 text-sm font-black text-tjc-evergreen">
@@ -524,75 +537,119 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </p>
       </section>
 
-      <section className="mt-4 hidden max-w-full min-w-0 flex-wrap gap-2 border-y border-[#d6dfd8] py-3 md:flex" aria-label="Review queues">
-        {(data?.queues || []).map((queue) => (
-          <button
-            key={queue.id}
-            type="button"
-            className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "bg-white text-tjc-evergreen shadow-[inset_0_-2px_0_#063f39]")}
-            onClick={() => selectQueue(queue.id)}
-            aria-pressed={activeQueue === queue.id}
-          >
-            <span>{queue.label}</span>
-            <strong className="tabular-nums">{queue.count.toLocaleString()}</strong>
-          </button>
-        ))}
+      <section className="mt-4 hidden gap-3 border-y border-[#d6dfd8] py-3 md:grid" aria-label="Review filters">
+        <div className="flex max-w-full min-w-0 flex-wrap gap-2">
+          {keyReviewerQueues.map((queue) => (
+            <button
+              key={queue.id}
+              type="button"
+              className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-white text-tjc-evergreen" : "border-transparent")}
+              onClick={() => selectQueue(queue.id)}
+              aria-pressed={activeQueue === queue.id}
+            >
+              <span>{queue.label}</span>
+              <strong className="tabular-nums">{queue.count.toLocaleString()}</strong>
+            </button>
+          ))}
+        </div>
+        <details className="rounded-lg border border-[#d6dfd8] bg-white p-3" aria-label="Advanced review filters">
+          <summary className="cursor-pointer text-sm font-black text-tjc-evergreen">Advanced filters</summary>
+          <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)]">
+            <div className="flex flex-wrap gap-2">
+              {advancedQueues.map((queue) => (
+                <button
+                  key={queue.id}
+                  type="button"
+                  className={cn("inline-flex min-h-8 items-center gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] px-2.5 text-xs font-semibold text-[#4d554d] transition hover:bg-[#eef7f1]", activeQueue === queue.id && "border-[#8fb2a5] bg-[#e5f3ea] text-tjc-evergreen")}
+                  onClick={() => selectQueue(queue.id)}
+                  aria-pressed={activeQueue === queue.id}
+                >
+                  <span>{queue.label}</span>
+                  <strong className="tabular-nums">{queue.count.toLocaleString()}</strong>
+                </button>
+              ))}
+            </div>
+            <dl className="grid grid-cols-2 gap-2 text-xs">
+              {advancedMetricCards.map((card) => (
+                <div key={card.key} className="rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-2">
+                  <dt className="font-black text-tjc-muted">{card.label}</dt>
+                  <dd className="mt-1 text-base font-black tabular-nums text-tjc-ink">{data?.governance[card.key]?.toLocaleString?.() ?? data?.governance[card.key] ?? "-"}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </details>
       </section>
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(26rem,31.25rem)]" aria-label="Review workbench">
-        <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-1">
-          {data?.assets.length ? (
-            <ReviewTriageStrip assets={data.assets} role={role} selectedId={selectedAsset?.id} onSelect={setSelectedId} />
-          ) : null}
-
-          <div className="min-w-0 max-w-full overflow-hidden rounded-[1.35rem] border border-[#b9c9bf] bg-white shadow-[0_12px_34px_rgba(25,34,29,.035)]">
+      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
+        <aside className="hidden min-w-0 2xl:grid 2xl:content-start 2xl:gap-3" aria-label="Review queue groups">
+          <section className="sticky top-24 grid gap-2 rounded-lg border border-[#c9d4d5] bg-white p-3">
+            <div>
+              <h2 className="text-sm font-black text-tjc-evergreen">Queue groups</h2>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">Select work by blocker, assignment, or write state.</p>
+            </div>
+            {keyReviewerQueues.map((queue) => (
+              <button
+                key={`left-${queue.id}`}
+                type="button"
+                className={cn("grid min-h-11 grid-cols-[1fr_auto] items-center gap-2 rounded-md border px-2 text-left text-xs font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e5f3ea] text-tjc-evergreen" : "border-transparent text-[#3f4a43]")}
+                onClick={() => selectQueue(queue.id)}
+                aria-pressed={activeQueue === queue.id}
+              >
+                <span className="truncate">{queue.label}</span>
+                <span className="rounded-md border border-[#d6dfd8] bg-white px-2 py-0.5 tabular-nums">{queue.count.toLocaleString()}</span>
+              </button>
+            ))}
+            <details className="border-t border-tjc-line pt-2">
+              <summary className="cursor-pointer text-xs font-black text-tjc-evergreen">Advanced queues</summary>
+              <div className="mt-2 grid gap-1">
+                {advancedQueues.map((queue) => (
+                  <button
+                    key={`left-advanced-${queue.id}`}
+                    type="button"
+                    className={cn("grid min-h-9 grid-cols-[1fr_auto] items-center gap-2 rounded-md px-2 text-left text-[11px] font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "bg-[#e5f3ea] text-tjc-evergreen" : "text-[#4d554d]")}
+                    onClick={() => selectQueue(queue.id)}
+                    aria-pressed={activeQueue === queue.id}
+                  >
+                    <span className="truncate">{queue.label}</span>
+                    <span className="tabular-nums">{queue.count.toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            </details>
+          </section>
+        </aside>
+        <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
+          <div className="min-w-0 max-w-full overflow-hidden rounded-md border border-[#b9c9bf] bg-white" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
           <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-3 py-3 text-sm lg:grid-cols-[1fr_auto]">
             <div className="min-w-0">
-              <strong className="font-black text-tjc-ink">Showing {Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} of {(data?.assets.length || 0).toLocaleString()} loaded queue assets</strong>
+              <strong className="font-black text-tjc-ink">Review queue</strong>
+              <span className="ml-2 text-xs font-black tabular-nums text-tjc-muted">{Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} loaded</span>
               {activeQueueSummary ? <span className="mt-1 block text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">Risk-sorted media cards</span>
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Review panel on right</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">Risk-sorted queue</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Decision console on right</span>
             </div>
           </div>
-          <div className="hidden xl:block">
-            <DataTable
-              label="Review queue data table"
-              rows={visibleReviewAssets}
-              columns={reviewTableColumns}
-              getRowKey={(asset) => asset.id}
-              getSearchText={(asset) => `${assetPresentation(asset, role).title} ${asset.resourceSpaceId || asset.id} ${asset.collection} ${asset.sourceAccount || ""} ${reviewRiskFlags(asset).join(" ")} ${missingReviewFields(asset).join(" ")}`}
-              gridTemplateColumns="6.75rem minmax(15rem,1.4fr) minmax(9rem,.65fr) minmax(9rem,.65fr) 6rem"
-              searchable
-              searchPlaceholder="Filter loaded review rows..."
-              initialPageSize={visibleReviewCount}
-              mobileCard={(asset) => (
-                <div className="grid gap-2">
-                  <strong>{assetPresentation(asset, role).title}</strong>
-                  <span>{reviewNextCheckLabel(asset)}</span>
-                </div>
-              )}
-            />
-          </div>
-          <div className="grid min-w-0 max-w-full xl:hidden">
-            {visibleReviewAssets.filter((asset) => asset.id !== selectedAsset?.id).map((asset) => (
+          <div className="grid min-w-0 max-w-full">
+            {visibleReviewAssets.map((asset) => (
                 <ReviewQueueAssetCard
                   key={asset.id}
                   asset={asset}
                   role={role}
                   selected={selectedAsset?.id === asset.id}
-                  onInspect={setSelectedId}
+                  onInspect={inspectAsset}
                 />
               ))}
               {data && !data.assets.length ? <div className="p-8 text-tjc-muted">No assets in this queue.</div> : null}
           </div>
           {data && visibleReviewCount < data.assets.length ? (
             <div className="border-t border-tjc-line bg-[#fbfcfa] p-3">
-              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + desktopReviewRowsPageSize, data.assets.length))}>
+              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + desktopReviewRowsPageSize, data.assets.length))}>
                 Show more review items
               </button>
             </div>
@@ -601,7 +658,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid min-w-0 max-w-full gap-3 self-start rounded-lg border border-[#d4ded7] bg-white p-3 xl:order-2 xl:sticky xl:top-24 xl:max-h-[calc(100vh-var(--app-header-height)-3rem)] xl:overflow-auto" aria-label="Selected asset review inspector" data-component="SelectedReviewAssetBlock">
+          <aside ref={selectedWorkspaceRef} className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-md border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
             <section className="grid gap-3" aria-label="Selected asset review summary">
               <MediaPreviewPanel className="review-selected-preview" asset={selectedAsset} src={selectedPreview} alt={selectedAsset.thumbnailAlt} title={assetPresentation(selectedAsset, role).title} compact />
               <div>
@@ -613,17 +670,31 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 <StatusBadge status={selectedAsset.status} />
                 <UsageBadge scope={selectedAsset.usageScope} />
               </div>
-              <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e6] p-3 text-sm text-[#684a10]">
+              <div className="rounded-md border border-[#ead6a8] bg-[#fff8e6] p-3 text-sm text-[#684a10]">
                 <strong className="block font-black">{reviewRiskFlags(selectedAsset)[0] || "Standard review"}</strong>
                 <span className="mt-1 block leading-snug">{reviewNextCheckLabel(selectedAsset)}</span>
               </div>
-              <div className="grid gap-1 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
+              <div className="grid gap-1 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
                 <span>RS {selectedAsset.resourceSpaceId || selectedAsset.id}</span>
                 <span>Original/master restricted</span>
               </div>
+              <section className="grid gap-2 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Typed decision lanes">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-black text-tjc-evergreen">Decision lanes</h3>
+                  <span className="text-xs font-semibold text-tjc-muted">Typed review evidence</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {reviewDecisionLanes(selectedAsset).map((lane) => (
+                    <div className={cn("rounded-md border px-2.5 py-2 text-xs", lane.blocked ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b8d9c6] bg-white text-[#22563a]")} key={lane.label}>
+                      <strong className="block font-black">{lane.label}</strong>
+                      <span className="mt-1 block truncate font-semibold">{lane.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </section>
 
-            <section className="grid min-w-0 gap-3 border-t border-tjc-line pt-3" aria-label="Review action inspector">
+            <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 border-t border-tjc-line pt-3" aria-label="Review action inspector">
             <div className="min-w-0" data-component="ReviewInspectorTabs">
               <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" />
             </div>
@@ -641,7 +712,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                         <span className="block text-sm font-black text-tjc-evergreen">Action evidence</span>
                         <span className="mt-1 block text-xs font-semibold text-tjc-muted">Checklist, note, and action buttons are collapsed to keep mobile queue short.</span>
                       </div>
-                      <span className="rounded-full border border-[#d6dfd8] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
+                      <span className="rounded-md border border-[#d6dfd8] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
                         {completedEvidenceCount}/{checklistLabels.length}
                       </span>
                     </div>
@@ -693,7 +764,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
             <div className="grid min-w-0 gap-2">
-              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 min-w-0 items-center justify-center gap-2 dam-button-primary px-3 text-center text-sm font-semibold transition active:translate-y-px">
+              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 w-full min-w-0 max-w-full items-center justify-center gap-2 dam-button-primary px-3 text-center text-sm font-semibold transition active:translate-y-px">
                 <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
                 Open detail
               </Link>

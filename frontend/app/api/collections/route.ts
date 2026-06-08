@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById } from "@/lib/catalog";
 import { assetIsPortalReady, assetNeedsStaleApprovalReview } from "@/lib/asset-governance";
 import { canSeeAsset, canUpload, normalizeRole } from "@/lib/permissions";
@@ -31,6 +32,13 @@ export async function POST(request: NextRequest) {
   const title = normalizeTextField(body.title, "Untitled ministry collection", 100);
 
   if (!canUpload(role)) {
+    appendAuditEvent({
+      type: "collection_draft_denied",
+      role,
+      status: "denied",
+      summary: "Collection draft denied for role.",
+      details: { assetCount: assetIds.length, audience }
+    });
     return NextResponse.json({ error: "Collection drafts require Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
   }
   if (!assetIds.length) {
@@ -52,6 +60,20 @@ export async function POST(request: NextRequest) {
     ? found.filter((asset) => !assetIsPortalReady(asset) || assetNeedsStaleApprovalReview(asset))
     : [];
   const blockedPublic = portalBlockedAssets.length > 0;
+
+  appendAuditEvent({
+    type: "collection_draft_previewed",
+    role,
+    status: blockedPublic ? "blocked" : "preview",
+    summary: blockedPublic ? "Collection draft previewed with public gate blocked." : "Collection draft previewed.",
+    details: {
+      title,
+      audience,
+      assetCount: found.length,
+      blockedPublic,
+      blockedAssetIds: portalBlockedAssets.map((asset) => asset.id)
+    }
+  });
 
   return NextResponse.json({
     ok: false,
