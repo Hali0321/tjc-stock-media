@@ -100,12 +100,12 @@ export function AssetCard({
           <ReuseStateBadge asset={asset} size="xs" />
         </div>
         <div className="dam-asset-card-meta grid gap-1 text-xs leading-snug text-tjc-muted max-sm:text-[10px]">
+          <span className={cn("dam-asset-card-use-line line-clamp-1 border-l-2 pl-2 text-[13px] font-black max-sm:text-[11px]", canDownload && !hasWarnings ? "border-[#7db58f] text-[#164d34]" : "border-[#d09a31] text-[#704707]")}>{canDownload && !hasWarnings ? "Safe to reuse" : blocker}</span>
           <span className="truncate font-semibold">{asset.collection || display.cardSubtitle}</span>
-          <span className={cn("dam-asset-card-use-line line-clamp-1 border-l-2 pl-2 font-black", canDownload && !hasWarnings ? "border-[#7db58f] text-[#164d34]" : "border-[#d09a31] text-[#704707]")}>{blocker}</span>
         </div>
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-t border-[#eef1ef] pt-2 text-[11px] font-bold leading-snug text-tjc-muted max-sm:hidden" aria-label="Source metadata">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-t border-[#eef1ef] pt-2 text-[10px] font-bold leading-snug text-tjc-muted max-sm:hidden" aria-label="Source metadata">
           <span className="truncate">{canDownload ? "Approved copy" : "Reuse requires review"}</span>
-          <span className="rounded-full bg-[#f3f6f2] px-2 py-1 tabular-nums">{asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export"}</span>
+          <span className="rounded-full bg-[#f6f8f5] px-2 py-1 tabular-nums text-[#6f7a72]">{asset.resourceSpaceId ? `RS ${asset.resourceSpaceId}` : "RS export"}</span>
         </div>
       </div>
       <AssetQuickLookDialog asset={asset} role={role} open={quickLookOpen} onClose={() => setQuickLookOpen(false)} />

@@ -491,14 +491,15 @@ textarea:focus-visible {
 
 @media (min-width: 1280px) {
   .upload-intake-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(24rem, .72fr);
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, .42fr);
     grid-template-areas:
-      "context people files"
-      "packet packet files"
-      "actions actions actions"
-      "message message message"
-      "receipt receipt receipt";
+      "context files"
+      "people files"
+      "packet files"
+      "message files"
+      "receipt receipt";
     align-items: start;
+    gap: 1rem;
   }
 
   .upload-context-card {

@@ -9,7 +9,7 @@ import { UploadDropzone } from "@/components/UploadFileDropzone";
 import { UploadIntakePacket } from "@/components/UploadIntakePacket";
 import { canUpload } from "@/lib/permissions";
 import { toastDraftSaved, toastUploadComplete, toastUploadFailed, toastUploadStarted } from "@/lib/tjc-toasts";
-import { uploadTagSuggestions } from "@/lib/upload-tags";
+import { parseUploadTags, uploadTagSuggestions } from "@/lib/upload-tags";
 import { cn } from "@/lib/ui";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
@@ -41,10 +41,13 @@ export function UploadPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [sourceLink, setSourceLink] = useState("");
   const [suggestedTags, setSuggestedTags] = useState("");
+  const [intakeNotes, setIntakeNotes] = useState("");
+  const [draftSaved, setDraftSaved] = useState(false);
   const [mobileStep, setMobileStep] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sourceLinkRef = useRef<HTMLInputElement>(null);
+  const intakeNotesRef = useRef<HTMLTextAreaElement>(null);
   const filesSectionRef = useRef<HTMLElement>(null);
   const receiptRef = useRef<HTMLElement>(null);
   const allowed = ready && canUpload(role);
@@ -61,6 +64,23 @@ export function UploadPage() {
     }
   }, [sourceLink]);
   const hasFileOrSource = selectedFiles.length > 0 || hasValidSourceLink;
+  const tagCount = parseUploadTags(suggestedTags).length;
+  const hasSuggestedTags = tagCount > 0;
+  const hasIntakeNotes = intakeNotes.trim().length > 0;
+  const submitReady = hasFileOrSource && hasSuggestedTags && hasIntakeNotes;
+  const submitReadiness = [
+    { label: "File or source", complete: hasFileOrSource, detail: hasFileOrSource ? selectedFiles.length ? `${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"} selected` : "Source link captured" : "Add a file or source link" },
+    { label: "Suggested tags", complete: hasSuggestedTags, detail: hasSuggestedTags ? `${tagCount} tag${tagCount === 1 ? "" : "s"} added` : "Add at least one tag" },
+    { label: "Intake notes", complete: hasIntakeNotes, detail: hasIntakeNotes ? "Reviewer note captured" : "Tell reviewer what to check" },
+    { label: "Review visibility", complete: true, detail: "Blocked by default" }
+  ];
+  const submitHelp = submitReady
+    ? "Ready for reviewer intake. This still does not approve or publish media."
+    : !hasFileOrSource
+      ? "Add a file or source link before submitting."
+      : !hasSuggestedTags
+        ? "Add suggested tags before submitting."
+        : "Add intake notes before submitting.";
 
   function findUploadStepIssue(stepIndex: number) {
     const container = formRef.current?.querySelector<HTMLElement>(`[data-upload-step="${stepIndex}"]`);
@@ -77,6 +97,9 @@ export function UploadPage() {
     }
     if (stepIndex === 2 && !suggestedTags.trim()) {
       return { step: stepIndex, message: "Add at least one suggested tag before continuing." };
+    }
+    if (stepIndex === 2 && !intakeNotes.trim()) {
+      return { step: stepIndex, control: intakeNotesRef.current || undefined, message: "Add intake notes before continuing." };
     }
     return null;
   }
@@ -113,6 +136,23 @@ export function UploadPage() {
     filesSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
+  function focusSubmitIssue() {
+    if (!hasFileOrSource) {
+      focusFileOrSource();
+      return;
+    }
+    if (!hasSuggestedTags) {
+      setMessage("Add suggested tags before submitting.");
+      filesSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      return;
+    }
+    if (!hasIntakeNotes) {
+      setMessage("Add intake notes before submitting.");
+      intakeNotesRef.current?.focus({ preventScroll: true });
+      intakeNotesRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -122,8 +162,8 @@ export function UploadPage() {
       showUploadStepIssue(firstIssue);
       return;
     }
-    if (!hasFileOrSource) {
-      focusFileOrSource();
+    if (!submitReady) {
+      focusSubmitIssue();
       return;
     }
     const form = new FormData(event.currentTarget);
@@ -186,6 +226,7 @@ export function UploadPage() {
 
   function saveDraftNotice() {
     setMessage("Draft capture is local-only in this demo. Files still need Submit for review before server intake.");
+    setDraftSaved(true);
     toastDraftSaved("Draft capture is local-only in this demo. Submit for review before server intake.");
   }
 
@@ -252,7 +293,7 @@ export function UploadPage() {
       <section className="mt-4 rounded-[1.25rem] border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Upload steps">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs font-black text-tjc-evergreen">Step {mobileStep + 1} of {uploadMobileSteps.length}</span>
+            <span className="text-xs font-black text-tjc-evergreen" data-testid="upload-stepper-current-step">Step {mobileStep + 1} of {uploadMobileSteps.length}</span>
             <h2 className="mt-1 text-xl font-black leading-tight text-tjc-ink">{uploadMobileSteps[mobileStep].title}</h2>
             <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{uploadMobileSteps[mobileStep].detail}</p>
           </div>
@@ -343,7 +384,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section data-upload-step="2" ref={filesSectionRef} className={cn("upload-files-card dam-soft-card min-w-0 scroll-mt-24 self-start p-4", mobileStep !== 2 && "max-md:hidden")}>
+        <section data-upload-step="2" ref={filesSectionRef} className={cn("upload-files-card dam-soft-card min-w-0 scroll-mt-24 self-start p-4 xl:sticky xl:top-24", mobileStep !== 2 && "max-md:hidden")} data-testid="upload-desktop-submission-rail">
           <div className="mb-4">
             <h2 className="text-lg font-black">3. Files and tags</h2>
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
@@ -380,9 +421,64 @@ export function UploadPage() {
           </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
-            <textarea className="min-h-24 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
+            <textarea ref={intakeNotesRef} className="min-h-24 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required value={intakeNotes} onChange={(event) => setIntakeNotes(event.target.value)} />
           </label>
           {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
+          <section className="mt-4 rounded-2xl border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Submission readiness" data-testid="upload-desktop-readiness-checklist">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <strong className="block text-sm font-black text-tjc-ink">Ready to send?</strong>
+                <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">Media stays blocked until a reviewer approves reuse.</span>
+              </div>
+              <span className={cn("rounded-full px-2.5 py-1 text-xs font-black", submitReady ? "bg-[#e8f6ee] text-tjc-evergreen" : "bg-[#fff8e8] text-[#725216]")}>
+                {submitReadiness.filter((item) => item.complete).length}/{submitReadiness.length}
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2">
+              {submitReadiness.map((item) => (
+                <div className="grid grid-cols-[auto_1fr] gap-2 rounded-xl border border-[#e1e8e2] bg-white px-3 py-2 text-xs" key={item.label}>
+                  {item.complete ? <CheckCircle2 size={15} strokeWidth={1.9} aria-hidden="true" className="mt-0.5 text-tjc-evergreen" /> : <Clock3 size={15} strokeWidth={1.9} aria-hidden="true" className="mt-0.5 text-[#9a6a10]" />}
+                  <span>
+                    <strong className="block font-black text-tjc-ink">{item.label}</strong>
+                    <span className="mt-0.5 block font-semibold leading-snug text-tjc-muted">{item.detail}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="mt-4 hidden gap-3 rounded-2xl border border-[#cbd8cf] bg-white p-3 shadow-[0_12px_28px_rgba(25,34,29,.045)] md:grid" aria-label="Desktop upload actions" data-testid="upload-desktop-actions-rail">
+            <div>
+              <strong className="text-sm font-black text-tjc-ink">Submit for review</strong>
+              <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">{submitHelp}</span>
+              {draftSaved ? <span className="mt-2 block text-xs font-black text-tjc-evergreen" data-testid="upload-draft-local-state">Draft saved locally</span> : null}
+            </div>
+            <div className="grid gap-2">
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
+                <Save size={15} strokeWidth={1.8} aria-hidden="true" />
+                Save draft
+              </button>
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
+                clearFiles();
+                setSuggestedTags("");
+                setSourceLink("");
+                setIntakeNotes("");
+                setMessage("File selection, source link, suggested tags, and intake notes cleared.");
+                toastDraftSaved("File selection, source link, suggested tags, and intake notes cleared.");
+              }}>
+                <RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" />
+                Clear all
+              </button>
+              <button
+                className="inline-flex min-h-11 items-center justify-center gap-2 dam-button-primary px-5 text-base font-black transition active:translate-y-px disabled:cursor-not-allowed disabled:!border-[#c5d1c9] disabled:!bg-[#edf1ed] disabled:!text-[#69746d] disabled:!shadow-none"
+                type="submit"
+                aria-label="Submit intake"
+                disabled={!submitReady}
+              >
+                <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
+                Submit for review
+              </button>
+            </div>
+          </section>
           <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#c9d6ce] bg-[#f6faf7] p-3">
             <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <div>
@@ -399,10 +495,11 @@ export function UploadPage() {
           <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} hasSourceLink={hasValidSourceLink} largeWarning={largeWarning} />
         </div>
 
-        <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:grid-cols-[1fr_auto]" aria-label="Upload actions" data-component="UploadBottomActionBar">
+        <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
           <div className="grid content-center">
             <strong className="text-sm font-black text-tjc-ink">Submit for reviewer intake</strong>
-            <span className="text-xs font-semibold text-tjc-muted">{hasFileOrSource ? "No upload bypasses review. Approved copies are created only after reviewer decision." : "Add a file or source link before submitting."}</span>
+            <span className="text-xs font-semibold text-tjc-muted">{submitHelp}</span>
+            {draftSaved ? <span className="mt-1 text-xs font-black text-tjc-evergreen" data-testid="upload-draft-local-state">Draft saved locally</span> : null}
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
@@ -413,8 +510,9 @@ export function UploadPage() {
               clearFiles();
               setSuggestedTags("");
               setSourceLink("");
-              setMessage("File selection, source link, and suggested tags cleared.");
-              toastDraftSaved("File selection, source link, and suggested tags cleared.");
+              setIntakeNotes("");
+              setMessage("File selection, source link, suggested tags, and intake notes cleared.");
+              toastDraftSaved("File selection, source link, suggested tags, and intake notes cleared.");
             }}>
               <RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" />
               Clear all
@@ -433,12 +531,12 @@ export function UploadPage() {
               className={cn(
                 "inline-flex min-h-11 min-w-[12rem] items-center justify-center gap-2 dam-button-primary px-5 text-base font-black transition active:translate-y-px",
                 mobileStep < uploadMobileSteps.length - 1 && "max-md:hidden",
-                !hasFileOrSource && "cursor-not-allowed !border-[#c5d1c9] !bg-[#edf1ed] !text-[#69746d] !shadow-none hover:!bg-[#edf1ed]"
+                !submitReady && "cursor-not-allowed !border-[#c5d1c9] !bg-[#edf1ed] !text-[#69746d] !shadow-none hover:!bg-[#edf1ed]"
               )}
-              type={hasFileOrSource ? "submit" : "button"}
+              type={submitReady ? "submit" : "button"}
               aria-label="Submit intake"
-              aria-disabled={!hasFileOrSource}
-              onClick={!hasFileOrSource ? focusFileOrSource : undefined}
+              aria-disabled={!submitReady}
+              onClick={!submitReady ? focusSubmitIssue : undefined}
             >
               <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
               Submit for review

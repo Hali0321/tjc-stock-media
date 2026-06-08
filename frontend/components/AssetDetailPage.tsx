@@ -129,7 +129,9 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <DownloadBadge asset={asset} size="sm" />
+        <span data-testid="asset-download-unavailable">
+          <DownloadBadge asset={asset} size="sm" />
+        </span>
         <TjcStatusBadge
           domain="source"
           status="original-master-restricted"
@@ -149,7 +151,7 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
             Download approved copy
           </a>
         ) : (
-          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={() => setRequestKind("review")}>
+          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" data-testid="asset-primary-request-review" onClick={() => setRequestKind("review")}>
             <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
             Request review
           </button>

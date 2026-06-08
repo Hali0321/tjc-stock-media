@@ -39,12 +39,13 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
     .replace("People/minors unknown", "People/minors")
     .replace("Rights or consent unclear", "Rights");
   const nextCheck = nextCheckLabel(missing, risks);
+  const evidenceProgress = "0/9 evidence";
 
   return (
     <>
     {selected ? (
       <article
-        className="grid w-full max-w-full gap-2 border-b border-tjc-line bg-[#e5f3ea] px-3 py-3 shadow-[inset_4px_0_0_#063f39] md:hidden"
+        className="hidden"
         data-component="CompactReviewQueueCard"
         aria-label={`${display.title} currently reviewing`}
       >
@@ -97,6 +98,9 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
           <span className="rounded-full border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[10px] font-black text-[#536057]">
             {missing.length ? `${missing.length} gaps` : "Fields ready"}
           </span>
+          <span className="rounded-full border border-[#cfd9dd] bg-white px-2 py-1 text-[10px] font-black text-[#52677a]">
+            {evidenceProgress}
+          </span>
         </div>
         <div className="mt-2 grid gap-2">
           <button
@@ -117,6 +121,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         selected && "bg-[#e5f3ea] shadow-[inset_6px_0_0_#063f39]"
       )}
       data-component="ExpandedReviewQueueCard"
+      data-testid={selected ? "review-selected-queue-item" : undefined}
     >
       <Link
         href={`/assets/${asset.id}`}
@@ -162,6 +167,9 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
           <span className="rounded-full border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[11px] font-black text-[#536057]">
             {missing.length ? `${missing.length} missing` : "Fields ready"}
           </span>
+          <span className="rounded-full border border-[#cfd9dd] bg-white px-2 py-1 text-[11px] font-black text-[#52677a]">
+            {evidenceProgress}
+          </span>
         </div>
       </div>
 
@@ -169,7 +177,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="rounded-xl border border-[#c9d8cf] bg-white/86 p-3 max-sm:hidden">
           <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Next check</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{nextCheck}</strong>
-          <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{missing.length ? missing.slice(0, 3).join(", ") : "Checklist and note still required before action."}</p>
+          <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{evidenceProgress} · {missing.length ? missing.slice(0, 3).join(", ") : "Checklist and note still required before action."}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           <button

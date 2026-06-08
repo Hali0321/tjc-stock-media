@@ -140,7 +140,7 @@ export function GuidePage() {
           {visibleBlocks.map((block) => {
             const Icon = block.icon;
             return (
-              <details className="rounded-2xl border border-[#d6dfd8] bg-white p-3" key={block.title}>
+              <details className="rounded-2xl border border-[#d6dfd8] bg-white p-3" key={block.title} data-testid={`guide-task-card-${guideSectionId(block.title).replace("guide-", "")}`}>
                 <summary className="grid cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-xl border border-[#dbe4dd] bg-[#f8fbf8] text-tjc-evergreen">
                     <Icon size={18} strokeWidth={1.8} aria-hidden="true" />

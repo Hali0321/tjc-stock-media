@@ -223,6 +223,30 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Viewer", 390, 900);
+  await gotoAndSettle(page, `${base}/?q=zzzzzz-no-visible-media-proof`);
+  if ((await page.getByTestId("library-empty-state").getByText("No matching approved assets").count()) < 1) failures.push("viewer-library-empty-to-collections: empty copy missing");
+  await page.getByRole("link", { name: "Browse collections" }).click();
+  await page.waitForURL(/\/collections/, { timeout: 10000 });
+  await page.getByRole("button", { name: /View details|Inspect metadata/ }).first().click();
+  await page.getByRole("button", { name: "Open Library results" }).first().click();
+  await page.waitForURL(/\?collection=/, { timeout: 10000 });
+  if (!page.url().includes("collection=")) failures.push("viewer-library-empty-to-collections: collection did not open Library results");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Viewer", 390, 900);
+  await gotoAndSettle(page, `${base}/assets/368`);
+  if ((await page.getByText("Needs review before use").count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
+  if ((await page.getByTestId("asset-download-unavailable").getByText("Download unavailable").count()) < 1) failures.push("viewer-asset-blocked-request-review: unavailable download state missing");
+  await page.getByTestId("asset-primary-request-review").click();
+  if ((await page.getByRole("dialog", { name: "Request review" }).count()) < 1) failures.push("viewer-asset-blocked-request-review: request dialog did not open");
+  if ((await page.getByText("ResourceSpace status, portal reuse state, and pending review writes do not change here.").count()) < 1) failures.push("viewer-asset-blocked-request-review: no-fake-persistence copy missing");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, base);
   const commandSearch = await openCommandPalette(page);
@@ -316,9 +340,70 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Contributor", 1440, 1000);
+  await gotoAndSettle(page, `${base}/upload`);
+  if ((await page.locator('[data-component="UploadBottomActionBar"]').count()) > 0) failures.push("upload desktop rail: detached bottom submit bar still present");
+  const rail = page.getByTestId("upload-desktop-submission-rail");
+  const actions = page.getByTestId("upload-desktop-actions-rail");
+  if ((await actions.getByText("Submit for review").count()) < 1) failures.push("upload desktop rail: submit action missing from right rail");
+  const submitButton = rail.getByRole("button", { name: "Submit intake" });
+  if ((await submitButton.isDisabled()) !== true) failures.push("upload desktop rail: submit should be disabled without file/source, tags, and notes");
+  await actions.getByRole("button", { name: "Save draft" }).click();
+  if ((await rail.getByTestId("upload-draft-local-state").getByText("Draft saved locally").count()) < 1) failures.push("upload desktop rail: save draft state missing");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Contributor", 320, 900);
+  await gotoAndSettle(page, `${base}/upload`);
+  if ((await page.getByTestId("upload-stepper-current-step").getByText("Step 1 of 4").count()) < 1) failures.push("contributor-upload-stepper: step 1 indicator missing");
+  await page.getByRole("button", { name: "Next" }).click();
+  if ((await page.getByText("Complete Context before continuing.").count()) < 1) failures.push("contributor-upload-stepper: context validation missing");
+  await page.getByLabel("Title").fill("Mobile stepper QA");
+  await page.getByLabel("Event name").fill("Sabbath media QA");
+  await page.getByLabel("Event date").fill("2026-06-06");
+  await page.getByLabel("Ministry/team").fill("Internet Ministry");
+  await page.getByLabel("Source / photographer").fill("QA reviewer");
+  await page.getByRole("button", { name: "Next" }).click();
+  if ((await page.getByText("People and rights").count()) < 1) failures.push("contributor-upload-stepper: step 2 did not appear");
+  await page.getByLabel("People visible").selectOption("No");
+  await page.getByLabel("Children/youth visible").selectOption("No");
+  await page.getByLabel("Usage rights").selectOption("TJC-owned / permission confirmed");
+  await page.getByLabel("Suggested approval direction").selectOption("Likely internal ministry use only");
+  await page.getByLabel("Consent/restrictions").fill("No restrictions known.");
+  await page.getByRole("button", { name: "Next" }).click();
+  if ((await page.getByText("Files or source").count()) < 1) failures.push("contributor-upload-stepper: step 3 did not appear");
+  await page.getByRole("button", { name: "Next" }).click();
+  if ((await page.getByText("Complete Files or source before continuing.").count()) < 1) failures.push("contributor-upload-stepper: file/source validation missing");
+  await page.getByLabel("Existing Google / ResourceSpace link").fill("https://drive.google.com/mobile-stepper-qa");
+  await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
+  await page.keyboard.press("Enter");
+  await page.getByLabel("Intake notes").fill("Mobile QA source-link intake ready for reviewer packet.");
+  await page.getByRole("button", { name: "Next" }).click();
+  if ((await page.getByText("Review and submit").count()) < 1) failures.push("contributor-upload-stepper: review step did not appear");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  if ((await page.getByTestId("upload-draft-local-state").getByText("Draft saved locally").count()) < 1) failures.push("contributor-upload-stepper: draft local state missing");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/review`);
-  if ((await page.getByText("Showing 24 of").count()) < 1) failures.push("review queue load more: initial 24-row limit missing");
+  if ((await page.getByTestId("review-primary-queue").count()) !== 1) failures.push("review console: expected one primary queue surface");
+  if ((await page.locator('[data-component="ReviewTriageStrip"]').count()) > 0) failures.push("review console: visual triage strip returned");
+  if ((await page.getByLabel("Review queue data table").count()) > 0) failures.push("review console: full data table returned");
+  const selectedQueueItem = page.getByTestId("review-selected-queue-item");
+  if ((await selectedQueueItem.count()) < 1) failures.push("review console: selected queue item highlight missing");
+  if ((await selectedQueueItem.getByText("Selected for review").count()) < 1) failures.push("review console: selected queue item label missing");
+  const reviewWorkspaceBehavior = await page.getByTestId("review-current-workspace").evaluate((node) => {
+    const style = window.getComputedStyle(node);
+    return { position: style.position, overflowY: style.overflowY, maxHeight: style.maxHeight };
+  });
+  if (reviewWorkspaceBehavior.position !== "sticky" && !["auto", "scroll"].includes(reviewWorkspaceBehavior.overflowY)) failures.push("review console: right workspace is not sticky or internally scrollable");
+  if ((await page.getByTestId("review-decision-requirements").count()) !== 1) failures.push("review console: decision lock panel should appear once");
+  if ((await page.getByText(/disabled because/).count()) > 0) failures.push("review console: repeated verbose disabled reason copy returned");
+  if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("review console: pending-write warning missing");
+  if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("review console: fake ResourceSpace success visible");
   if ((await page.getByRole("button", { name: "Show more review items" }).count()) < 1) failures.push("review queue load more: button missing");
   await page.getByRole("button", { name: "Asset actions" }).click();
   if ((await page.getByRole("menuitem", { name: /Copy ResourceSpace ID/ }).count()) < 1) failures.push("review asset actions menu: copy ResourceSpace ID missing");
@@ -344,10 +429,62 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Reviewer", 390, 900);
+  await gotoAndSettle(page, `${base}/review`);
+  const currentWorkspace = page.getByTestId("review-current-workspace");
+  const loadedQueueList = page.getByTestId("review-primary-queue");
+  if ((await currentWorkspace.getByText("Currently reviewing").count()) < 1) failures.push("reviewer-decision-workflow: currently reviewing panel missing on mobile");
+  if ((await loadedQueueList.getByText("Review queue").count()) < 1) failures.push("reviewer-decision-workflow: loaded queue list missing on mobile");
+  const currentBox = await currentWorkspace.boundingBox();
+  const queueBox = await loadedQueueList.boundingBox();
+  if (currentBox && queueBox && currentBox.y > queueBox.y) failures.push("reviewer-decision-workflow: current asset appears after loaded queue list on mobile");
+  if ((await page.locator('[data-testid="review-selected-queue-item"]:visible').count()) > 0) failures.push("reviewer-decision-workflow: selected queue item duplicated on mobile");
+  if ((await page.getByTestId("review-decision-requirements").getByText("Decision locked").count()) < 1) failures.push("reviewer-decision-workflow: decision locked panel missing");
+  if ((await page.getByTestId("review-decision-requirements").getByText(/Complete before approval/).count()) < 1) failures.push("reviewer-decision-workflow: requirements summary missing");
+  if ((await page.getByTestId("review-disabled-decision-group").getByRole("button", { name: "Approve for church-wide use" }).isDisabled()) !== true) failures.push("reviewer-decision-workflow: approve should be disabled before evidence");
+  if ((await page.getByText(/Approve for church-wide use disabled because/).count()) > 0) failures.push("reviewer-decision-workflow: repeated disabled reason copy returned");
+  if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("reviewer-decision-workflow: pending-write warning missing");
+  if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("reviewer-decision-workflow: fake ResourceSpace success visible");
+  await page.getByLabel("Review note").fill("Mobile QA confirms source, rights, people, derivative, and sensitive context evidence.");
+  for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
+    await page.getByLabel(label).check();
+  }
+  await page.getByRole("button", { name: "Approve for church-wide use" }).click();
+  await page.waitForSelector("text=Queue pending review write");
+  if ((await page.getByText("ResourceSpace is not updated until API field mapping is configured.").count()) < 1) failures.push("reviewer-decision-workflow: pending-write confirmation copy missing");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("DAM Admin", 1440, 1000);
   await gotoAndSettle(page, `${base}/review`);
   await page.getByRole("button", { name: "Asset actions" }).click();
   if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) < 1) failures.push("review asset actions menu: DAM Admin ResourceSpace action missing");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("DAM Admin", 390, 900);
+  await gotoAndSettle(page, `${base}/admin`);
+  if ((await page.getByRole("heading", { name: "Launch blocked" }).count()) < 1) failures.push("admin-launch-blocked: launch blocked heading missing");
+  for (const blocker of ["ResourceSpace write mapping", "Real authentication / SSO", "Rights and consent review coverage"]) {
+    if ((await page.getByText(blocker).count()) < 1) failures.push(`admin-launch-blocked: top blocker missing ${blocker}`);
+  }
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Viewer", 390, 900);
+  await gotoAndSettle(page, `${base}/guide`);
+  if ((await page.getByText("What are you trying to do?").count()) < 1) failures.push("guide-task-cards: task prompt missing");
+  await page.getByLabel("Search guide").fill("children");
+  const childrenTask = page.getByTestId("guide-task-card-check-children-youth");
+  if ((await childrenTask.getByText("Check children/youth").count()) < 1) failures.push("guide-task-cards: search did not match children task");
+  await childrenTask.getByText("Check children/youth").click();
+  if ((await page.getByText("Do", { exact: true }).count()) < 1 || (await page.getByText("Avoid", { exact: true }).count()) < 1) failures.push("guide-task-cards: do/avoid guidance missing after open");
+  await childrenTask.getByText("Check children/youth").click();
+  const openGuideDetails = await page.locator("details[open]").count();
+  if (openGuideDetails > 0) failures.push("guide-task-cards: task did not close");
   await context.close();
 }
 

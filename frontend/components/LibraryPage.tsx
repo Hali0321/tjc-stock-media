@@ -452,7 +452,7 @@ export function LibraryPage() {
   const emptyStateTitle = submittedQuery || filters.length
     ? "No matching approved assets"
     : activeCollection
-      ? "No approved assets in this collection yet"
+      ? "No assets in this collection yet"
       : selectedView
         ? "No assets in this view yet"
         : "No assets in this Library view";
@@ -486,7 +486,7 @@ export function LibraryPage() {
               className="min-h-11 min-w-0 bg-transparent px-2 text-sm font-semibold text-tjc-ink placeholder:text-[#7f8a82] sm:min-h-12 sm:px-1 sm:text-lg"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search Bible, fellowship, baptism, flowers, no people, website hero..."
+              placeholder="Search approved media..."
               name="q"
               type="search"
             />
@@ -773,7 +773,7 @@ export function LibraryPage() {
 
             {loading ? <SkeletonGrid count={pageLimit < 24 ? 8 : 12} /> : null}
             {!loading && result?.assets.length === 0 ? (
-              <div className="grid gap-3">
+              <div className="grid gap-3" data-testid="library-empty-state">
                 <EmptyState
                   title={emptyStateTitle}
                   detail={emptyStateDetail}
@@ -786,7 +786,7 @@ export function LibraryPage() {
                       Browse collections
                     </Link>
                     <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={clearSearchState}>
-                      Clear search
+                      {submittedQuery || filters.length ? "Clear search" : "Reset view"}
                     </button>
                   </div>
                 </div>
