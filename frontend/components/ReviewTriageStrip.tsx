@@ -41,14 +41,14 @@ export function ReviewTriageStrip({ assets, role, selectedId, onSelect }: Review
               aria-pressed={selected}
               className={cn(
                 "group grid min-w-0 gap-2 rounded-md border p-2 text-left transition hover:bg-[#f8fbf8]",
-                selected ? "border-[#0b4b42] bg-[#f4faf6] shadow-[inset_3px_0_0_#0b4b42]" : "border-[#d6dfd8] bg-white"
+                selected ? "border-[#0b4b42] bg-[#e8f2ed] ring-1 ring-inset ring-[#0b4b42]" : "border-[#d6dfd8] bg-white"
               )}
             >
               <span className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
                 <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.035]" className="px-2" loading="eager" />
               </span>
               <span className="line-clamp-1 text-sm font-black text-tjc-ink">{display.title}</span>
-              <span className="line-clamp-1 border-l-2 border-[#d09a31] pl-2 text-[11px] font-black text-[#684a10]">{risk}</span>
+              <span className="line-clamp-1 rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[11px] font-black text-[#684a10]">{risk}</span>
             </button>
           );
         })}

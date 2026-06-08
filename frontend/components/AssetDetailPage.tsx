@@ -58,7 +58,7 @@ function RelatedStrip({ assets, role }: { assets: StockMediaAsset[]; role: DemoR
   if (!visibleRelated.length) {
     return (
       <div className="rounded-xl border border-[#d6dfd8] bg-[#f8faf8] p-4 text-sm font-semibold leading-relaxed text-tjc-muted">
-        Related previews are unavailable for this role. Open Library after review clears a role-safe approved copy.
+        Related previews are unavailable for this role. Open Find after review clears a role-safe approved copy.
       </div>
     );
   }
@@ -102,7 +102,7 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
   return (
     <section
       className={cn(
-        "rounded-[1.45rem] border p-4 shadow-[0_22px_52px_rgba(35,53,111,.08)]",
+        "rounded-md border p-4",
         approved ? "border-[#9fcfb4] bg-[#f0faf4]" : "border-[#dfbd73] bg-[#fff7df]"
       )}
       aria-label="Reuse decision record"
@@ -144,24 +144,24 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
         {decision.blockers.length ? <BlockerBadge asset={asset} size="sm" /> : null}
       </div>
 
-      <div className="mt-4 grid gap-2 rounded-2xl border border-white/75 bg-white/68 p-3">
+      <div className="mt-4 grid gap-2 rounded-md border border-[#d8e1da] bg-white p-3">
         {approved ? (
-          <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
+          <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
             <Download size={16} strokeWidth={1.8} aria-hidden="true" />
             Download approved copy
           </a>
         ) : (
-          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" data-testid="asset-primary-request-review" onClick={() => setRequestKind("review")}>
+          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" data-testid="asset-primary-request-review" onClick={() => setRequestKind("review")}>
             <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
             Request DAM review
           </button>
         )}
         <div className="grid gap-2 sm:grid-cols-2">
-          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
+          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
             <Mail size={15} strokeWidth={1.8} aria-hidden="true" />
             Ask media team
           </button>
-          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
+          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
             <FileLock2 size={15} strokeWidth={1.8} aria-hidden="true" />
             Request original access
           </button>
@@ -191,7 +191,7 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
 
 function GovernancePassportSection({ passport }: { passport: ReturnType<typeof assetGovernancePassport> }) {
   return (
-    <details className="min-w-0 rounded-[1.2rem] border border-[#d4ded7] bg-white p-4" aria-label="Governance passport">
+    <details className="min-w-0 rounded-md border border-[#d4ded7] bg-white p-4" aria-label="Governance passport">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -213,13 +213,13 @@ function GovernancePassportSection({ passport }: { passport: ReturnType<typeof a
       </div>
       {passport.blockers.length || passport.warnings.length ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <div className="border-l-2 border-[#d09a31] pl-3 text-[#725216]">
+          <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]">
             <strong className="flex items-center gap-2 text-sm font-semibold"><AlertTriangle size={15} strokeWidth={1.8} aria-hidden="true" /> Portal blockers</strong>
             <div className="mt-2 grid gap-1">
               {(passport.blockers.length ? passport.blockers : ["None"]).map((item) => <span className="text-xs font-semibold" key={item}>{item}</span>)}
             </div>
           </div>
-          <div className="border-l-2 border-[#9fb6c8] pl-3 text-[#27435b]">
+          <div className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
             <strong className="flex items-center gap-2 text-sm font-semibold"><Info size={15} strokeWidth={1.8} aria-hidden="true" /> Improvement notes</strong>
             <div className="mt-2 grid gap-1">
               {(passport.warnings.length ? passport.warnings : ["None"]).map((item) => <span className="text-xs font-semibold" key={item}>{item}</span>)}
@@ -360,7 +360,7 @@ export function AssetDetailPage({ id }: { id: string }) {
                 <Link
                   href={index === 0 ? `/assets/${asset.id}` : `/assets/${item.id}`}
                   key={`${item.id}-${index}`}
-                  className={cn("grid h-16 min-w-0 place-items-center overflow-hidden rounded-2xl border bg-white transition hover:border-[#9fb8ae]", index === 0 ? "border-[#0f3d2e] shadow-[inset_0_0_0_2px_#e6f0eb]" : "border-[#d6dfd8]")}
+                  className={cn("grid h-16 min-w-0 place-items-center overflow-hidden rounded-md border bg-white transition hover:border-[#9fb8ae]", index === 0 ? "border-[#0f3d2e] ring-1 ring-inset ring-[#9fb8ae]" : "border-[#d6dfd8]")}
                   aria-label={index === 0 ? "Current asset preview" : `Open related asset ${assetPresentation(item, role).title}`}
                 >
                   <MediaPreview src={imageUrl} alt={item.thumbnailAlt} imgClassName="h-full w-full object-cover" className="px-1" />
@@ -432,7 +432,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           <ReuseDecisionRecord asset={asset} role={role} />
           <DownloadOptionsPanel asset={asset} role={role} />
           <AssetTrustPanel asset={asset} role={role} />
-          <section className="hidden rounded-[1.2rem] border border-[#d4ded7] bg-white p-4 xl:block" aria-label="ResourceSpace source actions">
+          <section className="hidden rounded-md border border-[#d4ded7] bg-white p-4 xl:block" aria-label="ResourceSpace source actions">
             <h2 className="text-sm font-black text-tjc-evergreen">ResourceSpace source</h2>
             <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">Secondary admin actions. Delivery decisions stay above.</p>
             <div className="mt-3">

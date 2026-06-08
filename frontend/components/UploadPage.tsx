@@ -23,7 +23,7 @@ type UploadReceipt = {
   reviewWarnings?: string[];
 };
 
-const inputClass = "min-h-10 w-full min-w-0 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
+const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
 const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
 const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
 const uploadMobileSteps = [
@@ -31,6 +31,15 @@ const uploadMobileSteps = [
   { title: "People and rights", detail: "Visibility, youth, rights, restrictions." },
   { title: "Files or source", detail: "File, source link, tags, notes." },
   { title: "Review and submit", detail: "Packet summary and safety check." }
+] as const;
+
+const intakeTemplates = [
+  { id: "event-photo", label: "Event photos", detail: "Ministry, date, people visibility, source path" },
+  { id: "youth", label: "Youth / children", detail: "People/minors and consent evidence required" },
+  { id: "sermon", label: "Sermon / teaching", detail: "Teaching context, speaker/source, usage scope" },
+  { id: "graphics", label: "Graphics / flyers", detail: "Template, font/license, channel fit" },
+  { id: "music", label: "Hymn / music", detail: "Copyright basis and recording rights" },
+  { id: "source-link", label: "Source link only", detail: "Shared Drive or ResourceSpace reference" }
 ] as const;
 
 export function UploadPage() {
@@ -44,6 +53,7 @@ export function UploadPage() {
   const [intakeNotes, setIntakeNotes] = useState("");
   const [draftSaved, setDraftSaved] = useState(false);
   const [mobileStep, setMobileStep] = useState(0);
+  const [intakeTemplate, setIntakeTemplate] = useState<(typeof intakeTemplates)[number]["id"]>("event-photo");
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sourceLinkRef = useRef<HTMLInputElement>(null);
@@ -284,20 +294,47 @@ export function UploadPage() {
         <StateBanner tone="info" title="Autosave checkpoint">
           Context, rights, files, and tags are reviewed together. Submitted media stays Needs Review / Do Not Publish until reviewer evidence is complete.
         </StateBanner>
-        <div className="grid content-center rounded-[1.35rem] border border-[#d7e1d9] bg-white px-4 py-3 text-sm shadow-[0_10px_28px_rgba(25,34,29,.035)]">
+        <div className="grid content-center rounded-md border border-[#d7e1d9] bg-white px-4 py-3 text-sm">
           <strong className="text-tjc-ink">{selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"} selected</strong>
           <span className="text-xs font-semibold text-tjc-muted">Review visibility: blocked by default</span>
         </div>
       </div>
 
-      <section className="mt-4 rounded-[1.25rem] border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Upload steps">
+      <section className="mt-4 hidden rounded-md border border-[#cbd8cf] bg-white p-3 md:block" aria-label="Intake templates">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-black text-tjc-evergreen">Choose intake type</h2>
+            <p className="mt-1 text-xs font-semibold text-tjc-muted">Template choice routes risk expectations. It does not publish media.</p>
+          </div>
+          <span className="rounded-md border border-[#d6dfd8] bg-[#f8fbf8] px-2.5 py-1 text-xs font-black text-tjc-muted">Desktop intake</span>
+        </div>
+        <div className="mt-3 grid gap-2 lg:grid-cols-3">
+          {intakeTemplates.map((template) => (
+            <button
+              type="button"
+              className={cn(
+                "grid min-h-20 gap-1 rounded-md border px-3 py-2 text-left transition hover:bg-[#f6faf7]",
+                intakeTemplate === template.id ? "border-[#8fb2a5] bg-[#e8f2ed] text-tjc-evergreen" : "border-[#d6dfd8] bg-white text-[#3f4a43]"
+              )}
+              aria-pressed={intakeTemplate === template.id}
+              onClick={() => setIntakeTemplate(template.id)}
+              key={template.id}
+            >
+              <strong className="text-sm font-black">{template.label}</strong>
+              <span className="text-xs font-semibold leading-snug text-tjc-muted">{template.detail}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-md border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Upload steps">
         <div className="flex items-center justify-between gap-3">
           <div>
             <span className="text-xs font-black text-tjc-evergreen" data-testid="upload-stepper-current-step">Step {mobileStep + 1} of {uploadMobileSteps.length}</span>
             <h2 className="mt-1 text-xl font-black leading-tight text-tjc-ink">{uploadMobileSteps[mobileStep].title}</h2>
             <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{uploadMobileSteps[mobileStep].detail}</p>
           </div>
-          <span className="rounded-full border border-[#d6dfd8] bg-[#f8fbf8] px-3 py-1 text-xs font-black tabular-nums text-tjc-evergreen">{mobileStep + 1}/{uploadMobileSteps.length}</span>
+          <span className="rounded-md border border-[#d6dfd8] bg-[#f8fbf8] px-3 py-1 text-xs font-black tabular-nums text-tjc-evergreen">{mobileStep + 1}/{uploadMobileSteps.length}</span>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-1" aria-hidden="true">
           {uploadMobileSteps.map((step, index) => (
@@ -380,7 +417,7 @@ export function UploadPage() {
           </label>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Consent/restrictions {requiredHint}</span>
-            <textarea className="min-h-28 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
+            <textarea className="min-h-28 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
           </label>
         </section>
 
@@ -390,7 +427,7 @@ export function UploadPage() {
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
           {!hasFileOrSource ? (
-            <div className="mb-3 rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-snug text-[#725216]" role="status">
+            <div className="mb-3 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-snug text-[#725216]" role="status">
               Required before submit: add a file or paste a Google Drive / ResourceSpace link.
             </div>
           ) : null}
@@ -421,22 +458,22 @@ export function UploadPage() {
           </div>
           <label className={`${labelClass} mt-4`}>
             <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
-            <textarea ref={intakeNotesRef} className="min-h-24 w-full min-w-0 rounded-lg border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required value={intakeNotes} onChange={(event) => setIntakeNotes(event.target.value)} />
+            <textarea ref={intakeNotesRef} className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required value={intakeNotes} onChange={(event) => setIntakeNotes(event.target.value)} />
           </label>
           {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
-          <section className="mt-4 rounded-2xl border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Submission readiness" data-testid="upload-desktop-readiness-checklist">
+          <section className="mt-4 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Submission readiness" data-testid="upload-desktop-readiness-checklist">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <strong className="block text-sm font-black text-tjc-ink">Ready to send?</strong>
                 <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">Media stays blocked until a reviewer approves reuse.</span>
               </div>
-              <span className={cn("rounded-full px-2.5 py-1 text-xs font-black", submitReady ? "bg-[#e8f6ee] text-tjc-evergreen" : "bg-[#fff8e8] text-[#725216]")}>
+              <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", submitReady ? "bg-[#e8f6ee] text-tjc-evergreen" : "bg-[#fff8e8] text-[#725216]")}>
                 {submitReadiness.filter((item) => item.complete).length}/{submitReadiness.length}
               </span>
             </div>
             <div className="mt-3 grid gap-2">
               {submitReadiness.map((item) => (
-                <div className="grid grid-cols-[auto_1fr] gap-2 rounded-xl border border-[#e1e8e2] bg-white px-3 py-2 text-xs" key={item.label}>
+                <div className="grid grid-cols-[auto_1fr] gap-2 rounded-md border border-[#e1e8e2] bg-white px-3 py-2 text-xs" key={item.label}>
                   {item.complete ? <CheckCircle2 size={15} strokeWidth={1.9} aria-hidden="true" className="mt-0.5 text-tjc-evergreen" /> : <Clock3 size={15} strokeWidth={1.9} aria-hidden="true" className="mt-0.5 text-[#9a6a10]" />}
                   <span>
                     <strong className="block font-black text-tjc-ink">{item.label}</strong>
@@ -446,18 +483,18 @@ export function UploadPage() {
               ))}
             </div>
           </section>
-          <section className="mt-4 hidden gap-3 rounded-2xl border border-[#cbd8cf] bg-white p-3 shadow-[0_12px_28px_rgba(25,34,29,.045)] md:grid" aria-label="Desktop upload actions" data-testid="upload-desktop-actions-rail">
+          <section className="mt-4 hidden gap-3 rounded-md border border-[#cbd8cf] bg-white p-3 md:grid" aria-label="Desktop upload actions" data-testid="upload-desktop-actions-rail">
             <div>
               <strong className="text-sm font-black text-tjc-ink">Submit for DAM review</strong>
               <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">{submitHelp}</span>
               {draftSaved ? <span className="mt-2 block text-xs font-black text-tjc-evergreen" data-testid="upload-draft-local-state">Draft saved locally</span> : null}
             </div>
             <div className="grid gap-2">
-              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
                 <Save size={15} strokeWidth={1.8} aria-hidden="true" />
                 Save draft
               </button>
-              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
+              <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
                 clearFiles();
                 setSuggestedTags("");
                 setSourceLink("");
@@ -479,7 +516,7 @@ export function UploadPage() {
               </button>
             </div>
           </section>
-          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#c9d6ce] bg-[#f6faf7] p-3">
+          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#c9d6ce] bg-[#f6faf7] p-3">
             <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <div>
               <strong className="block font-semibold">Large media intake</strong>
@@ -495,18 +532,18 @@ export function UploadPage() {
           <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} hasSourceLink={hasValidSourceLink} largeWarning={largeWarning} />
         </div>
 
-        <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
+        <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-md border border-[#cbd8cf] bg-white p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
           <div className="grid content-center">
             <strong className="text-sm font-black text-tjc-ink">Submit for DAM review</strong>
             <span className="text-xs font-semibold text-tjc-muted">{submitHelp}</span>
             {draftSaved ? <span className="mt-1 text-xs font-black text-tjc-evergreen" data-testid="upload-draft-local-state">Draft saved locally</span> : null}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
+            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={saveDraftNotice}>
               <Save size={15} strokeWidth={1.8} aria-hidden="true" />
               Save draft
             </button>
-            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
+            <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-4 text-sm font-black text-[#6b4c11] transition hover:bg-[#fff8e8] active:translate-y-px" type="button" onClick={() => {
               clearFiles();
               setSuggestedTags("");
               setSourceLink("");
@@ -518,12 +555,12 @@ export function UploadPage() {
               Clear all
             </button>
             {mobileStep > 0 ? (
-              <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px md:hidden" type="button" onClick={() => setMobileStep((current) => Math.max(0, current - 1))}>
+              <button className="inline-flex min-h-11 items-center justify-center rounded-md border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px md:hidden" type="button" onClick={() => setMobileStep((current) => Math.max(0, current - 1))}>
                 Back
               </button>
             ) : null}
             {mobileStep < uploadMobileSteps.length - 1 ? (
-              <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-tjc-evergreen px-5 text-sm font-black text-white transition hover:bg-[#0d4a37] active:translate-y-px md:hidden" type="button" onClick={continueMobileStep}>
+              <button className="inline-flex min-h-11 items-center justify-center rounded-md bg-tjc-evergreen px-5 text-sm font-black text-white transition hover:bg-[#0d4a37] active:translate-y-px md:hidden" type="button" onClick={continueMobileStep}>
                 Next
               </button>
             ) : null}

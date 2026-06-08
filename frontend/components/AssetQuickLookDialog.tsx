@@ -68,7 +68,7 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
           <div className="mt-3 flex flex-wrap gap-2">
             <StatusBadge status={asset.status} />
             <UsageBadge scope={asset.usageScope} />
-            <span className="rounded-full border border-[#cad8cf] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen tabular-nums">RS {asset.resourceSpaceId || asset.id}</span>
+            <span className="rounded-md border border-[#cad8cf] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen tabular-nums">RS {asset.resourceSpaceId || asset.id}</span>
           </div>
 
           {state.approvedCopy.allowed ? (

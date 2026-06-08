@@ -103,9 +103,9 @@ export function GuidePage() {
           </p>
         </div>
         <div className="grid gap-3">
-          <section className="rounded-[1.4rem] border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" aria-label="When in doubt">
+          <section className="rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" aria-label="When in doubt">
             <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#27435b]">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#cbd8e4] bg-white text-[#27435b]">
                 <CircleHelp size={19} strokeWidth={1.8} aria-hidden="true" />
               </span>
               <div>
@@ -116,7 +116,7 @@ export function GuidePage() {
           </section>
           <label className="grid gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
             Search guide
-            <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-full border border-[#cad8cf] bg-white px-3">
+            <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-md border border-[#cad8cf] bg-white px-3">
             <Search size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
             <input
               id="guide-search"
@@ -140,20 +140,20 @@ export function GuidePage() {
           {visibleBlocks.map((block) => {
             const Icon = block.icon;
             return (
-              <details className="rounded-2xl border border-[#d6dfd8] bg-white p-3" key={block.title} data-testid={`guide-task-card-${guideSectionId(block.title).replace("guide-", "")}`}>
+              <details className="rounded-md border border-[#d6dfd8] bg-white p-3" key={block.title} data-testid={`guide-task-card-${guideSectionId(block.title).replace("guide-", "")}`}>
                 <summary className="grid cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl border border-[#dbe4dd] bg-[#f8fbf8] text-tjc-evergreen">
+                  <span className="grid h-11 w-11 place-items-center rounded-md border border-[#dbe4dd] bg-[#f8fbf8] text-tjc-evergreen">
                     <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                   </span>
                   <span className="font-black text-tjc-ink">{block.title}</span>
                 </summary>
                 <p className="mt-3 text-sm font-semibold leading-relaxed text-tjc-muted">{block.body}</p>
                 <div className="mt-3 grid gap-2 text-sm">
-                  <p className="rounded-xl border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
+                  <p className="rounded-md border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
                     <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
                     {block.doText}
                   </p>
-                  <p className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
+                  <p className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
                     <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
                     {block.avoidText}
                   </p>
@@ -165,7 +165,7 @@ export function GuidePage() {
         {!visibleBlocks.length ? (
           <div className="rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide tasks match that search.</div>
         ) : null}
-        <section className="rounded-[1.4rem] border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworkerMobile">
+        <section className="rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworkerMobile">
           <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Ask a media coworker</h2>
           <p className="mt-2 text-sm leading-relaxed">
             If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review.
@@ -203,7 +203,7 @@ export function GuidePage() {
               <section id={guideSectionId(block.title)} className="scroll-mt-24 border-b border-[#d6dfd8] py-5" key={block.title}>
                 <div className="grid gap-3 md:grid-cols-[18rem_1fr]">
                   <div className="grid grid-cols-[auto_1fr] gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-full border border-[#dbe4dd] bg-white text-tjc-evergreen">
+                    <span className="grid h-10 w-10 place-items-center rounded-md border border-[#dbe4dd] bg-white text-tjc-evergreen">
                       <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                     </span>
                     <div>
@@ -212,11 +212,11 @@ export function GuidePage() {
                     </div>
                   </div>
                   <div className="grid gap-3 text-sm md:grid-cols-2" data-component="GuideDoAvoidSpacing">
-                    <p className="rounded-xl border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
+                    <p className="rounded-md border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
                       <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
                       {block.doText}
                     </p>
-                    <p className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
+                    <p className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
                       <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
                       {block.avoidText}
                     </p>
@@ -231,14 +231,14 @@ export function GuidePage() {
             <div className="mt-4 rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
           ) : null}
 
-          <section className="mt-5 rounded-[1.4rem] border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworker">
+          <section className="mt-5 rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworker">
             <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Ask a media coworker</h2>
             <p className="mt-2 text-sm leading-relaxed">
               If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
             </p>
           </section>
 
-          <details id="media-preview-modes" className="mt-5 rounded-[1.4rem] border border-[#d6dfd8] bg-white p-4">
+          <details id="media-preview-modes" className="mt-5 rounded-md border border-[#d6dfd8] bg-white p-4">
             <summary className="cursor-pointer text-base font-black text-tjc-evergreen">Preview safety states</summary>
             <p className="mt-2 max-w-[72ch] text-sm font-semibold leading-relaxed text-tjc-muted">
               The DAM preview panel supports safe image, video, audio, document, restricted, and unknown-file modes. This export currently contains photo records; document and unknown previews stay shell-only until a role-safe derivative exists.

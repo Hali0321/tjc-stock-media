@@ -55,7 +55,7 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
   }
 
   return (
-    <div className={cn("dam-tabs-scroll max-w-full overflow-x-auto overflow-y-hidden rounded-[1.05rem] border border-[#c5d1c9] bg-[#edf3f0] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,.92)]", className)}>
+    <div className={cn("dam-tabs-scroll max-w-full overflow-x-auto overflow-y-hidden rounded-md border border-[#c5d1c9] bg-[#edf3f0] p-1", className)}>
       <div className="flex w-max min-w-full flex-nowrap items-center gap-1 whitespace-nowrap" role="tablist" aria-label={ariaLabel} aria-orientation="horizontal" onKeyDown={onKeyDown}>
         {tabs.map((tab) => {
           const selected = active === tab;
@@ -70,13 +70,12 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
               tabIndex={selected ? 0 : -1}
               data-state={selected ? "active" : "inactive"}
               className={cn(
-                "relative inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[.82rem] border border-transparent font-black text-[#46534b] outline-none transition duration-200 ease-out hover:bg-white/78 hover:text-tjc-evergreen focus-visible:ring-4 focus-visible:ring-[#16a99a]/18 active:translate-y-px",
+                "relative inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-transparent font-black text-[#46534b] outline-none transition duration-200 ease-out hover:bg-[#f8fbf8] hover:text-tjc-evergreen focus-visible:ring-2 focus-visible:ring-[#16a99a]/24 active:translate-y-px",
                 size === "sm" ? "min-h-9 px-3 text-xs" : "min-h-11 px-4 text-sm",
-                selected && "border-[#a5cbbb] bg-[#e5f6f2] text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset,0_10px_24px_rgba(13,121,112,.12)]"
+                selected && "border-[#8fb8aa] bg-[#e5f0eb] text-tjc-evergreen"
               )}
               onClick={() => onChange(tab)}
             >
-              {selected ? <span className="absolute inset-x-4 bottom-1 h-0.5 rounded-full bg-[#12a294]" aria-hidden="true" /> : null}
               <span className="relative z-[1]">{tab}</span>
             </button>
           );

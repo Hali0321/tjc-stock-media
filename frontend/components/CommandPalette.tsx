@@ -23,23 +23,23 @@ type Command = {
 };
 
 const commands: Command[] = [
-  { id: "go-library", group: "Go to", label: "Library", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "library home assets contact sheet", icon: Search, shortcut: "G L" },
-  { id: "go-collections", group: "Go to", label: "Collections", hint: "Open governed internal portals", href: "/collections", keywords: "collections campaign ministry governed portals events", icon: FolderOpen, shortcut: "G C" },
+  { id: "go-library", group: "Go to", label: "Find", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "find library home assets contact sheet", icon: Search, shortcut: "G F" },
+  { id: "go-collections", group: "Go to", label: "Deliver", hint: "Open governed ministry delivery packages", href: "/collections", keywords: "deliver collections campaign ministry governed portals events", icon: FolderOpen, shortcut: "G D" },
   { id: "go-upload", group: "Go to", label: "Intake", hint: "Open contributor intake session", href: "/upload", keywords: "intake upload contributor submit files", icon: UploadCloud, shortcut: "G U" },
   { id: "go-review", group: "Go to", label: "Review", hint: "Open reviewer governance workbench", href: "/review", keywords: "review governance queue evidence", icon: ShieldAlert, shortcut: "G R" },
   { id: "go-guide", group: "Go to", label: "Guide", hint: "Open use guidance and policy notes", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle, shortcut: "G ?" },
   { id: "go-admin", group: "Go to", label: "Governance", hint: "Open operations console and blockers", href: "/admin", keywords: "governance admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Governance", tag: "Governance" },
 
-  { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Library search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
+  { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Find search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
   { id: "find-rs-id", group: "Find", label: "Search ResourceSpace ID", hint: "Type a numeric RS ID to open an exported asset record", href: "/", keywords: "resourcespace id reference ref search number", icon: KeyRound, shortcut: "RS #" },
-  { id: "find-collection", group: "Find", label: "Search by collection", hint: "Find governed sets by event, ministry, campaign, or stable collection", href: "/collections", keywords: "collection campaign event ministry stable id", icon: Tags, shortcut: "C" },
+  { id: "find-collection", group: "Find", label: "Search deliver packages", hint: "Find governed sets by event, ministry, campaign, or stable collection", href: "/collections", keywords: "deliver collection campaign event ministry stable id", icon: Tags, shortcut: "C" },
   { id: "find-blocked", group: "Find", label: "Search blocked downloads", hint: "Show assets blocked by reuse or download policy", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish needs review", icon: ShieldAlert, shortcut: "B" },
 
   { id: "portal-ready", group: "Saved views", label: "External ready", hint: "Assets approved for external ministry use", href: "/?view=approved-church-wide", keywords: "external ministry safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },
   { id: "needs-review", group: "Saved views", label: "Needs Review", hint: "Candidates missing evidence, rights, or approved copy", href: "/?view=needs-review", keywords: "needs portal review missing evidence rights approval", icon: ShieldAlert, shortcut: "2" },
   { id: "no-people", group: "Saved views", label: "No People", hint: "Lower-risk visuals with no visible people", href: "/?view=no-people", keywords: "no people empty plants bible safe", icon: UserRoundSearch, shortcut: "3" },
   { id: "website-hero", group: "Saved views", label: "Website Hero", hint: "Hero/banner candidates for web and slides", href: "/?view=website-hero", keywords: "hero banner web header website", icon: FileSearch, shortcut: "4" },
-  { id: "recently-approved", group: "Saved views", label: "Recently Approved", hint: "Newest reviewed items in role-safe Library", href: "/?view=recently-approved", keywords: "recently approved newest reviewed", icon: Archive, shortcut: "5" },
+  { id: "recently-approved", group: "Saved views", label: "Recently Approved", hint: "Newest reviewed items in role-safe Find", href: "/?view=recently-approved", keywords: "recently approved newest reviewed", icon: Archive, shortcut: "5" },
 
   { id: "start-upload", group: "Workflow", label: "Start intake session", hint: "Submit new media for DAM review", href: "/upload", keywords: "start intake upload contributor draft submit", icon: UploadCloud, shortcut: "U" },
   { id: "open-review-queue", group: "Workflow", label: "Open review queue", hint: "Inspect assets that need reviewer evidence", href: "/review?queue=pending", keywords: "open review queue pending evidence", icon: ListFilter, shortcut: "R", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
@@ -205,20 +205,20 @@ export function CommandPalette() {
     <>
       <button
         type="button"
-        className="group hidden min-h-11 w-11 items-center justify-center gap-2 rounded-[1rem] border border-[#d3ded7] bg-white/90 px-0 text-left text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_16px_40px_rgba(13,55,47,.075)] transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:border-[#a8c7bb] hover:bg-[#f7fbf8] hover:shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_24px_54px_rgba(13,55,47,.12)] active:scale-[.985] lg:inline-flex 2xl:w-auto 2xl:px-3"
+        className="group hidden min-h-10 w-10 items-center justify-center gap-2 rounded-md border border-[#d3ded7] bg-white px-0 text-left text-sm font-black text-tjc-evergreen transition hover:border-[#a8c7bb] hover:bg-[#f7fbf8] active:translate-y-px lg:inline-flex 2xl:w-auto 2xl:px-3"
         onClick={openPalette}
         aria-label="Open command palette"
         aria-keyshortcuts="Meta+K Control+K"
       >
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#edf7f3] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(13,121,112,.08)] transition duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:bg-[#dff3ed]">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[#edf7f3] text-tjc-evergreen transition group-hover:bg-[#dff3ed]">
           <Search size={16} strokeWidth={1.9} aria-hidden="true" />
         </span>
         <span className="hidden text-sm font-black text-tjc-ink 2xl:inline">Command</span>
-        <kbd className="hidden shrink-0 rounded-lg border border-[#c7d2ca] bg-[#f4f7f4] px-1.5 py-0.5 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset] 2xl:inline">⌘K</kbd>
+        <kbd className="hidden shrink-0 rounded-md border border-[#c7d2ca] bg-[#f4f7f4] px-1.5 py-0.5 text-[11px] font-black text-tjc-muted 2xl:inline">⌘K</kbd>
       </button>
       <button
         type="button"
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d3ded7] bg-white px-3 text-sm font-black text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.95)_inset] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f8f4] active:scale-[.98] lg:hidden"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d3ded7] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#f3f8f4] active:translate-y-px lg:hidden"
         onClick={openPalette}
         aria-label="Open command palette"
         aria-keyshortcuts="Meta+K Control+K"
@@ -227,10 +227,10 @@ export function CommandPalette() {
         <span>Search commands</span>
       </button>
       {open && typeof document !== "undefined" ? createPortal((
-        <div className="fixed inset-0 z-[80] bg-[#07100d]/36 p-3 backdrop-blur-[5px]" role="presentation" onMouseDown={closePalette}>
+        <div className="fixed inset-0 z-[80] bg-[#07100d]/36 p-3" role="presentation" onMouseDown={closePalette}>
           <section
             ref={dialogRef}
-            className="mx-auto mt-8 w-full max-w-5xl overflow-hidden rounded-[1.65rem] border border-[#9fb4a8] bg-[#fbfdfb] shadow-[0_34px_110px_rgba(7,16,13,.34),0_1px_0_rgba(255,255,255,.95)_inset] md:mt-14"
+            className="mx-auto mt-8 w-full max-w-5xl overflow-hidden rounded-md border border-[#9fb4a8] bg-[#fbfdfb] shadow-[0_30px_80px_rgba(7,16,13,.26)] md:mt-14"
             role="dialog"
             aria-modal="true"
             aria-labelledby="command-palette-title"
@@ -243,16 +243,16 @@ export function CommandPalette() {
                   <p className="mt-0.5 hidden text-xs font-semibold text-tjc-muted sm:block">Jump, find, saved views, and review workflows stay policy-aware.</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="hidden rounded-full border border-[#c9d6ce] bg-[#f6faf7] px-2.5 py-1 text-[11px] font-black text-tjc-evergreen sm:inline-flex">Role: {role}</span>
-                  <kbd className="hidden rounded-lg border border-[#c7d2ca] bg-[#f4f7f4] px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset] sm:inline">⌘K</kbd>
-                  <kbd className="hidden rounded-lg border border-[#c7d2ca] bg-[#f4f7f4] px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset] sm:inline">Ctrl K</kbd>
-                  <button className="grid h-9 w-9 place-items-center rounded-xl text-tjc-muted transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f6f2] active:scale-[.97]" type="button" onClick={closePalette} aria-label="Close command palette">
+                  <span className="hidden rounded-md border border-[#c9d6ce] bg-[#f6faf7] px-2.5 py-1 text-[11px] font-black text-tjc-evergreen sm:inline-flex">Role: {role}</span>
+                  <kbd className="hidden rounded-md border border-[#c7d2ca] bg-[#f4f7f4] px-2 py-1 text-[11px] font-black text-tjc-muted sm:inline">⌘K</kbd>
+                  <kbd className="hidden rounded-md border border-[#c7d2ca] bg-[#f4f7f4] px-2 py-1 text-[11px] font-black text-tjc-muted sm:inline">Ctrl K</kbd>
+                  <button className="grid h-9 w-9 place-items-center rounded-md text-tjc-muted transition hover:bg-[#f3f6f2] active:translate-y-px" type="button" onClick={closePalette} aria-label="Close command palette">
                     <X size={16} strokeWidth={1.8} aria-hidden="true" />
                   </button>
                 </div>
               </div>
-              <div className="grid min-h-[4.75rem] grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[1.2rem] border border-[#c9d6ce] bg-[#fbfdfb] px-4 shadow-[0_1px_0_rgba(255,255,255,.95)_inset,0_16px_40px_rgba(25,34,29,.075)] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] focus-within:border-[#0d7970] focus-within:ring-4 focus-within:ring-[#16a99a]/12" data-command-proof="search-height">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#edf7f3] text-tjc-evergreen">
+              <div className="grid min-h-[4.75rem] grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-[#c9d6ce] bg-[#fbfdfb] px-4 transition focus-within:border-[#0d7970] focus-within:ring-4 focus-within:ring-[#16a99a]/12" data-command-proof="search-height">
+                <span className="grid h-10 w-10 place-items-center rounded-md bg-[#edf7f3] text-tjc-evergreen">
                   <Search size={19} strokeWidth={1.8} aria-hidden="true" />
                 </span>
                 <input
@@ -271,7 +271,7 @@ export function CommandPalette() {
                   aria-autocomplete="list"
                   role="combobox"
                 />
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef7f1] text-tjc-evergreen" aria-hidden="true">
+                <span className="grid h-10 w-10 place-items-center rounded-md bg-[#eef7f1] text-tjc-evergreen" aria-hidden="true">
                   {query.trim() ? <Send size={17} strokeWidth={1.8} /> : <Search size={17} strokeWidth={1.8} />}
                 </span>
               </div>
@@ -297,8 +297,8 @@ export function CommandPalette() {
                               key={command.id}
                               id={`command-option-${command.id}`}
                               className={cn(
-                                "group/command relative grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[1.05rem] px-3 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
-                                selected ? "bg-[#e4f8f4] ring-1 ring-[#79c9bd] shadow-[inset_4px_0_0_#07857b,0_14px_34px_rgba(13,121,112,.12)]" : ""
+                                "group/command relative grid min-h-16 grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border px-3 py-2 text-left transition hover:bg-[#f3f8f4] focus-visible:bg-[#f3f8f4]",
+                                selected ? "border-[#79c9bd] bg-[#e4f8f4] ring-1 ring-[#79c9bd]" : "border-transparent"
                               )}
                               data-command-proof={selected ? "selected-row" : undefined}
                               role="option"
@@ -307,8 +307,7 @@ export function CommandPalette() {
                               onClick={() => runCommand(command)}
                               onMouseEnter={() => setSelectedIndex(index)}
                             >
-                              {selected ? <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-[#07857b] shadow-[0_0_18px_rgba(7,133,123,.45)]" aria-hidden="true" /> : null}
-                              <span className={cn("grid h-11 w-11 place-items-center rounded-xl border border-[#c5d0c8] bg-white text-tjc-evergreen shadow-[0_1px_0_rgba(255,255,255,.9)_inset] transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] group-hover/command:border-[#9accc3]", selected && "border-[#9accc3] bg-white")}>
+                              <span className={cn("grid h-11 w-11 place-items-center rounded-md border border-[#c5d0c8] bg-white text-tjc-evergreen transition group-hover/command:border-[#9accc3]", selected && "border-[#9accc3] bg-white")}>
                                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                               </span>
                               <span className="min-w-0">
@@ -317,8 +316,8 @@ export function CommandPalette() {
                               </span>
                               <span className="hidden items-center gap-2 sm:inline-flex" data-command-proof={command.access ? "role-restricted-command shortcut-placement" : "shortcut-placement"}>
                                 {command.tag ? <span className={cn("rounded-md border px-2 py-1 text-[11px] font-black", command.access === "Governance" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b9d4e1] bg-[#eef8fb] text-[#24546b]")}>{command.tag}</span> : null}
-                                {command.shortcut ? <kbd className="rounded-lg border border-[#d7e0da] bg-white px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">{command.shortcut}</kbd> : null}
-                                {selected ? <span className="rounded-full bg-tjc-evergreen px-2 py-1 text-[11px] font-black text-white">Enter</span> : null}
+                                {command.shortcut ? <kbd className="rounded-md border border-[#d7e0da] bg-white px-2 py-1 text-[11px] font-black text-tjc-muted">{command.shortcut}</kbd> : null}
+                                {selected ? <span className="rounded-md bg-tjc-evergreen px-2 py-1 text-[11px] font-black text-white">Enter</span> : null}
                               </span>
                             </button>
                           );

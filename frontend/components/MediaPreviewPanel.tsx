@@ -55,7 +55,7 @@ export function MediaPreviewPanel({
 
   if (resolvedMode === "restricted") {
     return (
-      <section className={cn("overflow-hidden rounded-[1.6rem] border border-[#cfd7d1] bg-white p-3 shadow-[0_18px_46px_rgba(35,53,111,.07)]", className)} aria-label="Restricted media preview">
+      <section className={cn("overflow-hidden rounded-md border border-[#cfd7d1] bg-white p-3", className)} aria-label="Restricted media preview">
         <RestrictedPreviewPanel
           title={title || "Preview restricted"}
           detail={detail || "No role-safe derivative is available. Original/master remains restricted and reuse is governed by the trust record."}
@@ -66,8 +66,8 @@ export function MediaPreviewPanel({
   }
 
   return (
-    <section className={cn("overflow-hidden rounded-[1.6rem] border border-[#cfd7d1] bg-white p-3 shadow-[0_18px_46px_rgba(35,53,111,.07)]", className)} aria-label={`${resolvedMode} media preview`}>
-      <div className={cn("relative overflow-hidden rounded-[1.25rem] border border-[#dbe4dd] bg-[#f5f8f5]", compact ? "min-h-44 md:min-h-56" : "min-h-[24rem] md:min-h-[30rem] xl:min-h-[34rem]")}>
+    <section className={cn("overflow-hidden rounded-md border border-[#cfd7d1] bg-white p-3", className)} aria-label={`${resolvedMode} media preview`}>
+      <div className={cn("relative overflow-hidden rounded-md border border-[#dbe4dd] bg-[#f5f8f5]", compact ? "min-h-44 md:min-h-56" : "min-h-[24rem] md:min-h-[30rem] xl:min-h-[34rem]")}>
         {resolvedMode === "image" ? (
           <div className="grid h-full min-h-[inherit] place-items-center">
             <MediaPreview
@@ -76,7 +76,7 @@ export function MediaPreviewPanel({
               label="Preview unavailable"
               detail="No display derivative is exported for this role."
               className="min-h-[inherit] px-4"
-              imgClassName="!h-auto max-h-[72dvh] !w-auto max-w-full rounded !object-contain shadow-[0_8px_24px_rgba(32,34,31,.14)]"
+              imgClassName="!h-auto max-h-[72dvh] !w-auto max-w-full rounded-sm !object-contain"
               loading="eager"
             />
           </div>
@@ -89,7 +89,7 @@ export function MediaPreviewPanel({
               Video preview
             </div>
             {src ? (
-              <video className="max-h-[68dvh] w-full rounded-xl bg-black" controls preload="metadata" src={src} aria-label={alt} />
+              <video className="max-h-[68dvh] w-full rounded-md bg-black" controls preload="metadata" src={src} aria-label={alt} />
             ) : (
               <StateCard compact variant="restricted" tone="warning" title="Video preview unavailable" description="No role-safe video derivative is exported." />
             )}
@@ -102,10 +102,10 @@ export function MediaPreviewPanel({
               <Music size={18} strokeWidth={1.8} aria-hidden="true" />
               Audio preview
             </div>
-            <div className="grid gap-1 rounded-2xl border border-[#cbd8cf] bg-white p-4">
+            <div className="grid gap-1 rounded-md border border-[#cbd8cf] bg-white p-4">
               <div className="flex h-16 items-end gap-1" aria-hidden="true">
                 {Array.from({ length: 32 }).map((_, index) => (
-                  <span className="flex-1 rounded-full bg-[#007da4]/70" style={{ height: `${18 + ((index * 17) % 42)}px` }} key={index} />
+                  <span className="flex-1 rounded-sm bg-[#007da4]/70" style={{ height: `${18 + ((index * 17) % 42)}px` }} key={index} />
                 ))}
               </div>
               {src ? <audio className="mt-3 w-full" controls src={src} aria-label={alt} /> : <p className="mt-3 text-sm font-semibold text-tjc-muted">No role-safe audio derivative is exported.</p>}
@@ -119,9 +119,9 @@ export function MediaPreviewPanel({
               <FileText size={18} strokeWidth={1.8} aria-hidden="true" />
               Document preview
             </div>
-            <div className="rounded-2xl border border-[#cbd8cf] bg-white p-5">
+            <div className="rounded-md border border-[#cbd8cf] bg-white p-5">
               {src && /\.pdf(?:$|\?)/i.test(src) ? (
-                <iframe className="h-[30rem] w-full rounded-xl border border-tjc-line" src={src} title={alt} />
+                <iframe className="h-[30rem] w-full rounded-md border border-tjc-line" src={src} title={alt} />
               ) : (
                 <div className="grid justify-items-center gap-3 py-10 text-center">
                   <FileText size={36} strokeWidth={1.5} aria-hidden="true" className="text-tjc-evergreen" />
@@ -147,7 +147,7 @@ export function MediaPreviewPanel({
           </div>
         ) : null}
 
-        <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full bg-white/92 px-3 py-1 text-xs font-black text-tjc-evergreen shadow-sm">
+        <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
           {resolvedMode === "image" ? <ImageIcon size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode === "video" ? <Video size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode === "audio" ? <Music size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
@@ -155,7 +155,7 @@ export function MediaPreviewPanel({
           {resolvedMode === "unknown" ? <FileQuestion size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode}
         </div>
-        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3 py-1 text-xs font-black text-[#4d554d] shadow-sm">
+        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-[#4d554d]">
           <LockKeyhole size={13} strokeWidth={1.8} aria-hidden="true" />
           Original restricted
         </div>
@@ -170,7 +170,7 @@ export function MediaPreviewPanel({
           <div className="flex flex-wrap gap-2" aria-label="Preview variants">
             {variants.map((variant, index) => (
               <span
-                className={cn("rounded-full border px-2.5 py-1 text-[11px] font-black", variant.active ? "border-[#0f3d2e] bg-[#e6f0eb] text-tjc-evergreen" : "border-[#d6dfd8] bg-white text-tjc-muted")}
+                className={cn("rounded-md border px-2.5 py-1 text-[11px] font-black", variant.active ? "border-[#0f3d2e] bg-[#e6f0eb] text-tjc-evergreen" : "border-[#d6dfd8] bg-white text-tjc-muted")}
                 key={`${variant.label}-${variant.src || "variant"}-${index}`}
               >
                 {variant.label}

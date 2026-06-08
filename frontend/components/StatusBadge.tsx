@@ -37,18 +37,18 @@ const usageLabels: Record<StockMediaAsset["usageScope"], string> = {
 };
 
 const toneClasses: Record<TjcStatusTone, string> = {
-  success: "border-[#a8d7ba] bg-[#edf8f1] text-[#1f5d3b] shadow-[inset_0_1px_0_rgba(255,255,255,.82)]",
-  warning: "border-[#e6c774] bg-[#fff7df] text-[#704707] shadow-[inset_0_1px_0_rgba(255,255,255,.82)]",
-  danger: "border-[#e1aaa5] bg-[#fff0ee] text-[#8a312d] shadow-[inset_0_1px_0_rgba(255,255,255,.82)]",
-  info: "border-[#b5d7e0] bg-[#eef8fb] text-[#0b5f7a] shadow-[inset_0_1px_0_rgba(255,255,255,.82)]",
-  neutral: "border-[#d6dfd8] bg-[#f8faf8] text-[#405048] shadow-[inset_0_1px_0_rgba(255,255,255,.82)]",
-  pending: "border-[#dcc37c] bg-[#fffaf0] text-[#7a5a19] shadow-[inset_0_1px_0_rgba(255,255,255,.82)]"
+  success: "border-[#a8d7ba] bg-[#edf8f1] text-[#1f5d3b]",
+  warning: "border-[#e6c774] bg-[#fff7df] text-[#704707]",
+  danger: "border-[#e1aaa5] bg-[#fff0ee] text-[#8a312d]",
+  info: "border-[#b5d7e0] bg-[#eef8fb] text-[#0b5f7a]",
+  neutral: "border-[#d6dfd8] bg-[#f8faf8] text-[#405048]",
+  pending: "border-[#dcc37c] bg-[#fffaf0] text-[#7a5a19]"
 };
 
 const sizeClasses: Record<TjcStatusSize, string> = {
-  xs: "h-6 gap-1 rounded-full px-2 text-[10px] max-sm:h-5 max-sm:px-1.5 max-sm:text-[9px]",
-  sm: "h-7 gap-1.5 rounded-full px-2.5 text-xs",
-  md: "h-8 gap-2 rounded-full px-3 text-sm"
+  xs: "h-6 gap-1 rounded-md px-2 text-[10px] max-sm:h-5 max-sm:px-1.5 max-sm:text-[9px]",
+  sm: "h-7 gap-1.5 rounded-md px-2.5 text-xs",
+  md: "h-8 gap-2 rounded-md px-3 text-sm"
 };
 
 const iconSizeClasses: Record<TjcStatusSize, string> = {

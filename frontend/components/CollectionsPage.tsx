@@ -93,15 +93,15 @@ export function CollectionsPage() {
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5" aria-label="Collections workspace">
+      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5" aria-label="Deliver workspace">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-black text-tjc-evergreen">
             <FolderOpen size={17} strokeWidth={1.8} aria-hidden="true" />
-            Governed internal portals
+            Governed ministry delivery
           </div>
-          <h1 className="mt-2 dam-page-title">Collections</h1>
+          <h1 className="mt-2 dam-page-title">Deliver</h1>
           <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">
-            Collections are curated reuse portals. Saved views are queries; campaigns are delivery workspaces.
+            Collections, ministry kits, and saved views package approved media for internal church use.
           </p>
           <form className="mt-4 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={19} strokeWidth={1.8} />
@@ -118,7 +118,7 @@ export function CollectionsPage() {
             <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search collections</button>
           </form>
           {submittedQuery ? (
-            <button className="mt-2 inline-flex min-h-8 items-center rounded-xl border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
+            <button className="mt-2 inline-flex min-h-8 items-center rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
               setQuery("");
               setSubmittedQuery("");
               setSelectedCollectionId("");
@@ -136,25 +136,25 @@ export function CollectionsPage() {
         </div>
       ) : null}
 
-      <section className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Collection governance workspace">
+      <section className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Deliver governance workspace">
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-[#d6dfd8] pb-3">
             <div>
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Governed collections</h2>
+              <h2 className="text-sm font-semibold text-tjc-evergreen">Governed deliver packages</h2>
               <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Owner, purpose, coverage, rights risk, and source state come from current export metadata.</p>
             </div>
             <span className="text-xs font-semibold text-tjc-muted">
               {loading ? "Loading collections" : `${collections.length} shown`}
             </span>
           </div>
-          <nav className="mb-3 flex flex-wrap gap-2 border-b border-[#d6dfd8] pb-3 text-sm font-semibold" aria-label="Collection use cases">
+          <nav className="mb-3 flex flex-wrap gap-2 border-b border-[#d6dfd8] pb-3 text-sm font-semibold" aria-label="Deliver use cases">
             {[
               ["Website hero", "website-hero"],
               ["Slides", "sermon-slides"],
               ["Newsletter", "newsletter"],
               ["No people", "no-people"]
             ].map(([label, view]) => (
-              <button key={view} type="button" className="shrink-0 rounded-full bg-white px-3 py-2 text-[#3f4a43] ring-1 ring-[#d8e1da] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" onClick={() => router.push(`/?view=${view}`)}>
+              <button key={view} type="button" className="shrink-0 rounded-md border border-[#d8e1da] bg-white px-3 py-2 text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" onClick={() => router.push(`/?view=${view}`)}>
                 {label}
               </button>
             ))}
@@ -170,7 +170,7 @@ export function CollectionsPage() {
             <div className="rounded-xl border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No collections match this search.</div>
           ) : null}
           {!loading && collections.length ? (
-            <div className="hidden overflow-hidden rounded-lg border border-[#c9d4d5] bg-white xl:block" aria-label="Collection governance table">
+            <div className="hidden overflow-hidden rounded-lg border border-[#c9d4d5] bg-white xl:block" aria-label="Deliver governance table">
               <div className="grid grid-cols-[minmax(12rem,1.2fr)_8rem_8rem_9rem_9rem_8rem_9rem] gap-3 border-b border-tjc-line bg-[#eef2f3] px-3 py-2 text-xs font-black uppercase text-[#536057]">
                 <span>Collection</span><span>Owner</span><span>State</span><span>Assets</span><span>Approval</span><span>Risk</span><span>Actions</span>
               </div>
@@ -189,7 +189,7 @@ export function CollectionsPage() {
                   </span>
                   <span className="flex flex-wrap gap-1">
                     <button className="min-h-8 rounded-md border border-tjc-line bg-white px-2 text-xs font-black text-tjc-evergreen hover:bg-[#eef7f1]" type="button" onClick={() => inspectCollection(collection.id)}>Inspect</button>
-                    <button className="min-h-8 rounded-md bg-tjc-evergreen px-2 text-xs font-black text-white hover:bg-[#062d24]" type="button" onClick={() => openCollection(collection)}>Library</button>
+                    <button className="min-h-8 rounded-md bg-tjc-evergreen px-2 text-xs font-black text-white hover:bg-[#062d24]" type="button" onClick={() => openCollection(collection)}>Find</button>
                   </span>
                 </article>
               ))}
@@ -224,7 +224,7 @@ export function CollectionsPage() {
 
         <aside className="hidden min-w-0 gap-3 xl:sticky xl:top-[calc(var(--app-header-height)+1.25rem)] xl:grid xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:self-start xl:overflow-auto" aria-label="Collection governance">
           <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
-          <details className="rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 text-sm">
+          <details className="rounded-md border border-[#d6dfd8] bg-white p-4 text-sm">
             <summary className="cursor-pointer font-black text-tjc-evergreen">ResourceSpace export</summary>
             <div className="mt-3 grid gap-2 text-tjc-muted">
               <strong className="text-tjc-ink">{result?.source.label || "Loading source"}</strong>
@@ -238,7 +238,7 @@ export function CollectionsPage() {
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
-                    <span className="rounded-xl border border-[#dbe5de] bg-[#fbfcfa] p-2" key={item.label}>
+                    <span className="rounded-md border border-[#dbe5de] bg-[#fbfcfa] p-2" key={item.label}>
                       <span className="flex items-center gap-1.5 text-tjc-muted">
                         <Icon size={12} strokeWidth={1.8} aria-hidden="true" />
                         {item.label}
@@ -253,7 +253,7 @@ export function CollectionsPage() {
           <details className="border-y border-[#d6dfd8] py-3 text-sm">
             <summary className="cursor-pointer font-semibold text-tjc-evergreen">Before sharing an album</summary>
             <ul className="mt-3 grid gap-2 text-xs leading-relaxed text-tjc-muted">
-              <li><strong className="text-tjc-ink">Approval summary is not a shortcut.</strong> Open Library result before reuse.</li>
+              <li><strong className="text-tjc-ink">Approval summary is not a shortcut.</strong> Open Find result before reuse.</li>
               <li><strong className="text-[#725216]">People/minors warning.</strong> Visible people or possible youth need review before public publication.</li>
               <li><strong className="text-[#27435b]">Draft collection publishing blocked.</strong> ResourceSpace portal/write mapping must be configured first.</li>
             </ul>

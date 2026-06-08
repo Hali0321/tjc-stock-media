@@ -54,8 +54,8 @@ function variantIcon(variant: DamStateVariant) {
 function actionNode(action: DamStateAction | undefined, kind: "primary" | "secondary") {
   if (!action) return null;
   const className = cn(
-    "inline-flex min-h-10 items-center justify-center rounded-full px-4 text-sm font-black transition active:translate-y-px",
-    kind === "primary" ? "bg-tjc-evergreen text-white hover:bg-[#062d24]" : "border border-current bg-white/70 hover:bg-white"
+    "inline-flex min-h-10 items-center justify-center rounded-md px-4 text-sm font-black transition active:translate-y-px",
+    kind === "primary" ? "bg-tjc-evergreen text-white hover:bg-[#062d24]" : "border border-current bg-white hover:bg-[#f8fbf8]"
   );
   if (action.href) {
     return <a className={className} href={action.href}>{action.label}</a>;
@@ -77,15 +77,15 @@ export function StateCard({
 }: DamStateProps) {
   const role = variant === "error" ? "alert" : "status";
   return (
-    <section className={cn("rounded-[1.25rem] border p-4", toneClass(tone), compact && "rounded-xl p-3", className)} role={role}>
+    <section className={cn("rounded-md border p-4", toneClass(tone), compact && "p-3", className)} role={role}>
       <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-white/72 shadow-[0_1px_0_rgba(255,255,255,.8)_inset]">
+        <span className="grid h-10 w-10 place-items-center rounded-md border border-current/15 bg-white">
           {icon || variantIcon(variant)}
         </span>
         <div className="min-w-0">
           <h2 className={cn("font-black leading-tight", compact ? "text-sm" : "text-lg")}>{title}</h2>
           {description ? <p className="mt-1 text-sm font-semibold leading-relaxed opacity-85">{description}</p> : null}
-          {reasonCode ? <code className="mt-2 inline-block rounded-md bg-white/70 px-2 py-1 text-[11px] font-black">{reasonCode}</code> : null}
+          {reasonCode ? <code className="mt-2 inline-block rounded-md bg-white px-2 py-1 text-[11px] font-black">{reasonCode}</code> : null}
           {primaryAction || secondaryAction ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {actionNode(primaryAction, "primary")}
@@ -178,7 +178,7 @@ function restrictedPreviewCopy(title?: string, detail?: string) {
     reason: detail || "No role-safe display derivative is available.",
     action: "Review needed",
     tone: "bg-[#eef4f0] text-tjc-evergreen",
-    ring: "bg-white/58"
+      ring: "bg-white"
   };
 }
 
@@ -187,21 +187,20 @@ export function RestrictedPreviewPanel({ title = "Preview restricted", detail, c
   return (
     <div
       className={cn(
-        "relative grid h-full min-h-44 w-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_50%_22%,rgba(255,255,255,.96),rgba(237,243,240,.74)_42%,rgba(214,223,216,.82)_100%)] p-5 text-center",
+        "relative grid h-full min-h-44 w-full place-items-center overflow-hidden bg-[#edf3ef] p-5 text-center",
         className
       )}
     >
-      <div className={cn("absolute inset-x-10 top-8 h-28 rounded-full blur-2xl", copy.ring)} aria-hidden="true" />
-      <div className="absolute inset-4 rounded-[1rem] border border-white/72" aria-hidden="true" />
-      <div className="relative z-[1] grid max-w-[24rem] justify-items-center gap-3 rounded-[1.125rem] border border-white/88 bg-white/84 px-5 py-5 shadow-[0_20px_50px_rgba(35,53,111,.10)] backdrop-blur-sm">
-        <span className={cn("grid h-14 w-14 place-items-center rounded-full shadow-[0_12px_24px_rgba(15,61,46,.12)]", copy.tone)}>
+      <div className="absolute inset-4 rounded-md border border-[#d6dfd8]" aria-hidden="true" />
+      <div className="relative z-[1] grid max-w-[24rem] justify-items-center gap-3 rounded-md border border-[#d6dfd8] bg-white px-5 py-5">
+        <span className={cn("grid h-12 w-12 place-items-center rounded-md border border-[#d6dfd8]", copy.tone)}>
           {copy.icon}
         </span>
         <div>
           <strong className="text-base font-black leading-tight text-tjc-ink">{copy.title}</strong>
           <span className="mt-2 block text-sm font-semibold leading-relaxed text-tjc-muted">{copy.reason}</span>
         </div>
-        <span className="rounded-full border border-[#d6dfd8] bg-[#fbfcfa] px-3 py-1 text-xs font-black text-tjc-evergreen">{copy.action}</span>
+        <span className="rounded-md border border-[#d6dfd8] bg-[#fbfcfa] px-3 py-1 text-xs font-black text-tjc-evergreen">{copy.action}</span>
       </div>
     </div>
   );
@@ -210,8 +209,8 @@ export function RestrictedPreviewPanel({ title = "Preview restricted", detail, c
 export function AssetPreviewPlaceholder({ title = "Preview pending", detail, className }: Partial<StateProps>) {
   return (
     <div className={cn("dam-preview-grid relative grid h-full min-h-36 w-full place-items-center overflow-hidden p-4 text-center", className)}>
-      <div className="relative z-[1] grid max-w-[20rem] justify-items-center gap-2 rounded-[1.125rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_14px_34px_rgba(35,53,111,.08)]">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-white text-tjc-blue shadow-[0_8px_18px_rgba(0,125,164,.10)]">
+      <div className="relative z-[1] grid max-w-[20rem] justify-items-center gap-2 rounded-md border border-[#d6dfd8] bg-white px-4 py-3">
+        <span className="grid h-10 w-10 place-items-center rounded-md border border-[#d6dfd8] bg-white text-tjc-blue">
           <ImageIcon size={18} strokeWidth={1.8} aria-hidden="true" />
         </span>
         <strong className="text-xs font-black leading-tight text-tjc-ink">{title}</strong>
@@ -223,8 +222,8 @@ export function AssetPreviewPlaceholder({ title = "Preview pending", detail, cla
 
 export function CollectionPreviewPlaceholder({ title = "Collection preview pending", detail, className }: Partial<StateProps>) {
   return (
-    <div className={cn("relative grid h-full min-h-28 w-full place-items-center overflow-hidden rounded-[1rem] bg-[#e6f0eb] p-3 text-center", className)}>
-      <div className="absolute inset-2 rounded-[.8rem] border border-white/72" aria-hidden="true" />
+    <div className={cn("relative grid h-full min-h-28 w-full place-items-center overflow-hidden rounded-md bg-[#e6f0eb] p-3 text-center", className)}>
+      <div className="absolute inset-2 rounded-md border border-[#c9d8cf]" aria-hidden="true" />
       <span className="relative z-[1] grid justify-items-center gap-1.5 text-tjc-evergreen">
         <FolderOpen size={20} strokeWidth={1.8} aria-hidden="true" />
         <strong className="text-[11px] font-black leading-tight">{title}</strong>
@@ -238,7 +237,7 @@ export function SkeletonGrid({ count = 12, className }: { count?: number; classN
   return (
     <div className={cn("dam-contact-grid gap-3", className)} aria-hidden="true">
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="skeleton h-72 w-full rounded-[1.125rem]" />
+        <div key={index} className="skeleton h-72 w-full rounded-md" />
       ))}
     </div>
   );
@@ -249,12 +248,12 @@ export function SkeletonTable({ rows = 6, className }: { rows?: number; classNam
     <div className={cn("dam-data-table", className)} aria-hidden="true">
       {Array.from({ length: rows }).map((_, index) => (
         <div className="dam-data-row grid-cols-[7rem_1fr_8rem]" key={index}>
-          <span className="skeleton h-16 rounded-xl" />
+          <span className="skeleton h-16 rounded-md" />
           <span className="grid content-center gap-2">
             <span className="skeleton h-4 w-2/3 rounded" />
             <span className="skeleton h-3 w-1/2 rounded" />
           </span>
-          <span className="skeleton h-8 self-center rounded-full" />
+          <span className="skeleton h-8 self-center rounded-md" />
         </div>
       ))}
     </div>
@@ -264,11 +263,11 @@ export function SkeletonTable({ rows = 6, className }: { rows?: number; classNam
 export function SkeletonDetail({ className }: { className?: string }) {
   return (
     <div className={cn("grid gap-4 lg:grid-cols-[1.1fr_.9fr]", className)} aria-hidden="true">
-      <div className="skeleton min-h-[32rem] rounded-[1.5rem]" />
+      <div className="skeleton min-h-[32rem] rounded-md" />
       <div className="grid gap-3">
-        <div className="skeleton h-28 rounded-[1.5rem]" />
-        <div className="skeleton h-52 rounded-[1.5rem]" />
-        <div className="skeleton h-52 rounded-[1.5rem]" />
+        <div className="skeleton h-28 rounded-md" />
+        <div className="skeleton h-52 rounded-md" />
+        <div className="skeleton h-52 rounded-md" />
       </div>
     </div>
   );
@@ -276,11 +275,11 @@ export function SkeletonDetail({ className }: { className?: string }) {
 
 export function SkeletonInspector({ rows = 4, className }: { rows?: number; className?: string }) {
   return (
-    <div className={cn("rounded-[1.25rem] border border-tjc-line bg-white p-4", className)} aria-hidden="true">
+    <div className={cn("rounded-md border border-tjc-line bg-white p-4", className)} aria-hidden="true">
       <div className="skeleton h-5 w-36 rounded" />
       <div className="mt-4 grid gap-3">
         {Array.from({ length: rows }).map((_, index) => (
-          <div className="skeleton h-14 rounded-xl" key={index} />
+          <div className="skeleton h-14 rounded-md" key={index} />
         ))}
       </div>
     </div>
@@ -289,9 +288,9 @@ export function SkeletonInspector({ rows = 4, className }: { rows?: number; clas
 
 export function EmptyState({ title, detail, children, className }: StateProps) {
   return (
-    <section className={cn("grid place-items-center rounded-[1.25rem] border border-tjc-line bg-white p-8 text-center", className)} aria-live="polite">
+    <section className={cn("grid place-items-center rounded-md border border-tjc-line bg-white p-8 text-center", className)} aria-live="polite">
       <div className="grid max-w-md justify-items-center gap-3">
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-[#e6f0eb] text-tjc-evergreen">
+        <span className="grid h-12 w-12 place-items-center rounded-md bg-[#e6f0eb] text-tjc-evergreen">
           <SearchX size={22} strokeWidth={1.8} aria-hidden="true" />
         </span>
         <div>
@@ -306,7 +305,7 @@ export function EmptyState({ title, detail, children, className }: StateProps) {
 
 export function ErrorState({ title, detail, children, className }: StateProps) {
   return (
-    <section className={cn("rounded-[1.25rem] border border-[#e5b7b5] bg-[#fff0ef] p-5 text-[#7d2d2a]", className)} role="alert">
+    <section className={cn("rounded-md border border-[#e5b7b5] bg-[#fff0ef] p-5 text-[#7d2d2a]", className)} role="alert">
       <div className="flex items-start gap-3">
         <AlertTriangle size={21} strokeWidth={1.8} aria-hidden="true" />
         <div>
@@ -321,7 +320,7 @@ export function ErrorState({ title, detail, children, className }: StateProps) {
 
 export function BlockedState({ title, detail, children, className }: StateProps) {
   return (
-    <section className={cn("rounded-[1.25rem] border border-[#ead6a8] bg-[#fff8e8] p-5 text-[#725216]", className)} role="status">
+    <section className={cn("rounded-md border border-[#ead6a8] bg-[#fff8e8] p-5 text-[#725216]", className)} role="status">
       <div className="flex items-start gap-3">
         <FileLock2 size={21} strokeWidth={1.8} aria-hidden="true" />
         <div>

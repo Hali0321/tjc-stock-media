@@ -54,10 +54,10 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
       tone={kind === "original" ? "warning" : "neutral"}
       footer={(
         <>
-          <button className="inline-flex min-h-10 items-center rounded-xl border border-tjc-line bg-white px-4 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={onCancel}>
+          <button className="inline-flex min-h-10 items-center rounded-md border border-tjc-line bg-white px-4 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={onCancel}>
             Cancel
           </button>
-          <a className="inline-flex min-h-10 items-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2" href={mailtoHref}>
+          <a className="inline-flex min-h-10 items-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2" href={mailtoHref}>
             <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
             {copy.action}
           </a>
@@ -65,8 +65,8 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
       )}
     >
       <div className="grid gap-3">
-        <span className="w-fit rounded-full border border-[#bdd9e2] bg-[#eef8fb] px-3 py-1 text-xs font-black text-[#0b5f7a]">{copy.kicker}</span>
-        <div className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 sm:grid-cols-2">
+        <span className="w-fit rounded-md border border-[#bdd9e2] bg-[#eef8fb] px-3 py-1 text-xs font-black text-[#0b5f7a]">{copy.kicker}</span>
+        <div className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 sm:grid-cols-2">
           <div>
             <span className="text-xs font-semibold text-tjc-muted">Asset</span>
             <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
@@ -79,7 +79,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
           </div>
         </div>
 
-        <div className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]">
+        <div className="grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]">
           {kind === "original" ? <FileLock2 size={18} strokeWidth={1.8} aria-hidden="true" /> : <ShieldAlert size={18} strokeWidth={1.8} aria-hidden="true" />}
           <div>
             <strong className="block text-sm">{kind === "original" ? "Original access is restricted" : "This does not approve reuse"}</strong>
@@ -87,7 +87,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
           </div>
         </div>
 
-        <section className="rounded-xl border border-tjc-line bg-white p-3" aria-label="Current blocker summary">
+        <section className="rounded-md border border-tjc-line bg-white p-3" aria-label="Current blocker summary">
           <h3 className="text-sm font-semibold text-tjc-evergreen">Current blockers</h3>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {visibleBlockers.length ? (

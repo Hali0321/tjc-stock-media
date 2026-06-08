@@ -39,7 +39,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
             This packet summarizes what reviewers receive. It does not approve, publish, or write final ResourceSpace metadata.
           </p>
         </div>
-        <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#dfbd73] bg-[#fff8e8] px-3 text-xs font-black text-[#725216]">
+        <span className="inline-flex min-h-9 items-center gap-2 rounded-md border border-[#dfbd73] bg-[#fff8e8] px-3 text-xs font-black text-[#725216]">
           <Clock3 size={14} strokeWidth={1.9} aria-hidden="true" />
           {uploadDefaultState.status}
         </span>
@@ -50,7 +50,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
           {checklist.map((item) => (
             <div
               className={cn(
-                "grid grid-cols-[auto_1fr] gap-3 rounded-2xl border p-3",
+                "grid grid-cols-[auto_1fr] gap-3 rounded-md border p-3",
                 item.complete ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff8e8] text-[#725216]"
               )}
               key={item.label}
@@ -65,7 +65,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
         </div>
 
         <div className="grid gap-2">
-          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
+          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-[#27435b]">
             <FolderInput size={18} strokeWidth={1.9} aria-hidden="true" />
             <span>
               <strong className="block text-sm font-black">Persistence mode</strong>
@@ -74,7 +74,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
               </span>
             </span>
           </div>
-          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-2xl border border-[#b8d9c6] bg-white p-3 text-tjc-evergreen">
+          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#b8d9c6] bg-white p-3 text-tjc-evergreen">
             <ShieldCheck size={18} strokeWidth={1.9} aria-hidden="true" />
             <span>
               <strong className="block text-sm font-black">Reuse safety</strong>
@@ -94,7 +94,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
             {selectedFiles.slice(0, 6).map((file, index) => {
               const tooLarge = file.size > LARGE_MEDIA_BYTES;
               return (
-                <div className={cn("rounded-xl border px-3 py-2 text-xs font-semibold", tooLarge ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-tjc-line bg-white text-[#4d554d]")} key={`${file.name}-${file.size}-${index}`}>
+                <div className={cn("rounded-md border px-3 py-2 text-xs font-semibold", tooLarge ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-tjc-line bg-white text-[#4d554d]")} key={`${file.name}-${file.size}-${index}`}>
                   <span className="block truncate font-black">{file.name}</span>
                   <span className="mt-1 block truncate text-current/72">{file.type || "unknown type"} / {formatBytes(file.size)}</span>
                 </div>
@@ -112,7 +112,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
             Tags
           </span>
           {tags.slice(0, 10).map((tag) => (
-            <span className="rounded-full border border-[#c9d9d0] bg-[#eef7f1] px-2.5 py-1 text-xs font-black text-tjc-evergreen" key={tag}>
+            <span className="rounded-md border border-[#c9d9d0] bg-[#eef7f1] px-2.5 py-1 text-xs font-black text-tjc-evergreen" key={tag}>
               {tag}
             </span>
           ))}
@@ -120,7 +120,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
       ) : null}
 
       {largeWarning || hasLargeFile ? (
-        <div className="mt-4 rounded-2xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold leading-snug text-[#725216]">
+        <div className="mt-4 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold leading-snug text-[#725216]">
           {largeWarning || uploadDefaultState.largeMediaMessage}
         </div>
       ) : null}

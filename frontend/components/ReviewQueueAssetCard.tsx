@@ -93,13 +93,13 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
           </div>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[10px] font-black text-[#725216]">
+          <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[10px] font-black text-[#725216]">
             {compactRisk}
           </span>
-          <span className="rounded-full border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[10px] font-black text-[#536057]">
+          <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[10px] font-black text-[#536057]">
             {missing.length ? `${missing.length} gaps` : "Fields ready"}
           </span>
-          <span className="rounded-full border border-[#cfd9dd] bg-white px-2 py-1 text-[10px] font-black text-[#52677a]">
+          <span className="rounded-md border border-[#cfd9dd] bg-white px-2 py-1 text-[10px] font-black text-[#52677a]">
             {evidenceProgress}
           </span>
         </div>
@@ -118,15 +118,15 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
     <article
       className={cn(
-        "group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[7.25rem_minmax(14rem,1.15fr)_minmax(16rem,1fr)_minmax(13rem,.9fr)]",
-        selected && "bg-[#e5f3ea] shadow-[inset_6px_0_0_#063f39]"
+        "group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[6.5rem_minmax(13rem,1.1fr)_minmax(13rem,.9fr)_minmax(10rem,.7fr)] 2xl:grid-cols-[7rem_minmax(14rem,1.15fr)_minmax(16rem,1fr)_minmax(12rem,.8fr)]",
+        selected && "bg-[#e5f3ea] ring-1 ring-inset ring-[#8fb2a5]"
       )}
       data-component="ExpandedReviewQueueCard"
       data-testid={selected ? "review-selected-queue-item" : undefined}
     >
       <Link
         href={`/assets/${asset.id}`}
-        className="review-media-reveal block aspect-[4/3] overflow-hidden rounded-xl border border-black/10 bg-[#eef1ed] shadow-[0_10px_24px_rgba(25,34,29,.08)] max-sm:rounded-lg"
+        className="review-media-reveal block aspect-[4/3] overflow-hidden rounded-md border border-black/10 bg-[#eef1ed] max-sm:rounded-lg"
         aria-label={`Open ${display.title}`}
       >
         <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
@@ -141,7 +141,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
               <span className="truncate max-sm:hidden">{sourceSummary(asset, role)}</span>
             </p>
           </div>
-          <span className="rounded-full border border-[#cad8cf] bg-white px-2 py-1 text-[11px] font-black text-tjc-evergreen tabular-nums max-sm:hidden">RS {asset.resourceSpaceId || asset.id}</span>
+          <span className="rounded-md border border-[#cad8cf] bg-white px-2 py-1 text-[11px] font-black text-tjc-evergreen tabular-nums max-sm:hidden">RS {asset.resourceSpaceId || asset.id}</span>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
           <StatusBadge status={asset.status} />
@@ -160,21 +160,21 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         </div>
         <div className="flex flex-wrap gap-1.5" aria-label="Blocker summary">
           {risks.slice(0, 3).map((flag) => (
-            <span className="rounded-full border border-[#ead6a8] bg-white px-2 py-1 text-[11px] font-black text-[#725216]" key={flag}>
+            <span className="rounded-md border border-[#ead6a8] bg-white px-2 py-1 text-[11px] font-black text-[#725216]" key={flag}>
               {flag}
             </span>
           ))}
-          <span className="rounded-full border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[11px] font-black text-[#536057]">
+          <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[11px] font-black text-[#536057]">
             {missing.length ? `${missing.length} missing` : "Fields ready"}
           </span>
-          <span className="rounded-full border border-[#cfd9dd] bg-white px-2 py-1 text-[11px] font-black text-[#52677a]">
+          <span className="rounded-md border border-[#cfd9dd] bg-white px-2 py-1 text-[11px] font-black text-[#52677a]">
             {evidenceProgress}
           </span>
         </div>
       </div>
 
       <div className="grid content-start gap-2 max-sm:col-span-2">
-        <div className="rounded-xl border border-[#c9d8cf] bg-white/86 p-3 max-sm:hidden">
+        <div className="rounded-md border border-[#c9d8cf] bg-white p-3 max-sm:hidden">
           <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Next check</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{nextCheck}</strong>
           <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{evidenceProgress} · {missing.length ? missing.slice(0, 3).join(", ") : "Ready for evidence note and decision."}</p>
@@ -182,7 +182,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           <button
             className={cn(
-              "inline-flex min-h-9 items-center justify-center rounded-xl border px-2.5 text-sm font-black transition hover:bg-[#eef7f1] active:translate-y-px max-sm:col-span-2",
+              "inline-flex min-h-9 items-center justify-center rounded-md border px-2.5 text-sm font-black transition hover:bg-[#eef7f1] active:translate-y-px max-sm:col-span-2",
               selected ? "border-[#8fb2a5] bg-[#dff0e6] text-tjc-evergreen" : "border-tjc-line bg-white text-tjc-evergreen"
             )}
             type="button"
@@ -191,7 +191,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
           >
             {selected ? "Selected for review" : "Review"}
           </button>
-          <Link className="inline-flex min-h-9 items-center justify-center gap-1 rounded-xl border border-tjc-line bg-white px-2.5 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] max-sm:hidden" href={`/assets/${asset.id}`}>
+          <Link className="inline-flex min-h-9 items-center justify-center gap-1 rounded-md border border-tjc-line bg-white px-2.5 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] max-sm:hidden" href={`/assets/${asset.id}`}>
             <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />
             Detail
           </Link>

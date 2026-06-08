@@ -110,7 +110,7 @@ export function UploadFileDropzone({
               <h3 className="text-sm font-black text-tjc-ink">{selectedFiles.length} staged file{selectedFiles.length === 1 ? "" : "s"}</h3>
               <p className="mt-0.5 text-xs font-semibold text-tjc-muted">Selected locally. Waiting for Submit for review.</p>
             </div>
-            <button className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={onClear}>
+            <button className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen transition hover:bg-[#f3f6f2]" type="button" onClick={onClear}>
               <Trash2 size={13} strokeWidth={1.8} aria-hidden="true" />
               Clear files
             </button>
@@ -129,7 +129,7 @@ export function UploadFileDropzone({
       ) : null}
 
       {selectedFiles.some((file) => file.size > LARGE_MEDIA_BYTES) ? (
-        <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{uploadDefaultState.largeMediaMessage}</div>
+        <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">{uploadDefaultState.largeMediaMessage}</div>
       ) : null}
     </section>
   );
@@ -142,20 +142,20 @@ export function SelectedFilePreview({ file, previewUrl, onRemove }: { file: File
   return (
     <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-[#d6dfd8] px-1 py-3 last:border-b-0" data-component="SelectedFilePreview" aria-label={`${file.name} staged for reviewer intake`}>
       {previewUrl ? (
-        <img className="h-12 w-12 rounded-xl border border-[#d6dfd8] object-cover" src={previewUrl} alt="" />
+        <img className="h-12 w-12 rounded-md border border-[#d6dfd8] object-cover" src={previewUrl} alt="" />
       ) : tooLarge ? (
-        <span className="grid h-12 w-12 place-items-center rounded-xl border border-[#ead6a8] bg-[#fff8e8] text-[#725216]">
+        <span className="grid h-12 w-12 place-items-center rounded-md border border-[#ead6a8] bg-[#fff8e8] text-[#725216]">
           <ShieldAlert size={17} strokeWidth={1.8} aria-hidden="true" />
         </span>
       ) : (
-        <span className="grid h-12 w-12 place-items-center rounded-xl border border-[#b8d9c6] bg-[#edf8f1] text-tjc-evergreen">
+        <span className="grid h-12 w-12 place-items-center rounded-md border border-[#b8d9c6] bg-[#edf8f1] text-tjc-evergreen">
           <FileCheck2 size={17} strokeWidth={1.8} aria-hidden="true" />
         </span>
       )}
       <span className="min-w-0">
         <span className="mb-1 flex flex-wrap items-center gap-1.5">
           <strong className="min-w-0 max-w-full truncate text-xs font-black text-tjc-ink">{file.name}</strong>
-          <span className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full border border-[#dfbd73] bg-[#fff8e8] px-2 text-[10px] font-black text-[#6f4608]">
+          <span className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-[#dfbd73] bg-[#fff8e8] px-2 text-[10px] font-black text-[#6f4608]">
             <Clock3 size={11} strokeWidth={1.8} aria-hidden="true" />
             Staged
           </span>
@@ -168,14 +168,14 @@ export function SelectedFilePreview({ file, previewUrl, onRemove }: { file: File
             <span className="text-[#7a5a19]">Submit next</span>
             <span className="text-tjc-muted">Review after submit</span>
           </span>
-          <span className="grid h-1.5 grid-cols-3 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
+          <span className="grid h-1.5 grid-cols-3 overflow-hidden rounded-sm bg-[#edf0eb]" aria-hidden="true">
             <span className="bg-tjc-evergreen" />
             <span className="bg-[#dfbd73]" />
             <span className="bg-[#d7dfd9]" />
           </span>
         </span>
       </span>
-      <button className="grid h-9 w-9 place-items-center rounded-lg text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={onRemove} aria-label={`Remove ${file.name}`}>
+      <button className="grid h-9 w-9 place-items-center rounded-md text-tjc-muted transition hover:bg-[#f3f6f2] hover:text-tjc-red" type="button" onClick={onRemove} aria-label={`Remove ${file.name}`}>
         <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
       </button>
     </div>

@@ -203,7 +203,7 @@ for (const width of qaViewports) {
     if (item.label === "upload-viewer" && !state.hasViewerUploadBlock) failures.push(`${item.label} ${width}: viewer upload block missing`);
     if (item.label === "admin-viewer" && !state.hasAdminBlock) failures.push(`${item.label} ${width}: viewer admin block missing`);
     if (item.label === "review-reviewer" && !state.hasReviewBlocker) failures.push(`${item.label} ${width}: write mapping blocker missing`);
-    if (item.label === "library-reviewer" && state.hasOriginalFilenameOnCard) failures.push(`${item.label} ${width}: original filename exposed on Library card`);
+    if (item.label === "library-reviewer" && state.hasOriginalFilenameOnCard) failures.push(`${item.label} ${width}: original filename exposed on Find card`);
     if (item.label === "viewer-needs-review-hidden" && state.textSample.includes("2012 Photo")) warnings.push(`${item.label} ${width}: viewer may see review asset copy`);
     if ((width === 1024 || width === 768 || width === 390 || width === 320) && ["library-viewer", "review-reviewer", "guide-viewer"].includes(item.label)) {
       await page.screenshot({ path: path.join(outDir, "qa", `${item.label}-${width}.png`), fullPage: true });
@@ -229,9 +229,9 @@ for (const width of qaViewports) {
   await page.getByRole("link", { name: "Open collections" }).click();
   await page.waitForURL(/\/collections/, { timeout: 10000 });
   await page.getByRole("button", { name: /View details|Inspect metadata/ }).first().click();
-  await page.getByRole("button", { name: "Open Library results" }).first().click();
+  await page.getByRole("button", { name: /Open (Find|Library) results/ }).first().click();
   await page.waitForURL(/\?collection=/, { timeout: 10000 });
-  if (!page.url().includes("collection=")) failures.push("viewer-library-empty-to-collections: collection did not open Library results");
+  if (!page.url().includes("collection=")) failures.push("viewer-library-empty-to-collections: collection did not open Find results");
   await context.close();
 }
 
@@ -582,6 +582,7 @@ await captureProof("library-badges-pagination-filterpills.png", "Viewer", 1440, 
 });
 
 await captureProof("admin-datatable.png", "DAM Admin", 1440, 1000, "/admin", async (page) => {
+  await page.getByRole("tab", { name: "Action backlog" }).click();
   await page.locator("#backlog").scrollIntoViewIfNeeded();
 });
 

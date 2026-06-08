@@ -117,8 +117,8 @@ function LibrarySavedRail({
                 key={view.id}
                 type="button"
                 className={cn(
-                  "grid min-h-12 grid-cols-[1fr_auto] items-center gap-2 rounded-2xl px-3 text-left text-sm transition hover:bg-[#f1f7f3] active:translate-y-px",
-                  selectedView === view.id ? "bg-[#e6f0eb] text-tjc-evergreen shadow-[inset_3px_0_0_#0f3d2e]" : "text-[#3f4a43]"
+                  "grid min-h-12 grid-cols-[1fr_auto] items-center gap-2 rounded-md border px-3 text-left text-sm transition hover:bg-[#f1f7f3] active:translate-y-px",
+                  selectedView === view.id ? "border-[#8fb2a5] bg-[#e6f0eb] text-tjc-evergreen" : "border-transparent text-[#3f4a43]"
                 )}
                 onClick={() => onOpenView(view.id)}
                 aria-pressed={selectedView === view.id}
@@ -127,19 +127,19 @@ function LibrarySavedRail({
                   <strong className="block truncate font-black">{view.label}</strong>
                   <span className="line-clamp-1 text-xs font-semibold text-tjc-muted">{view.reason}</span>
                 </span>
-                <span className="rounded-full border border-[#d9e3dc] bg-white px-2 py-0.5 text-xs font-black tabular-nums text-tjc-evergreen">{view.count}</span>
+                <span className="rounded-md border border-[#d9e3dc] bg-white px-2 py-0.5 text-xs font-black tabular-nums text-tjc-evergreen">{view.count}</span>
               </button>
             ))}
           </div>
         </section>
-        <section className="rounded-[1.4rem] border border-[#dde6df] bg-[#f8faf8] p-3">
+        <section className="rounded-md border border-[#dde6df] bg-[#f8faf8] p-3">
           <h2 className="text-sm font-black text-tjc-evergreen">Browse</h2>
           <div className="mt-3 grid gap-1.5">
             {visibleUseCases.map((item) => (
               <button
                 key={item.label}
                 type="button"
-                className="min-h-10 rounded-full px-3 text-left text-sm font-black text-[#3f4a43] transition hover:bg-white hover:text-tjc-evergreen active:translate-y-px"
+                className="min-h-10 rounded-md px-3 text-left text-sm font-black text-[#3f4a43] transition hover:bg-white hover:text-tjc-evergreen active:translate-y-px"
                 onClick={() => onOpenUseCase(item)}
               >
                 {item.label}
@@ -467,30 +467,30 @@ export function LibraryPage() {
       ? "No assets in this collection yet"
       : selectedView
         ? "No assets in this view yet"
-        : "No assets in this Library view";
+        : "No assets in this Find view";
   const emptyStateDetail = activeCollection
     ? "This collection can still exist while individual assets wait for portal reuse approval."
     : "Browse collections to find approved groups before opening individual assets.";
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-4 border-b border-[#d6dfd8] pb-4" aria-label="Library workspace">
+      <section className="grid gap-4 border-b border-[#d6dfd8] pb-4" aria-label="Find workspace">
         <div className="min-w-0">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="dam-page-title">Library</h1>
+              <h1 className="dam-page-title">Find</h1>
               <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
-                Search approved role-safe media first. Collections and visual browsing are secondary paths.
+                Search approved role-safe media first. Deliver packages and visual browsing are secondary paths.
               </p>
             </div>
             {hasActiveSearch ? (
-              <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef5f1] active:translate-y-px" type="button" onClick={clearSearchState}>
+              <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef5f1] active:translate-y-px" type="button" onClick={clearSearchState}>
                 <X size={15} strokeWidth={1.8} aria-hidden="true" />
                 Reset
               </button>
             ) : null}
           </div>
-          <form className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-1.5 rounded-xl border border-[#cad8cf] bg-white p-1.5 shadow-[0_12px_30px_rgba(35,53,111,.045)] sm:mt-5 sm:gap-2 sm:rounded-[1.25rem] sm:p-2.5 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
+          <form className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-1.5 rounded-md border border-[#cad8cf] bg-white p-1.5 sm:mt-5 sm:gap-2 sm:p-2.5 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Find search">
             <Search aria-hidden="true" className="ml-1 mt-2.5 hidden text-tjc-evergreen md:block" size={22} strokeWidth={1.9} />
             <label className="sr-only" htmlFor="library-search">Search approved media</label>
             <input
@@ -550,12 +550,12 @@ export function LibraryPage() {
 	      </section>
 
 	      {error ? (
-	        <ErrorState className="mt-4" title="Library did not load" detail={error} />
+	        <ErrorState className="mt-4" title="Find did not load" detail={error} />
 	      ) : null}
 
-	      <details className="mt-3 hidden rounded-2xl border border-[#d1ddd2] bg-white/80 shadow-[0_10px_26px_rgba(49,60,52,.035)] sm:block">
+	      <details className="mt-3 hidden rounded-md border border-[#d1ddd2] bg-white sm:block">
         <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-tjc-evergreen">
-          <span>Production signals</span>
+          <span>Operational signals</span>
           <span className="text-xs font-medium text-tjc-muted">Metadata health, operational signals, search gaps</span>
         </summary>
         <div className="grid gap-3 border-t border-tjc-line p-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)_minmax(20rem,.6fr)]" aria-label="Production DAM health">
@@ -629,7 +629,7 @@ export function LibraryPage() {
           <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen xl:hidden" type="button" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog">
             <SlidersHorizontal size={16} strokeWidth={1.8} aria-hidden="true" />
             Filters
-            {filters.length ? <span className="rounded-full bg-tjc-evergreen px-1.5 text-[11px] text-white">{filters.length}</span> : null}
+            {filters.length ? <span className="rounded-md bg-tjc-evergreen px-1.5 text-[11px] text-white">{filters.length}</span> : null}
           </button>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
@@ -639,7 +639,7 @@ export function LibraryPage() {
         </div>
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)]" aria-label="Library controls and results">
+      <section className="mt-4 grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)]" aria-label="Find controls and results">
         <LibrarySavedRail
           shortcuts={shortcuts}
           visibleUseCases={visibleUseCases}
@@ -650,10 +650,10 @@ export function LibraryPage() {
         <div className="min-w-0">
           <section className="min-w-0" aria-label="Asset results">
             {(hasVisibleAssets || filters.length > 0) ? (
-            <section className="mb-3 grid gap-3 dam-contact-sheet p-2 sm:p-3" aria-label="Selection and batch actions">
+            <section className="mb-3 grid gap-3 rounded-md border border-[#c8d5cd] bg-[#f7faf7] p-2 sm:p-3" aria-label="Selection and batch actions">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {hasVisibleAssets ? <button className="hidden min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] sm:inline-flex" type="button" onClick={selectVisibleAssets}>
+                  {hasVisibleAssets ? <button className="hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] sm:inline-flex" type="button" onClick={selectVisibleAssets}>
                     <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
                     {selectedIds.length ? "Clear selection" : "Select visible"}
                   </button> : null}
@@ -663,7 +663,7 @@ export function LibraryPage() {
                   {(filters.length > 0 || hasVisibleAssets) ? <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", filtersOpen ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setFiltersOpen(true)} aria-expanded={filtersOpen} aria-haspopup="dialog">
                     <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true" />
                     Filters
-                    {filters.length ? <span className="rounded-full bg-tjc-evergreen px-1.5 text-[11px] text-white">{filters.length}</span> : null}
+                    {filters.length ? <span className="rounded-md bg-tjc-evergreen px-1.5 text-[11px] text-white">{filters.length}</span> : null}
                   </button> : null}
                   {hasVisibleAssets ? <button className={cn("hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition sm:inline-flex", viewMode === "list" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
                     <List size={15} strokeWidth={1.8} aria-hidden="true" />
@@ -678,32 +678,32 @@ export function LibraryPage() {
               {selectedIds.length ? (
                 <div className="grid gap-3 border-t border-tjc-line pt-3">
                   <div className="flex flex-wrap gap-2">
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportCsv}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportCsv}>
                       <FileDown size={15} strokeWidth={1.8} aria-hidden="true" />
                       Export CSV
                     </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("request-review")}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("request-review")}>
                       <ShieldAlert size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview review
                     </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("mark-internal")}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("mark-internal")}>
                       <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview internal
                     </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("archive")}>
+                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("archive")}>
                       <Archive size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview archive
                     </button>
                   </div>
-                  <form className="grid gap-2 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,1fr)_11rem_10rem_minmax(9rem,.7fr)_auto]" onSubmit={createCollectionDraft}>
-                    <input className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionTitle} onChange={(event) => setCollectionTitle(event.target.value)} placeholder="Collection name" aria-label="Collection name" />
-                    <select className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionAudience} onChange={(event) => setCollectionAudience(event.target.value)} aria-label="Collection audience">
+                  <form className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,1fr)_11rem_10rem_minmax(9rem,.7fr)_auto]" onSubmit={createCollectionDraft}>
+                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionTitle} onChange={(event) => setCollectionTitle(event.target.value)} placeholder="Collection name" aria-label="Collection name" />
+                    <select className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionAudience} onChange={(event) => setCollectionAudience(event.target.value)} aria-label="Collection audience">
                       <option>Private draft</option>
                       <option>Internal ministry</option>
                       <option>Public-approved portal</option>
                     </select>
-                    <input className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" type="date" value={collectionExpiry} onChange={(event) => setCollectionExpiry(event.target.value)} aria-label="Expiry date" />
-                    <input className="min-h-9 rounded-xl border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionOwner} onChange={(event) => setCollectionOwner(event.target.value)} placeholder="Owner" aria-label="Collection owner" />
+                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" type="date" value={collectionExpiry} onChange={(event) => setCollectionExpiry(event.target.value)} aria-label="Expiry date" />
+                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionOwner} onChange={(event) => setCollectionOwner(event.target.value)} placeholder="Owner" aria-label="Collection owner" />
                     <button className="inline-flex min-h-9 items-center justify-center gap-2 dam-button-primary px-3 text-sm font-semibold transition disabled:opacity-50" type="submit" disabled={!contributor}>
                       <FolderPlus size={15} strokeWidth={1.8} aria-hidden="true" />
                       Preview draft
@@ -716,7 +716,7 @@ export function LibraryPage() {
             ) : null}
 
             {hasVisibleAssets ? (
-            <div className="mb-3 grid gap-2 rounded-2xl border border-[#c8d5cd] bg-[#fbfcfa] px-3 py-3 text-sm font-semibold text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.85)_inset] max-sm:text-xs" aria-live="polite">
+            <div className="mb-3 grid gap-2 rounded-md border border-[#c8d5cd] bg-[#fbfcfa] px-3 py-3 text-sm font-semibold text-tjc-muted max-sm:text-xs" aria-live="polite">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="font-semibold text-tjc-ink">
                   {loading
@@ -760,7 +760,7 @@ export function LibraryPage() {
             ) : null}
 
             {hasVisibleAssets ? (
-            <section className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-[#e9f0eb] p-2 text-sm text-tjc-muted" aria-label="Sort results">
+            <section className="mb-3 flex items-center justify-between gap-2 rounded-md border border-[#d6dfd8] bg-[#e9f0eb] p-2 text-sm text-tjc-muted" aria-label="Sort results">
               <span className="px-2 font-semibold text-tjc-ink">Sort</span>
               <DropdownActionMenu label={`Sort: ${sort}`} actions={sortActions} align="right" />
             </section>
@@ -790,14 +790,14 @@ export function LibraryPage() {
                   title={emptyStateTitle}
                   detail={emptyStateDetail}
                 />
-                <div className="rounded-2xl border border-[#d6dfd8] bg-white p-3 text-sm font-semibold text-tjc-muted lg:hidden" role="status">
+                <div className="rounded-md border border-[#d6dfd8] bg-white p-3 text-sm font-semibold text-tjc-muted lg:hidden" role="status">
                   <strong className="block text-base font-black text-tjc-ink">Keep browsing</strong>
-                  <p className="mt-1 leading-relaxed">Clear filters or switch to approved assets. Collections are secondary governed groups.</p>
+                  <p className="mt-1 leading-relaxed">Clear filters or switch to approved assets. Deliver packages are secondary governed groups.</p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={clearSearchState}>
+                    <button className="inline-flex min-h-11 items-center justify-center rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={clearSearchState}>
                       Switch to approved assets
                     </button>
-                    <Link className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="/collections">
+                    <Link className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="/collections">
                       Open collections
                     </Link>
                   </div>
@@ -808,7 +808,7 @@ export function LibraryPage() {
               <div className="contact-sheet-board dam-contact-grid auto-rows-auto gap-3 p-3">
                 {visibleAssets.map((asset, index) => (
                   <div className="relative min-w-0" key={asset.id}>
-                    <label className="dam-contact-select absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-xl border border-white/70 bg-white/92 shadow-[0_10px_22px_rgba(7,16,13,.14)]" aria-label={`Select ${asset.title}`}>
+                    <label className="dam-contact-select absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-[#cbd8cf] bg-white" aria-label={`Select ${asset.title}`}>
                       <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
                     </label>
                     <AssetCard asset={asset} role={role} variant={index % 11 === 0 ? "wide" : index % 7 === 0 ? "tall" : "standard"} />
@@ -844,11 +844,11 @@ export function LibraryPage() {
           <section id="collections" className="mt-6 hidden scroll-mt-24 lg:block" aria-label="Featured collections">
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
               <div>
-                <h2 className="text-lg font-semibold text-tjc-ink">{hasVisibleAssets ? "Collections" : "Browse collections instead"}</h2>
+                <h2 className="text-lg font-semibold text-tjc-ink">{hasVisibleAssets ? "Deliver packages" : "Browse deliver packages instead"}</h2>
                 <p className="text-sm text-tjc-muted">
                   {hasVisibleAssets
-                    ? "Collections and ministry contexts with approval summaries."
-                    : "Collections summarize the ResourceSpace export while assets wait for reuse confirmation."}
+                    ? "Collections, ministry kits, and saved views with approval summaries."
+                    : "Deliver packages summarize the ResourceSpace export while assets wait for reuse confirmation."}
                 </p>
               </div>
             </div>
@@ -883,21 +883,21 @@ export function LibraryPage() {
         footer={(
           <>
             <button
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50"
+              className="inline-flex min-h-10 items-center justify-center rounded-md border border-tjc-line bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50"
               type="button"
               disabled={!filters.length}
               onClick={() => setFilters([])}
             >
               Clear filters
             </button>
-            <button className="inline-flex min-h-10 items-center justify-center rounded-xl bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#0d4a37]" type="button" onClick={() => setFiltersOpen(false)}>
+            <button className="inline-flex min-h-10 items-center justify-center rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#0d4a37]" type="button" onClick={() => setFiltersOpen(false)}>
               Show results
             </button>
           </>
         )}
       >
         {activeFilterPills.length ? (
-          <div className="mb-3 rounded-2xl border border-[#d6dfd8] bg-[#fbfcfa] p-3">
+          <div className="mb-3 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3">
             <h3 className="mb-2 text-xs font-black uppercase text-tjc-muted">Active chips</h3>
             <FilterPills ariaLabel="Active drawer filters" pills={activeFilterPills} onRemove={removeActivePill} />
           </div>

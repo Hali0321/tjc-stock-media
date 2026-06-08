@@ -126,6 +126,19 @@ function reviewNextCheckLabel(asset: StockMediaAsset) {
   return "Decision ready";
 }
 
+function reviewDecisionLanes(asset: StockMediaAsset) {
+  const missing = missingReviewFields(asset);
+  const risks = reviewRiskFlags(asset);
+  const lane = (label: string, blocked: boolean, detail: string) => ({ label, blocked, detail });
+  return [
+    lane("Rights", missing.includes("consent") || risks.includes("Rights unclear") || !asset.rightsStatus, asset.rightsStatus || "Rights evidence needed"),
+    lane("People/minors", missing.includes("people/minors") || /child|youth|minor/i.test(asset.peopleRisk || ""), asset.peopleRisk || "Visibility unknown"),
+    lane("Source", missing.includes("source"), sourceSummary(asset)),
+    lane("Derivative", missing.includes("derivative"), asset.imageUrls?.download || asset.downloadPolicy.includes("approved-copy") ? "Approved copy available" : "Approved rendition missing"),
+    lane("Usage", missing.includes("usage guidance"), asset.usageGuidance || asset.usageScope)
+  ];
+}
+
 function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
   return (
     <section className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]" aria-label="Audit preview">
@@ -364,7 +377,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <strong className="font-black">{missingRequirementLabels.length ? "Decision locked" : "Decision ready"}</strong>
-          <span className="rounded-full bg-white/78 px-2 py-1 text-xs font-black tabular-nums">{completedRequirementCount}/{decisionRequirements.length} complete</span>
+          <span className="rounded-md bg-white px-2 py-1 text-xs font-black tabular-nums">{completedRequirementCount}/{decisionRequirements.length} complete</span>
         </div>
         <p className="mt-1 text-xs font-semibold leading-relaxed">
           {missingRequirementLabels.length ? `Complete before approval: ${missingRequirementLabels.slice(0, 4).join(", ")}${missingRequirementLabels.length > 4 ? ` and ${missingRequirementLabels.length - 4} more` : ""}.` : "Evidence and note are ready for a pending review write."}
@@ -393,7 +406,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           }
           return (
             <div className="grid gap-1" key={action.id}>
-              <button className="inline-flex min-h-9 min-w-0 items-center justify-center gap-2 whitespace-normal rounded-xl border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#f8faf8] disabled:text-[#77827a] disabled:opacity-55" type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
+              <button className="inline-flex min-h-9 w-full min-w-0 max-w-full items-center justify-center gap-2 whitespace-normal rounded-md border border-tjc-line bg-white px-3 text-center text-sm font-semibold text-[#354139] transition hover:bg-[#eef7f1] active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#f8faf8] disabled:text-[#77827a] disabled:opacity-55" type="button" disabled={!reviewer || missing.length > 0} title={title} onClick={() => requestAction(action)}>
                 {icon}
                 {action.label}
               </button>
@@ -481,7 +494,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             <button
               key={queue.id}
               type="button"
-              className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id && "bg-white text-tjc-evergreen shadow-[inset_0_-2px_0_#063f39]")}
+              className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-white text-tjc-evergreen" : "border-transparent")}
               onClick={() => selectQueue(queue.id)}
               aria-pressed={activeQueue === queue.id}
             >
@@ -521,8 +534,8 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_minmax(26rem,31.25rem)]" aria-label="Review workbench">
-        <aside className="hidden min-w-0 xl:grid xl:content-start xl:gap-3" aria-label="Review queue groups">
+      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 overflow-hidden xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
+        <aside className="hidden min-w-0 2xl:grid 2xl:content-start 2xl:gap-3" aria-label="Review queue groups">
           <section className="sticky top-24 grid gap-2 rounded-lg border border-[#c9d4d5] bg-white p-3">
             <div>
               <h2 className="text-sm font-black text-tjc-evergreen">Queue groups</h2>
@@ -532,12 +545,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               <button
                 key={`left-${queue.id}`}
                 type="button"
-                className={cn("grid min-h-11 grid-cols-[1fr_auto] items-center gap-2 rounded-md px-2 text-left text-xs font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "bg-[#e5f3ea] text-tjc-evergreen shadow-[inset_3px_0_0_#063f39]" : "text-[#3f4a43]")}
+                className={cn("grid min-h-11 grid-cols-[1fr_auto] items-center gap-2 rounded-md border px-2 text-left text-xs font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e5f3ea] text-tjc-evergreen" : "border-transparent text-[#3f4a43]")}
                 onClick={() => selectQueue(queue.id)}
                 aria-pressed={activeQueue === queue.id}
               >
                 <span className="truncate">{queue.label}</span>
-                <span className="rounded-full border border-[#d6dfd8] bg-white px-2 py-0.5 tabular-nums">{queue.count.toLocaleString()}</span>
+                <span className="rounded-md border border-[#d6dfd8] bg-white px-2 py-0.5 tabular-nums">{queue.count.toLocaleString()}</span>
               </button>
             ))}
             <details className="border-t border-tjc-line pt-2">
@@ -560,7 +573,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </section>
         </aside>
         <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
-          <div className="min-w-0 max-w-full overflow-hidden rounded-[1.35rem] border border-[#b9c9bf] bg-white shadow-[0_12px_34px_rgba(25,34,29,.035)]" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
+          <div className="min-w-0 max-w-full overflow-hidden rounded-md border border-[#b9c9bf] bg-white" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
           <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-3 py-3 text-sm lg:grid-cols-[1fr_auto]">
             <div className="min-w-0">
               <strong className="font-black text-tjc-ink">Review queue</strong>
@@ -568,9 +581,9 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               {activeQueueSummary ? <span className="mt-1 block text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">Risk-sorted queue</span>
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Decision console on right</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">Risk-sorted queue</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Decision console on right</span>
             </div>
           </div>
           <div className="grid min-w-0 max-w-full">
@@ -587,7 +600,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </div>
           {data && visibleReviewCount < data.assets.length ? (
             <div className="border-t border-tjc-line bg-[#fbfcfa] p-3">
-              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + desktopReviewRowsPageSize, data.assets.length))}>
+              <button className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + desktopReviewRowsPageSize, data.assets.length))}>
                 Show more review items
               </button>
             </div>
@@ -596,7 +609,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid min-w-0 max-w-full gap-3 self-start rounded-lg border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-24 xl:max-h-[calc(100vh-var(--app-header-height)-3rem)] xl:overflow-auto" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
+          <aside className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-hidden self-start rounded-md border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-24 xl:max-h-[calc(100vh-var(--app-header-height)-3rem)] xl:overflow-auto" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
             <section className="grid gap-3" aria-label="Selected asset review summary">
               <MediaPreviewPanel className="review-selected-preview" asset={selectedAsset} src={selectedPreview} alt={selectedAsset.thumbnailAlt} title={assetPresentation(selectedAsset, role).title} compact />
               <div>
@@ -608,17 +621,31 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 <StatusBadge status={selectedAsset.status} />
                 <UsageBadge scope={selectedAsset.usageScope} />
               </div>
-              <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e6] p-3 text-sm text-[#684a10]">
+              <div className="rounded-md border border-[#ead6a8] bg-[#fff8e6] p-3 text-sm text-[#684a10]">
                 <strong className="block font-black">{reviewRiskFlags(selectedAsset)[0] || "Standard review"}</strong>
                 <span className="mt-1 block leading-snug">{reviewNextCheckLabel(selectedAsset)}</span>
               </div>
-              <div className="grid gap-1 rounded-xl border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
+              <div className="grid gap-1 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
                 <span>RS {selectedAsset.resourceSpaceId || selectedAsset.id}</span>
                 <span>Original/master restricted</span>
               </div>
+              <section className="grid gap-2 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Typed decision lanes">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-black text-tjc-evergreen">Decision lanes</h3>
+                  <span className="text-xs font-semibold text-tjc-muted">Typed review evidence</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {reviewDecisionLanes(selectedAsset).map((lane) => (
+                    <div className={cn("rounded-md border px-2.5 py-2 text-xs", lane.blocked ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b8d9c6] bg-white text-[#22563a]")} key={lane.label}>
+                      <strong className="block font-black">{lane.label}</strong>
+                      <span className="mt-1 block truncate font-semibold">{lane.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </section>
 
-            <section className="grid min-w-0 gap-3 border-t border-tjc-line pt-3" aria-label="Review action inspector">
+            <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 border-t border-tjc-line pt-3" aria-label="Review action inspector">
             <div className="min-w-0" data-component="ReviewInspectorTabs">
               <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" />
             </div>
@@ -636,7 +663,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                         <span className="block text-sm font-black text-tjc-evergreen">Action evidence</span>
                         <span className="mt-1 block text-xs font-semibold text-tjc-muted">Checklist, note, and action buttons are collapsed to keep mobile queue short.</span>
                       </div>
-                      <span className="rounded-full border border-[#d6dfd8] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
+                      <span className="rounded-md border border-[#d6dfd8] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
                         {completedEvidenceCount}/{checklistLabels.length}
                       </span>
                     </div>
@@ -688,7 +715,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
             <div className="grid min-w-0 gap-2">
-              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 min-w-0 items-center justify-center gap-2 dam-button-primary px-3 text-center text-sm font-semibold transition active:translate-y-px">
+              <Link href={`/assets/${selectedAsset.id}`} className="inline-flex min-h-9 w-full min-w-0 max-w-full items-center justify-center gap-2 dam-button-primary px-3 text-center text-sm font-semibold transition active:translate-y-px">
                 <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
                 Open detail
               </Link>
