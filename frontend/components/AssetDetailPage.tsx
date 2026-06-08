@@ -153,13 +153,13 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
         ) : (
           <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" data-testid="asset-primary-request-review" onClick={() => setRequestKind("review")}>
             <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
-            Request review
+            Request DAM review
           </button>
         )}
         <div className="grid gap-2 sm:grid-cols-2">
           <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("coworker")}>
             <Mail size={15} strokeWidth={1.8} aria-hidden="true" />
-            Ask media coworker
+            Ask media team
           </button>
           <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={() => setRequestKind("original")}>
             <FileLock2 size={15} strokeWidth={1.8} aria-hidden="true" />

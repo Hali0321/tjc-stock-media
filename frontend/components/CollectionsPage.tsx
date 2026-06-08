@@ -97,11 +97,11 @@ export function CollectionsPage() {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-sm font-black text-tjc-evergreen">
             <FolderOpen size={17} strokeWidth={1.8} aria-hidden="true" />
-            Collections and ministry contexts
+            Governed internal portals
           </div>
           <h1 className="mt-2 dam-page-title">Collections</h1>
           <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">
-            Browse collections first, then open Library to confirm each asset before publication.
+            Collections are curated reuse portals. Saved views are queries; campaigns are delivery workspaces.
           </p>
           <form className="mt-4 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Collection search">
             <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={19} strokeWidth={1.8} />
@@ -136,12 +136,12 @@ export function CollectionsPage() {
         </div>
       ) : null}
 
-      <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Collection album grid">
+      <section className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Collection governance workspace">
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-[#d6dfd8] pb-3">
             <div>
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Collections</h2>
-              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Counts, dates, source, approval summary, and people/minors warning come from current export metadata.</p>
+              <h2 className="text-sm font-semibold text-tjc-evergreen">Governed collections</h2>
+              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Owner, purpose, coverage, rights risk, and source state come from current export metadata.</p>
             </div>
             <span className="text-xs font-semibold text-tjc-muted">
               {loading ? "Loading collections" : `${collections.length} shown`}
@@ -169,7 +169,33 @@ export function CollectionsPage() {
           {!loading && !collections.length ? (
             <div className="rounded-xl border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No collections match this search.</div>
           ) : null}
-          <div className="grid gap-3">
+          {!loading && collections.length ? (
+            <div className="hidden overflow-hidden rounded-lg border border-[#c9d4d5] bg-white xl:block" aria-label="Collection governance table">
+              <div className="grid grid-cols-[minmax(12rem,1.2fr)_8rem_8rem_9rem_9rem_8rem_9rem] gap-3 border-b border-tjc-line bg-[#eef2f3] px-3 py-2 text-xs font-black uppercase text-[#536057]">
+                <span>Collection</span><span>Owner</span><span>State</span><span>Assets</span><span>Approval</span><span>Risk</span><span>Actions</span>
+              </div>
+              {collections.map((collection) => (
+                <article className="grid grid-cols-[minmax(12rem,1.2fr)_8rem_8rem_9rem_9rem_8rem_9rem] items-center gap-3 border-b border-tjc-line px-3 py-3 text-sm last:border-b-0" key={`table-${collection.id}`}>
+                  <span className="min-w-0">
+                    <strong className="block truncate text-tjc-ink">{collection.name}</strong>
+                    <span className="mt-1 block truncate text-xs font-semibold text-tjc-muted">{collection.description}</span>
+                  </span>
+                  <span className="truncate text-xs font-semibold text-tjc-muted">{collection.ministry}</span>
+                  <span className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2 py-1 text-xs font-black text-[#22563a]">{collection.count ? "Curated" : "Empty"}</span>
+                  <span className="font-black tabular-nums text-tjc-ink">{collection.countLabel}</span>
+                  <span className="truncate text-xs font-semibold text-tjc-muted">{collection.approvalSummary}</span>
+                  <span className={collection.peopleWarning ? "rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-xs font-black text-[#725216]" : "rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2 py-1 text-xs font-black text-[#22563a]"}>
+                    {collection.peopleWarning ? "People risk" : "No warning"}
+                  </span>
+                  <span className="flex flex-wrap gap-1">
+                    <button className="min-h-8 rounded-md border border-tjc-line bg-white px-2 text-xs font-black text-tjc-evergreen hover:bg-[#eef7f1]" type="button" onClick={() => inspectCollection(collection.id)}>Inspect</button>
+                    <button className="min-h-8 rounded-md bg-tjc-evergreen px-2 text-xs font-black text-white hover:bg-[#062d24]" type="button" onClick={() => openCollection(collection)}>Library</button>
+                  </span>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          <div className="grid gap-3 xl:hidden">
             {collections.map((collection) => (
               <Fragment key={collection.id}>
                 <CollectionAlbumCard
@@ -187,7 +213,7 @@ export function CollectionsPage() {
                   onOpen={() => openCollection(collection)}
                 />
                 {selectedCollection?.id === collection.id ? (
-                  <div ref={mobileInspectorRef} className="scroll-mt-24 lg:hidden">
+                    <div ref={mobileInspectorRef} className="scroll-mt-24 xl:hidden">
                     <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
                   </div>
                 ) : null}
@@ -196,7 +222,7 @@ export function CollectionsPage() {
           </div>
         </div>
 
-        <aside className="hidden min-w-0 gap-3 lg:sticky lg:top-[calc(var(--app-header-height)+1.25rem)] lg:grid lg:max-h-[calc(100vh-var(--app-header-height)-2rem)] lg:self-start lg:overflow-auto" aria-label="Collection governance">
+        <aside className="hidden min-w-0 gap-3 xl:sticky xl:top-[calc(var(--app-header-height)+1.25rem)] xl:grid xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:self-start xl:overflow-auto" aria-label="Collection governance">
           <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} />
           <details className="rounded-[1.2rem] border border-[#d6dfd8] bg-white p-4 text-sm">
             <summary className="cursor-pointer font-black text-tjc-evergreen">ResourceSpace export</summary>

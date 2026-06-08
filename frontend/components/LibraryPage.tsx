@@ -34,7 +34,7 @@ const useCaseButtons = [
 
 const viewerShortcutIds = new Set(["approved-church-wide", "website-hero", "sermon-slides", "newsletter", "social-media", "no-people", "recently-approved"]);
 const contributorShortcutIds = new Set([...viewerShortcutIds, "internal-ministry"]);
-const viewerDefaultView = "approved-church-wide";
+const viewerDefaultView = "recently-approved";
 
 function healthTone(score: number) {
   if (score >= 90) return "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]";
@@ -50,16 +50,23 @@ function insightTone(tone: "ok" | "warn" | "info") {
 
 function AssetListRow({
   asset,
+  role,
   selected,
   onToggle
 }: {
   asset: StockMediaAsset;
+  role: string;
   selected: boolean;
   onToggle: () => void;
 }) {
   const health = assetMetadataHealth(asset);
+  const rightsState = asset.rightsStatus && !/unknown|needs review|review required/i.test(asset.rightsStatus) ? "Rights verified" : "Rights unverified";
+  const peopleState = asset.peopleRisk && asset.peopleRisk !== "Unknown" ? asset.peopleRisk : "People unverified";
+  const availabilityState = asset.downloadPolicy === "approved-copy-allowed" || asset.downloadPolicy === "internal-approved-copy-allowed" ? "Download available" : asset.reuseDecision?.blockers.some((item) => item.code === "blocked-derivative") ? "Rendition missing" : "Preview only";
+  const sourceState = asset.sourceSystem || asset.sourcePlatform || asset.sourceAccount ? "Source verified" : "Source incomplete";
+  const resourceId = asset.resourceSpaceId || asset.id;
   return (
-    <article className={cn("grid gap-3 border-b border-tjc-line bg-white px-3 py-2.5 last:border-b-0 lg:grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem]", selected && "bg-[#f4fbf7]")}>
+    <article className={cn("grid gap-3 border-b border-tjc-line bg-white px-3 py-2.5 last:border-b-0 lg:grid-cols-[auto_4.5rem_minmax(11rem,1.15fr)_7rem_9rem_9rem_9rem_9rem_9rem_8rem_7rem_7rem]", selected && "bg-[#f4fbf7]")}>
       <label className="grid h-9 w-9 place-items-center rounded-xl border border-tjc-line bg-white" aria-label={`Select ${asset.title}`}>
         <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selected} onChange={onToggle} />
       </label>
@@ -68,12 +75,17 @@ function AssetListRow({
       </Link>
       <div className="min-w-0">
         <Link href={`/assets/${asset.id}`} className="line-clamp-2 font-semibold leading-tight text-tjc-ink hover:text-tjc-evergreen">{asset.title}</Link>
-        <p className="mt-1 truncate text-sm text-tjc-muted">{asset.collection}</p>
+        <p className="mt-1 truncate text-xs font-semibold uppercase text-tjc-muted">{asset.mediaType} · {asset.collection}</p>
       </div>
       <span data-badge-slot="list-raw-status"><RawStatusBadge status={asset.status} size="xs" /></span>
       <span data-badge-slot="list-usage-scope"><UsageBadge scope={asset.usageScope} size="xs" /></span>
-      <span className="truncate text-sm text-tjc-muted">{asset.reviewer && asset.reviewedDate ? `${asset.reviewer} / ${asset.reviewedDate}` : "Review pending"}</span>
-      <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", healthTone(health.score))}>{health.score}% {health.state}</span>
+      <span className="rounded-md border border-[#d6dfd8] bg-[#fbfcfa] px-2 py-1 text-xs font-black text-[#3f4a43]">{rightsState}</span>
+      <span className="rounded-md border border-[#d6dfd8] bg-[#fbfcfa] px-2 py-1 text-xs font-black text-[#3f4a43]">{peopleState}</span>
+      <span className="rounded-md border border-[#d6dfd8] bg-[#fbfcfa] px-2 py-1 text-xs font-black text-[#3f4a43]">{availabilityState}</span>
+      <span className="truncate rounded-md border border-[#d6dfd8] bg-[#fbfcfa] px-2 py-1 text-xs font-black text-[#3f4a43]">{sourceState}</span>
+      <span className="truncate text-xs font-semibold text-tjc-muted">{asset.reviewer && asset.reviewedDate ? `${asset.reviewer} / ${asset.reviewedDate}` : "Review pending"}</span>
+      <span className="truncate text-xs font-semibold text-tjc-muted">{role === "Viewer" ? "Trust record" : `RS ${resourceId}`}</span>
+      <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", healthTone(health.score))}>{health.score}%</span>
     </article>
   );
 }
@@ -152,7 +164,7 @@ export function LibraryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pageOffset, setPageOffset] = useState(0);
   const [batchMessage, setBatchMessage] = useState("");
@@ -468,7 +480,7 @@ export function LibraryPage() {
             <div>
               <h1 className="dam-page-title">Library</h1>
               <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
-                Find, trust, and reuse ministry media from a ResourceSpace-backed contact sheet.
+                Search approved role-safe media first. Collections and visual browsing are secondary paths.
               </p>
             </div>
             {hasActiveSearch ? (
@@ -511,8 +523,8 @@ export function LibraryPage() {
           />
         </div>
 
-        <details className="hidden rounded-2xl border border-[#d6dfd8] bg-white/72 px-3 py-2 text-sm text-tjc-muted sm:block">
-          <summary className="cursor-pointer font-black text-tjc-evergreen">Source/count truth</summary>
+        <details className="hidden rounded-xl border border-[#c9d4d5] bg-white px-3 py-2 text-sm text-tjc-muted sm:block">
+          <summary className="cursor-pointer font-black text-tjc-evergreen">Source and trust lanes</summary>
           <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_26rem]">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -653,13 +665,13 @@ export function LibraryPage() {
                     Filters
                     {filters.length ? <span className="rounded-full bg-tjc-evergreen px-1.5 text-[11px] text-white">{filters.length}</span> : null}
                   </button> : null}
+                  {hasVisibleAssets ? <button className={cn("hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition sm:inline-flex", viewMode === "list" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
+                    <List size={15} strokeWidth={1.8} aria-hidden="true" />
+                    Table
+                  </button> : null}
                   {hasVisibleAssets ? <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "grid" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
                     <LayoutGrid size={15} strokeWidth={1.8} aria-hidden="true" />
                     Grid
-                  </button> : null}
-                  {hasVisibleAssets ? <button className={cn("hidden min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition sm:inline-flex", viewMode === "list" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
-                    <List size={15} strokeWidth={1.8} aria-hidden="true" />
-                    List
                   </button> : null}
                 </div>
               </div>
@@ -717,7 +729,7 @@ export function LibraryPage() {
               </div>
               {activeView ? (
                 <p>
-                  View: <strong className="font-semibold text-tjc-evergreen">{activeView.label}</strong>. ResourceSpace remains truth; downloads stay blocked until portal reuse checks pass.
+                  View: <strong className="font-semibold text-tjc-evergreen">{activeView.label}</strong>. ResourceSpace remains truth; downloads stay blocked until trust lanes pass.
                 </p>
               ) : null}
               {!activeView && result?.appliedIntent?.matchedView ? (
@@ -780,14 +792,14 @@ export function LibraryPage() {
                 />
                 <div className="rounded-2xl border border-[#d6dfd8] bg-white p-3 text-sm font-semibold text-tjc-muted lg:hidden" role="status">
                   <strong className="block text-base font-black text-tjc-ink">Keep browsing</strong>
-                  <p className="mt-1 leading-relaxed">Collections can help you find approved groups before opening individual assets.</p>
+                  <p className="mt-1 leading-relaxed">Clear filters or switch to approved assets. Collections are secondary governed groups.</p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <Link className="inline-flex min-h-11 items-center justify-center rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href="/collections">
-                      Browse collections
-                    </Link>
-                    <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={clearSearchState}>
-                      {submittedQuery || filters.length ? "Clear search" : "Reset view"}
+                    <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={clearSearchState}>
+                      Switch to approved assets
                     </button>
+                    <Link className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="/collections">
+                      Open collections
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -805,10 +817,10 @@ export function LibraryPage() {
               </div>
             ) : hasVisibleAssets ? (
               <div className="overflow-hidden rounded-lg border border-tjc-line">
-                <div className="hidden grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem] gap-3 border-b border-tjc-line bg-[#f5f7f4] px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
-                  <span>Select</span><span>Preview</span><span>Asset</span><span>Status</span><span>Use</span><span>Reviewer</span><span>Health</span>
+                <div className="hidden grid-cols-[auto_4.5rem_minmax(11rem,1.15fr)_7rem_9rem_9rem_9rem_9rem_9rem_8rem_7rem_7rem] gap-3 border-b border-tjc-line bg-[#eef2f3] px-3 py-2 text-xs font-black uppercase text-[#536057] lg:grid">
+                  <span>Select</span><span>Preview</span><span>Asset</span><span>Workflow</span><span>Distribution</span><span>Rights</span><span>People</span><span>Availability</span><span>Source</span><span>Reviewed</span><span>{role === "Viewer" ? "Record" : "RS ID"}</span><span>Health</span>
                 </div>
-                {visibleAssets.map((asset) => <AssetListRow key={asset.id} asset={asset} selected={selectedIds.includes(asset.id)} onToggle={() => toggleSelected(asset.id)} />)}
+                {visibleAssets.map((asset) => <AssetListRow key={asset.id} asset={asset} role={role} selected={selectedIds.includes(asset.id)} onToggle={() => toggleSelected(asset.id)} />)}
               </div>
             ) : null}
             {hasVisibleAssets && pagination && result?.total ? (

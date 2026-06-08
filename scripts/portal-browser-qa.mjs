@@ -117,7 +117,7 @@ async function inspectPage(page, expected) {
       return rect.width > 20 && rect.height > 20 && rect.bottom > 0 && rect.top < window.innerHeight;
     });
     const brokenImages = visibleImages
-      .filter((img) => !img.complete || img.naturalWidth === 0)
+      .filter((img) => (img.currentSrc || img.src) && (!img.complete || img.naturalWidth === 0))
       .map((img) => img.currentSrc || img.src)
       .slice(0, 5);
     const clippedControls = [...document.querySelectorAll("button, a, select, input")]
@@ -175,7 +175,7 @@ async function inspectPage(page, expected) {
     hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review"),
       hasReviewBlocker: visibleText.includes("ResourceSpace API write mapping is not configured yet"),
       hasViewerReviewBlock: visibleText.includes("Review workbench requires reviewer access"),
-      hasViewerUploadBlock: visibleText.includes("Upload is for Contributors"),
+      hasViewerUploadBlock: visibleText.includes("Intake is for Contributors"),
       hasAdminBlock: visibleText.includes("Admin cockpit requires DAM Admin role"),
       hasOriginalFilenameOnCard: [...document.querySelectorAll('[aria-label="Source metadata"]')].some((el) => (el.textContent || "").includes("Original:")),
       missingTabControls: [...document.querySelectorAll('[role="tab"][aria-controls]')]
@@ -226,7 +226,7 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/?q=zzzzzz-no-visible-media-proof`);
   if ((await page.getByTestId("library-empty-state").getByText("No matching approved assets").count()) < 1) failures.push("viewer-library-empty-to-collections: empty copy missing");
-  await page.getByRole("link", { name: "Browse collections" }).click();
+  await page.getByRole("link", { name: "Open collections" }).click();
   await page.waitForURL(/\/collections/, { timeout: 10000 });
   await page.getByRole("button", { name: /View details|Inspect metadata/ }).first().click();
   await page.getByRole("button", { name: "Open Library results" }).first().click();
@@ -272,7 +272,7 @@ for (const width of qaViewports) {
   await commandSearch.fill("children youth");
   await page.keyboard.press("Enter");
   await page.waitForURL(/queue=children-youth/, { timeout: 10000 });
-  const activeChildrenQueue = page.getByRole("button", { name: /Children\/Youth/ });
+  const activeChildrenQueue = page.getByLabel("Review filters", { exact: true }).getByRole("button", { name: /Children\/Youth/ });
   if ((await activeChildrenQueue.getAttribute("aria-pressed")) !== "true") failures.push("command palette: children/youth queue did not become active");
   await context.close();
 }
@@ -280,7 +280,7 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/review?queue=rights-review`);
-  const activeRightsQueue = page.getByRole("button", { name: /Rights Review/ });
+  const activeRightsQueue = page.getByLabel("Review filters", { exact: true }).getByRole("button", { name: /Rights Review/ });
   if ((await activeRightsQueue.getAttribute("aria-pressed")) !== "true") failures.push("review stable queue URL: rights-review did not become active");
   await activeRightsQueue.click();
   if (!page.url().includes("queue=rights-review")) failures.push("review stable queue URL: queue button did not preserve URL state");
@@ -345,7 +345,7 @@ for (const width of qaViewports) {
   if ((await page.locator('[data-component="UploadBottomActionBar"]').count()) > 0) failures.push("upload desktop rail: detached bottom submit bar still present");
   const rail = page.getByTestId("upload-desktop-submission-rail");
   const actions = page.getByTestId("upload-desktop-actions-rail");
-  if ((await actions.getByText("Submit for review").count()) < 1) failures.push("upload desktop rail: submit action missing from right rail");
+  if ((await actions.getByText("Submit for DAM review").count()) < 1) failures.push("upload desktop rail: submit action missing from right rail");
   const submitButton = rail.getByRole("button", { name: "Submit intake" });
   if ((await submitButton.isDisabled()) !== true) failures.push("upload desktop rail: submit should be disabled without file/source, tags, and notes");
   await actions.getByRole("button", { name: "Save draft" }).click();

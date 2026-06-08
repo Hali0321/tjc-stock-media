@@ -14,7 +14,7 @@ The UI must not lie about whether an asset is safe, approved, written, or downlo
 
 ## Design Thesis
 
-Calm operational DAM interface, warm neutral surfaces, evergreen action color, dense but readable governance information, and minimal decorative motion. This is workflow software for repeated church media tasks, not a marketing site.
+Private enterprise DAM interface, neutral operations surfaces, evergreen action color, dense but readable governance information, and minimal decorative motion. This is workflow software for repeated church media tasks, not a marketing site or photo gallery.
 
 ## Token Rules
 
@@ -86,6 +86,20 @@ Use current app classes before inventing new size scales.
 | No matching assets | Query/filter found nothing | Offer clear search/filter |
 | Unknown preview | File type cannot render safely | Use standard unknown shell |
 
+## Orthogonal Status Lanes
+
+Never collapse safety into one vague badge. Enterprise DAM trust uses separate lanes.
+
+| Lane | Values |
+|---|---|
+| Workflow | Draft, Submitted, In review, Needs info, Approved, Held, Rejected, Archived |
+| Distribution | External ministry, Internal only, Reviewer-only, Archive only, Do not publish |
+| Rights | Verified, Restricted, Unverified, Consent required, Expiring, Expired |
+| People / release | No people, Adults visible, Children/youth possible, Release verified, Missing, Unverified |
+| Availability | Download available, Preview only, Rendition missing, Original restricted, Preview unavailable |
+| Source | Verified, Incomplete, Conflict, ResourceSpace, Shared Drive, Manual intake, Duplicate candidate |
+| Sync | Read-only export, Pending write, Failed, Retrying, Synced, Mapping missing |
+
 ## CTA Hierarchy
 
 Each decision area has one primary CTA.
@@ -132,6 +146,8 @@ Do not render blocked downloads as real download links. Use disabled controls, l
 ## Page Rules
 
 ### Library
+
+Library is table-first and facet-first. Grid remains a visual browsing mode, not the default enterprise mode.
 
 Priority order on cards:
 
@@ -180,7 +196,7 @@ Restricted preview
 Unknown file shell
 ```
 
-### Upload
+### Intake
 
 Mobile step order:
 
@@ -198,18 +214,22 @@ Validation rules:
 
 ### Review
 
+Desktop Review is a three-pane workbench:
+
+```text
+queue groups -> queue table/selected preview -> decision console
+```
+
 Reviewer order:
 
 ```text
 current reviewing asset -> risk summary -> missing evidence -> decision actions -> review note -> checklist -> queue
 ```
 
-Disabled decisions must show nearby reason copy:
+Disabled decisions use one compact decision-lock panel, not repeated verbose copy under every button. The panel may say:
 
 ```text
-Approve disabled because: people/minors not confirmed.
-Approve disabled because: rights not confirmed.
-Approve disabled because: review note missing.
+Complete before approval: people/minors confirmed, rights confirmed, review note added.
 ```
 
 ### Admin

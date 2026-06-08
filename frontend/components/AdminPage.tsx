@@ -288,7 +288,7 @@ export function AdminPage() {
     <div className="mx-auto grid w-full max-w-[1760px] gap-5 px-3 py-5 md:px-5 xl:grid-cols-[14rem_minmax(0,1fr)]">
       <aside className="hidden xl:block">
         <div className="sticky top-24 grid gap-1 border-r border-[#d6dfd8] pr-3">
-          <span className="px-3 pb-2 text-xs font-black uppercase text-tjc-muted">Admin</span>
+          <span className="px-3 pb-2 text-xs font-black uppercase text-tjc-muted">Governance</span>
           {adminNav.map((item) => {
             const Icon = item.icon;
             const tabForItem: AdminTab =
@@ -318,9 +318,9 @@ export function AdminPage() {
       <main className="min-w-0">
       <section id="overview" className="scroll-mt-24 grid gap-4 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div>
-          <span className="text-sm font-black text-tjc-evergreen">DAM Admin</span>
+          <span className="text-sm font-black text-tjc-evergreen">Governance and operations</span>
           <h1 className="mt-2 dam-page-title">Launch blocked</h1>
-          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Reviewer and contributor pilot remains safe for curated workflows. Full production launch waits on the blockers below.</p>
+          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Private DAM pilot remains safe for curated workflows. Full production launch waits on identity, write mapping, audit, and rights coverage.</p>
           <ol className="mt-4 grid gap-2 text-sm font-black text-[#6f4608]">
             {[
               "ResourceSpace write mapping",
@@ -431,9 +431,9 @@ export function AdminPage() {
         </div>
       </details>
 
-      <section className={cn("mt-4 hidden grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid md:grid-cols-5 xl:grid-cols-10", activeAdminTab !== "Overview" && "md:hidden")} aria-label="DAM operating metrics">
+      <section className={cn("mt-4 hidden grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid md:grid-cols-5 xl:grid-cols-10", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Governance operating metrics">
         <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
-        <MetricTile label="Portal ready" value={data.metrics.portalReady} />
+        <MetricTile label="External ready" value={data.metrics.portalReady} />
         <MetricTile label="Needs review" value={data.metrics.needsReview} />
         <MetricTile label="Rights review" value={data.metrics.rightsReview} />
         <MetricTile label="Missing source" value={data.metrics.missingSource} />
@@ -538,7 +538,7 @@ export function AdminPage() {
       </section>
       <section id="backlog" className={cn("mt-4 hidden scroll-mt-24 gap-4 md:grid xl:grid-cols-[minmax(0,1fr)_minmax(24rem,.65fr)]", activeAdminTab !== "Action backlog" && "md:hidden")} aria-label="Admin work plan">
         <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
-          <h2 className="flex items-center gap-2 text-xl font-semibold"><ListChecks size={18} strokeWidth={1.8} aria-hidden="true" /> Action backlog</h2>
+          <h2 className="flex items-center gap-2 text-xl font-semibold"><ListChecks size={18} strokeWidth={1.8} aria-hidden="true" /> Governance action backlog</h2>
           <div className="mt-3">
             <DataTable
               label="Production blocker backlog"
@@ -566,7 +566,7 @@ export function AdminPage() {
         </section>
 
         <section className="rounded-lg border border-[#d6dfd8] bg-white p-4">
-          <h2 className="flex items-center gap-2 text-xl font-semibold"><Lock size={18} strokeWidth={1.8} aria-hidden="true" /> Integration readiness</h2>
+          <h2 className="flex items-center gap-2 text-xl font-semibold"><Lock size={18} strokeWidth={1.8} aria-hidden="true" /> Source, sync, and write readiness</h2>
           <div className="mt-3">
             <DataTable
               label="Integration readiness"

@@ -521,8 +521,45 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(26rem,31.25rem)]" aria-label="Review workbench">
-        <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-1">
+      <section ref={workbenchRef} className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_minmax(26rem,31.25rem)]" aria-label="Review workbench">
+        <aside className="hidden min-w-0 xl:grid xl:content-start xl:gap-3" aria-label="Review queue groups">
+          <section className="sticky top-24 grid gap-2 rounded-lg border border-[#c9d4d5] bg-white p-3">
+            <div>
+              <h2 className="text-sm font-black text-tjc-evergreen">Queue groups</h2>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">Select work by blocker, assignment, or write state.</p>
+            </div>
+            {keyReviewerQueues.map((queue) => (
+              <button
+                key={`left-${queue.id}`}
+                type="button"
+                className={cn("grid min-h-11 grid-cols-[1fr_auto] items-center gap-2 rounded-md px-2 text-left text-xs font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "bg-[#e5f3ea] text-tjc-evergreen shadow-[inset_3px_0_0_#063f39]" : "text-[#3f4a43]")}
+                onClick={() => selectQueue(queue.id)}
+                aria-pressed={activeQueue === queue.id}
+              >
+                <span className="truncate">{queue.label}</span>
+                <span className="rounded-full border border-[#d6dfd8] bg-white px-2 py-0.5 tabular-nums">{queue.count.toLocaleString()}</span>
+              </button>
+            ))}
+            <details className="border-t border-tjc-line pt-2">
+              <summary className="cursor-pointer text-xs font-black text-tjc-evergreen">Advanced queues</summary>
+              <div className="mt-2 grid gap-1">
+                {advancedQueues.map((queue) => (
+                  <button
+                    key={`left-advanced-${queue.id}`}
+                    type="button"
+                    className={cn("grid min-h-9 grid-cols-[1fr_auto] items-center gap-2 rounded-md px-2 text-left text-[11px] font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "bg-[#e5f3ea] text-tjc-evergreen" : "text-[#4d554d]")}
+                    onClick={() => selectQueue(queue.id)}
+                    aria-pressed={activeQueue === queue.id}
+                  >
+                    <span className="truncate">{queue.label}</span>
+                    <span className="tabular-nums">{queue.count.toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            </details>
+          </section>
+        </aside>
+        <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
           <div className="min-w-0 max-w-full overflow-hidden rounded-[1.35rem] border border-[#b9c9bf] bg-white shadow-[0_12px_34px_rgba(25,34,29,.035)]" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
           <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-3 py-3 text-sm lg:grid-cols-[1fr_auto]">
             <div className="min-w-0">
@@ -533,7 +570,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
               <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">Risk-sorted queue</span>
-              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Review panel on right</span>
+              <span className="rounded-full border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Decision console on right</span>
             </div>
           </div>
           <div className="grid min-w-0 max-w-full">
@@ -559,7 +596,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside className="order-1 grid min-w-0 max-w-full gap-3 self-start rounded-lg border border-[#d4ded7] bg-white p-3 xl:order-2 xl:sticky xl:top-24 xl:max-h-[calc(100vh-var(--app-header-height)-3rem)] xl:overflow-auto" aria-label="Selected asset review inspector" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
+          <aside className="order-1 grid min-w-0 max-w-full gap-3 self-start rounded-lg border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-24 xl:max-h-[calc(100vh-var(--app-header-height)-3rem)] xl:overflow-auto" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
             <section className="grid gap-3" aria-label="Selected asset review summary">
               <MediaPreviewPanel className="review-selected-preview" asset={selectedAsset} src={selectedPreview} alt={selectedAsset.thumbnailAlt} title={assetPresentation(selectedAsset, role).title} compact />
               <div>

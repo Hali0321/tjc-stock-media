@@ -225,9 +225,9 @@ export function UploadPage() {
   }
 
   function saveDraftNotice() {
-    setMessage("Draft capture is local-only in this demo. Files still need Submit for review before server intake.");
+    setMessage("Draft capture is local-only in this demo. Files still need Submit for DAM review before server intake.");
     setDraftSaved(true);
-    toastDraftSaved("Draft capture is local-only in this demo. Submit for review before server intake.");
+    toastDraftSaved("Draft capture is local-only in this demo. Submit for DAM review before server intake.");
   }
 
   if (!ready) {
@@ -239,7 +239,7 @@ export function UploadPage() {
       <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
         <section className="min-w-0 dam-card p-5">
           <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 dam-page-title">Upload is for Contributors</h1>
+          <h1 className="mt-2 dam-page-title">Intake is for Contributors</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
         </section>
         <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 dam-card p-5">
@@ -259,14 +259,14 @@ export function UploadPage() {
       <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 lg:grid-cols-[minmax(0,1fr)_38rem]">
         <div>
           <span className="text-sm font-black text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 dam-page-title">Upload for review</h1>
-          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
+          <h1 className="mt-2 dam-page-title">Intake session</h1>
+          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">Create a reviewer packet. This does not publish media or write final ResourceSpace metadata.</p>
         </div>
         <div className="grid gap-2 border-t border-[#d6dfd8] pt-4 sm:grid-cols-3 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0" aria-label="Upload workflow">
           {[
             { icon: UploadCloud, title: "Context", body: "Event, date, ministry, source." },
             { icon: ShieldCheck, title: "People and rights", body: "Visibility, consent, restrictions." },
-            { icon: FileCheck2, title: "Files and tags", body: "Upload, tag, receive review state." }
+            { icon: FileCheck2, title: "Files and tags", body: "Stage files, tag, and submit packet." }
           ].map((step) => {
             const Icon = step.icon;
             return (
@@ -386,7 +386,7 @@ export function UploadPage() {
 
         <section data-upload-step="2" ref={filesSectionRef} className={cn("upload-files-card dam-soft-card min-w-0 scroll-mt-24 self-start p-4 xl:sticky xl:top-24", mobileStep !== 2 && "max-md:hidden")} data-testid="upload-desktop-submission-rail">
           <div className="mb-4">
-            <h2 className="text-lg font-black">3. Files and tags</h2>
+          <h2 className="text-lg font-black">3. Files and tags</h2>
             <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
           </div>
           {!hasFileOrSource ? (
@@ -448,7 +448,7 @@ export function UploadPage() {
           </section>
           <section className="mt-4 hidden gap-3 rounded-2xl border border-[#cbd8cf] bg-white p-3 shadow-[0_12px_28px_rgba(25,34,29,.045)] md:grid" aria-label="Desktop upload actions" data-testid="upload-desktop-actions-rail">
             <div>
-              <strong className="text-sm font-black text-tjc-ink">Submit for review</strong>
+              <strong className="text-sm font-black text-tjc-ink">Submit for DAM review</strong>
               <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">{submitHelp}</span>
               {draftSaved ? <span className="mt-2 block text-xs font-black text-tjc-evergreen" data-testid="upload-draft-local-state">Draft saved locally</span> : null}
             </div>
@@ -475,7 +475,7 @@ export function UploadPage() {
                 disabled={!submitReady}
               >
                 <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
-                Submit for review
+                Submit for DAM review
               </button>
             </div>
           </section>
@@ -497,7 +497,7 @@ export function UploadPage() {
 
         <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-[1.45rem] border border-[#cbd8cf] bg-white/94 p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] backdrop-blur md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
           <div className="grid content-center">
-            <strong className="text-sm font-black text-tjc-ink">Submit for reviewer intake</strong>
+            <strong className="text-sm font-black text-tjc-ink">Submit for DAM review</strong>
             <span className="text-xs font-semibold text-tjc-muted">{submitHelp}</span>
             {draftSaved ? <span className="mt-1 text-xs font-black text-tjc-evergreen" data-testid="upload-draft-local-state">Draft saved locally</span> : null}
           </div>
@@ -539,7 +539,7 @@ export function UploadPage() {
               onClick={!submitReady ? focusSubmitIssue : undefined}
             >
               <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
-              Submit for review
+              Submit for DAM review
             </button>
           </div>
         </section>

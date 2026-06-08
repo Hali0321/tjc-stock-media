@@ -9,6 +9,14 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
   const downloadable = display.download.approvedCopy.allowed;
   const hasWarnings = display.confidence.some((item) => item.tone === "warn");
   const primaryFacts = display.trustFacts.slice(0, 6);
+  const lanes = [
+    { label: "Workflow", value: display.download.reuse.label },
+    { label: "Distribution", value: asset.usageScope },
+    { label: "Rights", value: asset.rightsStatus && !/unknown|needs review|review required/i.test(asset.rightsStatus) ? "Rights verified" : "Rights unverified" },
+    { label: "People/release", value: asset.peopleRisk && asset.peopleRisk !== "Unknown" ? asset.peopleRisk : "People visibility unverified" },
+    { label: "Availability", value: downloadable ? "Download available" : "Preview only" },
+    { label: "Source", value: asset.sourceSystem || asset.sourcePlatform || asset.sourceAccount ? "Source verified" : "Source incomplete" }
+  ];
   return (
     <section className={cn(
       "rounded-[1.35rem] border p-4 shadow-[0_18px_42px_rgba(35,53,111,.06)]",
@@ -27,13 +35,22 @@ export function AssetTrustPanel({ asset, role }: { asset: StockMediaAsset; role:
           <span className="mt-1 block text-sm font-semibold leading-snug">{downloadable && !hasWarnings ? "Source, rights, review, visibility, and approved-copy checks support reuse." : display.download.reuse.summary}</span>
         </div>
       </div>
-      <div className="mt-4 grid gap-2 rounded-2xl bg-white/62 p-3 ring-1 ring-white" aria-label="Grouped trust status summary" data-badge-slot="detail-trust-summary">
+      <div className="mt-4 grid gap-2 rounded-2xl bg-white/62 p-3 ring-1 ring-white" aria-label="Trust matrix status lanes" data-badge-slot="detail-trust-summary">
+        <h3 className="text-xs font-black uppercase text-tjc-muted">Trust matrix</h3>
         <div className="flex flex-wrap items-center gap-2">
           <ReuseStateBadge asset={asset} size="sm" />
           <RightsBadge asset={asset} size="sm" />
           <ReviewBadge asset={asset} size="sm" />
           <VisibilityBadge asset={asset} size="sm" />
         </div>
+        <dl className="grid gap-2 sm:grid-cols-2">
+          {lanes.map((lane) => (
+            <div className="rounded-xl border border-[#d6dfd8] bg-white/78 p-2" key={lane.label}>
+              <dt className="text-[11px] font-black uppercase text-tjc-muted">{lane.label}</dt>
+              <dd className="mt-1 text-xs font-black text-tjc-ink">{lane.value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
       <details className="mt-3 rounded-2xl bg-white/58 p-3 text-sm" open={role !== "Viewer"}>
         <summary className="cursor-pointer font-black text-tjc-evergreen"><span className="inline-flex items-center gap-2"><ClipboardCheck size={15} strokeWidth={1.8} aria-hidden="true" /> {role === "Viewer" ? "Show details" : "Trust checklist"}</span></summary>

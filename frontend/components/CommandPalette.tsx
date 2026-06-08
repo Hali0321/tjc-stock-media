@@ -17,34 +17,34 @@ type Command = {
   group: "Go to" | "Find" | "Saved views" | "Workflow";
   shortcut?: string;
   tag?: string;
-  access?: "Admin" | "Reviewer";
+  access?: "Governance" | "Reviewer";
   adminOnly?: boolean;
   reviewerOnly?: boolean;
 };
 
 const commands: Command[] = [
   { id: "go-library", group: "Go to", label: "Library", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "library home assets contact sheet", icon: Search, shortcut: "G L" },
-  { id: "go-collections", group: "Go to", label: "Collections", hint: "Browse ministry collections", href: "/collections", keywords: "albums collections events", icon: FolderOpen, shortcut: "G C" },
-  { id: "go-upload", group: "Go to", label: "Upload", hint: "Open contributor intake for review", href: "/upload", keywords: "upload intake contributor submit files", icon: UploadCloud, shortcut: "G U" },
+  { id: "go-collections", group: "Go to", label: "Collections", hint: "Open governed internal portals", href: "/collections", keywords: "collections campaign ministry governed portals events", icon: FolderOpen, shortcut: "G C" },
+  { id: "go-upload", group: "Go to", label: "Intake", hint: "Open contributor intake session", href: "/upload", keywords: "intake upload contributor submit files", icon: UploadCloud, shortcut: "G U" },
   { id: "go-review", group: "Go to", label: "Review", hint: "Open reviewer governance workbench", href: "/review", keywords: "review governance queue evidence", icon: ShieldAlert, shortcut: "G R" },
   { id: "go-guide", group: "Go to", label: "Guide", hint: "Open use guidance and policy notes", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle, shortcut: "G ?" },
-  { id: "go-admin", group: "Go to", label: "Admin", hint: "Open readiness console and blockers", href: "/admin", keywords: "admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Admin", tag: "Admin" },
+  { id: "go-admin", group: "Go to", label: "Governance", hint: "Open operations console and blockers", href: "/admin", keywords: "governance admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Governance", tag: "Governance" },
 
   { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Library search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
   { id: "find-rs-id", group: "Find", label: "Search ResourceSpace ID", hint: "Type a numeric RS ID to open an exported asset record", href: "/", keywords: "resourcespace id reference ref search number", icon: KeyRound, shortcut: "RS #" },
-  { id: "find-collection", group: "Find", label: "Search by collection", hint: "Find assets by album, event, ministry, or stable collection", href: "/collections", keywords: "collection album event ministry stable id", icon: Tags, shortcut: "C" },
+  { id: "find-collection", group: "Find", label: "Search by collection", hint: "Find governed sets by event, ministry, campaign, or stable collection", href: "/collections", keywords: "collection campaign event ministry stable id", icon: Tags, shortcut: "C" },
   { id: "find-blocked", group: "Find", label: "Search blocked downloads", hint: "Show assets blocked by reuse or download policy", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish needs review", icon: ShieldAlert, shortcut: "B" },
 
-  { id: "portal-ready", group: "Saved views", label: "Portal Ready", hint: "Assets passing stricter TJC portal reuse policy", href: "/?view=approved-church-wide", keywords: "public safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },
+  { id: "portal-ready", group: "Saved views", label: "External ready", hint: "Assets approved for external ministry use", href: "/?view=approved-church-wide", keywords: "external ministry safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },
   { id: "needs-review", group: "Saved views", label: "Needs Review", hint: "Candidates missing evidence, rights, or approved copy", href: "/?view=needs-review", keywords: "needs portal review missing evidence rights approval", icon: ShieldAlert, shortcut: "2" },
   { id: "no-people", group: "Saved views", label: "No People", hint: "Lower-risk visuals with no visible people", href: "/?view=no-people", keywords: "no people empty plants bible safe", icon: UserRoundSearch, shortcut: "3" },
   { id: "website-hero", group: "Saved views", label: "Website Hero", hint: "Hero/banner candidates for web and slides", href: "/?view=website-hero", keywords: "hero banner web header website", icon: FileSearch, shortcut: "4" },
   { id: "recently-approved", group: "Saved views", label: "Recently Approved", hint: "Newest reviewed items in role-safe Library", href: "/?view=recently-approved", keywords: "recently approved newest reviewed", icon: Archive, shortcut: "5" },
 
-  { id: "start-upload", group: "Workflow", label: "Start upload intake", hint: "Queue new media as Needs Review / Do Not Publish", href: "/upload", keywords: "start upload intake contributor draft submit", icon: UploadCloud, shortcut: "U" },
+  { id: "start-upload", group: "Workflow", label: "Start intake session", hint: "Submit new media for DAM review", href: "/upload", keywords: "start intake upload contributor draft submit", icon: UploadCloud, shortcut: "U" },
   { id: "open-review-queue", group: "Workflow", label: "Open review queue", hint: "Inspect assets that need reviewer evidence", href: "/review?queue=pending", keywords: "open review queue pending evidence", icon: ListFilter, shortcut: "R", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
   { id: "children-youth-queue", group: "Workflow", label: "Open children/youth queue", hint: "Review assets with children or youth visibility risk", href: "/review?queue=children-youth", keywords: "children youth minors queue review people visibility", icon: UserRoundSearch, shortcut: "C Y", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
-  { id: "pending-writes", group: "Workflow", label: "Show pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, shortcut: "P", adminOnly: true, access: "Admin", tag: "Admin" },
+  { id: "pending-writes", group: "Workflow", label: "Show pending writes", hint: "Local review writes awaiting ResourceSpace mapping", href: "/admin#launch-gate", keywords: "pending writes local queue resourcespace write mapping", icon: Settings2, shortcut: "P", adminOnly: true, access: "Governance", tag: "Governance" },
   { id: "request-access", group: "Workflow", label: "Request access", hint: "Review/original access stays a request, not a ResourceSpace write", href: "/guide", keywords: "request access original review coworker permission", icon: HelpCircle, shortcut: "A" }
 ];
 
@@ -316,7 +316,7 @@ export function CommandPalette() {
                                 <span className="mt-0.5 block truncate text-xs font-semibold text-tjc-muted">{command.hint}</span>
                               </span>
                               <span className="hidden items-center gap-2 sm:inline-flex" data-command-proof={command.access ? "role-restricted-command shortcut-placement" : "shortcut-placement"}>
-                                {command.tag ? <span className={cn("rounded-full border px-2 py-1 text-[11px] font-black", command.access === "Admin" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b9d4e1] bg-[#eef8fb] text-[#24546b]")}>{command.tag}</span> : null}
+                                {command.tag ? <span className={cn("rounded-md border px-2 py-1 text-[11px] font-black", command.access === "Governance" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b9d4e1] bg-[#eef8fb] text-[#24546b]")}>{command.tag}</span> : null}
                                 {command.shortcut ? <kbd className="rounded-lg border border-[#d7e0da] bg-white px-2 py-1 text-[11px] font-black text-tjc-muted shadow-[0_1px_0_rgba(255,255,255,.9)_inset]">{command.shortcut}</kbd> : null}
                                 {selected ? <span className="rounded-full bg-tjc-evergreen px-2 py-1 text-[11px] font-black text-white">Enter</span> : null}
                               </span>
@@ -334,7 +334,7 @@ export function CommandPalette() {
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#c7d3cb] bg-[#f5f8f5] px-4 py-3 text-xs font-semibold text-tjc-muted sm:px-5">
               <span>↑↓ move. Enter opens {selectedCommand ? selectedCommand.label : "selected command"}. Esc closes.</span>
               <span data-command-proof="footer-safety-copy">ResourceSpace writes remain pending until field mapping is configured.</span>
-              {hiddenRoleCommandCount ? <span>{hiddenRoleCommandCount} role-restricted commands hidden for {role}.</span> : <span>Admin and reviewer commands visible for {role}.</span>}
+              {hiddenRoleCommandCount ? <span>{hiddenRoleCommandCount} role-restricted commands hidden for {role}.</span> : <span>Governance and reviewer commands visible for {role}.</span>}
             </div>
           </section>
         </div>
