@@ -105,6 +105,17 @@ function visibleOpsLeaks(text) {
     .slice(0, 8);
 }
 
+function decodedHrefOpsLeaks(href) {
+  const raw = String(href || "");
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    decoded = raw;
+  }
+  return visibleOpsLeaks(decoded);
+}
+
 async function closeContext(context) {
   await Promise.race([
     context.close(),
@@ -401,8 +412,8 @@ for (const width of qaViewports) {
   if ((await page.getByText(/Review required before use|Source file restricted|Not available yet/).count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
   if ((await page.getByRole("link", { name: "Download approved copy" }).count()) > 0) failures.push("viewer-asset-blocked-request-review: blocked record shows download action");
   const reviewRequestHref = await page.getByRole("link", { name: "Request DAM review" }).first().getAttribute("href");
-  const decodedReviewRequestHref = decodeURIComponent(reviewRequestHref || "");
-  if (/ResourceSpace|Raw status/i.test(decodedReviewRequestHref)) failures.push("viewer-asset-blocked-request-review: viewer mailto exposes operations truth");
+  const reviewRequestLeaks = decodedHrefOpsLeaks(reviewRequestHref);
+  if (reviewRequestLeaks.length) failures.push(`viewer-asset-blocked-request-review: viewer mailto exposes operations truth (${reviewRequestLeaks.join(", ")})`);
   await closeContext(context);
 }
 
@@ -706,13 +717,16 @@ for (const width of qaViewports) {
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "false") failures.push("asset actions menu: Escape did not close menu");
   const focusedAfterEscape = await page.evaluate(() => document.activeElement?.textContent || "");
   if (!focusedAfterEscape.includes("Record actions")) failures.push("asset actions menu: focus did not return after Escape");
-  const requestLinks = page.getByRole("link", { name: /Request DAM review|Request source-file access/ });
+  const requestLinks = page.getByRole("link", { name: /Request DAM review|Ask media team|Request source-file access/ });
   if ((await requestLinks.count()) < 1) {
     failures.push("asset detail request link: request action missing");
   } else {
-    const requestHref = await requestLinks.first().getAttribute("href");
-    const decodedRequestHref = decodeURIComponent(requestHref || "");
-    if (/ResourceSpace|Raw status|source path/i.test(decodedRequestHref)) failures.push("asset detail request link: viewer mailto exposes operations truth");
+    const requestLinkCount = await requestLinks.count();
+    for (let index = 0; index < requestLinkCount; index += 1) {
+      const requestHref = await requestLinks.nth(index).getAttribute("href");
+      const leaks = decodedHrefOpsLeaks(requestHref);
+      if (leaks.length) failures.push(`asset detail request link: viewer href exposes operations truth (${leaks.join(", ")})`);
+    }
   }
   await closeContext(context);
 }
