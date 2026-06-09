@@ -6,16 +6,13 @@ import { useRouter } from "next/navigation";
 import { Database, ExternalLink, Info, ShieldCheck, ShieldX } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
-import { HoldToConfirmButton } from "@/components/HoldReleaseButton";
+import { DamAssetActionsMenu as AssetActionsMenu, DamMediaPreviewPanel as MediaPreviewPanel } from "@/components/dam/DamRecord";
+import { DamHoldToConfirmButton as HoldToConfirmButton, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard } from "@/components/dam/DamOperations";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
-import { MediaPreviewPanel } from "@/components/MediaPreviewPanel";
-import { ReviewActionDialog } from "@/components/ReviewActionDialog";
-import { ReviewQueueAssetCard } from "@/components/ReviewQueueAssetCard";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { toastPendingWriteQueued, toastReviewQueued, toastSaveFailed } from "@/lib/tjc-toasts";
 import { missingReviewFields, reviewActions, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
@@ -419,19 +416,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         ))}
       </div>
       <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Decision</h3>
-      <section
-        className={cn("mt-2 rounded-xl border p-3 text-sm", missingRequirementLabels.length ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b8d9c6] bg-[#f3fbf6] text-[#24583d]")}
-        data-testid="review-decision-requirements"
-        aria-label="Decision requirements"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <strong className="font-black">{missingRequirementLabels.length ? "Decision locked" : "Decision ready"}</strong>
-          <span className="rounded-md bg-white px-2 py-1 text-xs font-black tabular-nums">{completedRequirementCount}/{decisionRequirements.length} complete</span>
-        </div>
-        <p className="mt-1 text-xs font-semibold leading-relaxed">
-          {missingRequirementLabels.length ? `Complete before approval: ${missingRequirementLabels.slice(0, 4).join(", ")}${missingRequirementLabels.length > 4 ? ` and ${missingRequirementLabels.length - 4} more` : ""}.` : "Evidence and note are ready for a pending review write."}
-        </p>
-      </section>
+      <DamReviewDecisionLockPanel missingLabels={missingRequirementLabels} completed={completedRequirementCount} total={decisionRequirements.length} />
       <div className="mt-2 grid min-w-0 max-w-full gap-2" data-component="ReviewActionButtons" data-testid="review-disabled-decision-group">
         {reviewActions.map((action) => {
           const missing = missingEvidenceFor(action);

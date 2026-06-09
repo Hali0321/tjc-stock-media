@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderOpen, Search, ShieldCheck } from "lucide-react";
-import { EmptyState, HeroSearch, PackageCard, PackageInspector, PrimaryAction, UseCaseCard } from "@/components/DamExperience";
+import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamPrimaryAction as PrimaryAction, DamUseCaseCard as UseCaseCard } from "@/components/dam/DamWorkspace";
+import { DamPackageCard as PackageCard, DamPackageInspector as PackageInspector } from "@/components/dam/DamPortal";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogCollection, SearchResult } from "@/lib/types";
 

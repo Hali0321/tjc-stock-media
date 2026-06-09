@@ -2,10 +2,9 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FileText, Link as LinkIcon, RotateCcw, Save, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
-import { EmptyState, EvidenceChecklist, PrimaryAction, UseCaseCard } from "@/components/DamExperience";
+import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
 import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
-import { UploadDropzone } from "@/components/UploadFileDropzone";
 import { canUpload } from "@/lib/permissions";
 import { toastDraftSaved, toastUploadComplete, toastUploadFailed, toastUploadStarted } from "@/lib/tjc-toasts";
 import { parseUploadTags, uploadTagSuggestions } from "@/lib/upload-tags";
