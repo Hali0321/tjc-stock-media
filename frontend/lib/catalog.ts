@@ -455,11 +455,14 @@ function buildCollections(assets: StockMediaAsset[], role: DemoRole): CatalogCol
     return {
       id: definition.id,
       name: definition.name,
-	      description: definition.description,
-	      count: matching.length,
-	      countLabel: `${matching.length.toLocaleString()} asset${matching.length === 1 ? "" : "s"}`,
-	      dateRange: dateRangeFor(matching),
-	      ministry: matching.find((asset) => asset.sourceAccount)?.sourceAccount || matching.find((asset) => asset.eventName)?.eventName || "Source not available",
+      description: definition.description,
+      count: matching.length,
+      countLabel: `${matching.length.toLocaleString()} asset${matching.length === 1 ? "" : "s"}`,
+      dateRange: dateRangeFor(matching),
+      ministry:
+        role === "Reviewer" || role === "DAM Admin"
+          ? matching.find((asset) => asset.eventName)?.eventName || definition.description
+          : definition.description,
       approvalSummary: approvalSummary(matching),
       peopleWarning: warning,
       searchQuery: definition.searchQuery,

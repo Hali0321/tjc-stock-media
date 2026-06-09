@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderOpen, Search, ShieldCheck } from "lucide-react";
 import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamPrimaryAction as PrimaryAction, DamUseCaseCard as UseCaseCard } from "@/components/dam/DamWorkspace";
-import { DamPackageCard as PackageCard, DamPackageInspector as PackageInspector } from "@/components/dam/DamPortal";
+import { DamPackageCard as PackageCard, DamPackageInspector as PackageInspector, PackageCabinetHeader, packageReadinessForRole } from "@/components/dam/DamPortal";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogCollection, SearchResult } from "@/lib/types";
 
@@ -76,10 +76,20 @@ export function CollectionsPage() {
     [result?.collections, submittedQuery]
   );
   const selectedCollection = collections.find((collection) => collection.id === selectedCollectionId) || collections[0];
-  const readyTotal = result?.counts.portalReady ?? 0;
+  const packageReadinessTotals = collections.reduce(
+    (totals, collection) => {
+      const readiness = packageReadinessForRole(collection, role);
+      return {
+        ready: totals.ready + readiness.readyCount,
+        review: totals.review + readiness.reviewNeeded
+      };
+    },
+    { ready: 0, review: 0 }
+  );
+  const readyTotal = opsView ? result?.counts.portalReady ?? packageReadinessTotals.ready : packageReadinessTotals.ready;
   const reviewTotal = opsView
-    ? result?.counts.needsReview ?? 0
-    : result?.counts.batchApprovedWithBlockers || result?.counts.needsReview || 0;
+    ? result?.counts.needsReview ?? packageReadinessTotals.review
+    : packageReadinessTotals.review;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -121,7 +131,7 @@ export function CollectionsPage() {
         </div>
       </section>
 
-      <section className="find-usecase-grid grid gap-2 sm:grid-cols-3" aria-label="Package use cases">
+      <section className="find-usecase-grid package-usecase-strip grid gap-2 sm:grid-cols-3" aria-label="Package use cases">
         {packageUseCases.map((item) => (
           <UseCaseCard
             key={item.label}
@@ -139,23 +149,17 @@ export function CollectionsPage() {
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Ministry packages">
         <div className="grid gap-4">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-black text-tjc-ink">Ministry kits</h2>
-              <p className="mt-1 text-sm font-semibold text-tjc-muted">
-                {loading ? "Loading packages" : `${collections.length} packages shown. ${readyTotal.toLocaleString()} ready items, ${reviewTotal.toLocaleString()} needing review.`}
-              </p>
-            </div>
-            {submittedQuery ? (
-              <PrimaryAction tone="secondary" onClick={() => {
+          <PackageCabinetHeader
+            collections={collections}
+            readyTotal={readyTotal}
+            reviewTotal={reviewTotal}
+            submittedQuery={submittedQuery}
+            onClear={() => {
                 setQuery("");
                 setSubmittedQuery("");
                 setSelectedCollectionId("");
-              }}>
-                Clear search
-              </PrimaryAction>
-            ) : null}
-          </div>
+            }}
+          />
 
           {loading ? (
             <div className="grid gap-3">

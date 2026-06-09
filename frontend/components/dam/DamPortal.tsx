@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderOpen, Search, ShieldAlert } from "lucide-react";
+import { CheckCircle2, FolderOpen, LayoutGrid, ListFilter, Search, ShieldAlert } from "lucide-react";
 import { DamEmptyState as EmptyState, DamPrimaryAction as PrimaryAction } from "@/components/dam/DamWorkspace";
 import { collectionImageUrl } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
@@ -25,6 +25,69 @@ function packageInitials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "PK";
+}
+
+function packageReference(collection: CatalogCollection) {
+  return `PK-${packageInitials(collection.name)}-${collection.name.length.toString().padStart(2, "0")}`;
+}
+
+export function packageReadinessForRole(collection: CatalogCollection, roleOrOpsView: DemoRole | boolean) {
+  const opsView = typeof roleOrOpsView === "boolean" ? roleOrOpsView : roleOrOpsView === "Reviewer" || roleOrOpsView === "DAM Admin";
+  const readyMatch = collection.approvalSummary.match(/\d+/);
+  const readyCount = readyMatch ? Number(readyMatch[0]) : collection.count;
+  const reviewNeeded = Math.max(0, collection.count - readyCount);
+  return {
+    readyCount,
+    reviewNeeded,
+    opsView,
+    bestUse: collection.searchQuery || `${collection.ministry} media`,
+    reference: packageReference(collection)
+  };
+}
+
+export function PackageCabinetHeader({
+  collections,
+  readyTotal,
+  reviewTotal,
+  submittedQuery,
+  onClear
+}: {
+  collections: CatalogCollection[];
+  readyTotal: number;
+  reviewTotal: number;
+  submittedQuery?: string;
+  onClear: () => void;
+}) {
+  return (
+    <section className="package-cabinet-header" aria-label="Package cabinet controls">
+      <div className="package-cabinet-title">
+        <span>Cabinet</span>
+        <h2>Ministry kits</h2>
+        <p>{collections.length.toLocaleString()} curated packages shown.</p>
+      </div>
+      <dl className="package-cabinet-metrics" aria-label="Package readiness summary">
+        <div>
+          <dt>Ready items</dt>
+          <dd>{readyTotal.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Need review</dt>
+          <dd>{reviewTotal.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Reuse rule</dt>
+          <dd>Item-level</dd>
+        </div>
+      </dl>
+      <div className="package-cabinet-actions" aria-label="Package view options">
+        <span><LayoutGrid size={14} strokeWidth={1.9} aria-hidden="true" /> Contact sheet</span>
+        <span><ListFilter size={14} strokeWidth={1.9} aria-hidden="true" /> Safety first</span>
+        {submittedQuery ? (
+          <button type="button" onClick={onClear}>Clear search</button>
+        ) : null}
+      </div>
+    </section>
+  );
 }
 
 function PackageCover({
@@ -69,7 +132,7 @@ function PackageCover({
         </div>
         <div className="rounded-md bg-white/90 p-2 text-tjc-ink shadow-sm">
           <strong className="line-clamp-2 text-lg font-black leading-tight text-white drop-shadow-sm">{collection.name}</strong>
-          <span className="mt-1 block text-xs font-black text-white/90">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
+          <span className="mt-1 block text-xs font-black text-white/90">{readyCount.toLocaleString()} ready</span>
         </div>
       </div>
     </div>
@@ -89,39 +152,45 @@ export function PackageCard({
   onOpen: () => void;
   onInspect: () => void;
 }) {
-  const readyMatch = collection.approvalSummary.match(/\d+/);
-  const rawReadyCount = readyMatch ? Number(readyMatch[0]) : collection.count;
-  const readyCount = role === "Reviewer" || role === "DAM Admin" ? rawReadyCount : 0;
-  const reviewNeeded = Math.max(0, collection.count - readyCount);
-  const bestUse = collection.searchQuery || `${collection.ministry} media`;
+  const { readyCount, reviewNeeded, bestUse, reference } = packageReadinessForRole(collection, role);
   return (
     <article
-      className={cn("package-card collectible-package-card collection-row-card group grid gap-4 overflow-hidden rounded-2xl border bg-white p-4 transition md:grid-cols-[13rem_minmax(0,1fr)]", active && "ring-2 ring-[#0b4b42]")}
+      className={cn("package-card collectible-package-card collection-row-card package-cabinet-row group overflow-hidden", active && "is-active")}
       onPointerEnter={onInspect}
     >
+      <div className="package-row-index" aria-hidden="true">
+        <span>{reference}</span>
+        <CheckCircle2 size={16} strokeWidth={1.9} />
+      </div>
       <PackageCover collection={collection} readyCount={readyCount} reviewNeeded={reviewNeeded} />
-      <div className="grid min-w-0 gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-black text-tjc-evergreen">{collection.ministry}</span>
-            <span className="rounded-md border border-[#d9dee3] bg-[#f8faf9] px-2 py-0.5 text-[11px] font-black uppercase tracking-[.04em] text-[#52606b]">Package</span>
+      <div className="package-row-main">
+        <div className="package-row-copy">
+          <div className="package-row-eyebrow">
+            <span>{collection.ministry}</span>
+            <span>Package</span>
           </div>
-          <h2 className="mt-1 line-clamp-2 text-xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
-          <p className="mt-2 line-clamp-2 text-sm font-semibold leading-relaxed text-tjc-muted">{collection.description}</p>
+          <h2>{collection.name}</h2>
+          <p>{collection.description}</p>
         </div>
-        <div className="package-row-stats grid grid-cols-3 overflow-hidden rounded-xl border border-[#d6dfd8] bg-[#f7faf8] text-sm">
-          <span className="px-3 py-2 font-black text-[#194f34]">{readyCount.toLocaleString()}<small className="mt-0.5 block font-semibold text-tjc-muted">ready</small></span>
-          <span className="border-x border-[#d6dfd8] px-3 py-2 font-black text-[#71500f]">{reviewNeeded.toLocaleString()}<small className="mt-0.5 block font-semibold text-tjc-muted">review</small></span>
-          <span className="min-w-0 px-3 py-2 font-black text-[#27435b]"><span className="block truncate">{collection.countLabel}</span><small className="mt-0.5 block font-semibold text-tjc-muted">items</small></span>
+        <div className="package-row-stats">
+          <span><strong>{readyCount.toLocaleString()}</strong><small>ready</small></span>
+          <span><strong>{reviewNeeded.toLocaleString()}</strong><small>review</small></span>
+          <span><strong>{collection.countLabel}</strong><small>items</small></span>
         </div>
-        <div className="package-row-note grid gap-1 rounded-xl bg-[#f7faf8] p-3 text-sm leading-relaxed">
-          <p className="font-semibold text-tjc-muted"><strong className="font-black text-tjc-ink">Best use:</strong> {bestUse}</p>
-          <p className="font-semibold text-[#71500f]"><strong className="font-black">Safety:</strong> item-level approval required before reuse.</p>
+        <div className="package-row-ledger">
+          <div>
+            <span>Best use:</span>
+            <strong>{bestUse}</strong>
+          </div>
+          <div>
+            <span>Safety:</span>
+            <strong>Item-level approval required before reuse.</strong>
+          </div>
         </div>
         {collection.peopleWarning ? (
-          <p className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-xs font-black leading-relaxed text-[#71500f]">{collection.peopleWarning}</p>
+          <p className="package-row-warning">{collection.peopleWarning}</p>
         ) : null}
-        <div className="flex flex-wrap gap-2 md:justify-end">
+        <div className="package-row-actions">
           <PrimaryAction onClick={onOpen} icon={Search}>Open media</PrimaryAction>
           <PrimaryAction onClick={onInspect} tone="secondary" icon={FolderOpen}>View details</PrimaryAction>
         </div>
@@ -149,34 +218,32 @@ export function PackageInspector({
       />
     );
   }
-  const readyMatch = collection.approvalSummary.match(/\d+/);
-  const rawReadyCount = readyMatch ? Number(readyMatch[0]) : collection.count;
-  const readyCount = opsView ? rawReadyCount : 0;
-  const reviewNeeded = Math.max(0, collection.count - readyCount);
-  const bestUse = collection.searchQuery || `${collection.ministry} media`;
+  const { readyCount, reviewNeeded, bestUse, reference } = packageReadinessForRole(collection, Boolean(opsView));
   return (
-    <aside className="package-inspector grid gap-4 rounded-2xl border border-[#d6dfd8] bg-white p-4 sm:p-5">
-      <div>
-        <span className="text-sm font-black text-tjc-evergreen">{opsView ? "Package readiness" : "Package detail panel"}</span>
-        <h2 className="mt-1 text-3xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
-        <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{collection.description}</p>
+    <aside className="package-inspector package-cabinet-inspector">
+      <div className="package-inspector-title">
+        <span>{opsView ? "Package readiness" : "Package detail panel"}</span>
+        <h2>{collection.name}</h2>
+        <p>{collection.description}</p>
       </div>
       <PackageCover collection={collection} readyCount={readyCount} reviewNeeded={reviewNeeded} large />
-      <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-[#d6dfd8] bg-[#f8fbf8] py-1 text-sm">
-        <span className="px-3 py-2 font-black text-[#194f34]">{readyCount}<br /><small className="font-semibold text-tjc-muted">ready</small></span>
-        <span className="border-x border-[#d6dfd8] px-3 py-2 font-black text-[#71500f]">{reviewNeeded}<br /><small className="font-semibold text-tjc-muted">review</small></span>
-        <span className="px-3 py-2 font-black text-[#27435b]">{totalCollections}<br /><small className="font-semibold text-tjc-muted">packages</small></span>
+      <dl className="package-inspector-record">
+        <div><dt>Reference code</dt><dd>{reference}</dd></div>
+        <div><dt>Suggested use</dt><dd>{bestUse}</dd></div>
+        <div><dt>Package count</dt><dd>{collection.countLabel}</dd></div>
+        <div><dt>Cabinet size</dt><dd>{totalCollections.toLocaleString()} packages</dd></div>
+      </dl>
+      <div className="package-inspector-metrics">
+        <span><strong>{readyCount}</strong><small>ready</small></span>
+        <span><strong>{reviewNeeded}</strong><small>review</small></span>
+        <span><strong>{collection.dateRange}</strong><small>date range</small></span>
       </div>
-      <section className="grid gap-2">
-        <h3 className="text-sm font-black text-tjc-ink">Suggested use</h3>
-        <p className="text-sm font-semibold leading-relaxed text-tjc-muted">{bestUse}</p>
-      </section>
-      <section className="grid grid-cols-[auto_1fr] gap-3 rounded-xl border border-[#e5cf93] bg-[#fff8e8] p-3 text-sm font-semibold leading-relaxed text-[#71500f]">
+      <section className="package-safety-notice">
         <ShieldAlert size={18} strokeWidth={1.9} aria-hidden="true" />
         <span>Package approval is not enough. Open each media record to confirm item-level approval before reuse.</span>
       </section>
       {collection.peopleWarning ? (
-        <section className="rounded-xl border border-[#dfb9b5] bg-[#fff1ef] p-3 text-sm font-semibold leading-relaxed text-[#7b332f]">
+        <section className="package-people-warning">
           {collection.peopleWarning}
         </section>
       ) : null}
