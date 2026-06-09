@@ -18,6 +18,16 @@ function normalizeQueue(value: string | null): ReviewQueueId {
 
 export async function GET(request: NextRequest) {
   const role = normalizeRole(request.nextUrl.searchParams.get("role"));
+  if (!canReview(role)) {
+    appendAuditEvent({
+      type: "review_denied",
+      role,
+      status: "denied",
+      summary: "Review queue access denied for role.",
+      details: { reason: "role-cannot-review" }
+    });
+    return NextResponse.json({ error: "Review Inbox requires reviewer access." }, { status: 403 });
+  }
   const queueId = normalizeQueue(request.nextUrl.searchParams.get("queue"));
   const queue = await getReviewQueue(role, queueId);
   return NextResponse.json({

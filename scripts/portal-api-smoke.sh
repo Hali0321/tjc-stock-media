@@ -315,6 +315,9 @@ if (count !== 0) {
 }
 ' "$BASE_URL/api/review?role=Reviewer&queue=pending"
 
+expect_json_status 403 review-queue-viewer-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/review?role=Viewer&queue=pending"
+expect_json_status 403 review-queue-contributor-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/review?role=Contributor&queue=pending"
+
 expect_json dam-admin-links-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const count = Object.keys(data.resourceSpaceUrls || {}).length;
