@@ -142,13 +142,14 @@ if (data.source && (data.source.label !== "Media library" || data.source.adapter
 }
 '
 
-expect_code 403 unsafe-thumbnail-viewer "$BASE_URL/api/assets/thumbnail/644?variant=detail"
+expect_json_status 403 unsafe-thumbnail-viewer-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/thumbnail/644?variant=detail"
 expect_code 200 unsafe-thumbnail-reviewer "$BASE_URL/api/assets/thumbnail/644?variant=detail&role=Reviewer"
 expect_code 403 unsafe-download-variant-reviewer "$BASE_URL/api/assets/thumbnail/644?variant=download&role=Reviewer"
 expect_code 403 blocked-approved-download-viewer "$BASE_URL/api/download/368?role=Viewer"
 expect_code 400 malformed-asset-detail "$BASE_URL/api/assets/%2E%2E644?role=Reviewer"
 expect_code 400 malformed-thumbnail "$BASE_URL/api/assets/thumbnail/%2E%2E644?variant=detail&role=Reviewer"
 expect_code 400 malformed-download "$BASE_URL/api/download/%2E%2E368?role=Viewer"
+expect_json_status 404 missing-thumbnail-viewer-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/thumbnail/999999?variant=detail&role=Viewer"
 expect_code 400 unknown-saved-view "$BASE_URL/api/assets/search?role=Viewer&view=../../admin"
 expect_code 400 unknown-collection "$BASE_URL/api/assets/search?role=Viewer&collection=../../admin"
 
@@ -167,7 +168,7 @@ expect_code 404 missing-review-asset \
   -d '{"role":"Reviewer","id":"999999","action":"Approve Public"}' \
   "$BASE_URL/api/review"
 
-expect_code 400 empty-upload-contributor \
+expect_json_status 400 empty-upload-contributor-payload-safe "$normal_user_payload_guard" \
   -X POST -F 'role=Contributor' -F 'eventName=No files test' \
   "$BASE_URL/api/upload"
 
@@ -189,10 +190,33 @@ expect_code 400 noncanonical-upload-tags \
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"
 
+expect_json_status 400 noncanonical-upload-tags-payload-safe "$normal_user_payload_guard" \
+  -X POST \
+  -F 'role=Contributor' \
+  -F 'title=Noncanonical tag test' \
+  -F 'eventName=Noncanonical tag test' \
+  -F 'eventDate=2026-06-06' \
+  -F 'ministry=Internet Ministry' \
+  -F 'source=QA Reviewer' \
+  -F 'peopleVisible=No' \
+  -F 'minorsVisible=No' \
+  -F 'usageRights=TJC-owned / permission confirmed' \
+  -F 'approvalSuggestion=Internal ministry' \
+  -F 'notes=No consent restrictions; no people visible.' \
+  -F 'tags=qa-only' \
+  -F 'intakeNotes=QA invalid taxonomy intake.' \
+  -F 'sourceLink=https://drive.google.com/example' \
+  "$BASE_URL/api/upload"
+
 expect_json source-link-upload-contributor '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.status !== "validated" || data.fileCount !== 0 || !data.sourceLink) {
   console.error("FAIL: source-link intake was not accepted without local files");
+  process.exit(1);
+}
+const text = JSON.stringify(data);
+if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b/i.test(text)) {
+  console.error("FAIL: contributor upload response leaked operational copy");
   process.exit(1);
 }
 ' -X POST \
@@ -259,8 +283,13 @@ expect_code 404 collection-missing-asset \
 
 expect_json collection-preview-contributor '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-if (data.ok !== false || data.assetCount !== 1 || !/Persistence/.test(data.message || "")) {
+if (data.ok !== false || data.assetCount !== 1 || !/Sharing stays paused/.test(data.message || "")) {
   console.error("FAIL: collection draft preview did not stay read-only/honest");
+  process.exit(1);
+}
+const text = JSON.stringify(data);
+if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|Persistence/i.test(text)) {
+  console.error("FAIL: contributor collection response leaked operational copy");
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \

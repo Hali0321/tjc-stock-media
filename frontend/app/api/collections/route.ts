@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     ok: false,
-    mode: "server-route-contract",
+    mode: "review-preview",
     title,
     state: blockedPublic ? "private draft - public gate blocked" : audience,
     owner: normalizeTextField(body.owner, "Ministry media", 80),
@@ -92,6 +92,6 @@ export async function POST(request: NextRequest) {
     },
     message: blockedPublic
       ? `Collection draft preview ready with ${found.length} asset${found.length === 1 ? "" : "s"}. Public portal blocked until every asset is portal-ready with current approval, source, rights, people, and derivatives.`
-      : `Collection draft preview ready with ${found.length} asset${found.length === 1 ? "" : "s"} for ${audience}. Persistence/share links need ResourceSpace portal mapping.`
+      : `Collection draft preview ready with ${found.length} asset${found.length === 1 ? "" : "s"} for ${audience}. Sharing stays paused until each item is reviewed and cleared.`
   });
 }

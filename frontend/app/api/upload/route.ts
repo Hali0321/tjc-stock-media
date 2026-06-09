@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   if (invalidTags.length) {
     return NextResponse.json(
       {
-        error: "Suggested tags must use the current ResourceSpace/export taxonomy.",
+        error: "Suggested tags must use the current media-library taxonomy.",
         invalidTags,
         guidance: "Add new wording to intake notes for reviewer consideration."
       },
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     );
   }
   if (!files.length && !sourceLink) {
-    return NextResponse.json({ error: "Add at least one file or existing Google/ResourceSpace link before submitting intake." }, { status: 400 });
+    return NextResponse.json({ error: "Add at least one file or existing media link before submitting intake." }, { status: 400 });
   }
 
   const largeFiles = files.filter((file) => file.size > LARGE_MEDIA_BYTES);
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     status: "validated",
     defaultReviewState: uploadDefaultState.status,
     message:
-      "Upload intake validated. Current Mac reference uses ResourceSpace metadata export for browsing; ResourceSpace API upload persistence is the next integration step.",
+      "Upload intake validated. New media remains Needs Review / Do Not Publish until a reviewer clears the record.",
     eventName,
     fileCount: files.length,
     sourceLink: sourceLink || null,

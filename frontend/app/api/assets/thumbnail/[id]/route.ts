@@ -5,6 +5,7 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
+import { sourceForRole } from "@/lib/source-redaction";
 
 export const dynamic = "force-dynamic";
 
@@ -52,14 +53,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             ? "card"
             : "small";
   const { asset, source } = await getAssetRecordById(id);
+  const safeSource = sourceForRole(role, source);
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found.", source }, { status: 404 });
+    return NextResponse.json({ error: "Asset not found.", source: safeSource }, { status: 404 });
   }
 
   const action: AccessAction = variant === "download" ? "downloadApprovedCopy" : variant === "detail" ? "viewDetailPreview" : "viewThumbnail";
   const access = decideAccess(role, action, asset);
   if (!access.allowed) {
-    return NextResponse.json({ error: access.reason || "Preview restricted.", source }, { status: 403 });
+    return NextResponse.json({ error: access.reason || "Preview restricted.", source: safeSource }, { status: 403 });
   }
 
   const filePath = findFilestoreDerivative(id, variant);
