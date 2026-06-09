@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { normalizeTextField } from "@/lib/request-validation";
-import { sourceForRole } from "@/lib/source-redaction";
+import { assetForRolePayload, savedViewForRolePayload, sourceForRole } from "@/lib/source-redaction";
 import type { DemoRole, SearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
   }
 
   return {
-    assets: result.assets,
+    assets: result.assets.map((asset) => assetForRolePayload(role, asset)),
     total: result.total,
     pagination: result.pagination,
     source,
@@ -43,7 +43,7 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
       rendered: result.counts.rendered
     },
     appliedIntent: result.appliedIntent,
-    savedViews: result.savedViews,
+    savedViews: result.savedViews.map((view) => savedViewForRolePayload(role, view)),
     collections: result.collections
   };
 }

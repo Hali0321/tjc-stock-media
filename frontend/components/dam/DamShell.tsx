@@ -117,7 +117,7 @@ export function DamShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="grain-overlay" aria-hidden="true" />
       <header className="dam-app-header sticky top-0 z-40 px-3 py-3 md:px-5">
-        <div className="mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 xl:grid-cols-[minmax(18rem,.52fr)_minmax(0,1fr)_auto]">
+        <div className="dam-header-inner mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 xl:grid-cols-[minmax(18rem,.52fr)_minmax(0,1fr)_auto]">
           <DamBrand opsShell={opsShell} />
 
           <div className="hidden min-w-0 justify-center 2xl:flex">

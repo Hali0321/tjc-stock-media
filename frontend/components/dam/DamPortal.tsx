@@ -41,7 +41,9 @@ function PackageCover({
   const images = collection.images.slice(0, 4);
   if (images.length) {
     return (
-      <div className={cn("package-cover grid aspect-[4/3] grid-cols-[1.25fr_.75fr] gap-1.5 overflow-hidden rounded-2xl bg-[#e8f1eb] p-1.5", large && "aspect-[16/10]")}>
+      <div className={cn("package-cover package-cover-photo relative grid aspect-[4/3] grid-cols-[1.25fr_.75fr] gap-1.5 overflow-hidden rounded-2xl bg-[#e8f1eb] p-1.5", large && "aspect-[16/10]")}>
+        <span className="package-cover-label absolute left-3 top-3 z-[2] rounded-lg bg-white/92 px-2.5 py-1 text-[11px] font-black uppercase tracking-[.08em] text-tjc-evergreen shadow-sm">Package</span>
+        <span className="package-cover-count absolute bottom-3 right-3 z-[2] rounded-lg bg-[#0b4b42]/92 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
         <span className="row-span-2 overflow-hidden rounded-xl bg-white">
           <img className="h-full min-h-12 w-full object-cover transition duration-300 group-hover:scale-[1.025]" src={images[0].src} alt={images[0].alt} loading="lazy" />
         </span>
@@ -61,7 +63,7 @@ function PackageCover({
       <div className="relative z-[1] grid h-full content-between">
         <div className="flex items-start justify-between gap-2">
           <span className="rounded-xl bg-white/90 px-2.5 py-1 text-xs font-black text-tjc-evergreen shadow-sm">{packageInitials(collection.name)}</span>
-          <span className="text-right text-[11px] font-black uppercase tracking-[.08em] text-white/85">Ministry kit</span>
+          <span className="text-right text-[11px] font-black uppercase tracking-[.08em] text-white/85">Package</span>
         </div>
         <div>
           <strong className="line-clamp-2 text-lg font-black leading-tight text-white drop-shadow-sm">{collection.name}</strong>
@@ -92,7 +94,7 @@ export function PackageCard({
   const bestUse = collection.searchQuery || `${collection.ministry} media`;
   return (
     <article
-      className={cn("package-card group grid gap-4 overflow-hidden rounded-2xl border bg-white p-4 transition", active && "ring-2 ring-[#0b4b42]")}
+      className={cn("package-card collectible-package-card group grid gap-4 overflow-hidden rounded-2xl border bg-white p-4 transition", active && "ring-2 ring-[#0b4b42]")}
       onPointerEnter={onInspect}
     >
       <PackageCover collection={collection} readyCount={readyCount} reviewNeeded={reviewNeeded} />

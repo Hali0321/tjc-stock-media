@@ -40,6 +40,103 @@ expect_json() {
   node -e "$script" < "$output"
 }
 
+expect_json_status() {
+  local expected="$1"
+  local label="$2"
+  local script="$3"
+  local output="$TMP_DIR/${label//[^a-zA-Z0-9_-]/_}.json"
+  shift 3
+  local code
+  code="$(http_code "$output" "$@")"
+  if [ "$code" != "$expected" ]; then
+    echo "FAIL: $label expected $expected got $code"
+    cat "$output"
+    exit 1
+  fi
+  node -e "$script" < "$output"
+}
+
+normal_user_payload_guard='
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const forbiddenKeys = new Set([
+  "metadataHealth",
+  "zeroResultInsights",
+  "operationalInsights",
+  "resourceSpaceId",
+  "resourceSpaceUrl",
+  "resourceSpaceUrls",
+  "sourcePath",
+  "masterDrivePath",
+  "sourceAlbumPath",
+  "originalFilename",
+  "checksumSha256",
+  "fileSizeBytes",
+  "pendingReviewWrite",
+  "pendingWrites",
+  "fieldMappings",
+  "integrationReadiness",
+  "auditLog",
+  "rawTotal",
+  "visibleToRole",
+  "approvedRaw",
+  "approved",
+  "portalReady",
+  "batchApprovedWithBlockers",
+  "needsReview",
+  "pendingReview",
+  "archiveCandidates",
+  "childrenYouth",
+  "missingSource",
+  "rightsReview",
+  "approvedThisMonth"
+]);
+const forbiddenText = [
+  /ResourceSpace/i,
+  /Shared Drive/i,
+  /pending writes?/i,
+  /API mapping/i,
+  /launch gate/i,
+  /diagnostics?/i,
+  /metadata health/i,
+  /raw totals?/i,
+  /source[- ]of[- ]truth/i,
+  /field refs?/i,
+  /source path/i,
+  /master drive/i,
+  /original filename/i,
+  /checksum/i
+];
+const leaks = [];
+function walk(value, path) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => walk(item, `${path}[${index}]`));
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, child] of Object.entries(value)) {
+      const nextPath = path ? `${path}.${key}` : key;
+      if (forbiddenKeys.has(key)) leaks.push(nextPath);
+      walk(child, nextPath);
+    }
+    return;
+  }
+  if (typeof value === "string") {
+    for (const pattern of forbiddenText) {
+      if (pattern.test(value)) leaks.push(`${path}=${JSON.stringify(value).slice(0, 120)}`);
+    }
+  }
+}
+walk(data, "");
+if (leaks.length) {
+  console.error(`FAIL: normal-user payload leaked operational fields/copy: ${leaks.slice(0, 20).join(", ")}`);
+  process.exit(1);
+}
+if (data.source && (data.source.label !== "Media library" || data.source.adapter !== "demo-fallback")) {
+  console.error(`FAIL: normal-user source was not redacted: ${JSON.stringify(data.source)}`);
+  process.exit(1);
+}
+'
+
 expect_code 403 unsafe-thumbnail-viewer "$BASE_URL/api/assets/thumbnail/644?variant=detail"
 expect_code 200 unsafe-thumbnail-reviewer "$BASE_URL/api/assets/thumbnail/644?variant=detail&role=Reviewer"
 expect_code 403 unsafe-download-variant-reviewer "$BASE_URL/api/assets/thumbnail/644?variant=download&role=Reviewer"
@@ -275,6 +372,13 @@ if (!data.source || data.source.label !== "Media library" || data.source.adapter
   process.exit(1);
 }
 ' "$BASE_URL/api/assets/search?role=Viewer&limit=1"
+
+expect_json viewer-search-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/search?role=Viewer&limit=1"
+expect_json contributor-search-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/search?role=Contributor&limit=1"
+expect_json viewer-asset-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/367?role=Viewer"
+expect_json contributor-asset-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/367?role=Contributor"
+expect_json_status 403 viewer-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Viewer"
+expect_json_status 403 contributor-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Contributor"
 
 expect_json rights-status-not-publish-status '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

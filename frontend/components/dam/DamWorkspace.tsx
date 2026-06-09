@@ -192,7 +192,7 @@ function MediaCard({ asset, role, priority = false }: { asset: StockMediaAsset; 
   const verdict = viewerVerdictForAsset(asset, role);
   const previewDetail = verdict.canDownload ? display.cardSubtitle : verdict.reason;
   return (
-    <article className={cn("media-card group grid h-full overflow-hidden rounded-2xl bg-white transition duration-200", priority && "md:row-span-2")}>
+    <article className={cn("media-card media-card-catalog group grid h-full overflow-hidden rounded-2xl bg-white transition duration-200", priority && "md:row-span-2")}>
       <Link href={`/assets/${asset.id}`} className={cn("relative block overflow-hidden bg-[#e9efeb]", priority ? "aspect-[16/11] md:aspect-[4/3]" : "aspect-[4/3]")} aria-label={`Open ${display.title}`}>
         <MediaPreview
           src={display.image}

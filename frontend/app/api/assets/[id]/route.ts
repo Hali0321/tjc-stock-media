@@ -5,7 +5,7 @@ import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { normalizeAssetId } from "@/lib/request-validation";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
-import { sourceForRole } from "@/lib/source-redaction";
+import { assetForRolePayload, sourceForRole } from "@/lib/source-redaction";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +25,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
   const pending = latestPendingWriteForResource(asset.resourceSpaceId || asset.id);
   const isReviewerOrAdmin = canReview(role);
+  const assetPayload = assetWithRoleImageUrls(asset, role);
   return NextResponse.json({
     asset: {
-      ...assetWithRoleImageUrls(asset, role),
+      ...assetForRolePayload(role, assetPayload),
       pendingReviewWrite: isReviewerOrAdmin && pending ? pendingReviewWriteSummary(pending) : undefined
     },
     source: safeSource,
-    related: related.filter((item) => canSeeAsset(role, item)).map((item) => assetWithRoleImageUrls(item, role)),
-    resourceSpaceUrl: isReviewerOrAdmin && asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : null
+    related: related.filter((item) => canSeeAsset(role, item)).map((item) => assetForRolePayload(role, assetWithRoleImageUrls(item, role))),
+    resourceSpaceUrl: isReviewerOrAdmin && asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : undefined
   });
 }

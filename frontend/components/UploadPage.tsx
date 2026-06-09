@@ -255,7 +255,7 @@ export function UploadPage() {
 
   return (
     <div className="dam-shell mobile-first-flow grid gap-5">
-      <section className="find-hero p-5 sm:p-7" aria-label="Send media">
+      <section className="find-hero send-hero p-5 sm:p-7" aria-label="Send media">
         <h1 className="dam-page-title">Send media for review</h1>
         <p className="mt-3 max-w-[58ch] text-lg font-semibold leading-relaxed text-tjc-muted">
           Build a reviewer packet. Send never publishes media.
@@ -285,7 +285,7 @@ export function UploadPage() {
           </div>
         </section>
 
-        <section data-send-step="1" className={cn("grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 1 && "hidden")}>
+        <section data-send-step="1" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 1 && "hidden")}>
           <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Title {requiredHint}</span>
             <input className={inputClass} name="title" placeholder="Bible study fellowship photos" required />
@@ -310,7 +310,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section data-send-step="2" className={cn("grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 2 && "hidden")}>
+        <section data-send-step="2" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 2 && "hidden")}>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
               <span className="flex items-center justify-between gap-2">People visible {requiredHint}</span>
@@ -357,7 +357,7 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section data-send-step="3" className={cn("grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 3 && "hidden")}>
+        <section data-send-step="3" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 3 && "hidden")}>
           <UploadDropzone inputRef={fileInputRef} selectedFiles={selectedFiles} onInputFiles={checkFiles} onDropFiles={addDroppedFiles} onRemove={removeFile} onClear={clearFiles} />
           <label className={labelClass}>
             Existing Drive or media link
@@ -381,7 +381,7 @@ export function UploadPage() {
           {largeWarning ? <div className="rounded-[14px] border border-[#e5cf93] bg-[#fff8e8] p-3 text-sm font-semibold text-[#71500f]">{largeWarning}</div> : null}
         </section>
 
-        <section data-send-step="4" className={cn("grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 4 && "hidden")}>
+        <section data-send-step="4" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 4 && "hidden")}>
           <div>
             <h2 className="text-2xl font-black text-tjc-ink">Reviewer packet</h2>
             <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">Reviewer receives source context, people/youth answers, rights notes, file/link, suggested tags, and notes. Media stays blocked.</p>

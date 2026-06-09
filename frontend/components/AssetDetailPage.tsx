@@ -19,7 +19,7 @@ type DetailResponse = {
   asset: StockMediaAsset;
   source: MediaSourceStatus;
   related: StockMediaAsset[];
-  resourceSpaceUrl: string | null;
+  resourceSpaceUrl?: string | null;
 };
 
 function FieldList({ items }: { items: Array<{ label: string; value?: string }> }) {
@@ -212,12 +212,12 @@ export function AssetDetailPage({ id }: { id: string }) {
     <div className="dam-shell grid gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PrimaryAction href="/" tone="secondary" icon={ArrowLeft}>Back to Find</PrimaryAction>
-        <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={opsView} label={opsView ? "Asset actions" : "Record actions"} />
+        <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={opsView} label={opsView ? "Asset actions" : "Record actions"} />
       </div>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,.85fr)] xl:items-start" aria-label="Media record decision">
+      <section className="asset-record-layout grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,.85fr)] xl:items-start" aria-label="Media record decision">
         <div className="grid gap-4">
-          <div className="overflow-hidden rounded-[14px] border border-[#d7dde2] bg-[#e9efeb]">
+          <div className="record-preview-stage overflow-hidden rounded-[14px] border border-[#d7dde2] bg-[#e9efeb]">
             <div className="grid min-h-[18rem] sm:aspect-[16/10]">
               {preview ? (
                 <MediaPreview src={preview} alt={asset.thumbnailAlt} label="Preview available" detail={display.cardSubtitle} loading="eager" />
@@ -244,7 +244,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           ) : null}
         </div>
 
-        <aside className="grid gap-4 xl:sticky xl:top-[calc(var(--app-header-height)+1rem)]">
+        <aside className="record-verdict-rail grid gap-4 xl:sticky xl:top-[calc(var(--app-header-height)+1rem)]">
           <div>
             <h1 className="text-3xl font-black leading-[1.05] text-tjc-ink sm:text-4xl">{display.title}</h1>
             <p className="mt-3 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">{opsView ? provenance.publicLabel : asset.eventName || asset.collection}</p>
@@ -259,7 +259,7 @@ export function AssetDetailPage({ id }: { id: string }) {
         </aside>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Use guidance">
+      <section className="record-metadata-grid grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Use guidance">
         <div className="grid gap-4">
           <RecordMetadataSection title="Use guidance" className="scroll-mt-28" >
               <FieldList items={display.guidanceFacts.map((fact) => ({ label: fact.label, value: fact.value }))} />
@@ -297,7 +297,7 @@ export function AssetDetailPage({ id }: { id: string }) {
         </aside>
       </section>
 
-      {opsView ? <OpsDetails asset={asset} role={role} resourceSpaceUrl={data.resourceSpaceUrl} /> : null}
+      {opsView ? <OpsDetails asset={asset} role={role} resourceSpaceUrl={data.resourceSpaceUrl ?? null} /> : null}
     </div>
   );
 }
