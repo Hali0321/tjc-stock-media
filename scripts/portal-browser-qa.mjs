@@ -28,6 +28,7 @@ const requiredShots = [
   { name: "detail-mobile-320.png", path: "/assets/368", role: "Viewer", width: 320, height: 900 },
   { name: "detail-mobile-390.png", path: "/assets/368", role: "Viewer", width: 390, height: 900 },
   { name: "admin-desktop.png", path: "/admin", role: "DAM Admin", width: 1440, height: 1000 },
+  { name: "admin-mobile-320.png", path: "/admin", role: "DAM Admin", width: 320, height: 900 },
   { name: "admin-mobile-390.png", path: "/admin", role: "DAM Admin", width: 390, height: 900 },
   { name: "guide-desktop.png", path: "/guide", role: "Viewer", width: 1440, height: 1000 },
   { name: "guide-mobile-320.png", path: "/guide", role: "Viewer", width: 320, height: 900 },
