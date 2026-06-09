@@ -64,6 +64,6 @@ export async function POST(request: NextRequest) {
       reviewerRole: role,
       timestamp
     })),
-    message: `Batch action preview ready for ${found.length} asset${found.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. Sharing and library sync stay paused until each selected item is reviewed and cleared.`
+    message: `Batch action preview ready for ${found.length} asset${found.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. Sharing stays paused until each selected item is reviewed and cleared.`
   });
 }

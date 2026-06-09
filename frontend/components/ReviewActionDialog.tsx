@@ -40,7 +40,7 @@ export function ReviewActionDialog({
     <Dialog
       open={open}
       title={actionLabel}
-      description="Queue a reviewed decision for library sync. Source records stay unchanged until sync completes."
+      description="Queue a reviewed decision for media-team follow-up. This does not publish or finalize the record."
       onClose={onCancel}
       maxWidthClassName="max-w-2xl"
       tone="warning"
@@ -56,7 +56,7 @@ export function ReviewActionDialog({
             disabled={submitting}
           >
             <ShieldCheck size={16} strokeWidth={1.8} aria-hidden="true" />
-            {submitting ? "Queueing..." : "Queue decision for sync"}
+            {submitting ? "Queueing..." : "Queue decision"}
           </button>
         </>
       )}
@@ -82,8 +82,8 @@ export function ReviewActionDialog({
               <strong className="block text-sm">Queued, not final library status</strong>
               <p className="mt-1 text-sm leading-relaxed">
                 {sourceReadOnly
-                  ? "Current records are export-backed. This action creates an audit record and waits for sync."
-                  : "This action writes through the review route and preserves audit fields."}
+                  ? "This action creates an audit record for media-team follow-up. Approval is not final here."
+                  : "This action goes through the review route and preserves audit fields."}
               </p>
             </div>
           </div>

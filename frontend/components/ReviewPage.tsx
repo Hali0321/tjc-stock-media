@@ -145,7 +145,7 @@ function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
         <div><dt className="font-semibold">Reviewer role</dt><dd>{auditPreview.role}</dd></div>
         <div><dt className="font-semibold">Asset ID</dt><dd>{auditPreview.assetId}</dd></div>
         <div><dt className="font-semibold">Timestamp</dt><dd>{auditPreview.timestamp}</dd></div>
-        <div><dt className="font-semibold">Required before sync</dt><dd>Reviewer identity, evidence, audit fields, and a configured library sync.</dd></div>
+        <div><dt className="font-semibold">Required before queueing</dt><dd>Reviewer identity, evidence, audit fields, and media-team follow-up.</dd></div>
       </dl>
     </section>
   );
@@ -378,11 +378,11 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         setChecklist(emptyChecklist);
         setPendingAction(null);
       } else {
-        toastSaveFailed(body.error || "No library sync was attempted.");
+        toastSaveFailed(body.error || "No review queue update was attempted.");
       }
     } catch {
-      setMessage("Review route did not respond. No library sync was attempted.");
-      toastSaveFailed("Review route did not respond. No library sync was attempted.");
+      setMessage("Review route did not respond. No review queue update was attempted.");
+      toastSaveFailed("Review route did not respond. No review queue update was attempted.");
     } finally {
       setSubmittingReview(false);
     }
@@ -739,7 +739,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             <section id={damTabPanelId("review-inspector", "Queue status")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Queue status")} hidden={activeInspectorTab !== "Queue status"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Queued decision</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Queue mode</dt><dd className={factDescClass}>Review decisions are queued for media-team follow-up; source records stay unchanged here.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Queue mode</dt><dd className={factDescClass}>Review decisions are queued for media-team follow-up; record status stays unchanged here.</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Current library state</dt><dd className={factDescClass}>Current status remains {selectedAsset.status}. Queued review decisions are not final until completed by the media team.</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Next team step</dt><dd className={factDescClass}>Media team completes the final source update outside this review page.</dd></div>
                 </dl>

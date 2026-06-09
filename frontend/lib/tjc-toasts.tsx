@@ -63,7 +63,7 @@ export function toastShareCopied(label = "Link copied") {
 
 export function toastReviewQueued(action?: ToastAction) {
   return toast.success("Review action queued", {
-    description: "Decision waits for library sync before source records change.",
+    description: "Decision waits for media-team follow-up before the record changes.",
     action: actionConfig(action),
     icon: <CheckCircle2 size={16} strokeWidth={1.8} aria-hidden="true" />
   });
@@ -78,14 +78,14 @@ export function toastDownloadBlocked(detail: string, action?: ToastAction) {
 }
 
 export function toastPendingWriteQueued(action?: ToastAction) {
-  return toast.info("Sync queued", {
-    description: "Source records stay unchanged until library sync completes.",
+  return toast.info("Review follow-up queued", {
+    description: "Record status stays unchanged until the media team completes review.",
     action: actionConfig(action),
     icon: <Info size={16} strokeWidth={1.8} aria-hidden="true" />
   });
 }
 
-export function toastSaveFailed(detail = "Save failed. No library sync was attempted.", action?: ToastAction) {
+export function toastSaveFailed(detail = "Save failed. No review queue update was attempted.", action?: ToastAction) {
   return toast.error("Save failed", {
     description: detail,
     action: actionConfig(action),

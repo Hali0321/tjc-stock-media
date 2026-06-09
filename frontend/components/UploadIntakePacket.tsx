@@ -38,7 +38,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
           <h2 className="mt-1 text-xl font-black text-tjc-ink">Ready for intake review</h2>
           <p className="mt-1 max-w-[62ch] text-sm font-semibold leading-relaxed text-tjc-muted">
             {opsView
-              ? "This packet summarizes what reviewers receive. It does not approve, publish, or write final ResourceSpace metadata."
+              ? "This packet summarizes what reviewers receive. It does not approve, publish, or finalize library metadata."
               : "This packet summarizes what reviewers receive. It does not approve or publish media."}
           </p>
         </div>

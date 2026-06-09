@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     assetId: asset.id,
     resourceSpaceId: asset.resourceSpaceId || asset.id,
     status: "queued",
-    summary: "Review decision queued as local pending ResourceSpace write.",
+    summary: "Review decision queued for media-team follow-up.",
     details: {
       action: body.action,
       requestedStatus: action?.targetStatus || asset.status,
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       action: body.action,
       label: body.label || body.action,
       notes: note,
-      message: "Review decision queued for sync. Source records remain unchanged until sync completes.",
+      message: "Review decision queued for media-team follow-up. Record status remains unchanged until review is completed.",
       pendingWriteId: pending.id,
       syncState: pending.syncState,
       auditRecord: {
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         checklist,
         blockers: pending.blockers
       },
-      mode: "review-sync-preview"
+      mode: "review-follow-up-preview"
     },
     { status: 202 }
   );
