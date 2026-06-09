@@ -5,9 +5,18 @@ function canSeeOperationalSource(role: DemoRole) {
 }
 
 const operationalTextPattern = /ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b/i;
+const scaffoldTextPattern = /\b(MVP 2024|stock media candidate|prototype|demo role)\b/i;
 
 function hasOperationalText(value?: string) {
   return Boolean(value && operationalTextPattern.test(value));
+}
+
+function hasScaffoldText(value?: string) {
+  return Boolean(value && scaffoldTextPattern.test(value));
+}
+
+function safePublicList(values?: string[]) {
+  return (values || []).filter((value) => value && !hasOperationalText(value) && !hasScaffoldText(value));
 }
 
 function safeSavedViewText(value: string) {
@@ -61,13 +70,24 @@ export function assetForRolePayload(role: DemoRole, asset: StockMediaAsset): Sto
     sourceSystem: _sourceSystem,
     workflowState: _workflowState,
     reviewer: _reviewer,
+    collection,
+    eventName,
     rightsNotes,
+    sourceAccount,
+    tags,
+    tjcTerms,
+    usageTerms,
     ...safeAsset
   } = asset;
 
   return {
     ...safeAsset,
-    sourceAccount: hasOperationalText(asset.sourceAccount) ? undefined : asset.sourceAccount,
+    collection: hasScaffoldText(collection) || hasOperationalText(collection) ? "Media library" : collection,
+    eventName: hasScaffoldText(eventName) || hasOperationalText(eventName) ? undefined : eventName,
+    sourceAccount: hasOperationalText(sourceAccount) || hasScaffoldText(sourceAccount) ? undefined : sourceAccount,
+    tags: safePublicList(tags),
+    tjcTerms: safePublicList(tjcTerms),
+    usageTerms: safePublicList(usageTerms),
     rightsNotes: hasOperationalText(rightsNotes) ? undefined : rightsNotes
   };
 }

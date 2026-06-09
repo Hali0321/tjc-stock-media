@@ -113,7 +113,7 @@ export function downloadState(asset: StockMediaAsset, role: DemoRole) {
 
 export function guidanceFacts(asset: StockMediaAsset, role: DemoRole) {
   const canDownload = decideAccess(role, "downloadApprovedCopy", asset).allowed;
-  const context = [...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])].slice(0, 3).join(", ") || asset.collection;
+  const context = Array.from(new Set([...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])])).slice(0, 3).join(", ") || asset.collection;
   return [
     {
       label: "Best used for",
@@ -234,7 +234,7 @@ export function reviewFacts(asset: StockMediaAsset) {
 
 export function assetPresentation(asset: StockMediaAsset, role: DemoRole) {
   const title = assetDisplayTitle(asset);
-  const quickTerms = [...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])].slice(0, 2);
+  const quickTerms = Array.from(new Set([...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])])).slice(0, 2);
   return {
     title,
     shortStatus: shortStatusLabel(asset.status),

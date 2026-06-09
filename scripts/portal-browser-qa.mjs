@@ -415,6 +415,8 @@ for (const width of qaViewports) {
   const reviewRequestHref = await page.getByRole("link", { name: "Request DAM review" }).first().getAttribute("href");
   const reviewRequestLeaks = decodedHrefOpsLeaks(reviewRequestHref);
   if (reviewRequestLeaks.length) failures.push(`viewer-asset-blocked-request-review: viewer mailto exposes operations truth (${reviewRequestLeaks.join(", ")})`);
+  const viewerDetailText = await page.locator("body").innerText();
+  if (/MVP 2024|stock media candidate|prototype|Demo role|ResourceSpace ID|Shared Drive|master\/original/i.test(viewerDetailText)) failures.push("viewer-asset-blocked-request-review: viewer detail exposes scaffold/source-system copy");
   await closeContext(context);
 }
 
