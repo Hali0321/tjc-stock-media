@@ -94,8 +94,8 @@ function DamFooter({ opsShell }: { opsShell: boolean }) {
       <Link href="/guide" className="font-black text-tjc-evergreen">Help</Link>
       {opsShell ? (
         <>
-          <span>Operations view shows review queues, evidence, and audit-safe actions.</span>
-          <span>Production access uses assigned DAM roles.</span>
+          <span>Review queues, evidence, and audit-safe actions stay together.</span>
+          <span>Production access follows assigned DAM roles.</span>
         </>
       ) : (
         <>
