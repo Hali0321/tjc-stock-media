@@ -24,6 +24,15 @@ function nextCheckLabel(missing: string[], risks: string[]) {
   return "Decision ready";
 }
 
+function compactFocusLabel(value: string) {
+  if (/people/i.test(value)) return "People/minors";
+  if (/rights|consent/i.test(value)) return "Rights";
+  if (/source/i.test(value)) return "Source";
+  if (/guidance|usage/i.test(value)) return "Usage";
+  if (/reviewer|date/i.test(value)) return "Reviewer";
+  return value;
+}
+
 export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: ReviewQueueAssetCardProps) {
   const display = assetPresentation(asset, role);
   const risks = reviewRiskFlags(asset);
@@ -34,6 +43,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const rowTone = severity === "High" ? "High" : missing.length ? "Open" : "Ready";
   const evidenceLabel = missing.length ? `${missing.length} gaps` : "Ready";
   const reviewFocus = nextCheck === "Decision ready" ? primaryRisk : nextCheck;
+  const compactFocus = compactFocusLabel(reviewFocus);
 
   return (
     <>
@@ -126,17 +136,22 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
       </Link>
 
-      <div className="review-row-record min-w-0 self-center">
+      <button
+        type="button"
+        className="review-row-record min-w-0 self-center text-left"
+        onClick={() => onInspect(asset.id)}
+        aria-label={`Review ${display.title}: ${compactFocus}, ${evidenceLabel}`}
+      >
         <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
         <div className="review-row-subline">
+          <strong>{compactFocus}</strong>
           <span>{asset.mediaType}</span>
-          <strong>{reviewFocus}</strong>
         </div>
         <div className="review-row-chipline" aria-label="Review row status">
           <span className={cn("review-row-chip", severity === "High" ? "is-warn" : missing.length ? "is-info" : "is-ok")}>{evidenceLabel}</span>
           <span className="review-row-chip is-ref">Ref {asset.id}</span>
         </div>
-      </div>
+      </button>
 
       <div className="review-row-actions grid content-center gap-2">
         <div className="grid gap-2">

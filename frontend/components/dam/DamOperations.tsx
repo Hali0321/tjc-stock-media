@@ -107,10 +107,11 @@ export function DamReviewQueueHeader({
         <span>Current queue</span>
         <h2>{queueLabel || "Review queue"}</h2>
       </div>
-      <dl aria-label="Review queue status">
-        <div><dt>Loaded</dt><dd>{loaded.toLocaleString()}</dd></div>
-        <div><dt>Total</dt><dd>{typeof total === "number" ? total.toLocaleString() : "-"}</dd></div>
-      </dl>
+      <p aria-label="Review queue status">
+        <strong>{loaded.toLocaleString()}</strong> loaded
+        <span aria-hidden="true"> / </span>
+        <strong>{typeof total === "number" ? total.toLocaleString() : "-"}</strong> total
+      </p>
     </header>
   );
 }

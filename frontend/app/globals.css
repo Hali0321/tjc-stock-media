@@ -5386,13 +5386,13 @@ body,
 
 .review-queue-header-v2 {
   display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(12rem,.38fr);
+  grid-template-columns: minmax(0,1fr) auto;
   gap: .75rem;
-  align-items: stretch;
+  align-items: center;
   border-bottom: 1px solid var(--dam-v3-line);
   border-color: var(--dam-v3-line);
   background: #fff;
-  padding: .7rem .8rem;
+  padding: .65rem .75rem;
 }
 
 .review-queue-header-v2 > div:first-child {
@@ -5426,34 +5426,22 @@ body,
   font-weight: 720;
 }
 
-.review-queue-header-v2 dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  overflow: hidden;
+.review-queue-header-v2 p {
+  margin: 0;
   border: 1px solid #e1e6e3;
-  border-radius: .3rem;
+  border-radius: .28rem;
   background: #f8faf9;
-}
-
-.review-queue-header-v2 dl div {
-  min-width: 0;
-  border-left: 1px solid #e1e6e3;
-  padding: .48rem .58rem;
-}
-
-.review-queue-header-v2 dl div:first-child {
-  border-left: 0;
-}
-
-.review-queue-header-v2 dd {
-  overflow: hidden;
-  margin-top: .15rem;
-  color: var(--dam-v3-ink);
-  font-size: .86rem;
-  font-weight: 850;
-  font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
+  padding: .42rem .55rem;
+  color: #5c6861;
+  font-size: .74rem;
+  font-weight: 780;
   white-space: nowrap;
+}
+
+.review-queue-header-v2 p strong {
+  color: var(--dam-v3-ink);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
 }
 
 .review-queue-row-v2 {
@@ -5484,6 +5472,10 @@ body,
   display: grid;
   align-content: center;
   gap: .16rem;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .review-row-record h2 {
@@ -5515,10 +5507,11 @@ body,
 }
 
 .review-row-subline span:first-child {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
 }
 
 .review-row-subline strong {
+  flex: 0 0 auto;
   min-width: 0;
   overflow: hidden;
   color: #23352d;
@@ -5527,7 +5520,7 @@ body,
   white-space: nowrap;
 }
 
-.review-row-subline strong::before {
+.review-row-subline span::before {
   content: "· ";
 }
 
@@ -6261,7 +6254,7 @@ body,
 /* Final shell rail override: previous legacy layers reset the rail to 82px. */
 @media (min-width: 1024px) {
   :root {
-    --enterprise-rail-width: 7.25rem !important;
+    --enterprise-rail-width: 11.75rem !important;
   }
 
   .dam-desktop-rail {
@@ -6279,23 +6272,61 @@ body,
   }
 
   .dam-desktop-rail > div {
-    padding: .6rem !important;
+    padding: .8rem !important;
+  }
+
+  .dam-rail-heading {
+    border: 1px solid #dfe7e2;
+    border-radius: .42rem;
+    background: #f8faf9;
+    padding: .65rem .7rem;
+  }
+
+  .dam-rail-heading span {
+    display: block;
+    color: #69756e;
+    font-size: .64rem;
+    font-weight: 850;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .dam-rail-heading strong {
+    display: block;
+    margin-top: .12rem;
+    color: var(--dam-v3-ink);
+    font-size: .9rem;
+    font-weight: 900;
+    line-height: 1.1;
   }
 
   .dam-desktop-rail .workbench-menu-nav {
     width: 100% !important;
+    gap: .35rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
   }
 
   .dam-desktop-rail .workbench-menu-nav a {
     width: 100% !important;
-    min-height: 3rem !important;
-    grid-template-columns: 1.1rem minmax(0,1fr) !important;
-    padding-inline: .55rem !important;
+    min-height: 2.8rem !important;
+    grid-template-columns: 1.05rem minmax(0,1fr) !important;
+    gap: .55rem !important;
+    border: 1px solid transparent !important;
+    border-radius: .36rem !important;
+    padding: .46rem .58rem !important;
+    text-align: left !important;
   }
 
   .dam-desktop-rail .workbench-menu-nav .nav-label {
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: normal !important;
+    overflow: hidden !important;
+    color: currentColor;
+    font-size: .72rem !important;
+    font-weight: 850 !important;
+    line-height: 1.05 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 }
