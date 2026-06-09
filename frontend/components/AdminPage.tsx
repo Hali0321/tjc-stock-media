@@ -115,7 +115,7 @@ export function AdminPage() {
           <span className="text-sm font-semibold text-tjc-evergreen">Governance</span>
           <h1 className="mt-2 text-3xl font-semibold">Governance requires DAM Admin role</h1>
           <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Field mapping, portal readiness, vocabulary control, stale approvals, and duplicate cleanup are admin-only.</p>
-          <span className="mt-4 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Switch demo role to DAM Admin to inspect readiness.</span>
+          <span className="mt-4 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">DAM Admin access is required to inspect readiness.</span>
         </section>
       </div>
     );
@@ -161,7 +161,7 @@ export function AdminPage() {
       tone: data.metrics.portalReady > 0 ? "ok" : "warn"
     },
     {
-      question: "Can we launch beyond demo?",
+      question: "Can we launch beyond pilot?",
       answer: data.score >= 80 ? "yes" : "not yet",
       detail: `Readiness score ${data.score}%; pending queue: ${pendingQueue?.detail || "none"}.`,
       tone: data.score >= 80 ? "ok" : "info"

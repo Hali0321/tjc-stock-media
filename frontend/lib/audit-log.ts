@@ -61,7 +61,7 @@ export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt
     fs.mkdirSync(auditDir(), { recursive: true });
     fs.appendFileSync(auditFile(createdAt), `${JSON.stringify(record)}\n`, "utf8");
   } catch {
-    // Audit logging must not break safe read/deny/write route behavior in the local prototype.
+    // Audit logging must not break safe read/deny/write route behavior in local runtime.
   }
   return record;
 }

@@ -191,7 +191,7 @@ export function UploadPage() {
 
   function saveDraftNotice() {
     setDraftSaved(true);
-    setMessage("Draft saved locally in this demo. Submit for DAM review when ready.");
+    setMessage("Draft saved locally in this browser. Submit for DAM review when ready.");
     toastDraftSaved("Draft saved locally. Submit for DAM review when ready.");
   }
 

@@ -2,17 +2,17 @@ import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 
 export const demoFallbackStatus: MediaSourceStatus = {
   adapter: "demo-fallback",
-  label: "Temporary fallback data",
-  detail: "ResourceSpace export not found. These records are safe placeholders behind the real server route contract.",
+  label: "Read-only media index",
+  detail: "Media export not found. These records are read-only fallback entries behind the server route contract.",
   readOnly: true
 };
 
 export const demoFallbackAssets: StockMediaAsset[] = [
   {
-    id: "demo-bible",
+    id: "media-bible-study-001",
     title: "Bible Study Table",
     thumbnail: "",
-    thumbnailAlt: "Bible on a study table placeholder",
+    thumbnailAlt: "Bible on a study table",
     mediaType: "photo",
     collection: "Teaching & Study",
     status: "Approved Public",
@@ -20,17 +20,17 @@ export const demoFallbackAssets: StockMediaAsset[] = [
     peopleRisk: "No people",
     reviewer: "ResourceSpace admin",
     reviewedDate: "2026-06-04",
-    rightsNotes: "Fallback placeholder used only when ResourceSpace export is unavailable.",
+    rightsNotes: "Fallback entry used only when the media export is unavailable.",
     usageGuidance: "Approved copy available.",
     downloadPolicy: "approved-copy-allowed",
     tags: ["Bible", "book", "study"],
     tjcTerms: ["Teaching", "Bible study"]
   },
   {
-    id: "demo-review",
+    id: "media-intake-review-001",
     title: "Fellowship Upload Pending",
     thumbnail: "",
-    thumbnailAlt: "Pending fellowship placeholder",
+    thumbnailAlt: "Pending fellowship review",
     mediaType: "photo",
     collection: "Incoming",
     status: "Needs Review",

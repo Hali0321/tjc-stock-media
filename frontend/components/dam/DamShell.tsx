@@ -14,9 +14,9 @@ function DamRoleSwitch({ compact = false }: { compact?: boolean }) {
   const { role, setRole } = useDemoRole();
   return (
     <label className={compact ? "grid gap-1" : "hidden shrink-0 items-center gap-2 md:flex"}>
-      <span id={compact ? "mobile-demo-role-label" : "demo-role-label"} className={compact ? "text-xs font-black text-tjc-muted" : "sr-only"}>Demo role</span>
+      <span id={compact ? "mobile-access-role-label" : "access-role-label"} className={compact ? "text-xs font-black text-tjc-muted" : "sr-only"}>Access role</span>
       <select
-        aria-labelledby={compact ? "mobile-demo-role-label" : "demo-role-label"}
+        aria-labelledby={compact ? "mobile-access-role-label" : "access-role-label"}
         value={role}
         onChange={(event) => setRole(event.target.value as DemoRole)}
         className="min-h-10 rounded-md border border-[#cbd8cf] bg-white px-3 text-sm font-black text-[#2f3b34]"

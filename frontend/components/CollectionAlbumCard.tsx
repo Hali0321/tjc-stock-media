@@ -22,7 +22,7 @@ type CollectionAlbumCardProps = {
 
 function AlbumPlaceholder({ name, title, className, label = "Album cover" }: { name: string; title: string; className?: string; label?: string }) {
   return (
-    <span className={cn("relative grid h-full min-h-20 w-full place-items-center overflow-hidden rounded-md border border-[#cfd9d2] bg-[#eef3ef] p-3 text-center text-[#174d37]", className)} aria-label={`${name} placeholder`}>
+    <span className={cn("relative grid h-full min-h-20 w-full place-items-center overflow-hidden rounded-md border border-[#cfd9d2] bg-[#eef3ef] p-3 text-center text-[#174d37]", className)} aria-label={`${name} package cover`}>
       <span className="absolute inset-2 rounded-md border border-[#d8e2dc]" aria-hidden="true" />
       <span className="relative z-[1] grid justify-items-center gap-1.5">
         <span className="grid h-10 w-10 place-items-center rounded-md border border-[#cfd9d2] bg-white">
