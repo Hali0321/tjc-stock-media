@@ -87,11 +87,11 @@ export function collectionImageUrl(asset: StockMediaAsset) {
 
 export function friendlySourceLabel(asset: Pick<StockMediaAsset, "collection" | "resourceSpaceId" | "id">) {
   if (asset.collection) return asset.collection;
-  return asset.resourceSpaceId ? `ResourceSpace ${asset.resourceSpaceId}` : `Asset ${asset.id}`;
+  return "Media library";
 }
 
 export function friendlyReviewTrace(asset: Pick<StockMediaAsset, "reviewedDate" | "reviewer" | "resourceSpaceId" | "id">) {
   if (asset.reviewedDate && asset.reviewer) return `Reviewed ${asset.reviewedDate} by ${asset.reviewer}`;
   if (asset.reviewedDate) return `Reviewed ${asset.reviewedDate}`;
-  return asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : `Asset ID ${asset.id}`;
+  return `Reference code ${asset.id}`;
 }
