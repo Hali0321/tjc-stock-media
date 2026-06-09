@@ -384,7 +384,7 @@ export type SearchResult = {
 };
 
 export type MediaSourceStatus = {
-  adapter: "resourcespace-api" | "exported-metadata" | "demo-fallback";
+  adapter: "resourcespace-api" | "exported-metadata" | "demo-fallback" | "media-library";
   label: string;
   detail: string;
   readOnly: boolean;

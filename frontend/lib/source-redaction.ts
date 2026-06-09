@@ -70,7 +70,7 @@ function canExposeSavedView(role: DemoRole, view: SavedViewSummary) {
 export function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaSourceStatus {
   if (canSeeOperationalSource(role)) return source;
   return {
-    adapter: "demo-fallback",
+    adapter: "media-library",
     label: "Media library",
     detail: "Use approved copies and request review when a media record is not cleared.",
     readOnly: true

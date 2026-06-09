@@ -117,7 +117,8 @@ const forbiddenText = [
   /MVP 2024/i,
   /stock media candidate/i,
   /prototype/i,
-  /Demo role/i
+  /Demo role/i,
+  /demo-fallback/i
 ];
 const leaks = [];
 function walk(value, path) {
@@ -144,7 +145,7 @@ if (leaks.length) {
   console.error(`FAIL: normal-user payload leaked operational fields/copy: ${leaks.slice(0, 20).join(", ")}`);
   process.exit(1);
 }
-if (data.source && (data.source.label !== "Media library" || data.source.adapter !== "demo-fallback")) {
+if (data.source && (data.source.label !== "Media library" || data.source.adapter !== "media-library")) {
   console.error(`FAIL: normal-user source was not redacted: ${JSON.stringify(data.source)}`);
   process.exit(1);
 }
@@ -459,7 +460,7 @@ if (leakedCounts.length) {
   console.error(`FAIL: Viewer search leaked ${leakedCounts.map((key) => `counts.${key}`).join(", ")}`);
   process.exit(1);
 }
-if (!data.source || data.source.label !== "Media library" || data.source.adapter !== "demo-fallback") {
+if (!data.source || data.source.label !== "Media library" || data.source.adapter !== "media-library") {
   console.error("FAIL: Viewer search source was not redacted");
   process.exit(1);
 }
