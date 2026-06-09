@@ -14,7 +14,7 @@ import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { useDemoRole } from "@/components/RoleProvider";
 import { decideAccess } from "@/lib/access-decisions";
 import { assetGovernancePassport } from "@/lib/asset-governance";
-import { assetPresentation, collectionImageUrl, detailImageUrl, provenanceSummary } from "@/lib/presentation";
+import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
 import { requestReviewMailto, viewerVerdictForAsset } from "@/lib/viewer-verdict";
 import type { DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -33,46 +33,6 @@ function FieldList({ items }: { items: Array<{ label: string; value?: string }> 
         <RecordMetadataRow label={item.label} value={item.value} key={item.label} />
       ))}
     </dl>
-  );
-}
-
-function RelatedMedia({ assets, role }: { assets: StockMediaAsset[]; role: DemoRole }) {
-  if (!assets.length) return null;
-  const deduped = assets.reduce<StockMediaAsset[]>((items, asset) => {
-    const title = assetPresentation(asset, role).title.toLowerCase();
-    if (items.some((item) => assetPresentation(item, role).title.toLowerCase() === title)) return items;
-    return [...items, asset];
-  }, []);
-  const visible = (deduped.length ? deduped : assets).slice(0, 4);
-  return (
-    <section className="grid gap-3" aria-label="Related media">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="text-xl font-black text-tjc-ink">Related media</h2>
-          <p className="mt-1 text-sm font-semibold text-tjc-muted">Open each record to confirm its own approval.</p>
-        </div>
-        {assets.length > visible.length ? <span className="text-xs font-black text-tjc-muted">{assets.length - visible.length} more in package</span> : null}
-      </div>
-      <div className="related-media-strip grid gap-2">
-        {visible.map((asset) => {
-          const imageUrl = collectionImageUrl(asset, role);
-          const display = assetPresentation(asset, role);
-          return (
-            <Link href={`/assets/${asset.id}`} className="group grid min-h-24 grid-cols-[6rem_minmax(0,1fr)_auto] items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white p-2 transition hover:border-[#cbd5e1] hover:bg-[#fbfcfb]" key={asset.id}>
-              <span className="block aspect-[4/3] overflow-hidden rounded-[8px] bg-[#e9efeb]">
-                <MediaPreview src={imageUrl} alt={asset.thumbnailAlt} label="Preview protected" detail="Open record for guidance" imgClassName="transition duration-300 group-hover:scale-[1.025]" />
-              </span>
-              <span className="min-w-0">
-                <strong className="line-clamp-2 text-sm font-black leading-tight text-tjc-ink">{display.title}</strong>
-                <span className="mt-1 line-clamp-1 text-xs font-semibold text-tjc-muted">{display.cardSubtitle}</span>
-                <span className="mt-1 block text-xs font-black text-tjc-evergreen">Open media record</span>
-              </span>
-              <span className="hidden rounded-md border border-[#d6dfd8] px-2 py-1 text-xs font-black text-tjc-muted sm:inline-flex">Record</span>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
   );
 }
 
@@ -349,7 +309,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           <DamActionButton href={requestHref} tone="primary" icon={Mail}>Request DAM review</DamActionButton>
         )}
         <DamActionButton href="/collections" tone="secondary" icon={PackagePlus}>Browse packages</DamActionButton>
-        <DamActionButton href={requestHref} tone="secondary" icon={FileLock2}>Source access</DamActionButton>
+        <DamActionButton href={requestHref} tone="secondary" icon={FileLock2}>Request source access</DamActionButton>
         <DamActionButton href="#credit" tone="quiet" icon={ScrollText}>View credit</DamActionButton>
       </DamActionBar>
 

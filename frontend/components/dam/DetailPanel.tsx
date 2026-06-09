@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { FileLock2 } from "lucide-react";
+import { ArrowRight, FileLock2 } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import { assetPresentation, collectionImageUrl } from "@/lib/presentation";
+import { viewerVerdictForAsset } from "@/lib/viewer-verdict";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import type { ReactNode } from "react";
 
@@ -87,27 +88,42 @@ export function DamRelatedMediaStrip({
   role: DemoRole;
 }) {
   if (!assets.length) return null;
+  const visible = assets.slice(0, 5);
   return (
     <section className="dam-related-strip-v2" aria-label="Related media">
       <div className="dam-related-strip-heading">
-        <h2>Related media</h2>
-        <span>Item approval stays separate</span>
+        <div>
+          <h2>Related records</h2>
+          <p>Open each record before reuse; package context does not approve the item.</p>
+        </div>
+        <span>{assets.length.toLocaleString()} in package</span>
       </div>
-      <div className="dam-related-strip-list">
-        {assets.slice(0, 4).map((asset) => {
+      <div className="dam-related-record-list">
+        {visible.map((asset) => {
           const display = assetPresentation(asset, role);
+          const verdict = viewerVerdictForAsset(asset, role);
           return (
-            <Link href={`/assets/${asset.id}`} className="dam-related-card-v2" key={asset.id}>
-              <span className="dam-related-thumb">
+            <Link href={`/assets/${asset.id}`} className="dam-related-record-row" key={asset.id}>
+              <span className="dam-related-record-thumb">
                 <MediaPreview src={collectionImageUrl(asset, role)} alt={asset.thumbnailAlt} label="Preview protected" detail="Open record for guidance" />
               </span>
-              <span>
+              <span className="dam-related-record-main">
                 <strong>{display.title}</strong>
                 <small>{display.cardSubtitle}</small>
+              </span>
+              <span className={`dam-related-record-verdict is-${verdict.tone}`}>
+                {verdict.label}
+              </span>
+              <span className="dam-related-record-action">
+                Open record
+                <ArrowRight size={14} strokeWidth={1.9} aria-hidden="true" />
               </span>
             </Link>
           );
         })}
+        {assets.length > visible.length ? (
+          <span className="dam-related-record-more">{(assets.length - visible.length).toLocaleString()} more related records available from the package.</span>
+        ) : null}
       </div>
     </section>
   );

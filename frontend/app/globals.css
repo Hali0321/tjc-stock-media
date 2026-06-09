@@ -5548,15 +5548,28 @@ body,
 
 .dam-related-strip-heading {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: .75rem;
 }
 
-.dam-related-strip-heading span {
+.dam-related-strip-heading p {
+  margin-top: .15rem;
   color: var(--dam-v3-muted);
-  font-size: .72rem;
-  font-weight: 800;
+  font-size: .74rem;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.dam-related-strip-heading span {
+  flex: 0 0 auto;
+  border: 1px solid #dce5df;
+  border-radius: .28rem;
+  background: #fff;
+  padding: .24rem .45rem;
+  color: var(--dam-v3-muted);
+  font-size: .68rem;
+  font-weight: 850;
 }
 
 .dam-metadata-grid-v2 dl {
@@ -5578,48 +5591,127 @@ body,
   font-size: .68rem;
 }
 
-.dam-related-strip-list {
+.dam-related-record-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0,1fr));
-  gap: .55rem;
+  gap: 0;
   padding: .75rem;
 }
 
-.dam-related-card-v2 {
+.dam-related-record-row {
   display: grid;
+  grid-template-columns: 4.75rem minmax(0,1fr) minmax(9.25rem,.34fr) minmax(6.6rem,auto);
+  align-items: center;
+  gap: .7rem;
   min-width: 0;
-  gap: .45rem;
+  border-top: 1px solid #e5ece8;
+  padding: .55rem 0;
   color: inherit;
 }
 
-.dam-related-thumb {
+.dam-related-record-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.dam-related-record-row:last-child {
+  padding-bottom: 0;
+}
+
+.dam-related-record-thumb {
   display: block;
+  width: 4.75rem;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border-radius: .35rem;
+  border: 1px solid #dfe8e2;
+  border-radius: .28rem;
   background: #e8efeb;
 }
 
-.dam-related-card-v2 strong {
+.dam-related-record-main {
+  min-width: 0;
+}
+
+.dam-related-record-main strong {
   display: -webkit-box;
   overflow: hidden;
   color: var(--dam-v3-ink);
-  font-size: .78rem;
+  font-size: .86rem;
   font-weight: 900;
   line-height: 1.15;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
-.dam-related-card-v2 small {
+.dam-related-record-main small {
   display: block;
   overflow: hidden;
   margin-top: .12rem;
   color: var(--dam-v3-muted);
-  font-size: .68rem;
+  font-size: .72rem;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dam-related-record-verdict {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d8e1da;
+  border-radius: .28rem;
+  background: #fff;
+  padding: .28rem .48rem;
+  color: #415049;
+  font-size: .68rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.dam-related-record-verdict.is-ready {
+  border-color: #b8d9c6;
+  background: #eef8f2;
+  color: #194f34;
+}
+
+.dam-related-record-verdict.is-restricted,
+.dam-related-record-verdict.is-review,
+.dam-related-record-verdict.is-request {
+  border-color: #ead6a8;
+  background: #fff8e8;
+  color: #71500f;
+}
+
+.dam-related-record-verdict.is-unavailable {
+  border-color: #dfb9b5;
+  background: #fff1ef;
+  color: #7b332f;
+}
+
+.dam-related-record-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .3rem;
+  color: var(--dam-v3-green);
+  font-size: .72rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.dam-related-record-row:hover .dam-related-record-action {
+  text-decoration: underline;
+  text-underline-offset: .18rem;
+}
+
+.dam-related-record-more {
+  display: block;
+  border-top: 1px solid #e5ece8;
+  padding-top: .6rem;
+  color: var(--dam-v3-muted);
+  font-size: .74rem;
+  font-weight: 760;
 }
 
 .dam-action-bar {
@@ -5676,8 +5768,18 @@ body,
 
   .dam-preview-fact-strip,
   .dam-metadata-grid-v2 dl,
-  .dam-related-strip-list {
+  .dam-related-record-list {
     grid-template-columns: minmax(0,1fr);
+  }
+
+  .dam-related-record-row {
+    grid-template-columns: 4.5rem minmax(0,1fr);
+  }
+
+  .dam-related-record-verdict,
+  .dam-related-record-action {
+    grid-column: 2;
+    justify-content: flex-start;
   }
 
   .dam-preview-fact-strip div,
