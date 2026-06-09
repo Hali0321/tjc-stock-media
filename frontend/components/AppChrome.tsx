@@ -18,7 +18,7 @@ function RoleSwitch({ compact = false }: { compact?: boolean }) {
         aria-labelledby={compact ? "mobile-demo-role-label" : "demo-role-label"}
         value={role}
         onChange={(event) => setRole(event.target.value as typeof role)}
-        className="min-h-10 rounded-[10px] border border-[#cbd8cf] bg-white px-3 text-sm font-black text-[#2f3b34]"
+        className="min-h-10 rounded-md border border-[#cbd8cf] bg-white px-3 text-sm font-black text-[#2f3b34]"
       >
         {roles.map((item) => (
           <option key={item}>{item}</option>
@@ -41,7 +41,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       <header className="dam-app-header sticky top-0 z-40 px-3 py-2.5 md:px-5">
         <div className="mx-auto flex min-h-14 w-full max-w-[1760px] items-center justify-between gap-3">
           <Link href={opsShell ? "/review" : "/"} className="flex min-w-0 items-center gap-3" aria-label="TJC Stock Media home">
-            <span className="dam-brand-mark grid h-10 w-10 shrink-0 place-items-center rounded-[13px] text-[10px] font-black text-white">TJC</span>
+            <span className="dam-brand-mark grid h-10 w-10 shrink-0 place-items-center rounded-lg text-[10px] font-black text-white">TJC</span>
             <span className="min-w-0">
               <strong className="block truncate text-base font-black tracking-[0] text-tjc-ink">TJC Stock Media</strong>
               <small className="block truncate text-xs font-bold text-tjc-muted">{navLabel}</small>
@@ -54,11 +54,11 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
           <div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
             <CommandPalette />
-            <Link href="/guide" className="grid h-10 w-10 place-items-center rounded-[10px] border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
+            <Link href="/guide" className="grid h-10 w-10 place-items-center rounded-md border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
               <HelpCircle size={18} strokeWidth={1.9} aria-hidden="true" />
             </Link>
             {opsShell ? (
-              <Link href="/admin" className="grid h-10 w-10 place-items-center rounded-[10px] border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open governance">
+              <Link href="/admin" className="grid h-10 w-10 place-items-center rounded-md border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open governance">
                 <Settings2 size={18} strokeWidth={1.9} aria-hidden="true" />
               </Link>
             ) : null}
@@ -67,7 +67,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
           <button
             type="button"
-            className="grid h-11 w-11 place-items-center rounded-[12px] border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px xl:hidden"
+            className="grid h-11 w-11 place-items-center rounded-md border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px xl:hidden"
             onClick={() => setMobileMenuOpen((open) => !open)}
             aria-label={mobileMenuOpen ? "Close app menu" : "Open app menu"}
             aria-expanded={mobileMenuOpen}
@@ -78,7 +78,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         </div>
 
         {mobileMenuOpen ? (
-          <div id="mobile-app-menu" className="absolute inset-x-3 top-[calc(100%+.5rem)] z-50 grid gap-3 rounded-[18px] border border-[#d6e0d9] bg-white p-3 shadow-[0_20px_56px_rgba(17,24,39,.16)] xl:hidden">
+          <div id="mobile-app-menu" className="absolute inset-x-3 top-[calc(100%+.5rem)] z-50 grid gap-3 rounded-lg border border-[#d6e0d9] bg-white p-3 shadow-[0_20px_56px_rgba(17,24,39,.16)] xl:hidden">
             <CommandPalette />
             <AppNav role={role} variant="menu" onNavigate={() => setMobileMenuOpen(false)} />
             <RoleSwitch compact />
@@ -94,7 +94,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         mobileOffset={{ bottom: "calc(var(--app-mobile-nav-height) + var(--app-mobile-safe-bottom) + 1.25rem)", left: ".75rem", right: ".75rem" }}
         toastOptions={{
           classNames: {
-            toast: "rounded-[14px] border border-[#d6dfd8] bg-white text-tjc-ink shadow-[0_18px_50px_rgba(17,24,39,.16)]",
+            toast: "rounded-lg border border-[#d6dfd8] bg-white text-tjc-ink shadow-[0_18px_50px_rgba(17,24,39,.16)]",
             title: "font-black text-tjc-ink",
             description: "font-semibold text-tjc-muted"
           }

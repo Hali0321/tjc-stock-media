@@ -185,7 +185,7 @@ textarea:focus-visible {
 
 .dam-card {
   border: 1px solid oklch(84% .014 160);
-  border-radius: 1rem;
+  border-radius: .55rem;
   background: oklch(98% .006 160);
   box-shadow: none;
 }
@@ -340,7 +340,7 @@ textarea:focus-visible {
   position: relative;
   overflow: hidden;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: none;
 }
@@ -354,7 +354,7 @@ textarea:focus-visible {
 
 .media-results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
   gap: .85rem;
 }
 
@@ -405,7 +405,7 @@ textarea:focus-visible {
 
 .asset-bank-controlbar {
   border-top: 1px solid #eef2ef;
-  padding-top: .75rem;
+  padding-top: .6rem;
 }
 
 .asset-results-toolbar {
@@ -545,7 +545,7 @@ textarea:focus-visible {
 .empty-state-stage,
 .verdict-panel {
   border: 1px solid #e5e7eb !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   background: #fff !important;
   box-shadow: none !important;
 }
@@ -572,13 +572,13 @@ textarea:focus-visible {
 .help-detail-panel,
 .help-side-panel {
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   box-shadow: none;
 }
 
 .help-hero {
-  padding: clamp(1rem, 2vw, 1.4rem);
+  padding: clamp(.9rem, 1.5vw, 1.15rem);
 }
 
 .help-detail-panel,
@@ -590,11 +590,11 @@ textarea:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  min-height: 4.1rem;
+  min-height: 3.45rem;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
-  padding: .9rem 1rem;
+  padding: .65rem .8rem;
   text-align: left;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
@@ -617,7 +617,7 @@ textarea:focus-visible {
 
 .help-topic-button small {
   display: block;
-  margin-top: .25rem;
+  margin-top: .12rem;
   color: #4b5563;
   font-size: .875rem;
   font-weight: 500;
@@ -632,7 +632,7 @@ textarea:focus-visible {
   justify-content: center;
   gap: .45rem;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
   padding: 0 .85rem;
   color: #0f3d2e;
@@ -647,8 +647,8 @@ textarea:focus-visible {
 }
 
 .help-guidance {
-  border-radius: 12px;
-  padding: .9rem;
+  border-radius: 8px;
+  padding: .75rem;
   font-size: .9rem;
   line-height: 1.5;
 }
@@ -686,9 +686,9 @@ textarea:focus-visible {
 }
 
 .find-usecase-grid > * {
-  min-height: 5.5rem !important;
+  min-height: 4.6rem !important;
   border: 1px solid #e5e7eb !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   box-shadow: none !important;
 }
 
@@ -712,6 +712,10 @@ textarea:focus-visible {
 .package-card p,
 .package-inspector p {
   color: #4b5563 !important;
+}
+
+.package-safety-line {
+  background: transparent !important;
 }
 
 @media (max-width: 767px) {

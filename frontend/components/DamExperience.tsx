@@ -51,7 +51,7 @@ export function PrimaryAction({
   type = "button"
 }: PrimaryActionProps) {
   const classes = cn(
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-4 text-sm font-black transition duration-200 active:translate-y-px disabled:pointer-events-none disabled:opacity-55",
+    "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 text-sm font-bold transition duration-200 active:translate-y-px disabled:pointer-events-none disabled:opacity-55",
     tone === "primary" && "bg-tjc-evergreen text-white hover:bg-[#082f29]",
     tone === "secondary" && "border border-[#c5d1c9] bg-white text-tjc-evergreen hover:bg-[#eef7f1]",
     tone === "quiet" && "bg-transparent text-tjc-evergreen hover:bg-[#edf4ef]",
@@ -84,11 +84,11 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <section className={cn("empty-state-stage relative overflow-hidden rounded-[12px] border border-[#d9e3dc] bg-white p-4 sm:p-5", className)} role="status">
-      <div className="grid max-w-3xl gap-3">
+    <section className={cn("empty-state-stage relative overflow-hidden rounded-lg border border-[#d9e3dc] bg-white p-4", className)} role="status">
+      <div className="grid max-w-3xl gap-2.5">
         <div>
-          <h2 className="text-lg font-black leading-tight text-tjc-ink sm:text-xl">{title}</h2>
-          <p className="mt-1.5 max-w-[66ch] text-sm font-semibold leading-relaxed text-tjc-muted">{description}</p>
+          <h2 className="text-base font-black leading-tight text-tjc-ink sm:text-lg">{title}</h2>
+          <p className="mt-1 max-w-[62ch] text-sm font-semibold leading-relaxed text-tjc-muted">{description}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {primary}
@@ -114,18 +114,18 @@ export function HeroSearch({
   placeholder: string;
 }) {
   return (
-    <form className="hero-search-shell grid gap-2 rounded-[12px] bg-white p-1.5 md:grid-cols-[1fr_auto]" onSubmit={onSubmit} aria-label={ops ? "Ops search" : "Find approved media"}>
+    <form className="hero-search-shell grid gap-2 rounded-lg bg-white p-1 md:grid-cols-[1fr_auto]" onSubmit={onSubmit} aria-label={ops ? "Ops search" : "Find approved media"}>
       <label className="sr-only" htmlFor="find-media-search">{ops ? "Ops Search" : "Search approved media"}</label>
       <input
         id="find-media-search"
-        className="min-h-11 min-w-0 rounded-[9px] border border-transparent bg-[#fbfcfb] px-4 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d] focus:border-[#9cb9ab] sm:text-base"
+        className="min-h-10 min-w-0 rounded-md border border-transparent bg-[#fbfcfb] px-3 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d] focus:border-[#9cb9ab] sm:text-base"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         name="q"
         type="search"
       />
-      <PrimaryAction type="submit" icon={Search} className="min-h-11 px-5">Search</PrimaryAction>
+      <PrimaryAction type="submit" icon={Search} className="min-h-10 px-5">Search</PrimaryAction>
     </form>
   );
 }
@@ -155,7 +155,7 @@ export function UseCaseCard({
       <ArrowRight className="mt-1 text-[#7d8a82] transition group-hover:translate-x-0.5 group-hover:text-tjc-evergreen" size={16} strokeWidth={1.9} aria-hidden="true" />
     </>
   );
-  const classes = "group grid min-h-[4.25rem] grid-cols-[1fr_auto] items-start gap-3 rounded-[9px] border border-[#e5e7eb] bg-white px-3 py-3 text-left transition duration-200 hover:border-[#cbd5e1] hover:bg-[#fafafa] active:translate-y-px";
+  const classes = "group grid min-h-[3.75rem] grid-cols-[1fr_auto] items-start gap-3 rounded-md border border-[#e5e7eb] bg-white px-3 py-2.5 text-left transition duration-200 hover:border-[#cbd5e1] hover:bg-[#fafafa] active:translate-y-px";
   if (href) return <Link href={href} className={classes}>{content}</Link>;
   return <button type="button" className={classes} onClick={onClick}>{content}</button>;
 }
@@ -184,18 +184,23 @@ export function ProtectedPreview({
   className?: string;
 }) {
   return (
-    <div className={cn("protected-preview grid h-full min-h-48 place-items-center overflow-hidden rounded-[12px] bg-[#eef3ef] p-5 text-center", className)}>
-      <div className="protected-preview-frame relative grid min-h-[10rem] w-full max-w-[20rem] place-items-center overflow-hidden rounded-[12px] border border-white/70 bg-white/55 p-4">
-        <div className="absolute inset-3 rounded-[10px] border border-dashed border-[#b9c8c0]" aria-hidden="true" />
-        <div className="relative z-[1] grid justify-items-center gap-3">
-        <span className="inline-flex items-center gap-2 rounded-md border border-[#cbd5e1] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
-          <FileLock2 size={14} strokeWidth={1.8} aria-hidden="true" />
-          Protected preview
-        </span>
-        <span>
-          <strong className="block text-base font-black text-tjc-ink">{label}</strong>
-          <span className="mt-1 block text-sm font-semibold leading-snug text-tjc-muted">{detail}</span>
-        </span>
+    <div className={cn("protected-preview grid h-full min-h-48 place-items-center overflow-hidden rounded-lg bg-[#eef3ef] p-5 text-center", className)}>
+      <div className="protected-preview-frame relative grid min-h-[10rem] w-full max-w-[22rem] place-items-center overflow-hidden rounded-lg border border-white/70 bg-white/65 p-4">
+        <div className="absolute inset-2 grid grid-cols-4 gap-1 opacity-70" aria-hidden="true">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <span className="rounded bg-[#e7eee9]" key={index} />
+          ))}
+        </div>
+        <div className="absolute inset-3 rounded-md border border-dashed border-[#aab9b1] bg-white/35 backdrop-blur-[1px]" aria-hidden="true" />
+        <div className="relative z-[1] grid max-w-[18rem] justify-items-center gap-2.5 rounded-md border border-[#dce5df] bg-white/90 px-4 py-3">
+          <span className="inline-flex items-center gap-2 rounded border border-[#cbd5e1] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
+            <FileLock2 size={14} strokeWidth={1.8} aria-hidden="true" />
+            Protected preview
+          </span>
+          <span>
+            <strong className="block text-base font-black text-tjc-ink">{label}</strong>
+            <span className="mt-1 block text-sm font-semibold leading-snug text-tjc-muted">{detail}</span>
+          </span>
         </div>
       </div>
     </div>
@@ -362,7 +367,7 @@ export function PackageCard({
   const bestUse = collection.searchQuery || `${collection.ministry} media`;
   const safetySummary = `${readyCount.toLocaleString()} ready, ${reviewNeeded.toLocaleString()} need review`;
   return (
-    <article className={cn("package-card grid gap-3 overflow-hidden rounded-[12px] border border-[#e5e7eb] bg-white p-3 transition hover:border-[#cbd5e1] sm:p-4", active && "ring-2 ring-[#9cb9ab]")}>
+    <article className={cn("package-card grid gap-3 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white p-3 transition hover:border-[#cbd5e1] sm:p-4", active && "ring-2 ring-[#9cb9ab]")}>
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
         <div className="min-w-0">
           <h2 className="line-clamp-2 text-xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
@@ -379,7 +384,7 @@ export function PackageCard({
         <p className="font-semibold text-tjc-muted"><strong className="font-black text-tjc-ink">Best use:</strong> {bestUse}</p>
         <p className="font-semibold text-tjc-muted"><strong className="font-black text-tjc-ink">Safety:</strong> {safetySummary}</p>
       </div>
-      <p className="rounded-md bg-[#fff8e8] px-3 py-2 text-xs font-black leading-relaxed text-[#71500f]">Item-level media record remains final before reuse.</p>
+      <p className="package-safety-line border-t border-[#eef1f3] pt-2 text-xs font-black leading-relaxed text-[#71500f]">Item-level approval required before reuse.</p>
       <div className="flex flex-wrap gap-2">
         <PrimaryAction onClick={onOpen} icon={Search}>Open media</PrimaryAction>
         <PrimaryAction onClick={onInspect} tone="secondary" icon={FolderOpen}>View details</PrimaryAction>
@@ -413,7 +418,7 @@ export function PackageInspector({
   const reviewNeeded = Math.max(0, collection.count - readyCount);
   const bestUse = collection.searchQuery || `${collection.ministry} media`;
   return (
-    <aside className="package-inspector grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4 sm:p-5">
+    <aside className="package-inspector grid gap-4 rounded-lg border border-[#e5e7eb] bg-white p-4 sm:p-5">
       <div>
         <span className="text-sm font-black text-tjc-evergreen">{opsView ? "Package readiness" : "Package details"}</span>
         <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
@@ -429,7 +434,7 @@ export function PackageInspector({
         <h3 className="text-sm font-black text-tjc-ink">Suggested use</h3>
         <p className="text-sm font-semibold leading-relaxed text-tjc-muted">{bestUse}</p>
       </section>
-        <section className="rounded-[10px] border border-[#e5cf93] bg-[#fff8e8] p-3 text-sm font-semibold leading-relaxed text-[#71500f]">
+        <section className="rounded-md border border-[#e5cf93] bg-[#fff8e8] p-3 text-sm font-semibold leading-relaxed text-[#71500f]">
         Package approval is not enough. Open each media record to confirm item-level approval before reuse.
       </section>
       {collection.peopleWarning ? (
@@ -480,7 +485,7 @@ export function GovernanceMetric({
   href?: string;
 }) {
   const classes = cn(
-    "governance-metric block rounded-[18px] p-4 transition",
+    "governance-metric block rounded-lg p-4 transition",
     tone === "ok" && "bg-[#eef8f2] text-[#194f34]",
     tone === "warn" && "bg-[#fff8e8] text-[#71500f]",
     tone === "danger" && "bg-[#fff1ef] text-[#7b332f]",

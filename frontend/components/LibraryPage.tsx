@@ -191,8 +191,8 @@ export function LibraryPage() {
 
   return (
     <div className="dam-shell">
-      <section className="find-hero asset-bank-header p-3 sm:p-4 lg:p-5" aria-label={opsView ? "Ops search front door" : "Find approved media"}>
-        <div className={cn("relative z-[1] grid gap-4", opsView ? "lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,.55fr)] lg:items-end" : "xl:grid-cols-[minmax(0,.72fr)_minmax(22rem,.28fr)] xl:items-end")}>
+      <section className="find-hero asset-bank-header p-3 sm:p-4" aria-label={opsView ? "Ops search front door" : "Find approved media"}>
+        <div className={cn("relative z-[1] grid gap-3", opsView ? "lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,.55fr)] lg:items-end" : "xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-end")}>
           <div className="min-w-0">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
@@ -205,8 +205,8 @@ export function LibraryPage() {
                 </span>
               ) : null}
             </div>
-            <p className="mt-2 max-w-[58ch] text-sm font-semibold leading-relaxed text-tjc-muted sm:text-base">{subtitle}</p>
-            <div className="mt-4">
+            <p className="mt-1.5 max-w-[58ch] text-sm font-semibold leading-relaxed text-tjc-muted">{subtitle}</p>
+            <div className="mt-3">
               <HeroSearch
                 value={query}
                 onChange={setQuery}
@@ -218,7 +218,7 @@ export function LibraryPage() {
             {!opsView ? (
               <div className="asset-bank-controlbar mt-3 flex flex-wrap items-center gap-2" aria-label="Asset library controls">
                 <span className="inline-flex min-h-8 items-center rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2.5 text-xs font-black text-[#22563a]" role="status">
-                  Ready-only filter on
+                  Ready only
                 </span>
                 <button className="inline-flex min-h-8 items-center rounded-md border border-[#d1d5db] bg-white px-2.5 text-xs font-black text-[#3f4a43]" type="button" onClick={() => setFiltersOpen(true)}>
                   Filters
@@ -243,9 +243,9 @@ export function LibraryPage() {
               </p>
             </div>
           ) : (
-            <div className="asset-bank-rule grid gap-2 rounded-[10px] border border-[#e5e7eb] bg-[#fbfcfb] p-3 text-sm font-semibold leading-relaxed text-tjc-muted">
-              <strong className="text-tjc-evergreen">Normal users see approved copies only.</strong>
-              <span>If nothing is ready, browse Packages or request DAM review. Downloads stay blocked until a media record clears reuse checks.</span>
+            <div className="asset-bank-rule grid gap-1 rounded-lg border border-[#e5e7eb] bg-[#fbfcfb] p-3 text-sm font-semibold leading-relaxed text-tjc-muted">
+              <strong className="text-tjc-evergreen">Approved-copy workspace</strong>
+              <span>Downloads stay blocked until a media record clears reuse checks.</span>
             </div>
           )}
         </div>
@@ -295,13 +295,16 @@ export function LibraryPage() {
       ) : null}
 
       <section className="asset-bank-results mt-5 grid gap-3" aria-label="Find results">
-        <div className="asset-results-toolbar flex flex-wrap items-end justify-between gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-3 py-3">
+        {!(viewerSafeDefaultEmpty && !loading && !assets.length) ? (
+        <div className="asset-results-toolbar flex flex-wrap items-end justify-between gap-3 rounded-lg border border-[#e5e7eb] bg-white px-3 py-3">
           <div>
-            <h2 className="text-xl font-black text-tjc-ink">
-              {loading ? "Loading media" : assets.length ? "Media results" : "No ready media shown"}
+            <h2 className="text-lg font-black text-tjc-ink">
+              {loading ? "Loading media" : assets.length ? "Media results" : "Asset results"}
             </h2>
             <p className="mt-1 text-sm font-semibold text-tjc-muted">
-              {pagination && result?.total
+              {viewerSafeDefaultEmpty
+                ? "Ready-only default is active."
+                : pagination && result?.total
                 ? `Showing ${pagination.rangeStart.toLocaleString()}-${pagination.rangeEnd.toLocaleString()} of ${result.total.toLocaleString()}`
                 : activeCollection
                   ? `Package: ${activeCollection.name}`
@@ -331,6 +334,7 @@ export function LibraryPage() {
             </button>
           </div>
         </div>
+        ) : null}
 
         {loading ? (
           <div className="media-results-grid" aria-hidden="true">
@@ -352,7 +356,7 @@ export function LibraryPage() {
                   tertiary={<PrimaryAction href="/upload" tone="secondary" icon={UploadCloud}>Send new media</PrimaryAction>}
                   className="library-empty-compact"
                 />
-                <button className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
+                <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
                   Show items needing review, downloads stay blocked
                 </button>
               </div>

@@ -383,19 +383,26 @@ export function AdminPage() {
         aria-labelledby={damTabId("admin-readiness", "Overview")}
         hidden={activeAdminTab !== "Overview"}
       >
-      <section className="mt-5 grid gap-3 lg:grid-cols-3" aria-label="Top readiness blockers">
+      <section className="mt-5 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white" aria-label="Top readiness blockers">
+        <div className="hidden gap-3 border-b border-[#e5e7eb] bg-[#f8faf8] px-3 py-2 text-xs font-black text-tjc-muted md:grid md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem]">
+          <span>Priority</span>
+          <span>Blocker</span>
+          <span>Count</span>
+          <span>Queue</span>
+        </div>
         {topBlockers.map((item, index) => (
           <Link
             key={item.id}
             href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-            className="admin-priority-card rounded-[12px] border border-[#e5e7eb] bg-white p-5 transition hover:border-[#cbd5e1]"
+            className="admin-priority-card grid gap-2 border-b border-[#eef2ef] px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem] md:items-center"
           >
-            <span className="text-xs font-black uppercase text-tjc-muted">Priority {index + 1}</span>
-            <div className="mt-2 flex items-start justify-between gap-3">
-              <strong className="text-base font-black leading-tight text-tjc-ink">{item.label}</strong>
-              <span className={cn("rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
-            </div>
-            <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{item.action}</p>
+            <span className="text-xs font-black uppercase text-tjc-muted">P{index + 1}</span>
+            <span className="min-w-0">
+              <strong className="block text-sm font-black leading-tight text-tjc-ink">{item.label}</strong>
+              <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">{item.action}</span>
+            </span>
+            <span className={cn("w-fit rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
+            <span className="text-xs font-black uppercase tracking-[.04em] text-tjc-evergreen">{item.count === 0 ? zeroCountLabel(item) : "Open queue"}</span>
           </Link>
         ))}
       </section>

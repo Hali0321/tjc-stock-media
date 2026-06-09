@@ -3,6 +3,27 @@
 Date: 2026-06-08
 Branch: `codex/dam-v2-enterprise-ui-system`
 
+## Systemization Pass 2026-06-09
+
+Goal: finish the current direction rather than restart it. This pass compressed the shared visual system and made the main surfaces feel more like one enterprise DAM workspace.
+
+Changes made:
+
+- Tightened shared primitives: restrained radii, compact buttons/search, smaller empty states, quieter navigation/menu shapes.
+- Library: removed the competing default-empty toolbar panel so Viewer sees one compact results empty state inside the asset-bank flow.
+- Library: removed internal/meta copy from the user-facing empty state; default copy now stays product-facing.
+- Help: reduced hero scale, changed topic choices into denser task rows, and kept quick decision/review request higher on mobile.
+- Asset Detail: upgraded protected previews into a controlled media stage with contact-sheet texture and a centered locked state.
+- Packages: reduced repeated item-level approval warning weight while preserving the safety line and inspector warning.
+- Governance: converted the duplicate top priority cards into a compact queue/table surface and fixed the mobile stacked table header.
+
+Manual screenshot inspection:
+
+- Captured updated systemization screenshots under `docs/screenshots/systemization-pass/`.
+- Checked Library mobile/desktop, Help mobile, Packages mobile, Asset Detail mobile, Review mobile, Governance mobile, and Upload mobile.
+- Added Upload/Send proof at 320px, 390px, and 1440px with Contributor role.
+- Capture script reported zero horizontal overflow and zero console errors for inspected 390px and 1440px screens.
+
 ## Baseline Read
 
 Latest browser QA screenshots show a safer and more coherent DAM portal, but several surfaces still read as simplified internal portal screens rather than enterprise DAM software:

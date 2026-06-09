@@ -1,0 +1,170 @@
+{
+  "capturedAt": "2026-06-09T04:35:26.364Z",
+  "captures": [
+    {
+      "name": "library-viewer",
+      "route": "/",
+      "role": "Viewer",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/library-viewer-390.png",
+      "overflow": 0,
+      "h1": "Find approved media",
+      "errors": []
+    },
+    {
+      "name": "guide-viewer",
+      "route": "/guide",
+      "role": "Viewer",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/guide-viewer-390.png",
+      "overflow": 0,
+      "h1": "What are you trying to do?",
+      "errors": []
+    },
+    {
+      "name": "packages-viewer",
+      "route": "/collections",
+      "role": "Viewer",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/packages-viewer-390.png",
+      "overflow": 0,
+      "h1": "Packages",
+      "errors": []
+    },
+    {
+      "name": "detail-viewer",
+      "route": "/assets/368",
+      "role": "Viewer",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/detail-viewer-390.png",
+      "overflow": 0,
+      "h1": "Bench Bible",
+      "errors": []
+    },
+    {
+      "name": "review-reviewer",
+      "route": "/review",
+      "role": "Reviewer",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/review-reviewer-390.png",
+      "overflow": 0,
+      "h1": "Review Inbox",
+      "errors": []
+    },
+    {
+      "name": "admin-admin",
+      "route": "/admin",
+      "role": "DAM Admin",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/admin-admin-390.png",
+      "overflow": 0,
+      "h1": "Launch blocked",
+      "errors": []
+    },
+    {
+      "name": "library-viewer",
+      "route": "/",
+      "role": "Viewer",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/library-viewer-1440.png",
+      "overflow": 0,
+      "h1": "Find approved media",
+      "errors": []
+    },
+    {
+      "name": "guide-viewer",
+      "route": "/guide",
+      "role": "Viewer",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/guide-viewer-1440.png",
+      "overflow": 0,
+      "h1": "What are you trying to do?",
+      "errors": []
+    },
+    {
+      "name": "packages-viewer",
+      "route": "/collections",
+      "role": "Viewer",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/packages-viewer-1440.png",
+      "overflow": 0,
+      "h1": "Packages",
+      "errors": []
+    },
+    {
+      "name": "detail-viewer",
+      "route": "/assets/368",
+      "role": "Viewer",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/detail-viewer-1440.png",
+      "overflow": 0,
+      "h1": "Bench Bible",
+      "errors": []
+    },
+    {
+      "name": "review-reviewer",
+      "route": "/review",
+      "role": "Reviewer",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/review-reviewer-1440.png",
+      "overflow": 0,
+      "h1": "Review Inbox",
+      "errors": []
+    },
+    {
+      "name": "admin-admin",
+      "route": "/admin",
+      "role": "DAM Admin",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/admin-admin-1440.png",
+      "overflow": 0,
+      "h1": "Launch blocked",
+      "errors": []
+    },
+    {
+      "name": "upload-contributor",
+      "route": "/upload",
+      "role": "Contributor",
+      "width": 320,
+      "height": 900,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/upload-contributor-320.png",
+      "overflow": 0,
+      "h1": "Send media for review",
+      "errors": []
+    },
+    {
+      "name": "upload-contributor",
+      "route": "/upload",
+      "role": "Contributor",
+      "width": 390,
+      "height": 844,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/upload-contributor-390.png",
+      "overflow": 0,
+      "h1": "Send media for review",
+      "errors": []
+    },
+    {
+      "name": "upload-contributor",
+      "route": "/upload",
+      "role": "Contributor",
+      "width": 1440,
+      "height": 1000,
+      "file": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/systemization-pass/upload-contributor-1440.png",
+      "overflow": 0,
+      "h1": "Send media for review",
+      "errors": []
+    }
+  ]
+}

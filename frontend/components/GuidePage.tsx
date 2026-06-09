@@ -87,23 +87,23 @@ export function GuidePage() {
   const selected = visibleTopics.find((topic) => topic.id === openTopic) || visibleTopics[0] || helpTopics[0];
 
   return (
-    <div className="dam-help-shell mx-auto grid w-full max-w-[1180px] gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,.72fr)_minmax(22rem,.28fr)]">
+    <div className="dam-help-shell mx-auto grid w-full max-w-[1180px] gap-4 px-4 py-5 md:px-6 lg:grid-cols-[minmax(0,.68fr)_minmax(22rem,.32fr)]">
       <section className="min-w-0">
         <div className="help-hero">
           <p className="dam-kicker">Help</p>
-          <h1 className="mt-2 text-4xl font-black leading-[1.02] tracking-[0] text-[#111827] sm:text-5xl">
+          <h1 className="mt-1 text-2xl font-black leading-tight tracking-[0] text-[#111827] sm:text-3xl">
             What are you trying to do?
           </h1>
-          <p className="mt-3 max-w-[58ch] text-base font-medium leading-7 text-[#4b5563]">
+          <p className="mt-2 max-w-[58ch] text-sm font-semibold leading-6 text-[#4b5563]">
             Use approved copies when they are ready. When approval, people/youth, rights, or source access is unclear, send it for review.
           </p>
 
-          <form className="mt-5 grid min-h-12 grid-cols-[auto_1fr] items-center rounded-xl border border-[#d7dde2] bg-white px-3" role="search">
+          <form className="mt-4 grid min-h-11 grid-cols-[auto_1fr] items-center rounded-lg border border-[#d7dde2] bg-white px-3" role="search">
             <Search size={18} strokeWidth={1.8} aria-hidden="true" className="text-[#5b6670]" />
             <label className="sr-only" htmlFor="help-search">Search help</label>
             <input
               id="help-search"
-              className="min-h-12 min-w-0 bg-transparent px-3 text-base font-medium text-[#111827] placeholder:text-[#6b7280]"
+              className="min-h-11 min-w-0 bg-transparent px-3 text-sm font-semibold text-[#111827] placeholder:text-[#6b7280]"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search help, children, download, package..."
@@ -132,7 +132,7 @@ export function GuidePage() {
           </a>
         </section>
 
-        <div className="help-topic-list mt-5 grid gap-2 sm:grid-cols-2" aria-label="Help topics">
+        <div className="help-topic-list mt-4 grid gap-2" aria-label="Help topics">
           {visibleTopics.map((topic) => (
             <button
               className={`help-topic-button ${selected.id === topic.id ? "is-active" : ""}`}
@@ -156,19 +156,19 @@ export function GuidePage() {
           </div>
         ) : null}
 
-        <section className="mt-5 help-detail-panel" aria-live="polite">
+        <section className="mt-4 help-detail-panel" aria-live="polite">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="dam-kicker">Selected topic</p>
-              <h2 className="mt-1 text-2xl font-black tracking-[0] text-[#111827]">{selected.title}</h2>
-              <p className="mt-2 max-w-[60ch] text-sm font-medium leading-6 text-[#4b5563]">{selected.summary}</p>
+              <h2 className="mt-1 text-xl font-black tracking-[0] text-[#111827]">{selected.title}</h2>
+              <p className="mt-1.5 max-w-[60ch] text-sm font-semibold leading-6 text-[#4b5563]">{selected.summary}</p>
             </div>
             <Link className="help-primary-link" href={selected.route}>
               Open page
             </Link>
           </div>
 
-          <div className="help-guidance-grid mt-5 grid gap-3 md:grid-cols-2">
+          <div className="help-guidance-grid mt-4 grid gap-2 md:grid-cols-2">
             <div className="help-guidance help-guidance-do">
               <strong>Do</strong>
               <p>{selected.doText}</p>

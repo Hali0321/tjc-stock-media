@@ -59,8 +59,8 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
       className={cn(
         "tubelight-nav border border-[#c9d4d5] bg-white",
         top && "flex max-w-full items-center gap-1 border-transparent bg-transparent p-0 shadow-none",
-        menu && "grid gap-1 rounded-[14px] border-[#d7dde2] p-1 shadow-none",
-        !top && !menu && "mx-auto flex w-full max-w-[34rem] items-center gap-1 rounded-[18px] p-1 shadow-none"
+        menu && "grid gap-1 rounded-lg border-[#d7dde2] p-1 shadow-none",
+        !top && !menu && "mx-auto flex w-full max-w-[34rem] items-center gap-1 rounded-lg p-1 shadow-none"
       )}
       aria-label="Primary navigation"
     >
@@ -74,9 +74,9 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
             href={item.href}
             className={cn(
               "group relative inline-flex min-w-0 flex-1 items-center justify-center font-black text-[#5b655f] transition-colors duration-200 hover:text-tjc-evergreen active:translate-y-px",
-              top && "min-h-10 flex-none gap-2 rounded-[9px] px-3 text-sm",
-              menu && "min-h-11 justify-start gap-3 rounded-[10px] px-3 text-sm",
-              !top && !menu && "min-h-14 flex-col gap-1 rounded-[14px] px-1.5 text-[11px]",
+              top && "min-h-10 flex-none gap-2 rounded-md px-3 text-sm",
+              menu && "min-h-11 justify-start gap-3 rounded-md px-3 text-sm",
+              !top && !menu && "min-h-14 flex-col gap-1 rounded-md px-1.5 text-[11px]",
               isActive && "text-tjc-evergreen"
             )}
             title={item.label}
