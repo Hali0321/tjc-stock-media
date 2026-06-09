@@ -2425,10 +2425,11 @@ a[class*="bg-tjc-evergreen"] {
 
   .find-usecase-grid > * span span {
     display: block !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
     font-size: .75rem !important;
+    line-height: 1.15 !important;
   }
 }
 
