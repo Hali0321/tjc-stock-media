@@ -114,8 +114,8 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
             <Tags size={15} strokeWidth={1.9} aria-hidden="true" />
             Tags
           </span>
-          {tags.slice(0, 10).map((tag) => (
-            <span className="rounded-md border border-[#c9d9d0] bg-[#eef7f1] px-2.5 py-1 text-xs font-black text-tjc-evergreen" key={tag}>
+          {tags.slice(0, 10).map((tag, index) => (
+            <span className="rounded-md border border-[#c9d9d0] bg-[#eef7f1] px-2.5 py-1 text-xs font-black text-tjc-evergreen" key={`${tag}-${index}`}>
               {tag}
             </span>
           ))}

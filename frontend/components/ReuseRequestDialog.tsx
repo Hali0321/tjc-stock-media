@@ -40,21 +40,54 @@ const requestCopy: Record<ReuseRequestKind, { kicker: string; title: string; bod
   }
 };
 
+function viewerRequestCopy(kind: ReuseRequestKind) {
+  if (kind === "original") {
+    return {
+      kicker: "Source-file access",
+      title: "Request source-file access",
+      description: "Source files stay restricted. This request asks the media team for access and does not grant access automatically.",
+      action: "Open email request"
+    };
+  }
+  if (kind === "review") {
+    return {
+      kicker: "Review needed",
+      title: "Request DAM review",
+      description: "A reviewer must clear source, rights, people/youth, use guidance, and approved-copy checks before this media becomes reusable.",
+      action: "Open review request"
+    };
+  }
+  return {
+    kicker: "Media team",
+    title: "Ask media team",
+    description: "Use this when approval, source, people/youth, or ministry context is unclear.",
+    action: "Open email"
+  };
+}
+
+function viewerBlockerLabel(blocker: string) {
+  if (/rights|consent/i.test(blocker)) return "Rights or permission details need review";
+  if (/people|minor|youth|children/i.test(blocker)) return "People/youth visibility needs review";
+  if (/derivative|copy|rendition/i.test(blocker)) return "Approved copy is missing";
+  if (/source|provenance/i.test(blocker)) return "Source details need confirmation";
+  if (/reviewer|date|evidence/i.test(blocker)) return "Reviewer evidence is incomplete";
+  if (/archive|do not use/i.test(blocker)) return "Not available for reuse";
+  if (/sensitive/i.test(blocker)) return "Ministry context needs review";
+  return blocker;
+}
+
 export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, rawStatus, portalReuseState, blockers, mailtoHref, opsView = false, onCancel }: ReuseRequestDialogProps) {
   const copy = requestCopy[kind];
-  const visibleBlockers = useMemo(() => blockers.slice(0, 8), [blockers]);
+  const viewerCopy = viewerRequestCopy(kind);
+  const visibleBlockers = useMemo(() => (opsView ? blockers : blockers.map(viewerBlockerLabel)).slice(0, 8), [blockers, opsView]);
   const description = opsView
     ? copy.body
-    : kind === "original"
-      ? "Source files stay restricted. This request asks the media team for access and does not grant access automatically."
-      : kind === "review"
-        ? "A reviewer must clear source, rights, people/youth, usage scope, and safe-copy checks before this media becomes reusable."
-        : "Use this when approval, source, people/youth, or ministry context is unclear.";
+    : viewerCopy.description;
 
   return (
     <Dialog
       open={open}
-      title={copy.title}
+      title={opsView ? copy.title : viewerCopy.title}
       description={description}
       onClose={onCancel}
       closeLabel="Close request dialog"
@@ -67,18 +100,18 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
           </button>
           <a className="inline-flex min-h-10 items-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2" href={mailtoHref}>
             <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
-            {copy.action}
+            {opsView ? copy.action : viewerCopy.action}
           </a>
         </>
       )}
     >
       <div className="grid gap-3">
-        <span className="w-fit rounded-md border border-[#bdd9e2] bg-[#eef8fb] px-3 py-1 text-xs font-black text-[#0b5f7a]">{copy.kicker}</span>
+        <span className="w-fit rounded-md border border-[#bdd9e2] bg-[#eef8fb] px-3 py-1 text-xs font-black text-[#0b5f7a]">{opsView ? copy.kicker : viewerCopy.kicker}</span>
         <div className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 sm:grid-cols-2">
           <div>
             <span className="text-xs font-semibold text-tjc-muted">Asset</span>
             <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-            <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Media record ${resourceSpaceId}`}</span>
+            <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Reference code ${resourceSpaceId}`}</span>
           </div>
           <div>
             <span className="text-xs font-semibold text-tjc-muted">{opsView ? "Current state" : "Use state"}</span>
@@ -100,7 +133,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
         </div>
 
         <section className="rounded-md border border-tjc-line bg-white p-3" aria-label="Current blocker summary">
-          <h3 className="text-sm font-semibold text-tjc-evergreen">Current blockers</h3>
+          <h3 className="text-sm font-semibold text-tjc-evergreen">{opsView ? "Current blockers" : "What reviewer will check"}</h3>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {visibleBlockers.length ? (
               visibleBlockers.map((blocker) => (

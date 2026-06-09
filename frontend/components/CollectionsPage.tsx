@@ -1,10 +1,9 @@
 "use client";
 
-import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Database, FolderOpen, Search, ShieldCheck, Users } from "lucide-react";
-import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
-import { CollectionShelfInspector } from "@/components/CollectionShelfInspector";
+import { FolderOpen, Search, ShieldCheck } from "lucide-react";
+import { EmptyState, HeroSearch, PackageCard, PackageInspector, PrimaryAction, UseCaseCard } from "@/components/DamExperience";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogCollection, SearchResult } from "@/lib/types";
 
@@ -23,6 +22,12 @@ function matchesCollection(collection: CatalogCollection, query: string) {
   return query.toLowerCase().split(/\s+/).filter(Boolean).every((term) => haystack.includes(term));
 }
 
+const packageUseCases = [
+  { label: "Website image", detail: "Open approved web-ready package media.", view: "website-hero", icon: Search },
+  { label: "Slide background", detail: "Find visuals for worship, class, or sermon decks.", view: "sermon-slides", icon: FolderOpen },
+  { label: "Newsletter/social", detail: "Start from announcement and recap media.", view: "newsletter", icon: ShieldCheck }
+] as const;
+
 export function CollectionsPage() {
   const router = useRouter();
   const { role, ready } = useDemoRole();
@@ -33,6 +38,7 @@ export function CollectionsPage() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
   const mobileInspectorRef = useRef<HTMLDivElement>(null);
+  const opsView = role === "Reviewer" || role === "DAM Admin";
 
   const apiUrl = useMemo(() => `/api/assets/search?role=${encodeURIComponent(role)}&sort=Approved+first&limit=36`, [role]);
 
@@ -44,7 +50,7 @@ export function CollectionsPage() {
     fetch(apiUrl)
       .then(async (response) => {
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Unable to load collections.");
+        if (!response.ok) throw new Error(data.error || "Unable to load packages.");
         return data as SearchResult;
       })
       .then((data) => {
@@ -68,11 +74,11 @@ export function CollectionsPage() {
     () => (result?.collections || []).filter((collection) => matchesCollection(collection, submittedQuery)),
     [result?.collections, submittedQuery]
   );
-  const totalCollectionAssets = collections.reduce((sum, collection) => sum + collection.count, 0);
-  const peopleWarnings = collections.filter((collection) => collection.peopleWarning).length;
-  const strongestCollection = collections.toSorted((a, b) => b.count - a.count)[0];
-  const selectedCollection = collections.find((collection) => collection.id === selectedCollectionId) || strongestCollection;
-  const opsView = role === "Reviewer" || role === "DAM Admin";
+  const selectedCollection = collections.find((collection) => collection.id === selectedCollectionId) || collections[0];
+  const readyTotal = result?.counts.portalReady ?? 0;
+  const reviewTotal = opsView
+    ? result?.counts.needsReview ?? 0
+    : result?.counts.batchApprovedWithBlockers || result?.counts.needsReview || 0;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -86,234 +92,111 @@ export function CollectionsPage() {
   function inspectCollection(collectionId: string) {
     setSelectedCollectionId(collectionId);
     window.setTimeout(() => {
-      if (window.innerWidth < 1024) {
-        mobileInspectorRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-      }
+      if (window.innerWidth < 1024) mobileInspectorRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
     }, 0);
   }
 
   return (
-    <div className="dam-shell">
-      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5" aria-label="Packages workspace">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-sm font-black text-tjc-evergreen">
-            <FolderOpen size={17} strokeWidth={1.8} aria-hidden="true" />
-            Guided ministry packages
+    <div className="dam-shell grid gap-5">
+      <section className="find-hero asset-bank-header p-3 sm:p-4 lg:p-5" aria-label="Packages front door">
+        <div className="relative z-[1] grid gap-4 xl:grid-cols-[minmax(0,.72fr)_minmax(22rem,.28fr)] xl:items-end">
+          <div>
+            <span className="dam-kicker">Ministry portals</span>
+            <h1 className="dam-page-title mt-1">Packages</h1>
+            <p className="mt-2 max-w-[60ch] text-sm font-semibold leading-relaxed text-tjc-muted sm:text-base">
+              Curated ministry kits for websites, slides, newsletters, and safe reuse.
+            </p>
+            <p className="mt-2 max-w-[64ch] text-sm font-semibold text-[#53615a]">
+              Open each media record to confirm item-level approval before reuse.
+            </p>
+            <div className="mt-4">
+              <HeroSearch value={query} onChange={setQuery} onSubmit={submit} placeholder="Search Sabbath, Bible study, fellowship, youth-safe..." />
+            </div>
           </div>
-          <h1 className="mt-2 dam-page-title">Packages</h1>
-          <p className="mt-2 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">
-            Curated ministry groups help everyday users start from approved media without learning DAM structure.
-          </p>
-          <form className="mt-4 grid gap-2 rounded-lg border border-[#cad8cf] bg-white p-2 md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Package search">
-            <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={19} strokeWidth={1.8} />
-            <label className="sr-only" htmlFor="collection-search">Search packages</label>
-            <input
-              id="collection-search"
-              className="min-h-10 min-w-0 bg-transparent px-1 text-base text-tjc-ink placeholder:text-[#7f8a82]"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search Sabbath, Bible study, flowers, fellowship, website..."
-              name="q"
-              type="search"
-            />
-            <button className="min-h-10 dam-button-primary px-5 text-sm font-semibold transition active:translate-y-px" type="submit">Search packages</button>
-          </form>
-          {submittedQuery ? (
-            <button className="mt-2 inline-flex min-h-8 items-center rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-tjc-evergreen" type="button" onClick={() => {
-              setQuery("");
-              setSubmittedQuery("");
-              setSelectedCollectionId("");
-            }}>
-              Clear search: {submittedQuery}
-            </button>
-          ) : null}
+          <div className="asset-bank-rule rounded-[10px] border border-[#e5e7eb] bg-[#fbfcfb] p-3 text-sm font-semibold leading-relaxed text-tjc-muted">
+            <strong className="block text-tjc-evergreen">Package approval is not item approval.</strong>
+            <span>Use package context to start faster, then open each media record for the final reuse decision.</span>
+          </div>
         </div>
+      </section>
 
+      <section className="find-usecase-grid grid gap-2 sm:grid-cols-3" aria-label="Package use cases">
+        {packageUseCases.map((item) => (
+          <UseCaseCard
+            key={item.label}
+            label={item.label}
+            detail={item.detail}
+            icon={item.icon}
+            onClick={() => router.push(`/?view=${item.view}`)}
+          />
+        ))}
       </section>
 
       {error ? (
-        <div className="mt-4 rounded-lg border border-[#e5b7b5] bg-[#fff0ef] p-3 text-sm font-semibold text-[#7d2d2a]" role="status">
-          {error}
-        </div>
+        <section className="rounded-[12px] border border-[#dfb9b5] bg-[#fff1ef] p-4 text-sm font-semibold text-[#7b332f]" role="alert">{error}</section>
       ) : null}
 
-      <section className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Package governance workspace">
-        <div className="min-w-0">
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-[#d6dfd8] pb-3">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Ministry packages">
+        <div className="grid gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Ministry packages</h2>
-              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">
-                {opsView ? "Owner, purpose, coverage, rights risk, and approval state stay visible for safe reuse." : "Start from a ministry kit, then open Find results to confirm each media item."}
+              <h2 className="text-2xl font-black text-tjc-ink">Ministry kits</h2>
+              <p className="mt-1 text-sm font-semibold text-tjc-muted">
+                {loading ? "Loading packages" : `${collections.length} packages shown. ${readyTotal.toLocaleString()} ready items, ${reviewTotal.toLocaleString()} needing review.`}
               </p>
             </div>
-            <span className="text-xs font-semibold text-tjc-muted">
-              {loading ? "Loading packages" : `${collections.length} shown`}
-            </span>
+            {submittedQuery ? (
+              <PrimaryAction tone="secondary" onClick={() => {
+                setQuery("");
+                setSubmittedQuery("");
+                setSelectedCollectionId("");
+              }}>
+                Clear search
+              </PrimaryAction>
+            ) : null}
           </div>
-          <nav className="mb-3 flex flex-wrap gap-2 border-b border-[#d6dfd8] pb-3 text-sm font-semibold" aria-label="Package use cases">
-            {[
-              ["Website hero", "website-hero"],
-              ["Slides", "sermon-slides"],
-              ["Newsletter", "newsletter"],
-              ["No people", "no-people"]
-            ].map(([label, view]) => (
-              <button key={view} type="button" className="shrink-0 rounded-md border border-[#d8e1da] bg-white px-3 py-2 text-[#3f4a43] transition hover:bg-[#eef7f1] hover:text-tjc-evergreen" onClick={() => router.push(`/?view=${view}`)}>
-                {label}
-              </button>
-            ))}
-          </nav>
+
           {loading ? (
-            <div className="grid gap-2" aria-hidden="true">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div className="skeleton h-28 rounded-md" key={index} />
+            <div className="grid gap-4 lg:grid-cols-2">
+              {Array.from({ length: 6 }).map((_, index) => <div className="skeleton h-72 rounded-[14px]" key={index} />)}
+            </div>
+          ) : null}
+
+          {!loading && !collections.length ? (
+            <EmptyState
+              title="No packages match this search"
+              description="Try a ministry, event, or media use. Packages stay curated, and each media record still controls reuse."
+              primary={<PrimaryAction onClick={() => { setQuery(""); setSubmittedQuery(""); }} icon={Search}>Search packages</PrimaryAction>}
+            />
+          ) : null}
+
+          {!loading && collections.length ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {collections.map((collection) => (
+                <div key={collection.id}>
+                  <PackageCard
+                    collection={collection}
+                    role={role}
+                    active={selectedCollection?.id === collection.id}
+                    onInspect={() => inspectCollection(collection.id)}
+                    onOpen={() => openCollection(collection)}
+                  />
+                  {selectedCollection?.id === collection.id ? (
+                    <div ref={mobileInspectorRef} className="mt-4 scroll-mt-24 xl:hidden">
+                      <PackageInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} opsView={opsView} />
+                    </div>
+                  ) : null}
+                </div>
               ))}
             </div>
           ) : null}
-          {!loading && !collections.length ? (
-            <div className="rounded-xl border border-tjc-line bg-white p-8 text-sm text-tjc-muted">No packages match this search.</div>
-          ) : null}
-          {!loading && collections.length ? (
-            opsView ? <div className="hidden overflow-hidden rounded-lg border border-[#c9d4d5] bg-white xl:block" aria-label="Package governance table">
-              <div className="grid grid-cols-[minmax(12rem,1.2fr)_8rem_8rem_9rem_9rem_8rem_9rem] gap-3 border-b border-tjc-line bg-[#eef2f3] px-3 py-2 text-xs font-black uppercase text-[#536057]">
-                <span>Package</span><span>Owner</span><span>State</span><span>Assets</span><span>Approval</span><span>Risk</span><span>Actions</span>
-              </div>
-              {collections.map((collection) => (
-                <article className="grid grid-cols-[minmax(12rem,1.2fr)_8rem_8rem_9rem_9rem_8rem_9rem] items-center gap-3 border-b border-tjc-line px-3 py-3 text-sm last:border-b-0" key={`table-${collection.id}`}>
-                  <span className="min-w-0">
-                    <strong className="block truncate text-tjc-ink">{collection.name}</strong>
-                    <span className="mt-1 block truncate text-xs font-semibold text-tjc-muted">{collection.description}</span>
-                  </span>
-                  <span className="truncate text-xs font-semibold text-tjc-muted">{collection.ministry}</span>
-                  <span className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2 py-1 text-xs font-black text-[#22563a]">{collection.count ? "Curated" : "Empty"}</span>
-                  <span className="font-black tabular-nums text-tjc-ink">{collection.countLabel}</span>
-                  <span className="truncate text-xs font-semibold text-tjc-muted">{collection.approvalSummary}</span>
-                  <span className={collection.peopleWarning ? "rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-xs font-black text-[#725216]" : "rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2 py-1 text-xs font-black text-[#22563a]"}>
-                    {collection.peopleWarning ? "People risk" : "No warning"}
-                  </span>
-                  <span className="flex flex-wrap gap-1">
-                    <button className="min-h-8 rounded-md border border-tjc-line bg-white px-2 text-xs font-black text-tjc-evergreen hover:bg-[#eef7f1]" type="button" onClick={() => inspectCollection(collection.id)}>Inspect</button>
-                    <button className="min-h-8 rounded-md bg-tjc-evergreen px-2 text-xs font-black text-white hover:bg-[#062d24]" type="button" onClick={() => openCollection(collection)}>Find</button>
-                  </span>
-                </article>
-              ))}
-            </div> : (
-              <div className="grid gap-3" aria-label="Ministry package cards">
-                {collections.map((collection) => (
-                  <Fragment key={collection.id}>
-                    <CollectionAlbumCard
-                      name={collection.name}
-                      description={collection.description}
-                      countLabel={collection.countLabel}
-                      dateRange={collection.dateRange}
-                      ministry={collection.ministry}
-                      approvalSummary={collection.approvalSummary}
-                      peopleWarning={collection.peopleWarning}
-                      images={collection.images}
-                      isActive={selectedCollection?.id === collection.id}
-                      inspectLabel="View details"
-                      onInspect={() => inspectCollection(collection.id)}
-                      onOpen={() => openCollection(collection)}
-                    />
-                    {selectedCollection?.id === collection.id ? (
-                      <div ref={mobileInspectorRef} className="scroll-mt-24 xl:hidden">
-                        <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} opsView={opsView} />
-                      </div>
-                    ) : null}
-                  </Fragment>
-                ))}
-              </div>
-            )
-          ) : null}
-          <div className={opsView ? "grid gap-3 xl:hidden" : "hidden"}>
-            {collections.map((collection) => (
-              <Fragment key={collection.id}>
-                <CollectionAlbumCard
-                  name={collection.name}
-                  description={collection.description}
-                  countLabel={collection.countLabel}
-                  dateRange={collection.dateRange}
-                  ministry={collection.ministry}
-                  approvalSummary={collection.approvalSummary}
-                  peopleWarning={collection.peopleWarning}
-                  images={collection.images}
-                  isActive={selectedCollection?.id === collection.id}
-                  inspectLabel={role === "Viewer" ? "View details" : "Inspect metadata"}
-                  onInspect={() => inspectCollection(collection.id)}
-                  onOpen={() => openCollection(collection)}
-                />
-                {selectedCollection?.id === collection.id ? (
-                    <div ref={mobileInspectorRef} className="scroll-mt-24 xl:hidden">
-                    <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} opsView={opsView} />
-                  </div>
-                ) : null}
-              </Fragment>
-            ))}
-          </div>
         </div>
 
-        <aside className="hidden min-w-0 gap-3 xl:sticky xl:top-[calc(var(--app-header-height)+1.25rem)] xl:grid xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:self-start xl:overflow-auto" aria-label="Package governance">
-          <CollectionShelfInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} opsView={opsView} />
-          {opsView ? <details className="rounded-md border border-[#d6dfd8] bg-white p-4 text-sm">
-            <summary className="cursor-pointer font-black text-tjc-evergreen">ResourceSpace export</summary>
-            <div className="mt-3 grid gap-2 text-tjc-muted">
-              <strong className="text-tjc-ink">{result?.source.label || "Loading source"}</strong>
-              <p className="text-xs font-semibold leading-relaxed">{result?.source.detail || "Loading ResourceSpace source state."}</p>
-              <div className="grid grid-cols-2 gap-2 text-xs font-black">
-                {[
-                  { label: "packages", value: collections.length, icon: FolderOpen },
-                  { label: "package assets", value: totalCollectionAssets, icon: Database },
-                  { label: "people flags", value: peopleWarnings, icon: Users },
-                  { label: "approved", value: result?.counts.approved ?? "-", icon: ShieldCheck }
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <span className="rounded-md border border-[#dbe5de] bg-[#fbfcfa] p-2" key={item.label}>
-                      <span className="flex items-center gap-1.5 text-tjc-muted">
-                        <Icon size={12} strokeWidth={1.8} aria-hidden="true" />
-                        {item.label}
-                      </span>
-                      <strong className="mt-1 block text-sm tabular-nums text-tjc-ink">{item.value}</strong>
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          </details> : (
-            <section className="rounded-md border border-[#d6dfd8] bg-white p-4 text-sm">
-              <h2 className="font-black text-tjc-evergreen">Package safety</h2>
-              <div className="mt-3 grid gap-2 text-tjc-muted">
-                <p className="text-xs font-semibold leading-relaxed">Packages are starting points. Each media item still shows its own use guidance before download.</p>
-                <div className="grid grid-cols-2 gap-2 text-xs font-black">
-                  {[
-                    { label: "packages", value: collections.length, icon: FolderOpen },
-                    { label: "media items", value: totalCollectionAssets, icon: Database },
-                    { label: "people flags", value: peopleWarnings, icon: Users },
-                    { label: "approved", value: result?.counts.approved ?? "-", icon: ShieldCheck }
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <span className="rounded-md border border-[#dbe5de] bg-[#fbfcfa] p-2" key={item.label}>
-                        <span className="flex items-center gap-1.5 text-tjc-muted">
-                          <Icon size={12} strokeWidth={1.8} aria-hidden="true" />
-                          {item.label}
-                        </span>
-                        <strong className="mt-1 block text-sm tabular-nums text-tjc-ink">{item.value}</strong>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-          )}
-          <details className="border-y border-[#d6dfd8] py-3 text-sm">
-            <summary className="cursor-pointer font-semibold text-tjc-evergreen">Before sharing an album</summary>
-            <ul className="mt-3 grid gap-2 text-xs leading-relaxed text-tjc-muted">
-              <li><strong className="text-tjc-ink">Approval summary is not a shortcut.</strong> Open Find result before reuse.</li>
-              <li><strong className="text-[#725216]">People/minors warning.</strong> Visible people or possible youth need review before public publication.</li>
-              <li><strong className="text-[#27435b]">{opsView ? "Draft package publishing blocked." : "Packages do not publish media."}</strong> {opsView ? "ResourceSpace portal/write mapping must be configured first." : "Open Find results and use approved copies only."}</li>
-            </ul>
-          </details>
-        </aside>
+        <div className="hidden xl:block">
+          <div className="sticky top-[calc(var(--app-header-height)+1rem)]">
+            <PackageInspector collection={selectedCollection} totalCollections={collections.length} onOpen={openCollection} opsView={opsView} />
+          </div>
+        </div>
       </section>
     </div>
   );

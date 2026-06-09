@@ -64,8 +64,8 @@ type AuditPreview = {
 
 const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Pending write"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
-const desktopReviewRowsPageSize = 24;
-const mobileReviewRowsPageSize = 8;
+const desktopReviewRowsPageSize = 12;
+const mobileReviewRowsPageSize = 6;
 const highRiskActionIds = new Set(["archive-only", "do-not-publish"]);
 const keyReviewerQueueIds: ReviewQueueId[] = ["pending", "rights-review", "children-youth", "usage-guidance", "archive-candidates"];
 const advancedMetricCards: Array<{ key: keyof Governance; label: string }> = [
@@ -493,16 +493,16 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-5 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_30rem]">
+      <section className="find-hero grid gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_30rem]">
         <div>
-          <span className="text-sm font-black text-tjc-evergreen">Govern</span>
-          <h1 className="mt-2 dam-page-title">Review inbox</h1>
-          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted max-sm:line-clamp-2">Prioritize pending assets, children/youth, missing source, rights issues, duplicates, large media, and usage guidance gaps.</p>
+          <span className="text-sm font-black text-tjc-evergreen">Approval workbench</span>
+          <h1 className="mt-2 dam-page-title">Review Inbox</h1>
+          <p className="mt-3 max-w-[66ch] text-lg font-semibold leading-relaxed text-tjc-muted">Make safe, evidence-based decisions quickly. Approval stays locked until required evidence is complete.</p>
         </div>
-        <div className="grid content-center gap-1 border-t border-[#d6dfd8] pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+        <div className="grid content-center gap-2 rounded-[12px] border border-[#e5e7eb] bg-white p-4">
           <span className="text-sm font-black text-tjc-evergreen">Current queue</span>
           <strong className="block text-4xl font-black tabular-nums text-tjc-ink">{activeQueueSummary ? activeQueueSummary.count.toLocaleString() : "-"}</strong>
-          <span className="block text-sm font-semibold text-tjc-muted">{activeQueueSummary ? `${activeQueueSummary.label} pending reviews. ${data?.assets.length ?? 0} loaded for this session.` : "Loading queue"}</span>
+          <span className="block text-sm font-semibold leading-relaxed text-tjc-muted">{activeQueueSummary ? `${activeQueueSummary.label}. ${data?.assets.length ?? 0} loaded for this session.` : "Loading queue"}</span>
         </div>
 	      </section>
 
@@ -537,13 +537,13 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </p>
       </section>
 
-      <section className="mt-4 hidden gap-3 border-y border-[#d6dfd8] py-3 md:grid" aria-label="Review filters">
+      <section className="mt-5 hidden gap-3 rounded-[12px] border border-[#e5e7eb] bg-white p-3 md:grid" aria-label="Review filters">
         <div className="flex max-w-full min-w-0 flex-wrap gap-2">
           {keyReviewerQueues.map((queue) => (
             <button
               key={queue.id}
               type="button"
-              className={cn("inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-semibold text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-white text-tjc-evergreen" : "border-transparent")}
+              className={cn("inline-flex min-h-11 shrink-0 items-center gap-2 rounded-[10px] border px-4 text-sm font-black text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e8f4ed] text-tjc-evergreen" : "border-[#e0e8e2] bg-white")}
               onClick={() => selectQueue(queue.id)}
               aria-pressed={activeQueue === queue.id}
             >
@@ -583,7 +583,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
+      <section ref={workbenchRef} className="mt-5 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
         <aside className="hidden min-w-0 2xl:grid 2xl:content-start 2xl:gap-3" aria-label="Review queue groups">
           <section className="sticky top-24 grid gap-2 rounded-lg border border-[#c9d4d5] bg-white p-3">
             <div>
@@ -622,8 +622,41 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </section>
         </aside>
         <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
-          <div className="min-w-0 max-w-full overflow-hidden rounded-md border border-[#b9c9bf] bg-white" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
-          <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-3 py-3 text-sm lg:grid-cols-[1fr_auto]">
+          <details className="review-mobile-queue rounded-xl border border-[#d7dde2] bg-white md:hidden" data-testid="review-mobile-collapsed-queue">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-black text-[#111827]">
+              <span>Queue below</span>
+              <span className="rounded-md bg-[#f3f4f6] px-2 py-1 text-xs tabular-nums text-[#4b5563]">{data?.assets.length || 0} loaded</span>
+            </summary>
+            <div className="border-t border-[#e5e7eb] p-2">
+              {visibleReviewAssets.map((asset) => {
+                const title = assetPresentation(asset, role).title;
+                const selected = selectedAsset?.id === asset.id;
+                return (
+                  <button
+                    className={cn("grid w-full grid-cols-[1fr_auto] gap-2 rounded-lg px-3 py-2 text-left text-sm", selected ? "bg-[#eef6f2] text-[#0f3d2e]" : "text-[#111827] hover:bg-[#f8fafc]")}
+                    key={`mobile-${asset.id}`}
+                    type="button"
+                    onClick={() => inspectAsset(asset.id)}
+                    data-testid={selected ? "review-selected-queue-item" : undefined}
+                  >
+                    <span className="min-w-0">
+                      <strong className="block truncate font-black">{title}</strong>
+                      <span className="mt-0.5 block truncate text-xs font-medium text-[#6b7280]">{reviewNextCheckLabel(asset)}</span>
+                    </span>
+                    <span className="text-xs font-black tabular-nums text-[#6b7280]">#{asset.resourceSpaceId || asset.id}</span>
+                  </button>
+                );
+              })}
+              {data && visibleReviewCount < data.assets.length ? (
+                <button className="mt-2 min-h-10 w-full rounded-lg border border-[#d1d5db] bg-white text-sm font-black text-[#0f3d2e]" type="button" onClick={() => setVisibleReviewCount((current) => Math.min(current + mobileReviewRowsPageSize, data.assets.length))}>
+                  Show more
+                </button>
+              ) : null}
+            </div>
+          </details>
+
+          <div className="hidden min-w-0 max-w-full overflow-hidden rounded-[12px] border border-[#d7dde2] bg-white md:block" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
+          <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-4 py-4 text-sm lg:grid-cols-[1fr_auto]">
             <div className="min-w-0">
               <strong className="font-black text-tjc-ink">Review queue</strong>
               <span className="ml-2 text-xs font-black tabular-nums text-tjc-muted">{Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} loaded</span>
@@ -631,8 +664,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
-              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">Risk-sorted queue</span>
-              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">Decision console on right</span>
+              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">{activeQueueSummary?.label || "Queue"}</span>
             </div>
           </div>
           <div className="grid min-w-0 max-w-full">
@@ -658,7 +690,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside ref={selectedWorkspaceRef} className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-md border border-[#d4ded7] bg-white p-3 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
+          <aside ref={selectedWorkspaceRef} className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-[12px] border border-[#d4ded7] bg-white p-4 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
             <section className="grid gap-3" aria-label="Selected asset review summary">
               <MediaPreviewPanel className="review-selected-preview" asset={selectedAsset} src={selectedPreview} alt={selectedAsset.thumbnailAlt} title={assetPresentation(selectedAsset, role).title} compact />
               <div>

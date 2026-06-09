@@ -17,7 +17,7 @@ type AssetActionsMenuProps = {
 export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace, canExposeResourceSpaceId = true, label = "Asset actions" }: AssetActionsMenuProps) {
   const [status, setStatus] = useState("");
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
-  const recordLabel = canExposeResourceSpaceId ? "ResourceSpace ID" : "media record ID";
+  const recordLabel = canExposeResourceSpaceId ? "ResourceSpace ID" : "reference code";
 
   async function copyText(value: string, label: string) {
     if (!navigator.clipboard?.writeText) {
@@ -38,7 +38,7 @@ export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace
   const actions: DropdownAction[] = [
     {
       id: "copy-resource-id",
-      label: canExposeResourceSpaceId ? "Copy ResourceSpace ID" : "Copy media record ID",
+      label: canExposeResourceSpaceId ? "Copy ResourceSpace ID" : "Copy reference code",
       detail: canExposeResourceSpaceId ? resourceSpaceId : "Use this when asking the media team for help",
       icon: <Copy size={15} strokeWidth={1.8} aria-hidden="true" />,
       onSelect: () => copyText(resourceSpaceId, recordLabel)

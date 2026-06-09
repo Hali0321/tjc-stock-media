@@ -90,7 +90,7 @@ export function CollectionAlbumCard({
           </>
         ) : (
           <>
-            <AlbumPlaceholder name={name} className="row-span-2 aspect-[4/3]" title={name} label="Cover pending" />
+            <AlbumPlaceholder name={name} className="row-span-2 aspect-[4/3]" title={name} label="Package cover" />
             <AlbumPlaceholder name={`${name}-shelf`} className="aspect-[4/3]" title="Package" label="Preview" />
             <AlbumPlaceholder name={`${name}-stable`} className="aspect-[4/3]" title="Media kit" label="Preview" />
           </>

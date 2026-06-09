@@ -21,7 +21,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const assetTitle = asset.title || asset.resourceSpaceId || asset.id;
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
-  const requestRecordLabel = opsView ? "ResourceSpace ID" : "Media record ID";
+  const requestRecordLabel = opsView ? "ResourceSpace ID" : "Reference code";
   const requestAccessLabel = opsView ? "Original/master access" : "Source-file access";
   const requestStateLine = opsView
     ? `Raw%20status:%20${encodeURIComponent(asset.status)}%0AReuse%20state:%20${encodeURIComponent(state.reuse.label)}`
@@ -165,7 +165,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             <div>
               <span className="text-xs font-semibold text-tjc-muted">Asset</span>
               <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-              <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Media record ${resourceSpaceId}`}</span>
+              <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Reference code ${resourceSpaceId}`}</span>
             </div>
             <div>
               <span className="text-xs font-semibold text-tjc-muted">{opsView ? "Current state" : "Use state"}</span>

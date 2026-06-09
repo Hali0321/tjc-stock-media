@@ -180,7 +180,7 @@ function buildActionBacklog({
     {
       id: "rights-review",
       severity: rightsReview ? "high" : "low",
-      label: "Rights and consent review",
+      label: "Rights and consent review coverage",
       count: rightsReview,
       owner: "Reviewer",
       action: "Confirm rights status, consent, restrictions, and public-use notes before external reuse.",
@@ -295,7 +295,7 @@ function buildIntegrationReadiness({
     },
     {
       id: "auth",
-      label: "Real authentication",
+      label: "Real authentication / SSO",
       ready: false,
       owner: "DAM Admin",
       detail: "Demo role switch is useful for stakeholder review; production needs real identity and permissions."

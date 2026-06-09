@@ -63,8 +63,8 @@ function includesAny(asset: StockMediaAsset, terms: string[]) {
 export const savedViewDefinitions: SavedViewDefinition[] = [
   {
     id: "approved-church-wide",
-    label: "Portal ready",
-    description: "Public-safe assets cleared by portal reuse policy.",
+    label: "Ready to use",
+    description: "Approved copies cleared for normal reuse.",
     reason: "Fastest path for newsletters, websites, slides, and church-wide communication.",
     match: assetIsPortalReady
   },

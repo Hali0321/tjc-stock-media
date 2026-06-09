@@ -47,7 +47,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
               ))}
             </div>
           ) : (
-            <CollectionPreviewPlaceholder className="min-h-64 rounded-none" title={collection.name} detail="Cover pending" />
+            <CollectionPreviewPlaceholder className="min-h-64 rounded-none" title={collection.name} detail="Generated package cover" />
           )}
           <span className="absolute left-4 top-4 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
             Selected package

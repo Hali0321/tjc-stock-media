@@ -1,274 +1,221 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BadgeCheck, CircleHelp, Download, FileLock2, FileText, Image as ImageIcon, MessageCircle, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
-import { MediaPreviewPanel } from "@/components/MediaPreviewPanel";
+import Link from "next/link";
+import { ArrowRight, FileLock2, MessageCircle, Search, UploadCloud } from "lucide-react";
 
-const guideBlocks = [
+type HelpTopic = {
+  id: string;
+  title: string;
+  summary: string;
+  route: string;
+  doText: string;
+  avoidText: string;
+};
+
+const helpTopics: HelpTopic[] = [
   {
-    title: "Search approved media",
-    icon: Search,
-    body: "Start with ministry need first: Bible Study, fellowship, worship, flowers, website hero, slides, newsletter, no people, or event name.",
-    doText: "Combine use case and safety terms, such as website hero no people.",
-    avoidText: "Do not search only by old filenames unless a DAM admin asks for source tracing."
+    id: "find",
+    title: "Find approved media",
+    summary: "Search by use case, event, ministry, topic, or package.",
+    route: "/",
+    doText: "Use plain terms like website image, slide background, youth-safe, Bible study, or newsletter.",
+    avoidText: "Do not use media just because you remember seeing it somewhere."
   },
   {
-    title: "Download an approved image",
-    icon: BadgeCheck,
-    body: "Check the use guidance before downloading. Approval must match your audience and channel.",
-    doText: "Use external-ready or internal-ready media inside its stated scope.",
-    avoidText: "Do not treat Please review before public sharing, Archive only, or Contains children/youth as publishable."
+    id: "download",
+    title: "Download a copy",
+    summary: "Open the media record and follow the verdict before reuse.",
+    route: "/",
+    doText: "Download only when the record says Ready to use and the guidance matches your channel.",
+    avoidText: "Do not treat review-required or source-file restricted media as approved."
   },
   {
-    title: "Share internally",
-    icon: ShieldCheck,
-    body: "Church-wide assets can support public ministry communication. Internal assets stay within coworkers, recap decks, and local ministry coordination.",
-    doText: "Choose internal assets for team updates, planning, and private recap material.",
-    avoidText: "Do not move internal media into public posts, web pages, or printed outreach without another review."
+    id: "packages",
+    title: "Use a package",
+    summary: "Start from a curated ministry kit, then confirm each item.",
+    route: "/collections",
+    doText: "Open each media record before reuse. Item-level approval still matters.",
+    avoidText: "Do not assume the whole package is approved for every use."
   },
   {
-    title: "Use media on website/social",
-    icon: ImageIcon,
-    body: "Keep ministry context intact. Cropping, contrast, and layout choices should preserve worship, service, fellowship, and event meaning.",
-    doText: "Use portal-ready images for newsletters, slides, local updates, and website articles.",
-    avoidText: "Do not crop in a way that changes ministry context or isolates people without clear reason."
+    id: "children",
+    title: "Check people/youth",
+    summary: "Use extra care when faces, children, youth, or private moments may appear.",
+    route: "/?view=children-youth-review",
+    doText: "Request review before public sharing when people/youth visibility is unclear.",
+    avoidText: "Do not crop tightly, repost, or publish youth media before approval."
   },
   {
-    title: "Use logos and graphics",
-    icon: FileText,
-    body: "Use approved logo, template, and graphic files when available. Source and version matter for public-facing work.",
-    doText: "Use latest approved copy or request review for the right file.",
-    avoidText: "Do not recreate logos from screenshots, old flyers, or social posts."
+    id: "source",
+    title: "Request source-file access",
+    summary: "Source files are restricted and require a separate request.",
+    route: "/guide#request-review",
+    doText: "Include the media record, ministry use, deadline, and why the approved copy is not enough.",
+    avoidText: "Do not ask for source files as a normal download path."
   },
   {
-    title: "Check children/youth",
-    icon: Users,
-    body: "Children/youth visibility requires extra care. Portal blocks unsafe downloads and calls out risk labels.",
-    doText: "Ask a reviewer before public sharing when children/youth may be visible.",
-    avoidText: "Do not post, crop tightly, or reuse youth media before approval."
-  },
-  {
-    title: "Credit/source",
-    icon: Download,
-    body: "Source, photographer, package, and media record stay with each asset for traceability.",
-    doText: "Keep required credit notes with final layout or caption.",
-    avoidText: "Do not remove provenance notes when handing media to another coworker."
-  },
-  {
-    title: "Request original",
-    icon: FileLock2,
-    body: "Source files stay restricted. Normal users work from approved copies unless a ministry use case requires source access.",
-    doText: "Request source-file access with media record, reason, and usage scope.",
-    avoidText: "Do not treat original access as normal download or bypass approved-copy review."
-  },
-  {
-    title: "Upload new media",
-    icon: UploadCloud,
-    body: "Video/audio over 100 MB uses the large-media intake path before review.",
-    doText: "Send large files through approved intake path so checksum, source, and review state remain traceable.",
-    avoidText: "Do not force large video/audio through browser upload or place it directly into master folders."
+    id: "send",
+    title: "Send media for review",
+    summary: "Submit files or links so reviewers can check rights, people, source, and use guidance.",
+    route: "/upload",
+    doText: "Provide context, people/youth answers, source, tags, and reviewer notes.",
+    avoidText: "Do not send media expecting it to publish immediately."
   }
 ];
 
-const decisionRows = [
-  ["Need public flyer or website image", "Use Portal ready and download approved web copy."],
-  ["Need coworker recap or planning deck", "Use Internal ready, if audience stays internal."],
-  ["People, children/youth, or source unclear", "Pause and request DAM review."],
-  ["Original/master requested", "Request access. Normal users use approved copies only."]
+const decisionTree = [
+  ["Need media now?", "Search Find first. If nothing is ready, browse Packages."],
+  ["Verdict says Ready to use?", "Download approved copy and follow guidance."],
+  ["People/youth, rights, or source unclear?", "Stop and request DAM review."],
+  ["Need original/source file?", "Request source-file access. It is not automatic."]
 ];
-
-function guideSectionId(title: string) {
-  return `guide-${title.toLowerCase().replaceAll(" ", "-").replaceAll("/", "-")}`;
-}
 
 export function GuidePage() {
   const [query, setQuery] = useState("");
-  const visibleBlocks = useMemo(() => {
+  const [openTopic, setOpenTopic] = useState(helpTopics[0].id);
+
+  const visibleTopics = useMemo(() => {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return guideBlocks;
-    return guideBlocks.filter((block) => {
-      const haystack = `${block.title} ${block.body} ${block.doText} ${block.avoidText}`.toLowerCase();
+    if (!terms.length) return helpTopics;
+    return helpTopics.filter((topic) => {
+      const haystack = `${topic.title} ${topic.summary} ${topic.doText} ${topic.avoidText}`.toLowerCase();
       return terms.every((term) => haystack.includes(term));
     });
   }, [query]);
 
+  const selected = visibleTopics.find((topic) => topic.id === openTopic) || visibleTopics[0] || helpTopics[0];
+
   return (
-    <div className="mx-auto max-w-[1180px] px-3 py-6 md:px-5">
-      <section className="grid gap-4 border-b border-[#d6dfd8] pb-5 md:grid-cols-[minmax(0,1fr)_22rem]">
-        <div>
-          <span className="text-sm font-black text-tjc-evergreen">Usage guide</span>
-          <h1 className="mt-2 dam-page-title">Use approved media with care</h1>
-          <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
-            Quick rules for searching, checking approval, downloading copies, and knowing when to ask a reviewer.
+    <div className="dam-help-shell mx-auto grid w-full max-w-[1180px] gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,.72fr)_minmax(22rem,.28fr)]">
+      <section className="min-w-0">
+        <div className="help-hero">
+          <p className="dam-kicker">Help</p>
+          <h1 className="mt-2 text-4xl font-black leading-[1.02] tracking-[0] text-[#111827] sm:text-5xl">
+            What are you trying to do?
+          </h1>
+          <p className="mt-3 max-w-[58ch] text-base font-medium leading-7 text-[#4b5563]">
+            Use approved copies when they are ready. When approval, people/youth, rights, or source access is unclear, send it for review.
           </p>
-        </div>
-        <div className="grid gap-3">
-          <section className="rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" aria-label="When in doubt">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#cbd8e4] bg-white text-[#27435b]">
-                <CircleHelp size={19} strokeWidth={1.8} aria-hidden="true" />
-              </span>
-              <div>
-                <h2 className="text-base font-black text-[#27435b]">When in doubt, ask</h2>
-                <p className="mt-1 text-sm font-semibold leading-relaxed">Approval, source, children/youth, or source-file uncertainty should move to review, not guessing.</p>
-              </div>
-            </div>
-          </section>
-          <label className="grid gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
-            Search guide
-            <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-md border border-[#cad8cf] bg-white px-3">
-            <Search size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
+
+          <form className="mt-5 grid min-h-12 grid-cols-[auto_1fr] items-center rounded-xl border border-[#d7dde2] bg-white px-3" role="search">
+            <Search size={18} strokeWidth={1.8} aria-hidden="true" className="text-[#5b6670]" />
+            <label className="sr-only" htmlFor="help-search">Search help</label>
             <input
-              id="guide-search"
-              className="min-h-10 min-w-0 bg-transparent text-sm font-medium text-tjc-ink placeholder:text-[#7f8a82]"
+              id="help-search"
+              className="min-h-12 min-w-0 bg-transparent px-3 text-base font-medium text-[#111827] placeholder:text-[#6b7280]"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search children, source, public, source file..."
+              placeholder="Search help, children, download, package..."
               type="search"
             />
-            </span>
-          </label>
+          </form>
         </div>
-      </section>
 
-      <section className="mt-4 grid gap-3 lg:hidden" aria-label="Task-based guide" data-component="GuideMobileTaskPicker">
-        <div className="border-b border-[#d6dfd8] pb-3">
-          <h2 className="text-base font-black text-tjc-ink">What are you trying to do?</h2>
-          <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">Open one task. Request DAM review when source, children/youth, or approval is unclear.</p>
-        </div>
-        <div className="grid gap-2">
-          {visibleBlocks.map((block) => {
-            const Icon = block.icon;
-            return (
-              <details className="rounded-md border border-[#d6dfd8] bg-white p-3" key={block.title} data-testid={`guide-task-card-${guideSectionId(block.title).replace("guide-", "")}`}>
-                <summary className="grid cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-md border border-[#dbe4dd] bg-[#f8fbf8] text-tjc-evergreen">
-                    <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+        <section className="help-mobile-decision mt-3 grid gap-2 md:hidden" aria-label="Mobile quick help">
+          <div className="rounded-[10px] border border-[#d7e1db] bg-white p-3">
+            <p className="dam-kicker">Quick decision</p>
+            <div className="mt-2 grid gap-1.5">
+              {decisionTree.slice(0, 3).map(([question, answer]) => (
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-[#eef2ef] py-2 first:border-t-0 first:pt-0 last:pb-0" key={`mobile-${question}`}>
+                  <span>
+                    <strong className="block text-[.82rem] font-black leading-tight text-[#111827]">{question}</strong>
+                    <small className="mt-1 block text-[.78rem] font-semibold leading-snug text-[#4b5563]">{answer}</small>
                   </span>
-                  <span className="font-black text-tjc-ink">{block.title}</span>
-                </summary>
-                <p className="mt-3 text-sm font-semibold leading-relaxed text-tjc-muted">{block.body}</p>
-                <div className="mt-3 grid gap-2 text-sm">
-                  <p className="rounded-md border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
-                    <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
-                    {block.doText}
-                  </p>
-                  <p className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
-                    <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
-                    {block.avoidText}
-                  </p>
-                </div>
-              </details>
-            );
-          })}
-        </div>
-        {!visibleBlocks.length ? (
-          <div className="rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide tasks match that search.</div>
-        ) : null}
-        <section className="rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworkerMobile">
-          <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Request DAM review</h2>
-          <p className="mt-2 text-sm leading-relaxed">
-              If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review.
-          </p>
-        </section>
-      </section>
-
-      <div className="mt-5 hidden gap-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <aside className="hidden lg:block">
-          <nav className="sticky top-24 grid gap-1 text-sm font-semibold text-tjc-muted" aria-label="Guide sections">
-            <a className="rounded-md px-2 py-1.5 text-tjc-evergreen hover:bg-[#eef4f0]" href="#before-downloading">Before downloading</a>
-            {guideBlocks.map((block) => (
-              <a className="rounded-md px-2 py-1.5 hover:bg-[#eef4f0]" href={`#${guideSectionId(block.title)}`} key={block.title}>{block.title}</a>
-            ))}
-          </nav>
-        </aside>
-
-        <div className="min-w-0">
-          <section id="before-downloading" className="scroll-mt-24 border-b border-[#d6dfd8] pb-5" aria-label="Download decision guide">
-            <h2 className="text-base font-black text-tjc-evergreen">Before downloading</h2>
-            <div className="mt-3 divide-y divide-[#dbe4dd] rounded-lg border border-[#dbe4dd] bg-white">
-              {decisionRows.map(([need, action]) => (
-                <div className="grid gap-2 px-3 py-3 md:grid-cols-[17rem_1fr]" key={need}>
-                  <strong className="text-sm text-tjc-ink">{need}</strong>
-                  <span className="text-sm font-semibold leading-relaxed text-tjc-muted">{action}</span>
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+          <a className="inline-flex min-h-10 items-center justify-between rounded-[10px] border border-[#bdd3e4] bg-[#f5f9fc] px-3 text-sm font-black text-[#1f3f5b]" href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20this%20media%20for%20safe%20reuse.%0AContext:%20">
+            Request DAM review
+            <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
+          </a>
+        </section>
 
-          <div className="grid">
-            {visibleBlocks.map((block) => {
-              const Icon = block.icon;
-              return (
-              <section id={guideSectionId(block.title)} className="scroll-mt-24 border-b border-[#d6dfd8] py-5" key={block.title}>
-                <div className="grid gap-3 md:grid-cols-[18rem_1fr]">
-                  <div className="grid grid-cols-[auto_1fr] gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-md border border-[#dbe4dd] bg-white text-tjc-evergreen">
-                      <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
-                    </span>
-                    <div>
-                    <h2 className="text-base font-black text-tjc-ink">{block.title}</h2>
-                    <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
-                    </div>
-                  </div>
-                  <div className="grid gap-3 text-sm md:grid-cols-2" data-component="GuideDoAvoidSpacing">
-                    <p className="rounded-md border border-[#b8d9c6] bg-[#f3fbf6] p-3 leading-relaxed text-[#24583d]">
-                      <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Do</strong>
-                      {block.doText}
-                    </p>
-                    <p className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 leading-relaxed text-[#725216]">
-                      <strong className="mb-1 block text-xs font-black uppercase tracking-[.08em] text-[#8a641b]">Avoid</strong>
-                      {block.avoidText}
-                    </p>
-                  </div>
-                </div>
-              </section>
-            );
-            })}
+        <div className="help-topic-list mt-5 grid gap-2 sm:grid-cols-2" aria-label="Help topics">
+          {visibleTopics.map((topic) => (
+            <button
+              className={`help-topic-button ${selected.id === topic.id ? "is-active" : ""}`}
+              key={topic.id}
+              onClick={() => setOpenTopic(topic.id)}
+              type="button"
+              aria-pressed={selected.id === topic.id}
+            >
+              <span>
+                <strong>{topic.title}</strong>
+                <small>{topic.summary}</small>
+              </span>
+              <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+
+        {!visibleTopics.length ? (
+          <div className="mt-5 rounded-xl border border-[#d7dde2] bg-white p-6 text-sm font-medium text-[#4b5563]">
+            No help topic matched. Request DAM review when unsure.
+          </div>
+        ) : null}
+
+        <section className="mt-5 help-detail-panel" aria-live="polite">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="dam-kicker">Selected topic</p>
+              <h2 className="mt-1 text-2xl font-black tracking-[0] text-[#111827]">{selected.title}</h2>
+              <p className="mt-2 max-w-[60ch] text-sm font-medium leading-6 text-[#4b5563]">{selected.summary}</p>
+            </div>
+            <Link className="help-primary-link" href={selected.route}>
+              Open page
+            </Link>
           </div>
 
-          {!visibleBlocks.length ? (
-            <div className="mt-4 rounded-lg border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
-          ) : null}
-
-          <section className="mt-5 rounded-md border border-[#cbd8e4] bg-[#f7fbff] p-4 text-[#52677a]" data-component="GuideAskMediaCoworker">
-            <h2 className="flex items-center gap-2 text-base font-black text-[#27435b]"><MessageCircle size={18} strokeWidth={1.8} aria-hidden="true" /> Request DAM review</h2>
-            <p className="mt-2 text-sm leading-relaxed">
-              If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
-            </p>
-          </section>
-
-          <details id="media-preview-modes" className="mt-5 rounded-md border border-[#d6dfd8] bg-white p-4">
-            <summary className="cursor-pointer text-base font-black text-tjc-evergreen">Preview safety states</summary>
-            <p className="mt-2 max-w-[72ch] text-sm font-semibold leading-relaxed text-tjc-muted">
-              The preview panel supports safe image, video, audio, document, restricted, and unknown-file modes. Document and unknown previews stay shell-only until a safe copy exists.
-            </p>
-            <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <MediaPreviewPanel
-                mode="document"
-                alt="Document derivative safety shell"
-                title="PDF/document shell"
-                detail="Prepared for safe document copies. Source documents remain restricted."
-                compact
-              />
-              <MediaPreviewPanel
-                mode="restricted"
-                alt="Restricted preview policy shell"
-                title="Preview restricted"
-                detail="No safe preview is available. Request review or access instead."
-                compact
-              />
-              <MediaPreviewPanel
-                mode="unknown"
-                alt="Unknown file safety shell"
-                title="Unknown file shell"
-                detail="File type needs a safe derivative before inline preview."
-                compact
-              />
+          <div className="help-guidance-grid mt-5 grid gap-3 md:grid-cols-2">
+            <div className="help-guidance help-guidance-do">
+              <strong>Do</strong>
+              <p>{selected.doText}</p>
             </div>
-          </details>
-        </div>
-      </div>
+            <div className="help-guidance help-guidance-avoid">
+              <strong>Avoid</strong>
+              <p>{selected.avoidText}</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside className="help-assistant-rail grid h-fit gap-4 lg:sticky lg:top-24">
+        <section className="help-side-panel">
+          <p className="dam-kicker">Quick decision</p>
+          <div className="mt-3 divide-y divide-[#e5e7eb]">
+            {decisionTree.map(([question, answer]) => (
+              <div className="py-3" key={question}>
+                <strong className="block text-sm font-black text-[#111827]">{question}</strong>
+                <span className="mt-1 block text-sm font-medium leading-6 text-[#4b5563]">{answer}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="request-review" className="help-side-panel help-review-panel">
+          <MessageCircle size={20} strokeWidth={1.8} aria-hidden="true" />
+          <div>
+            <h2 className="text-base font-black text-[#1f3f5b]">Request DAM review</h2>
+            <p className="mt-1 text-sm font-medium leading-6 text-[#425466]">
+              If approval, source, rights, people/youth, or use scope is unclear, ask the media team before reuse.
+            </p>
+            <a className="mt-3 inline-flex font-black text-[#1f3f5b]" href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20this%20media%20for%20safe%20reuse.%0AContext:%20">
+              Open review request
+            </a>
+          </div>
+        </section>
+
+        <section className="help-side-panel">
+          <p className="dam-kicker">Fast paths</p>
+          <div className="mt-3 grid gap-2">
+            <Link className="help-quick-link" href="/collections">Packages</Link>
+            <Link className="help-quick-link" href="/upload"><UploadCloud size={15} /> Send media</Link>
+            <Link className="help-quick-link" href="/guide#request-review"><FileLock2 size={15} /> Source-file access</Link>
+          </div>
+        </section>
+      </aside>
     </div>
   );
 }
