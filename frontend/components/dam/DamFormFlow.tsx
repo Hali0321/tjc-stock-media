@@ -132,16 +132,17 @@ export function PacketStepper({
   steps: readonly string[];
   current: number;
 }) {
+  const stageLabels = ["Type", "Source", "People", "Files", "Review"];
   return (
     <section className="dam-packet-stepper rounded-2xl border border-[#d6dfd8] bg-white p-4" aria-label="Send progress">
-      <div className="flex items-start justify-between gap-3">
+      <div className="dam-packet-stepper-head flex items-start justify-between gap-3">
         <div>
           <span className="text-xs font-black text-tjc-evergreen">Step {current + 1} of {steps.length}</span>
           <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{steps[current]}</h2>
         </div>
         <span className="rounded-xl bg-[#eef7f1] px-3 py-1 text-xs font-black tabular-nums text-tjc-evergreen">{current + 1}/{steps.length}</span>
       </div>
-      <div className="mt-4 grid gap-1" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }} aria-hidden="true">
+      <div className="dam-packet-progress-track mt-4 grid gap-1" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }} aria-hidden="true">
         {steps.map((item, index) => (
           <span className={cn("h-2 rounded-full", index <= current ? "bg-tjc-evergreen" : "bg-[#dbe4dd]")} key={item} />
         ))}
@@ -150,7 +151,7 @@ export function PacketStepper({
         {steps.map((item, index) => (
           <li className={cn("dam-packet-step-item grid grid-cols-[auto_1fr_auto] items-center gap-2", index === current && "is-current", index < current && "is-complete")} key={item}>
             <span className="dam-packet-step-index tabular-nums">{index + 1}</span>
-            <span className="truncate">{item}</span>
+            <span className="truncate" title={item}>{stageLabels[index] || item}</span>
             <span className="dam-packet-step-state">{index < current ? "Done" : index === current ? "Now" : "Open"}</span>
           </li>
         ))}

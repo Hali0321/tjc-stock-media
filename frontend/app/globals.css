@@ -4084,31 +4084,46 @@ body,
 
 .dam-packet-stepper {
   display: grid;
-  grid-template-columns: minmax(0, .55fr) minmax(18rem, .45fr);
-  gap: 1rem;
-  align-items: start;
+  grid-template-columns: minmax(15rem, .34fr) minmax(0, .66fr);
+  gap: .8rem 1rem;
+  align-items: center;
   border-color: #b8cbc1 !important;
+  background: linear-gradient(90deg, #ffffff 0%, #ffffff 38%, #f5f8f6 38%, #f5f8f6 100%) !important;
+  padding: .9rem 1rem !important;
 }
 
-.dam-packet-stepper > div:first-child {
+.dam-packet-stepper-head {
   min-width: 0;
 }
 
-.dam-packet-stepper > div:nth-child(2) {
-  grid-column: 1 / -1;
+.dam-packet-stepper-head h2 {
+  margin-top: .2rem !important;
+  font-size: clamp(1.15rem, 1.4vw, 1.55rem) !important;
+}
+
+.dam-packet-stepper-head > span {
+  border-radius: 999px !important;
+  background: #e6f2ec !important;
+}
+
+.dam-packet-progress-track {
+  grid-column: 1;
+  margin-top: 0 !important;
 }
 
 .dam-packet-step-list {
   grid-column: 2;
   grid-row: 1 / span 2;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .45rem !important;
 }
 
 .dam-packet-step-item {
-  min-height: 2rem;
+  min-height: 3.05rem;
   border: 1px solid #e1e6e3;
   border-radius: .32rem;
   background: #fff;
-  padding: .35rem .45rem;
+  padding: .42rem .48rem;
   color: #52605a;
   font-size: .72rem;
   font-weight: 780;
@@ -4126,8 +4141,8 @@ body,
 
 .dam-packet-step-index {
   display: grid;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.28rem;
+  height: 1.28rem;
   place-items: center;
   border-radius: .25rem;
   background: #eef2ef;
@@ -4329,11 +4344,17 @@ body,
 @media (max-width: 1023px) {
   .dam-packet-stepper {
     grid-template-columns: minmax(0,1fr);
+    background: #fff !important;
   }
 
   .dam-packet-step-list {
     grid-column: 1;
     grid-row: auto;
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .dam-packet-progress-track {
+    grid-column: 1;
   }
 }
 
