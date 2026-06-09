@@ -256,10 +256,25 @@ export function UploadPage() {
   return (
     <div className="dam-shell mobile-first-flow grid gap-5">
       <section className="find-hero send-hero p-5 sm:p-7" aria-label="Send media">
-        <h1 className="dam-page-title">Send media for review</h1>
-        <p className="mt-3 max-w-[58ch] text-lg font-semibold leading-relaxed text-tjc-muted">
-          Build a reviewer packet. Send never publishes media.
-        </p>
+        <div className="send-command-main">
+          <p className="dam-kicker">Contributor intake</p>
+          <h1 className="dam-page-title">Send media for review</h1>
+          <p className="mt-3 max-w-[58ch] text-lg font-semibold leading-relaxed text-tjc-muted">
+            Build a reviewer packet. Send never publishes media.
+          </p>
+        </div>
+        <dl className="send-command-ledger" aria-label="Send media safety summary">
+          {[
+            ["Intake", "Review packet"],
+            ["Default", uploadDefaultState.status],
+            ["Publish", "Never from Send"]
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <PacketStepper steps={steps} current={step} />

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileLock2, MessageCircle, Search, UploadCloud } from "lucide-react";
+import { DamAssistantLaneCard, DamHelpDecisionPanel, DamHelpTopicButton } from "@/components/dam/DamWorkspace";
 
 type HelpTopic = {
   id: string;
@@ -85,13 +86,13 @@ const decisionTree = [
   ["Verdict says Ready to use?", "Download approved copy and follow guidance."],
   ["People/youth, rights, or source unclear?", "Stop and request DAM review."],
   ["Need original/source file?", "Request source-file access. It is not automatic."]
-];
+] as const;
 
 const assistantLanes = [
   ["Find", "Start with approved copies and packages."],
   ["Verify", "Open the media record before reuse."],
   ["Escalate", "Ask review when approval is unclear."]
-];
+] as const;
 
 export function GuidePage() {
   const [query, setQuery] = useState("");
@@ -112,52 +113,50 @@ export function GuidePage() {
     <div className="dam-help-shell mx-auto grid w-full max-w-[1180px] gap-4 px-4 py-5 md:px-6 lg:grid-cols-[minmax(0,.68fr)_minmax(22rem,.32fr)]">
       <section className="min-w-0">
         <div className="help-hero">
-          <p className="dam-kicker">Help</p>
-          <h1 className="mt-1 text-2xl font-black leading-tight tracking-[0] text-[#111827] sm:text-3xl">
-            What are you trying to do?
-          </h1>
-          <p className="mt-2 max-w-[58ch] text-sm font-semibold leading-6 text-[#4b5563]">
-            Use approved copies when they are ready. When approval, people/youth, rights, or source access is unclear, send it for review.
-          </p>
+          <div className="help-command-main">
+            <p className="dam-kicker">Help desk</p>
+            <h1 className="mt-1 text-2xl font-black leading-tight tracking-[0] text-[#111827] sm:text-3xl">
+              What are you trying to do?
+            </h1>
+            <p className="mt-2 max-w-[58ch] text-sm font-semibold leading-6 text-[#4b5563]">
+              Use approved copies when they are ready. When approval, people/youth, rights, or source access is unclear, send it for review.
+            </p>
 
-          <form className="mt-4 grid min-h-11 grid-cols-[auto_1fr] items-center rounded-lg border border-[#d7dde2] bg-white px-3" role="search">
-            <Search size={18} strokeWidth={1.8} aria-hidden="true" className="text-[#5b6670]" />
-            <label className="sr-only" htmlFor="help-search">Search help</label>
-            <input
-              id="help-search"
-              className="min-h-11 min-w-0 bg-transparent px-3 text-sm font-semibold text-[#111827] placeholder:text-[#6b7280]"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search help, children, download, package..."
-              type="search"
-            />
-          </form>
+            <form className="mt-4 grid min-h-11 grid-cols-[auto_1fr] items-center rounded-lg border border-[#d7dde2] bg-white px-3" role="search">
+              <Search size={18} strokeWidth={1.8} aria-hidden="true" className="text-[#5b6670]" />
+              <label className="sr-only" htmlFor="help-search">Search help</label>
+              <input
+                id="help-search"
+                className="min-h-11 min-w-0 bg-transparent px-3 text-sm font-semibold text-[#111827] placeholder:text-[#6b7280]"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search help, children, download, package..."
+                type="search"
+              />
+            </form>
+          </div>
+          <dl className="help-command-ledger" aria-label="Help workflow summary">
+            {[
+              ["Start", "Find approved media"],
+              ["Verify", "Open media record"],
+              ["Escalate", "Request DAM review"]
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         <section className="help-lane-strip mt-3 grid gap-2 md:grid-cols-3" aria-label="Help decision lanes">
           {assistantLanes.map(([label, detail], index) => (
-            <div className="help-lane-card grid gap-1" key={label}>
-              <span className="text-[11px] font-black tabular-nums text-tjc-evergreen">0{index + 1}</span>
-              <strong>{label}</strong>
-              <small>{detail}</small>
-            </div>
+            <DamAssistantLaneCard index={index} label={label} detail={detail} key={label} />
           ))}
         </section>
 
         <section className="help-mobile-decision mt-3 grid gap-2 md:hidden" aria-label="Mobile quick help">
-          <div className="rounded-[10px] border border-[#d7e1db] bg-white p-3">
-            <p className="dam-kicker">Quick decision</p>
-            <div className="mt-2 grid gap-1.5">
-              {decisionTree.slice(0, 3).map(([question, answer]) => (
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-[#eef2ef] py-2 first:border-t-0 first:pt-0 last:pb-0" key={`mobile-${question}`}>
-                  <span>
-                    <strong className="block text-[.82rem] font-black leading-tight text-[#111827]">{question}</strong>
-                    <small className="mt-1 block text-[.78rem] font-semibold leading-snug text-[#4b5563]">{answer}</small>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DamHelpDecisionPanel items={decisionTree} mobile />
           <a className="inline-flex min-h-10 items-center justify-between rounded-[10px] border border-[#bdd3e4] bg-[#f5f9fc] px-3 text-sm font-black text-[#1f3f5b]" href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20this%20media%20for%20safe%20reuse.%0AContext:%20">
             Request DAM review
             <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
@@ -166,20 +165,14 @@ export function GuidePage() {
 
         <div className="help-topic-list mt-4 grid gap-2" aria-label="Help topics">
           {visibleTopics.map((topic) => (
-            <button
-              className={`help-topic-button ${selected.id === topic.id ? "is-active" : ""}`}
+            <DamHelpTopicButton
               key={topic.id}
+              active={selected.id === topic.id}
+              lane={topic.lane}
+              title={topic.title}
+              summary={topic.summary}
               onClick={() => setOpenTopic(topic.id)}
-              type="button"
-              aria-pressed={selected.id === topic.id}
-            >
-              <span>
-                <em>{topic.lane}</em>
-                <strong>{topic.title}</strong>
-                <small>{topic.summary}</small>
-              </span>
-              <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
-            </button>
+            />
           ))}
         </div>
 
@@ -232,14 +225,7 @@ export function GuidePage() {
       <aside className="help-assistant-rail grid h-fit gap-4 lg:sticky lg:top-24">
         <section className="help-side-panel">
           <p className="dam-kicker">Quick decision</p>
-          <div className="mt-3 divide-y divide-[#e5e7eb]">
-            {decisionTree.map(([question, answer]) => (
-              <div className="py-3" key={question}>
-                <strong className="block text-sm font-black text-[#111827]">{question}</strong>
-                <span className="mt-1 block text-sm font-medium leading-6 text-[#4b5563]">{answer}</span>
-              </div>
-            ))}
-          </div>
+          <DamHelpDecisionPanel items={decisionTree} />
         </section>
 
         <section id="request-review" className="help-side-panel help-review-panel">

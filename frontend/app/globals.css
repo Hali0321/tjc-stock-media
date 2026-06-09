@@ -4104,6 +4104,133 @@ body,
   font-size: .9rem !important;
 }
 
+/* Assistant desk + intake console polish. */
+.help-hero,
+.send-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, .34fr);
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.help-command-main,
+.send-command-main {
+  min-width: 0;
+}
+
+.help-command-ledger,
+.send-command-ledger {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .38rem;
+  background: #fff;
+}
+
+.help-command-ledger div,
+.send-command-ledger div {
+  display: grid;
+  grid-template-columns: 5.8rem minmax(0, 1fr);
+  gap: .75rem;
+  border-top: 1px solid #edf1ee;
+  padding: .72rem .8rem;
+}
+
+.help-command-ledger div:first-child,
+.send-command-ledger div:first-child {
+  border-top: 0;
+  box-shadow: inset 3px 0 0 var(--dam-v3-green);
+}
+
+.help-command-ledger dt,
+.send-command-ledger dt {
+  color: #66726d;
+  font-size: .68rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.help-command-ledger dd,
+.send-command-ledger dd {
+  min-width: 0;
+  color: var(--dam-v3-ink);
+  font-size: .86rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.help-topic-list {
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .42rem;
+  background: #fff;
+  gap: 0 !important;
+  overflow: hidden;
+}
+
+.help-topic-list .help-topic-button {
+  border-width: 0 0 1px 0 !important;
+  border-color: #edf1ee !important;
+  border-radius: 0 !important;
+}
+
+.help-topic-list .help-topic-button:last-child {
+  border-bottom: 0 !important;
+}
+
+.help-topic-list .help-topic-button.is-active {
+  box-shadow: inset 3px 0 0 #fff;
+}
+
+.help-side-panel .help-quick-link {
+  justify-content: center;
+}
+
+.send-command-ledger div:first-child {
+  box-shadow: inset 3px 0 0 #5b778a;
+}
+
+.send-command-ledger div:nth-child(2) {
+  box-shadow: inset 3px 0 0 #c79020;
+}
+
+.send-command-ledger div:nth-child(3) {
+  box-shadow: inset 3px 0 0 var(--dam-v3-green);
+}
+
+.dam-packet-stepper {
+  background:
+    linear-gradient(90deg, #fff 0%, #fff 58%, #f7f9f8 58%, #f7f9f8 100%) !important;
+}
+
+.dam-packet-stepper > div:first-child h2 {
+  max-width: 18ch;
+}
+
+.dam-packet-summary {
+  background:
+    linear-gradient(180deg, #fff 0%, #fff 42%, #f7f9f8 42%, #f7f9f8 100%) !important;
+}
+
+@media (max-width: 900px) {
+  .help-hero,
+  .send-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .help-command-ledger div,
+  .send-command-ledger div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .18rem;
+  }
+
+  .help-topic-list {
+    border-radius: .36rem;
+  }
+}
+
 .package-usecase-strip span span {
   font-size: .74rem !important;
 }

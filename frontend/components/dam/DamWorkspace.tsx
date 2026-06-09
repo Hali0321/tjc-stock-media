@@ -217,6 +217,91 @@ function UseCaseCard({
   return <button type="button" className={classes} onClick={onClick}>{content}</button>;
 }
 
+function AssistantLaneCard({
+  index,
+  label,
+  detail
+}: {
+  index: number;
+  label: string;
+  detail: string;
+}) {
+  return (
+    <div className="help-lane-card grid gap-1">
+      <span className="text-[11px] font-black tabular-nums text-tjc-evergreen">0{index + 1}</span>
+      <strong>{label}</strong>
+      <small>{detail}</small>
+    </div>
+  );
+}
+
+function HelpTopicButton({
+  active,
+  lane,
+  title,
+  summary,
+  onClick
+}: {
+  active: boolean;
+  lane: string;
+  title: string;
+  summary: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={cn("help-topic-button", active && "is-active")}
+      onClick={onClick}
+      type="button"
+      aria-pressed={active}
+    >
+      <span>
+        <em>{lane}</em>
+        <strong>{title}</strong>
+        <small>{summary}</small>
+      </span>
+      <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+function HelpDecisionPanel({
+  items,
+  mobile = false
+}: {
+  items: ReadonlyArray<readonly [string, string]>;
+  mobile?: boolean;
+}) {
+  if (mobile) {
+    return (
+      <div className="rounded-[10px] border border-[#d7e1db] bg-white p-3">
+        <p className="dam-kicker">Quick decision</p>
+        <div className="mt-2 grid gap-1.5">
+          {items.slice(0, 3).map(([question, answer]) => (
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-[#eef2ef] py-2 first:border-t-0 first:pt-0 last:pb-0" key={`mobile-${question}`}>
+              <span>
+                <strong className="block text-[.82rem] font-black leading-tight text-[#111827]">{question}</strong>
+                <small className="mt-1 block text-[.78rem] font-semibold leading-snug text-[#4b5563]">{answer}</small>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 divide-y divide-[#e5e7eb]">
+      {items.map(([question, answer]) => (
+        <div className="py-3" key={question}>
+          <strong className="block text-sm font-black text-[#111827]">{question}</strong>
+          <span className="mt-1 block text-sm font-medium leading-6 text-[#4b5563]">{answer}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function StatusBadge({ tone, children }: { tone: ViewerVerdictTone | "info" | "ok" | "danger"; children: ReactNode }) {
   return (
     <span className={cn(
@@ -290,6 +375,9 @@ export { EmptyState as DamEmptyState };
 export { HeroSearch as DamHeroSearch };
 export { PrimaryAction as DamPrimaryAction };
 export { UseCaseCard as DamUseCaseCard };
+export { AssistantLaneCard as DamAssistantLaneCard };
+export { HelpDecisionPanel as DamHelpDecisionPanel };
+export { HelpTopicButton as DamHelpTopicButton };
 export { FilterPills as DamFilterPills };
 export { FilterSidebar as DamFilterSidebar };
 export { LibraryPagination as DamLibraryPagination };
