@@ -3403,3 +3403,210 @@ body,
     grid-template-columns: 4.25rem minmax(0,1fr) !important;
   }
 }
+
+/* Send packet builder hardening. */
+.send-hero {
+  min-height: 7.2rem;
+}
+
+.send-hero .dam-page-title {
+  font-size: clamp(1.65rem, 2vw, 2.35rem) !important;
+}
+
+.dam-packet-stepper {
+  display: grid;
+  grid-template-columns: minmax(0, .55fr) minmax(18rem, .45fr);
+  gap: 1rem;
+  align-items: start;
+  border-left: 3px solid var(--dam-v3-green) !important;
+}
+
+.dam-packet-stepper > div:first-child {
+  min-width: 0;
+}
+
+.dam-packet-stepper > div:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+.dam-packet-step-list {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.dam-packet-step-item {
+  min-height: 2rem;
+  border: 1px solid #e1e6e3;
+  border-radius: .32rem;
+  background: #fff;
+  padding: .35rem .45rem;
+  color: #52605a;
+  font-size: .72rem;
+  font-weight: 780;
+}
+
+.dam-packet-step-item.is-current {
+  border-color: #93b9aa;
+  background: #e8f3ee;
+  color: var(--dam-v3-green);
+}
+
+.dam-packet-step-item.is-complete {
+  color: #24583d;
+}
+
+.dam-packet-step-index {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border-radius: .25rem;
+  background: #eef2ef;
+  font-size: .68rem;
+}
+
+.dam-packet-step-state {
+  color: #6b7580;
+  font-size: .65rem;
+}
+
+.dam-packet-workbench {
+  align-items: start;
+}
+
+.dam-packet-categories {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dam-packet-category {
+  min-height: 4.35rem !important;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  padding: .75rem !important;
+}
+
+.dam-packet-category.is-selected {
+  border-color: #86ae9e !important;
+  background: #e8f3ee !important;
+  box-shadow: inset 3px 0 0 var(--dam-v3-green) !important;
+}
+
+.dam-packet-category strong {
+  font-size: 1rem !important;
+}
+
+.dam-packet-category span span {
+  font-size: .78rem !important;
+}
+
+.dam-packet-selected {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .75rem;
+  align-items: center;
+  border-radius: .35rem !important;
+  background: #f8faf9 !important;
+}
+
+.dam-packet-selected span {
+  color: #6b7580;
+  font-size: .7rem;
+  font-weight: 820;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.dam-packet-panel {
+  border-left: 3px solid var(--dam-v3-green) !important;
+}
+
+.dam-packet-panel label {
+  color: #1f2933 !important;
+}
+
+.dam-packet-panel input,
+.dam-packet-panel select,
+.dam-packet-panel textarea,
+.dam-packet-workbench input,
+.dam-packet-workbench select,
+.dam-packet-workbench textarea {
+  border-radius: .32rem !important;
+  border-color: #cbd5d0 !important;
+  background: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(17,24,32,.025);
+}
+
+.dam-packet-submit-bar {
+  position: sticky;
+  bottom: .75rem;
+  z-index: 5;
+  border-color: #c9d4ce !important;
+  background: rgba(255,255,255,.96) !important;
+  backdrop-filter: blur(8px);
+}
+
+.dam-packet-submit-bar > div:first-child {
+  align-items: center;
+}
+
+.dam-packet-summary {
+  border-top: 3px solid var(--dam-v3-green) !important;
+}
+
+.dam-packet-summary dl > div {
+  border-radius: .32rem !important;
+  background: #fff !important;
+}
+
+.dam-packet-checklist button {
+  min-height: 2.35rem !important;
+  border-radius: .32rem !important;
+  font-size: .82rem !important;
+}
+
+.dam-packet-ledger {
+  border: 1px solid #dce4df;
+  border-radius: .32rem;
+  background: #f8faf9;
+  padding: .65rem;
+}
+
+@media (max-width: 1023px) {
+  .dam-packet-stepper {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .dam-packet-step-list {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .send-hero {
+    min-height: 0;
+  }
+
+  .dam-packet-stepper {
+    gap: .7rem;
+    padding: .8rem !important;
+  }
+
+  .dam-packet-step-list {
+    display: none !important;
+  }
+
+  .dam-packet-categories {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .dam-packet-submit-bar {
+    position: static;
+    backdrop-filter: none;
+  }
+
+  .dam-packet-selected {
+    grid-template-columns: minmax(0,1fr);
+    gap: .15rem;
+  }
+}

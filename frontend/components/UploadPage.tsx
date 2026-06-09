@@ -269,19 +269,21 @@ export function UploadPage() {
         <input type="hidden" name="intakeType" value={intakeType} />
 
         <section data-send-step="0" className={cn("grid gap-4", step !== 0 && "hidden")}>
-          <div className="grid gap-3">
+          <div className="dam-packet-categories grid gap-3">
             {intakeTypes.map((item) => (
               <UseCaseCard
                 key={item.id}
                 label={item.label}
                 detail={item.detail}
                 icon={item.icon}
+                selected={intakeType === item.id}
                 onClick={() => setIntakeType(item.id)}
               />
             ))}
           </div>
-          <div className="rounded-[16px] border border-[#d8e1da] bg-white p-3 text-sm font-semibold text-tjc-muted">
-            Selected: <strong className="text-tjc-evergreen">{selectedType.label}</strong>
+          <div className="dam-packet-selected rounded-[16px] border border-[#d8e1da] bg-white p-3 text-sm font-semibold text-tjc-muted">
+            <span>Selected category</span>
+            <strong className="text-tjc-evergreen">{selectedType.label}</strong>
           </div>
         </section>
 

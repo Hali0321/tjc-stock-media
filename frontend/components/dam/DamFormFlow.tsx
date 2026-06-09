@@ -70,18 +70,24 @@ export function UseCaseCard({
   label,
   detail,
   icon: Icon,
-  onClick
+  onClick,
+  selected = false
 }: {
   label: string;
   detail: string;
   icon: LucideIcon;
   onClick?: () => void;
+  selected?: boolean;
 }) {
   return (
     <button
-      className="dam-packet-category group grid min-h-20 grid-cols-[auto_1fr_auto] items-start gap-3 rounded-2xl border border-[#d6dfd8] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-[#8fb2a5] hover:bg-[#f5faf7] active:translate-y-px"
+      className={cn(
+        "dam-packet-category group grid min-h-20 grid-cols-[auto_1fr_auto] items-start gap-3 rounded-2xl border border-[#d6dfd8] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-[#8fb2a5] hover:bg-[#f5faf7] active:translate-y-px",
+        selected && "is-selected"
+      )}
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
     >
       <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#eef7f1] text-tjc-evergreen">
         <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
@@ -140,6 +146,15 @@ export function PacketStepper({
           <span className={cn("h-2 rounded-full", index <= current ? "bg-tjc-evergreen" : "bg-[#dbe4dd]")} key={item} />
         ))}
       </div>
+      <ol className="dam-packet-step-list mt-4 grid gap-2">
+        {steps.map((item, index) => (
+          <li className={cn("dam-packet-step-item grid grid-cols-[auto_1fr_auto] items-center gap-2", index === current && "is-current", index < current && "is-complete")} key={item}>
+            <span className="dam-packet-step-index tabular-nums">{index + 1}</span>
+            <span className="truncate">{item}</span>
+            <span className="dam-packet-step-state">{index < current ? "Done" : index === current ? "Now" : "Open"}</span>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
@@ -189,6 +204,18 @@ function PacketSummary({
           </div>
         ))}
       </dl>
+      <section className="dam-packet-ledger grid gap-2" aria-label="Packet handling">
+        {[
+          ["Intake", "Submitted media enters review."],
+          ["Decision", "Reviewer evidence controls reuse."],
+          ["Publish", "Never automatic from Send."]
+        ].map(([label, value]) => (
+          <div className="grid grid-cols-[5.5rem_1fr] gap-3 border-t border-[#e7ece8] pt-2 first:border-t-0 first:pt-0" key={label}>
+            <strong className="text-xs font-black text-tjc-evergreen">{label}</strong>
+            <span className="text-xs font-semibold leading-relaxed text-tjc-muted">{value}</span>
+          </div>
+        ))}
+      </section>
       {children}
     </aside>
   );
