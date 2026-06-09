@@ -19,6 +19,12 @@ function packageReference(collection: CatalogCollection) {
   return `PK-${packageInitials(collection.name)}-${collection.name.length.toString().padStart(2, "0")}`;
 }
 
+function packageTone(collection: CatalogCollection) {
+  const tones = ["evergreen", "slate", "gold", "rose", "teal", "ink"] as const;
+  const seed = collection.name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[seed % tones.length];
+}
+
 export function packageReadinessForRole(collection: CatalogCollection, roleOrOpsView: DemoRole | boolean) {
   const opsView = typeof roleOrOpsView === "boolean" ? roleOrOpsView : roleOrOpsView === "Reviewer" || roleOrOpsView === "DAM Admin";
   const readyMatch = collection.approvalSummary.match(/\d+/);
@@ -107,7 +113,9 @@ function PackageCover({
     );
   }
   return (
-    <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden p-3 text-tjc-ink", large && "aspect-[16/10]")}>
+    <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden p-3 text-tjc-ink", `package-tone-${packageTone(collection)}`, large && "aspect-[16/10]")}>
+      <span className="package-cover-type-label">Package</span>
+      <span className="package-cover-monogram" aria-hidden="true">{packageInitials(collection.name)}</span>
       <div className="generated-package-contact-sheet absolute grid grid-cols-3 gap-1.5 opacity-95" aria-hidden="true">
         {Array.from({ length: large ? 12 : 9 }).map((_, index) => (
           <span className={cn(index % 4 === 0 && "is-paper", index % 5 === 0 && "is-ready")} key={index} />
