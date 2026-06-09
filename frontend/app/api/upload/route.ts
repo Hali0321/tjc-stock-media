@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     type: "upload_submitted",
     role,
     status: "preview",
-    summary: "Intake validated for DAM review; no ResourceSpace write performed.",
+    summary: "Intake validated for DAM review; no media-library write performed.",
     details: { eventName, fileCount: files.length, sourceLink: sourceLink || null, reviewWarnings }
   });
 

@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     type: "batch_action_previewed",
     role,
     status: "preview",
-    summary: "Batch governance action previewed; no ResourceSpace write performed.",
+    summary: "Batch governance action previewed; no production media-library write performed.",
     details: { action: body.action, assetCount: found.length }
   });
 
