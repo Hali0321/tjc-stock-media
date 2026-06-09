@@ -103,8 +103,13 @@ const forbiddenText = [
   /field refs?/i,
   /source path/i,
   /master drive/i,
+  /master\/original path/i,
+  /master files?/i,
   /original filename/i,
-  /checksum/i
+  /checksum/i,
+  /raw ResourceSpace/i,
+  /ResourceSpace ID/i,
+  /\bRS\s+\d+\b/
 ];
 const leaks = [];
 function walk(value, path) {

@@ -155,9 +155,9 @@ function restrictedPreviewCopy(title?: string, detail?: string) {
   if (/original|master|hidden/.test(haystack)) {
     return {
       icon: <FileLock2 size={22} strokeWidth={1.8} aria-hidden="true" />,
-      title: title || "Original/master hidden",
-      reason: "Master file remains restricted; use approved copies only.",
-      action: "Request original access",
+      title: title || "Source file hidden",
+      reason: "Source-file access remains restricted; use approved copies only.",
+      action: "Request source-file access",
       tone: "bg-[#f2f7fb] text-[#27435b]",
       ring: "bg-[#b9cede]/50"
     };

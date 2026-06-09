@@ -4,19 +4,33 @@ function canSeeOperationalSource(role: DemoRole) {
   return role === "Reviewer" || role === "DAM Admin";
 }
 
+const operationalTextPattern = /ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b/i;
+
 function hasOperationalText(value?: string) {
-  return Boolean(value && /ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|original filename|checksum/i.test(value));
+  return Boolean(value && operationalTextPattern.test(value));
 }
 
 function safeSavedViewText(value: string) {
   return value
     .replace(/ResourceSpace-approved/gi, "Batch-approved")
     .replace(/ResourceSpace publish status/gi, "approval state")
+    .replace(/ResourceSpace ID/gi, "reference code")
     .replace(/ResourceSpace/gi, "media library")
     .replace(/Shared Drive/gi, "media library")
+    .replace(/pending writes?/gi, "review queue")
+    .replace(/API mapping/gi, "review setup")
+    .replace(/launch gate/gi, "readiness check")
     .replace(/metadata health/gi, "record readiness")
     .replace(/raw totals?/gi, "library totals")
-    .replace(/diagnostics?/gi, "readiness notes");
+    .replace(/diagnostics?/gi, "readiness notes")
+    .replace(/source[- ]of[- ]truth/gi, "record source")
+    .replace(/field refs?/gi, "required details")
+    .replace(/source path/gi, "source access")
+    .replace(/master drive/gi, "media library")
+    .replace(/master\/original path/gi, "source-file access")
+    .replace(/master files?/gi, "source files")
+    .replace(/original filename/gi, "file reference")
+    .replace(/checksum/gi, "file check");
 }
 
 export function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaSourceStatus {

@@ -58,7 +58,7 @@ export function MediaPreviewPanel({
       <section className={cn("overflow-hidden rounded-md border border-[#cfd7d1] bg-white p-3", className)} aria-label="Restricted media preview">
         <RestrictedPreviewPanel
           title={title || "Preview restricted"}
-          detail={detail || "No role-safe derivative is available. Original/master remains restricted and reuse is governed by the trust record."}
+          detail={detail || "No role-safe derivative is available. Source-file access remains restricted and reuse is governed by the trust record."}
           className={cn(compact ? "min-h-44 md:min-h-52" : "min-h-72 md:min-h-[28rem] xl:min-h-[32rem]")}
         />
       </section>

@@ -58,7 +58,7 @@ export function decideAccess(role: DemoRole, action: AccessAction, asset?: Stock
   if (action === "downloadOriginal") {
     return role === "DAM Admin"
       ? { allowed: false, effect: "pending", reasonCodes: ["request-original-required"], allowedRenditions: [], reason: "Original/master download is still routed through ResourceSpace or Google Shared Drive admin workflow.", label: "Original/master restricted" }
-      : { allowed: false, effect: "block", reasonCodes: ["original-restricted"], allowedRenditions: [], reason: "Original/master files are restricted.", label: "Original/master restricted" };
+      : { allowed: false, effect: "block", reasonCodes: ["original-restricted"], allowedRenditions: [], reason: "Source-file access is restricted.", label: "Source file restricted" };
   }
 
   if (action === "viewOriginalMetadata") {

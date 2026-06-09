@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
     return NextResponse.json(
       {
-        error: "Not approved for this role. Original/master files stay restricted.",
+        error: "Not approved for this role. Source-file access stays restricted.",
         source: safeSource
       },
       { status: 403 }
