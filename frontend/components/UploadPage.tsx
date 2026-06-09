@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FileText, Link as LinkIcon, RotateCcw, Save, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
-import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamPacketStepper as PacketStepper, DamPacketSubmitBar as PacketSubmitBar, DamPacketSummary as PacketSummary, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
+import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamPacketRequirementPanel as PacketRequirementPanel, DamPacketStepper as PacketStepper, DamPacketSubmitBar as PacketSubmitBar, DamPacketSummary as PacketSummary, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
 import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canUpload } from "@/lib/permissions";
@@ -41,6 +41,13 @@ const steps = [
   "Files, link, and reviewer notes",
   "Reviewer packet"
 ] as const;
+
+const packetRequirementItems = [
+  { label: "Origin", detail: "Where it came from and who can answer follow-up." },
+  { label: "People/youth", detail: "Who appears and whether children or youth may be visible." },
+  { label: "Rights", detail: "Known permission, restrictions, or internal-only limits." },
+  { label: "Use case", detail: "How ministry teams expect to reuse it after review." }
+];
 
 export function UploadPage() {
   const { role, ready } = useDemoRole();
@@ -300,6 +307,7 @@ export function UploadPage() {
             <span>Selected category</span>
             <strong className="text-tjc-evergreen">{selectedType.label}</strong>
           </div>
+          <PacketRequirementPanel typeLabel={selectedType.label} items={packetRequirementItems} />
         </section>
 
         <section data-send-step="1" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 1 && "hidden")}>

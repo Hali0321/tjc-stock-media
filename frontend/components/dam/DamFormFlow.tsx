@@ -167,6 +167,33 @@ export function PacketSubmitBar({ children }: { children: ReactNode }) {
   );
 }
 
+export function PacketRequirementPanel({
+  typeLabel,
+  items
+}: {
+  typeLabel: string;
+  items: Array<{ label: string; detail: string }>;
+}) {
+  return (
+    <section className="dam-packet-requirements" aria-label="Reviewer packet requirements">
+      <div>
+        <span>Reviewer packet needs</span>
+        <h3>{typeLabel}</h3>
+        <p>Reviewers need enough context to decide reuse. Sending media here does not publish it.</p>
+      </div>
+      <ol>
+        {items.map((item, index) => (
+          <li key={item.label}>
+            <span>{index + 1}</span>
+            <strong>{item.label}</strong>
+            <small>{item.detail}</small>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function PacketSummary({
   typeLabel,
   fileCount,
@@ -227,6 +254,7 @@ export { EmptyState as DamFormEmptyState };
 export { EvidenceChecklist as DamFormEvidenceChecklist };
 export { PrimaryAction as DamFormPrimaryAction };
 export { UseCaseCard as DamFormUseCaseCard };
+export { PacketRequirementPanel as DamPacketRequirementPanel };
 export { PacketStepper as DamPacketStepper };
 export { PacketSummary as DamPacketSummary };
 export { PacketSubmitBar as DamPacketSubmitBar };

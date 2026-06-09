@@ -250,7 +250,12 @@ export function AssetDetailPage({ id }: { id: string }) {
               {preview ? (
                 <MediaPreview src={preview} alt={asset.thumbnailAlt} label="Preview available" detail={display.cardSubtitle} loading="eager" />
               ) : (
-                <ProtectedPreview label="Preview protected" detail={verdict.reason} className="asset-detail-protected-preview h-full rounded-none" />
+                <ProtectedPreview
+                  label="Preview protected"
+                  detail={verdict.reason}
+                  signals={["Open verdict first", "Request review to unblock", "Source file stays request-only"]}
+                  className="asset-detail-protected-preview h-full rounded-none"
+                />
               )}
           </RecordPreviewStage>
         </div>
