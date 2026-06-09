@@ -62,6 +62,7 @@ export function UploadPage() {
   const receiptRef = useRef<HTMLElement>(null);
   const allowed = ready && canUpload(role);
   const opsView = role === "Reviewer" || role === "DAM Admin";
+  const selectedTemplate = intakeTemplates.find((template) => template.id === intakeTemplate) || intakeTemplates[0];
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const hasValidSourceLink = useMemo(() => {
@@ -303,27 +304,30 @@ export function UploadPage() {
         </div>
       </div>
 
-      <section className="mt-4 hidden rounded-md border border-[#cbd8cf] bg-white p-3 md:block" aria-label="Intake templates">
+      <section className="mt-4 hidden rounded-md border border-[#cbd8cf] bg-white p-4 md:block" aria-label="Intake templates">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-sm font-black text-tjc-evergreen">Choose intake type</h2>
-            <p className="mt-1 text-xs font-semibold text-tjc-muted">Template choice helps reviewers know what to check. It does not publish media.</p>
+            <h2 className="text-lg font-black text-tjc-ink">What are you sending?</h2>
+            <p className="mt-1 text-sm font-semibold text-tjc-muted">Start with the closest type. We ask the review questions that matter for that media.</p>
           </div>
-          <span className="rounded-md border border-[#d6dfd8] bg-[#f8fbf8] px-2.5 py-1 text-xs font-black text-tjc-muted">Desktop intake</span>
+          <span className="rounded-md border border-[#d6dfd8] bg-[#f8fbf8] px-2.5 py-1 text-xs font-black text-tjc-muted">Never publishes directly</span>
         </div>
         <div className="mt-3 grid gap-2 lg:grid-cols-3">
           {intakeTemplates.map((template) => (
             <button
               type="button"
               className={cn(
-                "grid min-h-20 gap-1 rounded-md border px-3 py-2 text-left transition hover:bg-[#f6faf7]",
+                "grid min-h-24 gap-1 rounded-md border px-3 py-3 text-left transition hover:bg-[#f6faf7]",
                 intakeTemplate === template.id ? "border-[#8fb2a5] bg-[#e8f2ed] text-tjc-evergreen" : "border-[#d6dfd8] bg-white text-[#3f4a43]"
               )}
               aria-pressed={intakeTemplate === template.id}
               onClick={() => setIntakeTemplate(template.id)}
               key={template.id}
             >
-              <strong className="text-sm font-black">{template.label}</strong>
+              <strong className="flex items-start justify-between gap-2 text-sm font-black">
+                {template.label}
+                {intakeTemplate === template.id ? <span className="rounded-md bg-white px-2 py-0.5 text-[10px] text-tjc-evergreen">Selected</span> : null}
+              </strong>
               <span className="text-xs font-semibold leading-snug text-tjc-muted">{template.detail}</span>
             </button>
           ))}
@@ -349,8 +353,8 @@ export function UploadPage() {
       <form ref={formRef} className="upload-intake-layout mt-4 grid gap-3" onSubmit={submit} noValidate>
         <section data-upload-step="0" className={cn("upload-context-card dam-soft-card min-w-0 self-start p-4", mobileStep !== 0 && "max-md:hidden")}>
           <div className="mb-4">
-            <h2 className="text-lg font-black">1. Context</h2>
-            <p className="text-sm font-semibold text-tjc-muted">Help reviewers understand where this media came from.</p>
+            <h2 className="text-lg font-black">1. Where is this from?</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Selected type: {selectedTemplate.label}. Help reviewers connect media to a ministry, event, and source.</p>
           </div>
           <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Title {requiredHint}</span>
@@ -378,8 +382,8 @@ export function UploadPage() {
 
         <section data-upload-step="1" className={cn("upload-people-card dam-soft-card min-w-0 self-start p-4", mobileStep !== 1 && "max-md:hidden")}>
           <div className="mb-4">
-            <h2 className="text-lg font-black">2. People and rights</h2>
-            <p className="text-sm font-semibold text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
+            <h2 className="text-lg font-black">2. Who appears and what permission is known?</h2>
+            <p className="text-sm font-semibold text-tjc-muted">Unknown rights, people, or children/youth visibility stays blocked until reviewed.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
@@ -426,8 +430,12 @@ export function UploadPage() {
 
         <section data-upload-step="2" ref={filesSectionRef} className={cn("upload-files-card dam-soft-card min-w-0 scroll-mt-24 self-start p-4 xl:sticky xl:top-24", mobileStep !== 2 && "max-md:hidden")} data-testid="upload-desktop-submission-rail">
           <div className="mb-4">
-          <h2 className="text-lg font-black">3. Files and tags</h2>
-            <p className="text-sm font-semibold text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
+          <h2 className="text-lg font-black">3. Files, link, and send</h2>
+            <p className="text-sm font-semibold text-tjc-muted">{selectedTemplate.label} enters {uploadDefaultState.status}.</p>
+          </div>
+          <div className="mb-3 rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#27435b]">
+            <strong className="block font-black">Reviewer will check</strong>
+            <span className="mt-1 block font-semibold leading-snug">Source, rights, people visibility, children/youth, usage, and approved copy readiness.</span>
           </div>
           {!hasFileOrSource ? (
             <div className="mb-3 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-snug text-[#725216]" role="status">
@@ -467,7 +475,7 @@ export function UploadPage() {
           <section className="mt-4 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Submission readiness" data-testid="upload-desktop-readiness-checklist">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <strong className="block text-sm font-black text-tjc-ink">Ready to send?</strong>
+                <strong className="block text-sm font-black text-tjc-ink">Ready to send to reviewer?</strong>
                 <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">Media stays blocked until a reviewer approves reuse.</span>
               </div>
               <span className={cn("rounded-md px-2.5 py-1 text-xs font-black", submitReady ? "bg-[#e8f6ee] text-tjc-evergreen" : "bg-[#fff8e8] text-[#725216]")}>
@@ -535,7 +543,7 @@ export function UploadPage() {
           <UploadIntakePacket selectedFiles={selectedFiles} suggestedTags={suggestedTags} hasSourceLink={hasValidSourceLink} largeWarning={largeWarning} opsView={opsView} />
         </div>
 
-        <section className="upload-actions-card sticky bottom-3 z-20 grid gap-3 rounded-md border border-[#cbd8cf] bg-white p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
+        <section className="upload-actions-card grid gap-3 rounded-md border border-[#cbd8cf] bg-white p-3 shadow-[0_18px_42px_rgba(25,34,29,.09)] md:hidden" aria-label="Upload actions" data-component="UploadMobileActionBar" data-testid="upload-mobile-action-bar">
           <div className="grid content-center">
             <strong className="text-sm font-black text-tjc-ink">Submit for DAM review</strong>
             <span className="text-xs font-semibold text-tjc-muted">{submitHelp}</span>

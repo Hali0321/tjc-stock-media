@@ -92,13 +92,26 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
   const approved = state.approvedCopy.allowed;
   const assetTitle = display.title;
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
+  const requestRecordLabel = opsView ? "ResourceSpace ID" : "Media record ID";
+  const requestAccessLabel = opsView ? "Original/master access" : "Source-file access";
+  const requestStateLine = opsView
+    ? `Raw%20status:%20${encodeURIComponent(asset.status)}%0AReuse%20state:%20${encodeURIComponent(state.reuse.label)}`
+    : `Use%20state:%20${encodeURIComponent(state.reuse.label)}`;
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const requestLinks: Record<RequestKind, string> = {
-    original: `mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(assetTitle)}&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0ARequest:%20Original/master access%0AReason:%20`,
-    review: `mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(assetTitle)}&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0ARaw status: ${encodeURIComponent(asset.status)}%0AReuse state: ${encodeURIComponent(state.reuse.label)}%0AReason:%20`,
-    coworker: `mailto:media@tjc.org?subject=TJC Stock Media asset question&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0AAsset: ${encodeURIComponent(assetTitle)}%0AQuestion:%20`
+    original: `mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(assetTitle)}&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0ARequest:%20${encodeURIComponent(requestAccessLabel)}%0AReason:%20`,
+    review: `mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(assetTitle)}&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0A${requestStateLine}%0AReason:%20`,
+    coworker: `mailto:media@tjc.org?subject=TJC Stock Media asset question&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0AAsset:%20${encodeURIComponent(assetTitle)}%0AQuestion:%20`
   };
   const blockerLabels = decision.blockers.map((blocker) => blocker.label).slice(0, 3);
+  const sourceRestricted = decision.blockers.some((blocker) => /source|derivative|copy/i.test(blocker.code) || /source|copy|derivative/i.test(blocker.label));
+  const verdictTitle = approved
+    ? decision.state === "internal-ready"
+      ? "Internal only"
+      : "Ready to use"
+    : sourceRestricted
+      ? "Source file restricted"
+      : "Review required before use";
 
   return (
     <section
@@ -107,11 +120,12 @@ function ReuseDecisionRecord({ asset, role }: { asset: StockMediaAsset; role: De
         approved ? "border-[#9fcfb4] bg-[#f0faf4]" : "border-[#dfbd73] bg-[#fff7df]"
       )}
       aria-label="Reuse decision record"
+      data-testid="asset-primary-verdict"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <span className="text-xs font-black text-tjc-evergreen">{opsView ? "Reuse decision" : "Can I use this?"}</span>
-          <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{approved ? "Approved copy can be reused" : "Review required before use"}</h2>
+          <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{verdictTitle}</h2>
         </div>
         <ReuseStateBadge asset={asset} size="sm" />
       </div>
@@ -437,8 +451,27 @@ export function AssetDetailPage({ id }: { id: string }) {
 
         <aside className="grid min-w-0 gap-3 xl:sticky xl:top-24 xl:self-start">
           <ReuseDecisionRecord asset={asset} role={role} />
-          <DownloadOptionsPanel asset={asset} role={role} />
-          <AssetTrustPanel asset={asset} role={role} />
+          {opsView ? (
+            <>
+              <DownloadOptionsPanel asset={asset} role={role} />
+              <AssetTrustPanel asset={asset} role={role} />
+            </>
+          ) : (
+            <details className="rounded-md border border-[#d4ded7] bg-white p-4" aria-label="Review details">
+              <summary className="cursor-pointer list-none">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-black text-tjc-evergreen">More review details</h2>
+                    <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">Rights, people/youth, source, and download checks.</p>
+                  </div>
+                  <span className="rounded-md border border-[#d6dfd8] bg-[#fbfcfa] px-2 py-1 text-xs font-black text-tjc-muted">Show</span>
+                </div>
+              </summary>
+              <div className="mt-3">
+                <AssetTrustPanel asset={asset} role={role} />
+              </div>
+            </details>
+          )}
           {opsView ? <section className="hidden rounded-md border border-[#d4ded7] bg-white p-4 xl:block" aria-label="ResourceSpace source actions">
             <h2 className="text-sm font-black text-tjc-evergreen">ResourceSpace source</h2>
             <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">Secondary admin actions. Delivery decisions stay above.</p>

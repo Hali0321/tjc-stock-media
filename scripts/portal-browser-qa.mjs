@@ -236,19 +236,41 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Viewer", 1440, 1000);
+  await gotoAndSettle(page, `${base}/collections`);
+  if ((await page.getByText("Best use:").count()) < 1) failures.push("packages ministry kits: best-use summary missing");
+  if ((await page.getByText("Safety:").count()) < 1) failures.push("packages ministry kits: safety summary missing");
+  if ((await page.getByText("Open Find results").count()) < 1) failures.push("packages ministry kits: open Find action missing");
+  await context.close();
+}
+
+{
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/assets/368`);
-  if ((await page.getByText("Review required before use").count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
+  if ((await page.getByText(/Review required before use|Source file restricted|Not available yet/).count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
   if ((await page.getByTestId("asset-download-unavailable").getByText("Download unavailable").count()) < 1) failures.push("viewer-asset-blocked-request-review: unavailable download state missing");
   await page.getByTestId("asset-primary-request-review").click();
   if ((await page.getByRole("dialog", { name: "Request review" }).count()) < 1) failures.push("viewer-asset-blocked-request-review: request dialog did not open");
   if ((await page.getByText("Download access and review status do not change here.").count()) < 1) failures.push("viewer-asset-blocked-request-review: no-fake-persistence copy missing");
+  const reviewRequestHref = await page.getByRole("link", { name: "Open review request" }).getAttribute("href");
+  const decodedReviewRequestHref = decodeURIComponent(reviewRequestHref || "");
+  if (/ResourceSpace|Raw status/i.test(decodedReviewRequestHref)) failures.push("viewer-asset-blocked-request-review: viewer mailto exposes operations truth");
   await context.close();
 }
 
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, base);
+  if ((await page.getByText("What do you need media for?").count()) < 1) failures.push("viewer-find: task-first prompt missing");
+  if ((await page.getByText("No approved copies are ready yet.").count()) < 1) failures.push("viewer-find: safe empty state missing");
+  if ((await page.getByText("Media may exist, but it still needs review, rights checks, or approved copies before normal users can reuse it.").count()) < 1) failures.push("viewer-find: safe empty explanation missing");
+  for (const action of ["Browse ministry packages", "Request DAM review", "Send new media"]) {
+    if ((await page.getByText(action).count()) < 1) failures.push(`viewer-find: safe empty action missing ${action}`);
+  }
+  const viewerHomeText = await page.locator("body").innerText();
+  if (/ResourceSpace|Shared Drive|pending writes|launch gate/i.test(viewerHomeText)) failures.push("viewer-find: Viewer sees operations truth copy");
+  if ((await page.getByText(/Ready to use/).count()) > 0) failures.push("viewer-find: ready verdict visible when portal-ready set is empty");
+  if ((await page.getByText("Saved ops views").count()) > 0) failures.push("viewer-find: ops saved views visible to Viewer");
   const commandSearch = await openCommandPalette(page);
   await commandSearch.fill("website hero");
   const firstActiveCommand = await commandSearch.getAttribute("aria-activedescendant");
@@ -262,6 +284,16 @@ for (const width of qaViewports) {
   await page.keyboard.press("Enter");
   await page.waitForURL(/view=website-hero/, { timeout: 10000 });
   if (!page.url().includes("view=website-hero")) failures.push("command palette: website hero did not open stable view");
+  await context.close();
+}
+
+{
+  const { page, context } = await newRolePage("Viewer", 1440, 1000);
+  await gotoAndSettle(page, `${base}/?view=batch-approved-blockers`);
+  const simpleVerdicts = await page.getByText(/Review first|Source restricted|Not available yet|Internal only/).count();
+  if (simpleVerdicts < 1) failures.push("viewer-review-needed-view: result cards do not show blocked simple verdicts");
+  if ((await page.getByText("Ready to use").count()) > 0) failures.push("viewer-review-needed-view: unsafe result labelled ready to use");
+  if ((await page.getByText(/ResourceSpace ID|RS [0-9]/).count()) > 0) failures.push("viewer-review-needed-view: ResourceSpace details visible to Viewer");
   await context.close();
 }
 
@@ -342,6 +374,8 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await gotoAndSettle(page, `${base}/upload`);
+  if ((await page.getByText("What are you sending?").count()) < 1) failures.push("upload desktop wizard: template-first prompt missing");
+  if ((await page.getByText("Never publishes directly").count()) < 1) failures.push("upload desktop wizard: never-publishes safety copy missing");
   if ((await page.locator('[data-component="UploadBottomActionBar"]').count()) > 0) failures.push("upload desktop rail: detached bottom submit bar still present");
   const rail = page.getByTestId("upload-desktop-submission-rail");
   const actions = page.getByTestId("upload-desktop-actions-rail");
@@ -357,6 +391,11 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Contributor", 320, 900);
   await gotoAndSettle(page, `${base}/upload`);
   if ((await page.getByTestId("upload-stepper-current-step").getByText("Step 1 of 4").count()) < 1) failures.push("contributor-upload-stepper: step 1 indicator missing");
+  const firstStepBox = await page.locator('[data-upload-step="0"]:visible').boundingBox();
+  const mobileActionBox = await page.getByTestId("upload-mobile-action-bar").boundingBox();
+  if (firstStepBox && mobileActionBox && mobileActionBox.y < firstStepBox.y + firstStepBox.height - 2) {
+    failures.push("contributor-upload-stepper: mobile action controls appear before required step fields");
+  }
   await page.getByRole("button", { name: "Next" }).click();
   if ((await page.getByText("Complete Context before continuing.").count()) < 1) failures.push("contributor-upload-stepper: context validation missing");
   await page.getByLabel("Title").fill("Mobile stepper QA");
@@ -518,6 +557,8 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/assets/368`);
+  if ((await page.getByTestId("asset-primary-verdict").count()) !== 1) failures.push("asset detail one-verdict: expected exactly one primary verdict card");
+  if ((await page.getByRole("heading", { name: "Download and requests" }).count()) > 0) failures.push("asset detail one-verdict: viewer sees duplicate download panel");
   const viewerActionsButton = page.getByRole("button", { name: "Record actions" });
   await viewerActionsButton.click();
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "true") failures.push("asset actions menu: aria-expanded not true after open");
@@ -539,6 +580,9 @@ for (const width of qaViewports) {
   if ((await page.getByRole("dialog", { name: "Request original access" }).count()) < 1) failures.push("request original dialog: dialog did not open");
   if ((await page.getByText("This request asks the media team for access and does not grant access automatically.").count()) < 1) failures.push("request original dialog: safety copy missing");
   if ((await page.getByText("Download access and review status do not change here.").count()) < 1) failures.push("request original dialog: no-fake-persistence copy missing");
+  const originalRequestHref = await page.getByRole("link", { name: "Open email request" }).getAttribute("href");
+  const decodedOriginalRequestHref = decodeURIComponent(originalRequestHref || "");
+  if (/ResourceSpace|Raw status/i.test(decodedOriginalRequestHref)) failures.push("request original dialog: viewer mailto exposes operations truth");
   await page.getByRole("button", { name: "Close request dialog" }).click();
   await context.close();
 }

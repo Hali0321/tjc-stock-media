@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Archive, Check, CheckCircle2, Database, FileDown, FolderPlus, LayoutGrid, List, Search, ShieldAlert, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
+import { Archive, Check, CheckCircle2, Database, FileDown, FolderPlus, LayoutGrid, List, Mail, Search, ShieldAlert, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
 import Link from "next/link";
 import { AssetCard } from "@/components/AssetCard";
 import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
@@ -34,7 +34,7 @@ const useCaseButtons = [
 
 const viewerShortcutIds = new Set(["approved-church-wide", "website-hero", "sermon-slides", "newsletter", "social-media", "no-people", "recently-approved"]);
 const contributorShortcutIds = new Set([...viewerShortcutIds, "internal-ministry"]);
-const viewerDefaultView = "recently-approved";
+const viewerDefaultView = "approved-church-wide";
 const findTaskCards = [
   { label: "Website image", detail: "Approved visuals for church web pages.", view: "website-hero", icon: Search },
   { label: "Slide background", detail: "Media suited for sermon and class slides.", view: "sermon-slides", icon: LayoutGrid },
@@ -456,10 +456,11 @@ export function LibraryPage() {
     return true;
   });
   const activeCollection = result?.collections.find((collection) => collection.id === selectedCollection);
-  const hasActiveSearch = Boolean(activeView || activeCollection || submittedQuery || filters.length);
+  const hasActiveSearch = Boolean((activeView && !(role === "Viewer" && selectedView === viewerDefaultView)) || activeCollection || submittedQuery || filters.length);
   const visibleAssets = result?.assets || [];
   const hasVisibleAssets = visibleAssets.length > 0;
   const pagination = result?.pagination;
+  const viewerSafeDefaultEmpty = role === "Viewer" && selectedView === viewerDefaultView && !submittedQuery && !filters.length && !activeCollection;
   const activeFilterPills = [
     ...(submittedQuery ? [{ id: "search", label: `Search: ${submittedQuery}`, active: true }] : []),
     ...(activeView && selectedView !== viewerDefaultView ? [{ id: "view", label: activeView.label, active: true }] : []),
@@ -476,16 +477,20 @@ export function LibraryPage() {
       setPageOffset(0);
     }
   }));
-  const emptyStateTitle = submittedQuery || filters.length
-    ? "No matching approved assets"
+  const emptyStateTitle = viewerSafeDefaultEmpty
+    ? "No approved copies are ready yet."
+    : submittedQuery || filters.length
+      ? "No matching approved assets"
+      : activeCollection
+        ? "No assets in this package yet"
+        : selectedView
+          ? "No assets in this view yet"
+          : "No assets in this Find view";
+  const emptyStateDetail = viewerSafeDefaultEmpty
+    ? "Media may exist, but it still needs review, rights checks, or approved copies before normal users can reuse it."
     : activeCollection
-      ? "No assets in this package yet"
-      : selectedView
-        ? "No assets in this view yet"
-        : "No assets in this Find view";
-  const emptyStateDetail = activeCollection
-    ? "This package can still exist while individual assets wait for reuse approval."
-    : "Browse packages to find approved groups before opening individual assets.";
+      ? "This package can still exist while individual assets wait for reuse approval."
+      : "Browse packages to find approved groups before opening individual assets.";
 
   return (
     <div className="dam-shell">
@@ -494,8 +499,8 @@ export function LibraryPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="dam-page-title">Find</h1>
-              <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
-                {simpleFind ? "What do you need media for? Search approved media, start from a package, or send new media for review." : "Ops Library: search role-safe media with workflow, source, and governance state."}
+            <p className="mt-2 max-w-[68ch] text-base font-semibold leading-relaxed text-tjc-muted">
+                {simpleFind ? "What do you need media for? Start with a use case, then open use guidance before sharing." : "Ops Library: search role-safe media with workflow, source, and governance state."}
               </p>
             </div>
             {hasActiveSearch ? (
@@ -513,7 +518,7 @@ export function LibraryPage() {
               className="min-h-11 min-w-0 bg-transparent px-2 text-sm font-semibold text-tjc-ink placeholder:text-[#7f8a82] sm:min-h-12 sm:px-1 sm:text-lg"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={simpleFind ? "What do you need media for?" : "Search approved media, ResourceSpace ID, source, ministry..."}
+              placeholder={simpleFind ? "Search website, slides, youth-safe, newsletter..." : "Search approved media, ResourceSpace ID, source, ministry..."}
               name="q"
               type="search"
             />
@@ -555,15 +560,17 @@ export function LibraryPage() {
               onRemove={removeActivePill}
             />
           ) : null}
-          <FilterPills
-            className="mt-3 hidden pb-1 sm:flex"
-            ariaLabel="Use-case shortcuts"
-            pills={visibleUseCases.map((item) => ({ id: item.view, label: item.label, active: selectedView === item.view }))}
-            onSelect={(id) => {
-              const item = visibleUseCases.find((useCase) => useCase.view === id);
-              if (item) openUseCase(item);
-            }}
-          />
+          {!simpleFind ? (
+            <FilterPills
+              className="mt-3 hidden pb-1 sm:flex"
+              ariaLabel="Use-case shortcuts"
+              pills={visibleUseCases.map((item) => ({ id: item.view, label: item.label, active: selectedView === item.view }))}
+              onSelect={(id) => {
+                const item = visibleUseCases.find((useCase) => useCase.view === id);
+                if (item) openUseCase(item);
+              }}
+            />
+          ) : null}
         </div>
 
         {reviewer ? <details className="hidden rounded-xl border border-[#c9d4d5] bg-white px-3 py-2 text-sm text-tjc-muted sm:block">
@@ -663,7 +670,7 @@ export function LibraryPage() {
         </div>
       </details> : null}
 
-      <section className="mt-4 hidden sm:block xl:hidden" aria-label={reviewer ? "Saved ops views" : "Common starting points"}>
+      {!simpleFind ? <section className="mt-4 hidden sm:block xl:hidden" aria-label={reviewer ? "Saved ops views" : "Common starting points"}>
         <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-sm font-black text-tjc-evergreen">{reviewer ? "Saved ops views" : "Common starting points"}</h2>
@@ -680,17 +687,17 @@ export function LibraryPage() {
             <SavedViewCard key={view.id} view={view} active={selectedView === view.id} onOpen={() => openSavedView(view.id)} />
           ))}
         </div>
-      </section>
+      </section> : null}
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-[15rem_minmax(0,1fr)]" aria-label="Find controls and results">
-        <LibrarySavedRail
+      <section className={cn("mt-4 grid gap-4", reviewer && "xl:grid-cols-[15rem_minmax(0,1fr)]")} aria-label="Find controls and results">
+        {reviewer ? <LibrarySavedRail
           shortcuts={shortcuts}
           visibleUseCases={visibleUseCases}
           selectedView={selectedView}
           ops={reviewer}
           onOpenView={openSavedView}
           onOpenUseCase={openUseCase}
-        />
+        /> : null}
         <div className="min-w-0">
           <section className="min-w-0" aria-label="Asset results">
             {(hasVisibleAssets || filters.length > 0) ? (
@@ -701,7 +708,7 @@ export function LibraryPage() {
                     <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
                     {selectedIds.length ? "Clear selection" : "Select visible"}
                   </button> : null}
-                  {hasVisibleAssets && contributor ? <span className="text-sm font-semibold text-tjc-muted">{selectedIds.length} selected</span> : <span className="text-sm font-semibold text-tjc-muted">Approved media only</span>}
+                  {hasVisibleAssets && contributor ? <span className="text-sm font-semibold text-tjc-muted">{selectedIds.length} selected</span> : <span className="text-sm font-semibold text-tjc-muted">Open use guidance before sharing</span>}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(filters.length > 0 || hasVisibleAssets) ? <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", filtersOpen ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setFiltersOpen(true)} aria-expanded={filtersOpen} aria-haspopup="dialog">
@@ -713,7 +720,7 @@ export function LibraryPage() {
                     <List size={15} strokeWidth={1.8} aria-hidden="true" />
                     Table
                   </button> : null}
-                  {hasVisibleAssets ? <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "grid" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
+                  {hasVisibleAssets && reviewer ? <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "grid" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
                     <LayoutGrid size={15} strokeWidth={1.8} aria-hidden="true" />
                     Grid
                   </button> : null}
@@ -773,7 +780,7 @@ export function LibraryPage() {
               </div>
               {activeView ? (
                 <p>
-                  View: <strong className="font-semibold text-tjc-evergreen">{activeView.label}</strong>. {reviewer ? "ResourceSpace remains truth; downloads stay blocked until trust lanes pass." : "Open a media record to confirm use guidance before sharing."}
+                  View: <strong className="font-semibold text-tjc-evergreen">{activeView.label}</strong>. {reviewer ? "ResourceSpace remains truth; downloads stay blocked until trust lanes pass." : "Cards show a simple verdict; open use guidance for the final decision."}
                 </p>
               ) : null}
               {!activeView && result?.appliedIntent?.matchedView ? (
@@ -834,18 +841,42 @@ export function LibraryPage() {
                   title={emptyStateTitle}
                   detail={emptyStateDetail}
                 />
-                <div className="rounded-md border border-[#d6dfd8] bg-white p-3 text-sm font-semibold text-tjc-muted lg:hidden" role="status">
-                  <strong className="block text-base font-black text-tjc-ink">Keep browsing</strong>
-                  <p className="mt-1 leading-relaxed">Clear filters or switch to approved assets. Packages are secondary guided groups.</p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <button className="inline-flex min-h-11 items-center justify-center rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={clearSearchState}>
-                      Switch to approved assets
+                {viewerSafeDefaultEmpty ? (
+                  <section className="rounded-md border border-[#d6dfd8] bg-white p-4 text-sm font-semibold text-tjc-muted" role="status" data-testid="viewer-safe-empty-state">
+                    <strong className="block text-base font-black text-tjc-ink">Safe reuse starts here</strong>
+                    <p className="mt-1 max-w-[72ch] leading-relaxed">A media record existing in the archive is not enough for self-serve reuse. A reviewer must clear rights, people/youth, usage scope, and approved-copy readiness.</p>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href="/collections">
+                        <FolderPlus size={16} strokeWidth={1.8} aria-hidden="true" />
+                        Browse ministry packages
+                      </Link>
+                      <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20media%20for%20safe%20reuse.%0AContext:%20">
+                        <Mail size={16} strokeWidth={1.8} aria-hidden="true" />
+                        Request DAM review
+                      </a>
+                      <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="/upload">
+                        <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
+                        Send new media
+                      </Link>
+                    </div>
+                    <button className="mt-3 inline-flex min-h-9 items-center justify-center rounded-md border border-[#ead6a8] bg-[#fff8e8] px-3 text-xs font-black text-[#725216] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
+                      Show items needing review, downloads stay blocked
                     </button>
-                    <Link className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="/collections">
-                      Open packages
-                    </Link>
+                  </section>
+                ) : (
+                  <div className="rounded-md border border-[#d6dfd8] bg-white p-3 text-sm font-semibold text-tjc-muted lg:hidden" role="status">
+                    <strong className="block text-base font-black text-tjc-ink">Keep browsing</strong>
+                    <p className="mt-1 leading-relaxed">Clear filters or switch to approved assets. Packages are secondary guided groups.</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <button className="inline-flex min-h-11 items-center justify-center rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" type="button" onClick={clearSearchState}>
+                        Switch to approved assets
+                      </button>
+                      <Link className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href="/collections">
+                        Open packages
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ) : null}
             {hasVisibleAssets && (viewMode === "grid" || !reviewer) ? (
@@ -885,7 +916,7 @@ export function LibraryPage() {
             ) : null}
           </section>
 
-          <section id="collections" className="mt-6 hidden scroll-mt-24 lg:block" aria-label="Featured packages">
+          {!simpleFind ? <section id="collections" className="mt-6 hidden scroll-mt-24 lg:block" aria-label="Featured packages">
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
               <div>
                 <h2 className="text-lg font-semibold text-tjc-ink">{hasVisibleAssets ? "Ministry packages" : "Browse packages instead"}</h2>
@@ -912,7 +943,7 @@ export function LibraryPage() {
                 />
               ))}
             </div>
-          </section>
+          </section> : null}
         </div>
       </section>
       <Dialog

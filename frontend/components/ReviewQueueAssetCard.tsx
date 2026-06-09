@@ -29,6 +29,17 @@ function nextCheckLabel(missing: string[], risks: string[]) {
   return "Decision ready";
 }
 
+function ageLabel(asset: StockMediaAsset) {
+  const raw = asset.reviewedDate || asset.importDate || asset.capturedDate || asset.eventDate;
+  if (!raw) return "Age unknown";
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return "Age unknown";
+  const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000));
+  if (days === 0) return "Today";
+  if (days === 1) return "1 day";
+  return `${days} days`;
+}
+
 export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: ReviewQueueAssetCardProps) {
   const display = assetPresentation(asset, role);
   const risks = reviewRiskFlags(asset);
@@ -41,6 +52,9 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const nextCheck = nextCheckLabel(missing, risks);
   const evidenceProgress = missing.length ? `${missing.length} gaps` : "Fields ready";
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
+  const assignee = asset.reviewer || "Unassigned";
+  const age = ageLabel(asset);
+  const sla = severity === "High" ? "SLA: review soon" : missing.length ? "SLA: open" : "SLA: ready";
 
   return (
     <>
@@ -135,6 +149,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
+            {selected ? <span className="mb-1 inline-flex rounded-md border border-[#8fb2a5] bg-white px-2 py-0.5 text-[10px] font-black text-tjc-evergreen">Currently reviewing</span> : null}
             <h2 className="line-clamp-2 text-base font-black leading-tight text-tjc-ink max-sm:text-sm">{display.title}</h2>
             <p className="mt-1 grid gap-1 text-sm font-medium text-tjc-muted max-sm:text-xs">
               <span className="truncate">{asset.collection}</span>
@@ -146,6 +161,8 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
           <StatusBadge status={asset.status} />
           <UsageBadge scope={asset.usageScope} />
+          <span className="rounded-md border border-[#d7dfd8] bg-white px-2 py-1 text-[11px] font-black text-[#536057]">{assignee}</span>
+          <span className="rounded-md border border-[#d7dfd8] bg-white px-2 py-1 text-[11px] font-black text-[#536057]">{age}</span>
         </div>
       </div>
 
@@ -177,7 +194,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="rounded-md border border-[#c9d8cf] bg-white p-3 max-sm:hidden">
           <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Next check</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{nextCheck}</strong>
-          <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{evidenceProgress} · {missing.length ? missing.slice(0, 3).join(", ") : "Ready for evidence note and decision."}</p>
+          <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{evidenceProgress} · {sla} · {missing.length ? missing.slice(0, 3).join(", ") : "Ready for evidence note and decision."}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           <button

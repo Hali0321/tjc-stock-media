@@ -8,9 +8,9 @@
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-tjc-ink: oklch(20% .018 160);
   --color-tjc-muted: oklch(47% .018 160);
-  --color-tjc-bg: oklch(95% .009 160);
-  --color-tjc-panel: oklch(98% .006 160);
-  --color-tjc-line: oklch(86% .012 160);
+  --color-tjc-bg: oklch(96.5% .003 140);
+  --color-tjc-panel: oklch(99% .002 140);
+  --color-tjc-line: oklch(86% .008 150);
   --color-tjc-evergreen: oklch(31% .07 165);
   --color-tjc-evergreen-2: oklch(22% .052 165);
   --color-tjc-gold: oklch(48% .09 72);
@@ -41,9 +41,9 @@ body {
   margin: 0;
   overflow-x: clip;
   background:
-    linear-gradient(90deg, rgba(16, 50, 42, .045) 1px, transparent 1px),
-    linear-gradient(180deg, oklch(97% .006 160) 0%, oklch(94% .009 160) 100%);
-  background-size: 56px 56px, auto;
+    radial-gradient(circle at 0 0, rgba(15, 61, 46, .06), transparent 32rem),
+    linear-gradient(180deg, oklch(98% .002 140) 0%, oklch(94.5% .004 150) 100%);
+  background-size: auto;
   color: oklch(20% .018 160);
   font-family: var(--font-geist), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -114,7 +114,7 @@ textarea:focus-visible {
   inset: 0;
   z-index: 0;
   display: block;
-  opacity: .08;
+  opacity: .035;
   mix-blend-mode: multiply;
   background-image:
     linear-gradient(rgba(17,24,39,.022) 1px, transparent 1px),
@@ -635,7 +635,8 @@ textarea:focus-visible {
   }
 
   .dam-contact-grid .dam-asset-card-use-line {
-    display: none;
+    display: grid;
+    padding: .5rem;
   }
 
   .dam-contact-grid .dam-asset-card-preview-action {
