@@ -66,12 +66,43 @@ const consoleErrors = [];
 const expectedDeniedConsole = [];
 const networkFailures = [];
 
+const normalUserRoles = new Set(["Viewer", "Contributor"]);
+const normalUserOpsLeakPatterns = [
+  /ResourceSpace/i,
+  /Shared Drive/i,
+  /pending writes?/i,
+  /API mapping/i,
+  /launch gate/i,
+  /diagnostics?/i,
+  /metadata health/i,
+  /raw totals?/i,
+  /source[- ]of[- ]truth/i,
+  /field refs?/i,
+  /source path/i,
+  /master drive/i,
+  /master\/original path/i,
+  /master files?/i,
+  /original filename/i,
+  /checksum/i,
+  /raw ResourceSpace/i,
+  /ResourceSpace ID/i,
+  /\bRS\s+\d+\b/
+];
+
 function isExpectedDeniedConsole(text) {
   return /Failed to load resource: the server responded with a status of (400|403|409)/.test(text);
 }
 
 function isTransientBrowserTargetClose(error) {
   return /Target page, context or browser has been closed|ERR_ABORTED|frame was detached/i.test(String(error?.message || error));
+}
+
+function visibleOpsLeaks(text) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  return normalUserOpsLeakPatterns
+    .filter((pattern) => pattern.test(normalized))
+    .map((pattern) => pattern.source)
+    .slice(0, 8);
 }
 
 async function closeContext(context) {
@@ -281,6 +312,7 @@ async function inspectPage(page, expected) {
         .map((el) => el.getAttribute("aria-controls"))
         .filter((id) => id && !document.getElementById(id))
         .slice(0, 10),
+      visibleText: visibleText.replace(/\s+/g, " ").trim(),
       textSample: visibleText.replace(/\s+/g, " ").trim().slice(0, 220)
     };
   }, expected);
@@ -302,6 +334,10 @@ for (const width of qaViewports) {
         if (width <= 767 && state.fixedMobileNavs.length) failures.push(`${item.label} ${width}: fixed mobile nav can cover content ${JSON.stringify(state.fixedMobileNavs)}`);
         if (state.missingTabControls.length) failures.push(`${item.label} ${width}: tab aria-controls missing targets ${state.missingTabControls.join(", ")}`);
         if (state.brokenImages.length) warnings.push(`${item.label} ${width}: broken images ${state.brokenImages.join(", ")}`);
+        if (normalUserRoles.has(item.role)) {
+          const leaks = visibleOpsLeaks(state.visibleText);
+          if (leaks.length) failures.push(`${item.label} ${width}: normal-user ops language leak ${leaks.join(", ")} in "${state.textSample}"`);
+        }
         const governanceShortcutCount = await page.getByLabel("Open governance").count();
         if (item.role === "Reviewer" && governanceShortcutCount > 0) failures.push(`${item.label} ${width}: Reviewer sees governance shortcut`);
         if (item.label === "admin-dam-admin" && width >= 768 && governanceShortcutCount < 1) failures.push(`${item.label} ${width}: DAM Admin governance shortcut missing`);
