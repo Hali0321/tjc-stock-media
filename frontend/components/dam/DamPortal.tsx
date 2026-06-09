@@ -146,6 +146,7 @@ export function PackageCard({
   onInspect: () => void;
 }) {
   const { readyCount, reviewNeeded, bestUse, reference } = packageReadinessForRole(collection, role);
+  const hasItems = collection.count > 0;
   return (
     <article
       className={cn("package-card collectible-package-card collection-row-card package-cabinet-row group overflow-hidden", active && "is-active")}
@@ -184,7 +185,7 @@ export function PackageCard({
           <p className="package-row-warning">{collection.peopleWarning}</p>
         ) : null}
         <div className="package-row-actions">
-          <PrimaryAction onClick={onOpen} icon={Search}>Open media</PrimaryAction>
+          <PrimaryAction onClick={hasItems ? onOpen : undefined} icon={hasItems ? Search : FolderOpen} disabled={!hasItems} tone={hasItems ? "primary" : "secondary"}>{hasItems ? "Open media" : "No media yet"}</PrimaryAction>
           <PrimaryAction onClick={onInspect} tone="secondary" icon={FolderOpen}>View details</PrimaryAction>
         </div>
       </div>
@@ -212,6 +213,7 @@ export function PackageInspector({
     );
   }
   const { readyCount, reviewNeeded, bestUse, reference } = packageReadinessForRole(collection, Boolean(opsView));
+  const hasItems = collection.count > 0;
   return (
     <aside className="package-inspector package-cabinet-inspector">
       <div className="package-inspector-title">
@@ -245,7 +247,7 @@ export function PackageInspector({
           {collection.peopleWarning}
         </section>
       ) : null}
-      <PrimaryAction onClick={() => onOpen(collection)} icon={Search}>Open media</PrimaryAction>
+      <PrimaryAction onClick={hasItems ? () => onOpen(collection) : undefined} icon={hasItems ? Search : FolderOpen} disabled={!hasItems} tone={hasItems ? "primary" : "secondary"}>{hasItems ? "Open media" : "No media yet"}</PrimaryAction>
     </aside>
   );
 }
