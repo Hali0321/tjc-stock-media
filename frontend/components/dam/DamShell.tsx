@@ -41,6 +41,16 @@ function DamBrand({ opsShell }: { opsShell: boolean }) {
   );
 }
 
+function DamRailSummary({ role, opsShell }: { role: DemoRole; opsShell: boolean }) {
+  return (
+    <section className="dam-rail-summary" aria-label="Current workspace">
+      <span>{opsShell ? "Operations" : "Library"}</span>
+      <strong>{opsShell ? "Workbench" : "Workspace"}</strong>
+      <small>{role}</small>
+    </section>
+  );
+}
+
 function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boolean }) {
   const canOpenGovernance = role === "DAM Admin";
   return (
@@ -143,11 +153,7 @@ export function DamShell({ children }: { children: ReactNode }) {
 
       <aside className="dam-desktop-rail hidden border-r border-[#d7dde2] bg-white lg:block" aria-label="Desktop workspace navigation">
         <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] content-start gap-3 p-3">
-          <DamBrand opsShell={opsShell} />
-          <div className="dam-rail-heading">
-            <span>{opsShell ? "Operations" : "Library"}</span>
-            <strong>{opsShell ? "Workbench" : "Workspace"}</strong>
-          </div>
+          <DamRailSummary role={role} opsShell={opsShell} />
           <AppNav role={role} variant="menu" />
         </div>
       </aside>
@@ -172,6 +178,6 @@ export function DamShell({ children }: { children: ReactNode }) {
   );
 }
 
-export { DamBrand, DamUtilityActions, DamMobileMenu, DamFooter, DamRoleSwitch };
+export { DamBrand, DamUtilityActions, DamMobileMenu, DamFooter, DamRoleSwitch, DamRailSummary };
 export { AppNav as DamRoleNavigation };
 export { CommandPalette as DamCommandEntry };

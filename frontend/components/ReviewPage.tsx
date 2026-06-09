@@ -59,7 +59,7 @@ type AuditPreview = {
   assetId: string;
 };
 
-const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Queue status"] as const;
+const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "Signals", "Queue"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
 const desktopReviewRowsPageSize = 12;
 const mobileReviewRowsPageSize = 6;
@@ -372,8 +372,8 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       setMessage(body.message || body.error || "Review route responded.");
       if (response.ok) {
         toastReviewQueued({ label: "Open review queue", onClick: () => router.push(`/review?queue=${activeQueue}`) });
-        toastPendingWriteQueued({ label: "View queue status", onClick: () => setActiveInspectorTab("Queue status") });
-        setActiveInspectorTab("Queue status");
+        toastPendingWriteQueued({ label: "View queue status", onClick: () => setActiveInspectorTab("Queue") });
+        setActiveInspectorTab("Queue");
         setReviewNote("");
         setChecklist(emptyChecklist);
         setPendingAction(null);
@@ -681,7 +681,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
             <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 border-t border-tjc-line pt-3" aria-label="Review action inspector">
             <div className="min-w-0" data-component="ReviewInspectorTabs">
-              <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" />
+              <DamTabs tabs={reviewInspectorTabs} active={activeInspectorTab} onChange={setActiveInspectorTab} ariaLabel="Review inspector sections" idPrefix="review-inspector" className="[&_[role=tab]]:text-xs" size="sm" />
             </div>
 
             <section id={damTabPanelId("review-inspector", "Overview")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Overview")} className="border-t border-tjc-line pt-3" aria-label="Review action area" hidden={activeInspectorTab !== "Overview"}>
@@ -729,18 +729,18 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 </dl>
             </section>
 
-            <section id={damTabPanelId("review-inspector", "AI Insights")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "AI Insights")} hidden={activeInspectorTab !== "AI Insights"}>
+            <section id={damTabPanelId("review-inspector", "Signals")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Signals")} hidden={activeInspectorTab !== "Signals"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Reviewer</dt><dd className={factDescClass}>{selectedAsset.reviewer || "Not reviewed"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Reviewed date</dt><dd className={factDescClass}>{selectedAsset.reviewedDate || "Pending"}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>AI enrichment signal</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? "Suggested metadata needs reviewer confirmation before write." : "Exported fields look complete; reviewer evidence still required for action."}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Metadata signal</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? "Suggested metadata needs reviewer confirmation before write." : "Exported fields look complete; reviewer evidence still required for action."}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Last library state</dt><dd className={factDescClass}>Read from the current media-library export. Queue status is shown separately.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
 
-            <section id={damTabPanelId("review-inspector", "Queue status")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Queue status")} hidden={activeInspectorTab !== "Queue status"}>
+            <section id={damTabPanelId("review-inspector", "Queue")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Queue")} hidden={activeInspectorTab !== "Queue"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Queued decision</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Queue mode</dt><dd className={factDescClass}>Review decisions are queued for media-team follow-up; record status stays unchanged here.</dd></div>

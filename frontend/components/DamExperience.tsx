@@ -366,6 +366,7 @@ export function PackageCard({
   const reviewNeeded = Math.max(0, collection.count - readyCount);
   const bestUse = collection.searchQuery || `${collection.ministry} media`;
   const safetySummary = `${readyCount.toLocaleString()} ready, ${reviewNeeded.toLocaleString()} need review`;
+  const hasItems = collection.count > 0;
   return (
     <article className={cn("package-card grid gap-3 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white p-3 transition hover:border-[#cbd5e1] sm:p-4", active && "ring-2 ring-[#9cb9ab]")}>
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
@@ -386,7 +387,9 @@ export function PackageCard({
       </div>
       <p className="package-safety-line border-t border-[#eef1f3] pt-2 text-xs font-black leading-relaxed text-[#71500f]">Item-level approval required before reuse.</p>
       <div className="flex flex-wrap gap-2">
-        <PrimaryAction onClick={onOpen} icon={Search}>Open media</PrimaryAction>
+        <PrimaryAction onClick={hasItems ? onOpen : undefined} icon={hasItems ? Search : FolderOpen} disabled={!hasItems} tone={hasItems ? "primary" : "secondary"}>
+          {hasItems ? "Open media" : "No media yet"}
+        </PrimaryAction>
         <PrimaryAction onClick={onInspect} tone="secondary" icon={FolderOpen}>View details</PrimaryAction>
       </div>
     </article>
@@ -417,6 +420,7 @@ export function PackageInspector({
   const readyCount = opsView ? rawReadyCount : 0;
   const reviewNeeded = Math.max(0, collection.count - readyCount);
   const bestUse = collection.searchQuery || `${collection.ministry} media`;
+  const hasItems = collection.count > 0;
   return (
     <aside className="package-inspector grid gap-4 rounded-lg border border-[#e5e7eb] bg-white p-4 sm:p-5">
       <div>
@@ -442,7 +446,9 @@ export function PackageInspector({
           {collection.peopleWarning}
         </section>
       ) : null}
-      <PrimaryAction onClick={() => onOpen(collection)} icon={Search}>Open media</PrimaryAction>
+      <PrimaryAction onClick={hasItems ? () => onOpen(collection) : undefined} icon={hasItems ? Search : FolderOpen} disabled={!hasItems} tone={hasItems ? "primary" : "secondary"}>
+        {hasItems ? "Open media" : "No media yet"}
+      </PrimaryAction>
     </aside>
   );
 }

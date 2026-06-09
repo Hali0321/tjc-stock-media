@@ -48,11 +48,11 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const primaryRisk = risks[0] || "Standard review";
   const nextCheck = nextCheckLabel(missing, risks);
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
-  const rowTone = severity === "High" ? "High" : missing.length ? "Open" : "Ready";
   const evidenceLabel = missing.length ? `${missing.length} gaps` : "Ready";
   const reviewFocus = nextCheck === "Decision ready" ? primaryRisk : nextCheck;
   const compactFocus = compactFocusLabel(reviewFocus);
   const rowTitle = compactQueueTitle(display.title) || display.title;
+  const evidenceTone = severity === "High" ? "is-warn" : missing.length ? "is-info" : "is-ok";
 
   return (
     <>
@@ -153,15 +153,15 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       >
         <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{rowTitle}</h2>
         <div className="review-row-subline">
+          <span>Focus</span>
           <strong>{compactFocus}</strong>
-        </div>
-        <div className="review-row-chipline" aria-label="Review row status">
-          <span className={cn("review-row-chip", severity === "High" ? "is-warn" : missing.length ? "is-info" : "is-ok")}>{evidenceLabel}</span>
-          <span className="review-row-chip is-quiet">{severity}</span>
         </div>
       </button>
 
       <div className="review-row-actions grid content-center gap-2">
+        <span className={cn("review-row-chip", evidenceTone)} aria-label={`Evidence status: ${evidenceLabel}`}>
+          {evidenceLabel}
+        </span>
         <div className="grid gap-2">
           <button
             className={cn(
@@ -179,7 +179,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
             Open detail for {display.title}
           </Link>
         </div>
-        <span className="sr-only">{rowTone}</span>
+        <span className="sr-only">{severity}</span>
       </div>
     </article>
     </>
