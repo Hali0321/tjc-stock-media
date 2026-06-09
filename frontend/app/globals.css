@@ -5395,7 +5395,7 @@ body,
   display: flex;
   max-width: 100%;
   min-width: 0;
-  gap: .5rem;
+  gap: .42rem;
   overflow: hidden;
   margin-top: .18rem !important;
   color: var(--dam-v3-muted) !important;
@@ -5417,7 +5417,16 @@ body,
   flex: 0 0 auto;
 }
 
-.review-row-subline span + span::before {
+.review-row-subline strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #23352d;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-row-subline strong::before {
   content: "· ";
 }
 
@@ -5667,16 +5676,7 @@ body,
   }
 
   .review-compact-header dl {
-    grid-template-columns: minmax(0,1fr);
-  }
-
-  .review-compact-header dl div {
-    border-top: 1px solid #e1e7e3;
-    border-left: 0;
-  }
-
-  .review-compact-header dl div:first-child {
-    border-top: 0;
+    display: none;
   }
 
   .review-queue-header-v2 {

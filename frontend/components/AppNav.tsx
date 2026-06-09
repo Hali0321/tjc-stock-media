@@ -67,7 +67,7 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-        const label = top ? item.label : item.mobileLabel || item.label;
+        const label = top || menu ? item.label : item.mobileLabel || item.label;
         return (
           <Link
             key={item.href}

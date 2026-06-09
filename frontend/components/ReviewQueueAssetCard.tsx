@@ -29,15 +29,11 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const risks = reviewRiskFlags(asset);
   const missing = missingReviewFields(asset);
   const primaryRisk = risks[0] || "Standard review";
-  const compactRisk = primaryRisk
-    .replace("Please review before public sharing", "Needs review")
-    .replace("People/minors unknown", "People/minors")
-    .replace("Rights or consent unclear", "Rights");
   const nextCheck = nextCheckLabel(missing, risks);
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
   const rowTone = severity === "High" ? "High" : missing.length ? "Open" : "Ready";
   const evidenceLabel = missing.length ? `${missing.length} gaps` : "Ready";
-  const recordMeta = `${asset.mediaType} · ${nextCheck}`;
+  const reviewFocus = nextCheck === "Decision ready" ? primaryRisk : nextCheck;
 
   return (
     <>
@@ -51,7 +47,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
           <div className="min-w-0">
             <span className="text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Currently reviewing</span>
             <h2 className="mt-1 line-clamp-1 text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
-            <p className="mt-0.5 truncate text-xs font-semibold text-tjc-muted">{nextCheck}</p>
+            <p className="mt-0.5 truncate text-xs font-semibold text-tjc-muted">{reviewFocus}</p>
           </div>
           <button
             className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-[#8fb2a5] bg-white px-2 text-xs font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px"
@@ -91,7 +87,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[10px] font-black text-[#725216]">
-            {compactRisk}
+            {reviewFocus}
           </span>
           <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[10px] font-black text-[#536057]">
             {evidenceLabel}
@@ -133,11 +129,11 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       <div className="review-row-record min-w-0 self-center">
         <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
         <div className="review-row-subline">
-          <span>{recordMeta}</span>
+          <span>{asset.mediaType}</span>
+          <strong>{reviewFocus}</strong>
         </div>
         <div className="review-row-chipline" aria-label="Review row status">
           <span className={cn("review-row-chip", severity === "High" ? "is-warn" : missing.length ? "is-info" : "is-ok")}>{evidenceLabel}</span>
-          <span className="review-row-chip is-quiet">{compactRisk}</span>
           <span className="review-row-chip is-ref">Ref {asset.id}</span>
         </div>
       </div>
