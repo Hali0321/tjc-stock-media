@@ -4,6 +4,27 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+LOCK_DIR=".runtime/locks/frontend-check.lock"
+mkdir -p ".runtime/locks"
+
+while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+  if [ -f "$LOCK_DIR/pid" ]; then
+    lock_pid="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+    if [ -n "$lock_pid" ] && ! kill -0 "$lock_pid" 2>/dev/null; then
+      rm -rf "$LOCK_DIR"
+      continue
+    fi
+  fi
+  echo "Waiting for another frontend check to finish..."
+  sleep 2
+done
+
+printf '%s\n' "$$" > "$LOCK_DIR/pid"
+cleanup_lock() {
+  rm -rf "$LOCK_DIR"
+}
+trap cleanup_lock EXIT INT TERM
+
 if [ ! -d frontend ]; then
   echo "FAIL: frontend directory missing"
   exit 1
