@@ -107,11 +107,14 @@ export function LibraryPage() {
   useEffect(() => {
     if (!ready) return;
     if (role === "Viewer") {
-      setSelectedView((current) => current || viewerDefaultView);
+      setSelectedView((current) => {
+        if (submittedQuery || selectedCollection) return current === viewerDefaultView ? "" : current;
+        return current || viewerDefaultView;
+      });
     } else if (selectedView === viewerDefaultView && !submittedQuery) {
       setSelectedView("");
     }
-  }, [ready, role, selectedView, submittedQuery]);
+  }, [ready, role, selectedView, submittedQuery, selectedCollection]);
 
   const apiUrl = useMemo(() => {
     const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: String(pageLimit), offset: String(pageOffset) });

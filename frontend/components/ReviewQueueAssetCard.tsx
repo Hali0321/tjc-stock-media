@@ -37,7 +37,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
   const rowTone = severity === "High" ? "High" : missing.length ? "Open" : "Ready";
   const evidenceLabel = missing.length ? `${missing.length} gaps` : "Ready";
-  const recordMeta = `${asset.mediaType} · Ref ${asset.id}`;
+  const recordMeta = `${asset.mediaType} · ${nextCheck}`;
 
   return (
     <>
@@ -134,11 +134,11 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
         <div className="review-row-subline">
           <span>{recordMeta}</span>
-          <span>{nextCheck}</span>
         </div>
         <div className="review-row-chipline" aria-label="Review row status">
           <span className={cn("review-row-chip", severity === "High" ? "is-warn" : missing.length ? "is-info" : "is-ok")}>{evidenceLabel}</span>
           <span className="review-row-chip is-quiet">{compactRisk}</span>
+          <span className="review-row-chip is-ref">Ref {asset.id}</span>
         </div>
       </div>
 

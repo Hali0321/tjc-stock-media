@@ -163,63 +163,65 @@ export function GuidePage() {
           </a>
         </section>
 
-        <div className="help-topic-list mt-4 grid gap-2" aria-label="Help topics">
-          {visibleTopics.map((topic) => (
-            <DamHelpTopicButton
-              key={topic.id}
-              active={selected.id === topic.id}
-              lane={topic.lane}
-              title={topic.title}
-              summary={topic.summary}
-              onClick={() => setOpenTopic(topic.id)}
-            />
-          ))}
-        </div>
+        <section className="help-workbench-grid mt-4" aria-label="Help assistant workbench">
+          <div className="help-topic-list grid gap-2" aria-label="Help topics">
+            {visibleTopics.map((topic) => (
+              <DamHelpTopicButton
+                key={topic.id}
+                active={selected.id === topic.id}
+                lane={topic.lane}
+                title={topic.title}
+                summary={topic.summary}
+                onClick={() => setOpenTopic(topic.id)}
+              />
+            ))}
+          </div>
+
+          <section className="help-detail-panel" aria-live="polite">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="dam-kicker">Selected topic</p>
+                <h2 className="mt-1 text-xl font-black tracking-[0] text-[#111827]">{selected.title}</h2>
+                <p className="mt-1.5 max-w-[60ch] text-sm font-semibold leading-6 text-[#4b5563]">{selected.summary}</p>
+              </div>
+              <Link className="help-primary-link" href={selected.route}>
+                Open page
+              </Link>
+            </div>
+
+            <dl className="help-selected-record mt-4 grid gap-2 sm:grid-cols-3">
+              <div>
+                <dt>Lane</dt>
+                <dd>{selected.lane}</dd>
+              </div>
+              <div>
+                <dt>Decision</dt>
+                <dd>{selected.id === "download" ? "Open record first" : selected.id === "send" ? "Review only" : "Use guidance"}</dd>
+              </div>
+              <div>
+                <dt>Safe next step</dt>
+                <dd>{selected.id === "review" || selected.id === "source" ? "Request review" : "Open page"}</dd>
+              </div>
+            </dl>
+
+            <div className="help-guidance-grid mt-4 grid gap-2">
+              <div className="help-guidance help-guidance-do">
+                <strong>Do</strong>
+                <p>{selected.doText}</p>
+              </div>
+              <div className="help-guidance help-guidance-avoid">
+                <strong>Avoid</strong>
+                <p>{selected.avoidText}</p>
+              </div>
+            </div>
+          </section>
+        </section>
 
         {!visibleTopics.length ? (
           <div className="mt-5 rounded-xl border border-[#d7dde2] bg-white p-6 text-sm font-medium text-[#4b5563]">
             No help topic matched. Request DAM review when unsure.
           </div>
         ) : null}
-
-        <section className="mt-4 help-detail-panel" aria-live="polite">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="dam-kicker">Selected topic</p>
-              <h2 className="mt-1 text-xl font-black tracking-[0] text-[#111827]">{selected.title}</h2>
-              <p className="mt-1.5 max-w-[60ch] text-sm font-semibold leading-6 text-[#4b5563]">{selected.summary}</p>
-            </div>
-            <Link className="help-primary-link" href={selected.route}>
-              Open page
-            </Link>
-          </div>
-
-          <dl className="help-selected-record mt-4 grid gap-2 sm:grid-cols-3">
-            <div>
-              <dt>Lane</dt>
-              <dd>{selected.lane}</dd>
-            </div>
-            <div>
-              <dt>Decision</dt>
-              <dd>{selected.id === "download" ? "Open record first" : selected.id === "send" ? "Review only" : "Use guidance"}</dd>
-            </div>
-            <div>
-              <dt>Safe next step</dt>
-              <dd>{selected.id === "review" || selected.id === "source" ? "Request review" : "Open page"}</dd>
-            </div>
-          </dl>
-
-          <div className="help-guidance-grid mt-4 grid gap-2 md:grid-cols-2">
-            <div className="help-guidance help-guidance-do">
-              <strong>Do</strong>
-              <p>{selected.doText}</p>
-            </div>
-            <div className="help-guidance help-guidance-avoid">
-              <strong>Avoid</strong>
-              <p>{selected.avoidText}</p>
-            </div>
-          </div>
-        </section>
       </section>
 
       <aside className="help-assistant-rail grid h-fit gap-4 lg:sticky lg:top-24">

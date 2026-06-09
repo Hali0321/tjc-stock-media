@@ -598,7 +598,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                       <strong className="block truncate font-black">{title}</strong>
                       <span className="mt-0.5 block truncate text-xs font-medium text-[#6b7280]">{reviewNextCheckLabel(asset)}</span>
                     </span>
-                    <span className="text-xs font-black tabular-nums text-[#6b7280]">#{asset.resourceSpaceId || asset.id}</span>
+                    <span className="text-xs font-black tabular-nums text-[#6b7280]">Ref {asset.id}</span>
                   </button>
                 );
               })}
