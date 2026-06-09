@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ministry Portals - TJC Stock Media</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#95d3ba",
+                        "tertiary": "#442800",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary-fixed": "#0d1c2e",
+                        "surface": "#f8f9fa",
+                        "primary-fixed": "#b0f0d6",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-container": "#f69f0d",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-tertiary-fixed": "#2a1700",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "outline": "#707974",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-container": "#80bea6",
+                        "surface-variant": "#e1e3e4",
+                        "tertiary-container": "#623c00",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary": "#515f74",
+                        "on-secondary": "#ffffff",
+                        "primary": "#003527",
+                        "secondary-container": "#d5e3fc",
+                        "on-primary-fixed-variant": "#0b513d",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#ffddb8",
+                        "outline-variant": "#bfc9c3",
+                        "on-secondary-container": "#57657a",
+                        "on-surface-variant": "#404944",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#064e3b",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-fixed-variant": "#3a485b",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-primary-fixed": "#002117",
+                        "secondary-fixed": "#d5e3fc",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-background": "#191c1d",
+                        "surface-tint": "#2b6954",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#b9c7df",
+                        "inverse-primary": "#95d3ba",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#edeeef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-max": "1600px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "mono-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen flex overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full h-[56px] z-50 flex justify-between items-center px-gutter bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">TJC Stock Media</span>
+</div>
+<div class="flex-1 flex justify-end px-lg">
+<div class="relative w-full max-w-[400px]">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full h-[36px] pl-xl pr-sm bg-surface-container-low border border-outline-variant rounded-DEFAULT font-body-sm text-body-sm focus:border-primary focus:ring-2 focus:ring-primary-fixed-dim/20 outline-none transition-all" placeholder="Search portals..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-[36px] h-[36px] flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+<button class="w-[36px] h-[36px] flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-[36px] h-[36px] flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-xs"></div>
+<button class="flex items-center gap-xs px-sm h-[36px] rounded-DEFAULT hover:bg-surface-container-high transition-colors font-label-md text-label-md text-primary">
+                Role Switcher
+                <span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-[56px] bottom-0 w-[280px] flex flex-col p-md z-40 bg-surface-container-low border-r border-outline-variant">
+<div class="mb-lg px-sm">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-[40px] h-[40px] rounded-full bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm">
+                    U
+                </div>
+<div>
+<div class="font-headline-sm text-headline-sm font-black text-primary">TJC Stock Media</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">DAM Operations</div>
+</div>
+</div>
+<button class="w-full h-[40px] mt-md bg-primary text-on-primary rounded-DEFAULT font-label-md text-label-md flex items-center justify-center gap-xs hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">upload</span>
+                Upload Assets
+            </button>
+</div>
+<div class="flex-1 flex flex-col gap-xs overflow-y-auto">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">search</span>
+                Find
+            </a>
+<a class="flex items-center gap-sm px-sm py-sm bg-primary-container text-on-primary-container font-bold rounded-lg transition-all font-label-md text-label-md scale-[0.98]" href="#">
+<span class="material-symbols-outlined icon-fill">inventory_2</span>
+                Packages
+            </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">send</span>
+                Send
+            </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">move_to_inbox</span>
+                Review Inbox
+            </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">gavel</span>
+                Governance
+            </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">help</span>
+                Help
+            </a>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-[280px] mt-[56px] mr-[320px] bg-background overflow-y-auto p-lg relative">
+<!-- Header Section -->
+<div class="mb-lg">
+<h1 class="font-display-lg text-display-lg text-primary mb-xs">Ministry Portals</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">
+                Curated collections of high-value media assets tailored for specific departmental campaigns and ongoing ministry initiatives. These packages are pre-organized but require final compliance sign-off before external distribution.
+            </p>
+</div>
+<!-- Warning Banner -->
+<div class="bg-surface-container-low border border-outline-variant rounded-DEFAULT p-md mb-lg flex items-start gap-sm">
+<span class="material-symbols-outlined text-on-tertiary-container mt-xs">warning</span>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Governance Notice</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">
+                    Item-level approval is strictly required before use. Portals containing items in 'Review' status must pass Governance checks before final export.
+                </p>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-md">
+<!-- Card 1 (Selected) -->
+<div class="bg-surface border-2 border-primary rounded-lg overflow-hidden flex flex-col relative cursor-pointer shadow-[0_8px_16px_-4px_rgba(0,0,0,0.04)]">
+<!-- Montage Cover -->
+<div class="h-[180px] w-full grid grid-cols-3 gap-xs p-xs bg-surface-container-low">
+<img class="w-full h-full object-cover rounded-sm" data-alt="A professional corporate meeting setting with diverse individuals discussing documents around a modern glass table. Soft natural light streaming through large windows, creating a bright, optimistic light-mode aesthetic. Minimalist office background with subtle green plant accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFZBLL0AeslgiS6XYc2mINQX8vyOAR1nEug3xyvaPMxOk3pnM1tbSui_WXPYQpdgEYl6Jw-EI24aVU-fg7pa08uqd_Sa6GD8cItyPommTgIHYvKudJoaV1ZN8fq3ylUvZSMijzcMr8-Lcj2o3vZyxfQjV_ykExhBC-6wqLTRdDj2KbXlFnXB0aDFDyXag8efk0tcDnHwDjFJWt78KrB0xSgUfDbUrVNE9tuQi1POUlZWir627G8u1ZXvbCNF1lexU2G_9ItMhp__Yr"/>
+<img class="w-full h-full object-cover rounded-sm" data-alt="High-quality close-up of a presenter's hands gesturing over a digital tablet displaying charts. Clean, uncluttered workspace with white and light gray tones, adhering to a modern corporate minimal style. Sharp focus on the technology and data." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiAqz-FAFrXfbhcz9hLEZB8QP2ZsKVrBjAgaMPLcn3dXwJ08VM3KxAnfdkLrhY85T9PLX-qfy5otKZhp-VmniOzkOQZeRNXG8K3hz3clyOD-DJ0u8qJ3YWRBurKSeIovgmPj3PLPLB9CZl4UPm81_tZOffQCRaf2UTj6j1xGFUOPdWTCVIq3WeF7EdpJEjFrlGmyTwtJkbwydp_axfmDX-UOQFPzZT3B9lGs1XlPRVOxTOXmpFlRYV8KPYK7GeaMCyJSM18eC-78zX"/>
+<img class="w-full h-full object-cover rounded-sm" data-alt="A wide shot of a modern architectural building interior with clean lines, white walls, and geometric shadows cast by strong sunlight. Professional, serene atmosphere suitable for a corporate digital asset management background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-hNoFaiZDX6KaULjX9Wq4E0HxGBBWS_zP9kW40Qfy0zANCI9lXx0Dsq8Ao_k3IXF4ERGsS_0PExkXO1xu-JQDbMNiHzGQb8OHjBMvko3KUIRuWH_PThs3r8xczVc6WsfY8OdEts8m38C_SrEqCnXaPqdt0GNNNlwn45tv2pR8a02LPhEM7lVyY1Vn7VE9q1Ia55Z4gXL3b1qxa6M4ZoAH-_3GxW7wfrQ49UpkNf9Wt3Tj-ZfF7TpYU6-SCwaNiaftTCc38NI0B78t"/>
+</div>
+<div class="p-md flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Q3 Global Outreach Campaign</h3>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-xs py-[2px] rounded-sm mt-xs inline-block">Best Use: Social Media &amp; Web</span>
+</div>
+<div class="w-[24px] h-[24px] border-2 border-primary rounded-sm flex items-center justify-center bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[16px] icon-fill">check</span>
+</div>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant flex gap-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Assets</span>
+<span class="font-headline-md text-headline-md text-on-surface">142</span>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-surface-tint">Ready</span>
+<span class="font-headline-md text-headline-md text-on-surface">120</span>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-tertiary-container">Review</span>
+<span class="font-headline-md text-headline-md text-on-surface">22</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden flex flex-col relative cursor-pointer hover:bg-surface-container-lowest transition-colors">
+<!-- Montage Cover -->
+<div class="h-[180px] w-full grid grid-cols-2 gap-xs p-xs bg-surface-container-low">
+<img class="w-full h-full object-cover rounded-sm" data-alt="A portrait of a confident professional smiling gently in a bright, modern studio. The lighting is high-key and flattering, emphasizing a clean, approachable corporate identity. Minimalist light gray background ensuring the focus remains on the subject." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATw8eSVEbkdBDyr5Cw9X8qzKhgOV7V0jcuoDA39UrSgOh_w6aR8KG4zyi5CGMTQJL6x2COYiwzom7fayKChkvV7aQ3rWaIlXxZAt51wQW6-GF6tYSIziT8yHyeT0BMvE0zbVbSKaJ0DEXp6_ZxzR3OuaFynA8sp6kbJBV_a1m0E6y-YtiVxB0sZwKEV_6tqTebTWxk2ExU8FHNsdieDIZI_GQvvT6KrR9srHPRbIiA-MtSBCtO6dGyirBt4fXV-aRyXSHnzMtSoJhc"/>
+<div class="grid grid-rows-2 gap-xs">
+<img class="w-full h-full object-cover rounded-sm" data-alt="A team of professionals collaborating around a large monitor displaying data analytics. The office environment is modern, sleek, and well-lit with cool, natural daylight. High tech and professional aesthetic suitable for corporate communication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSaYEcwTSowauNo8X4t40t-WM8h7rCpCXInG59mrs1KyCeB6SAlf8ojybOe6lxQwZgJ4ckPQHhT7JFmNVhlydiv2fwELTQ5Bgew2CzvBN-SFiFBgR7EJXwpwTOSSEV7wVLllC8mXiKl-Du7-7Yvcb08vGKLI-fAwUFPZme1LrtBwfdQ_L5xV9VMgvNu6J5BO0ev8T6iYfNIz6B5BvP2TrljPbT9Re0UHvU0sQ3jbeGnSElVCMGI12tOShPbzCsIpTcxjGsmdSHCuvc"/>
+<img class="w-full h-full object-cover rounded-sm" data-alt="A detailed shot of hands typing on a modern laptop keyboard beside a sleek cup of coffee. The desk surface is pristine white, creating a high-contrast, minimalist look consistent with a premium digital asset management interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQqcvuSVrdAh9RmY_T2RQaEoRaX6nV6bnNZoEf8bq8fC80of6brsEFjSpX1lm09hbzsR_95QzLfD1c5C282I0-pALzji-5m8wh8qzX404Bg_9pFqaer6DKVejf26-3J6ufB-aNl54WsnYm6wWxhkm7_f5mZXAfkrhkfDVFC2JTNCvVWaCJft6zZ_hsYWjnblWyc9OU-bgx04u0y_FP2GBBxGPeztV7pqYTfSNbBqmGsO1_aiPFuwqCCFgFcLeJRLlPTXh6D5Bsbupb"/>
+</div>
+</div>
+<div class="p-md flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Annual Report Visuals 2024</h3>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-xs py-[2px] rounded-sm mt-xs inline-block">Best Use: Print &amp; PDF</span>
+</div>
+<div class="w-[24px] h-[24px] border border-outline rounded-sm"></div>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant flex gap-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Assets</span>
+<span class="font-headline-md text-headline-md text-on-surface">85</span>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-surface-tint">Ready</span>
+<span class="font-headline-md text-headline-md text-on-surface">85</span>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant opacity-50">Review</span>
+<span class="font-headline-md text-headline-md text-on-surface opacity-50">0</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden flex flex-col relative cursor-pointer hover:bg-surface-container-lowest transition-colors">
+<!-- Montage Cover -->
+<div class="h-[180px] w-full grid grid-cols-4 gap-xs p-xs bg-surface-container-low">
+<img class="w-full h-full object-cover rounded-sm col-span-2 row-span-2" data-alt="A wide angle view of a modern data center interior with glowing blue lights and stark white corridors. The environment communicates high security, structure, and technological advancement, perfectly aligned with a robust corporate minimal style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBypBKvBB7Qsb1ZnLUO69B6xKpbUPfAyO_HM72U0DFwheFPkq-9goYZrtUiWXF39_aCkwLRubvUBlf5PiutsPFcWQnluFTtoZ_dbSHEIa43IlVRl-OIu1oEPEQNE3yzEiUz9GEO6KtJbj5MvGZpAL6CBPTDofc8bWKE887xl3UlPHPCr3XG3UzHJRqHAKd40xyj3lqIPGt06YlOe87D0Hf2L80mkAwF7TPUEY_29UrmsEQWiGtgYAL57e2NnFP69szTGfy8N47c7Seu"/>
+<img class="w-full h-full object-cover rounded-sm col-span-2" data-alt="Abstract representation of digital networks and global connectivity using clean geometric lines and soft blue/white gradients. The image evokes a sense of expansive, organized information flow typical of modern tech infrastructure." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCM9O8yQCEQSMhUrWIaW3DBit1V11PLpfw0m7PTFSZZbd1iMOxs4V738x_fQP8F0VyyS-sLOzgGguX_3i0etMNtEwRDictstwMXcKGYQfyCS7CaRKcPdbId6A6rxB-xIcnlB5SUcY-_WQkhMQ6RMnNvq2D2uVmG0ZsrympnB90m8QW43sAzu2euGvv5dI0KQXedLSzPEOkN2hoiU1PmJXqlzNlizSXAQn9Ksf1AXBDAEXVDTjuiNVg3hLeQR-NRFJqCo7uWI5ubcwW"/>
+<img class="w-full h-full object-cover rounded-sm" data-alt="Close-up of a sleek smartwatch displaying health metrics against a crisp white background. The lighting is pristine, highlighting the device's premium build quality and modern, minimalist design language." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL_3BSb6GF4f_jrXQqIipj0Pcc56yhRY77PR3nS1TUEcmbUFj6hmNPS1bjrq4pTTpjf-S-wN3p72aNrGd1MS-HS38ofQUGG_BoCSw7DbA7RV2Pdbo2fdnPznfG3tIS4mdCK9iIMukAnYbiwIlHJIKpQ0M24-r4YuG57T-9vfJVS8hfZCk0BHsV0CJRTL-_7-1XgNxIjO2d8TngjwenTtT6HaqwkJxdC5u36vlkMtRk3BvRZK_nlgtjVLycWtzurr8cNhgbpHpq3mQo"/>
+<img class="w-full h-full object-cover rounded-sm" data-alt="A clean, isolated shot of a sophisticated circuit board with gold pathways on a light gray surface. The macro photography emphasizes precision and advanced engineering within a restrained, professional color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwT547HAlIfl14YIc-2gp5RN1ZakljPBmtziI6fOamv_OUEsAtXRCjuDpn8JLnCebKxDUlc0GCjuBVKnNlZgtTRJ7SW_yrc9kbujlIzBgYC2Dzsfexjxf_D1rWMlc-MQkjvc5ZLwfiTId4czw4uXQ2SrImfoIwtkiV8VREpe-Es5FLbhJTXqsQq3fAQhRpIyaqNnp_IViAs9VSsaT_IQ2BNs5D04_P8v23RdEjk0bXOzdtM-ZjVof89J1DKgKrLGvmP6KHkN5SDQu4"/>
+</div>
+<div class="p-md flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Tech Infrastructure B-Roll</h3>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-xs py-[2px] rounded-sm mt-xs inline-block">Best Use: Video Production</span>
+</div>
+<div class="w-[24px] h-[24px] border border-outline rounded-sm"></div>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant flex gap-md">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Assets</span>
+<span class="font-headline-md text-headline-md text-on-surface">412</span>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-surface-tint">Ready</span>
+<span class="font-headline-md text-headline-md text-on-surface">300</span>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-tertiary-container">Review</span>
+<span class="font-headline-md text-headline-md text-on-surface">112</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Inspector Panel (Sticky Right) -->
+<aside class="fixed right-0 top-[56px] bottom-0 w-[320px] bg-surface border-l border-outline-variant flex flex-col z-40">
+<!-- Inspector Header -->
+<div class="p-md border-b border-outline-variant bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Portal Details</h2>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<h3 class="font-body-md text-body-md text-primary font-bold">Q3 Global Outreach Campaign</h3>
+<div class="flex gap-xs mt-xs">
+<span class="px-xs py-[2px] bg-surface-container text-secondary font-label-sm text-label-sm rounded-sm">ID: PRT-2024-089</span>
+</div>
+</div>
+<!-- Inspector Content -->
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-lg">
+<!-- Metadata Section -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center border-b border-outline-variant pb-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Metadata</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_less</span>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-[2px]">Created By</div>
+<div class="font-body-sm text-body-sm text-on-surface">Sarah Jenkins</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-[2px]">Created Date</div>
+<div class="font-body-sm text-body-sm text-on-surface">Oct 12, 2024</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-[2px]">Department</div>
+<div class="font-body-sm text-body-sm text-on-surface">Communications</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-[2px]">Governance Level</div>
+<div class="font-body-sm text-body-sm text-on-surface">Strict (Tier 1)</div>
+</div>
+</div>
+<div class="mt-xs">
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-[2px]">Description</div>
+<p class="font-body-sm text-body-sm text-on-surface">Comprehensive media kit for the Q3 Global Outreach initiative. Includes high-res photography, social media cutdowns, and approved messaging templates.</p>
+</div>
+</div>
+<!-- Status Breakdown -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center border-b border-outline-variant pb-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Status Breakdown</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_less</span>
+</div>
+<div class="flex flex-col gap-xs">
+<div class="flex items-center justify-between p-xs bg-surface-container-low rounded-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-surface-tint"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Ready (Approved)</span>
+</div>
+<span class="font-mono-sm text-mono-sm">120</span>
+</div>
+<div class="flex items-center justify-between p-xs bg-surface-container-low rounded-sm border-l-2 border-on-tertiary-container">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Pending Review</span>
+</div>
+<span class="font-mono-sm text-mono-sm font-semibold">22</span>
+</div>
+<div class="flex items-center justify-between p-xs bg-surface-container-low rounded-sm opacity-50">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Rejected / Expired</span>
+</div>
+<span class="font-mono-sm text-mono-sm">0</span>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="flex flex-col gap-sm mt-auto">
+<button class="w-full h-[40px] bg-primary-container text-on-primary-container rounded-DEFAULT font-label-md text-label-md flex items-center justify-center gap-xs hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+                    Review 22 Pending Items
+                </button>
+<button class="w-full h-[40px] bg-surface border border-outline-variant text-secondary rounded-DEFAULT font-label-md text-label-md flex items-center justify-center gap-xs hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                    Open Portal View
+                </button>
+</div>
+</div>
+</aside>
+</body></html>
