@@ -27,13 +27,18 @@ export function ProtectedPreview({
     <div className={cn("protected-preview grid h-full min-h-56 place-items-center overflow-hidden rounded-2xl bg-[#eef3ef] p-6 text-center", className)}>
       <div className="protected-preview-material grid w-full max-w-[44rem] gap-3">
         <div className="protected-preview-frame relative grid min-h-[12rem] w-full place-items-center overflow-hidden rounded-2xl border border-white/70 bg-white/68 p-4">
+          <div className="protected-preview-watermark" aria-hidden="true">
+            <span>Protected record</span>
+            <span>Preview withheld</span>
+            <span>Review required</span>
+          </div>
           <div className="absolute inset-2 grid grid-cols-5 gap-1 opacity-70" aria-hidden="true">
             {Array.from({ length: 20 }).map((_, index) => (
               <span className="rounded bg-[#e7eee9]" key={index} />
             ))}
           </div>
           <div className="absolute inset-4 rounded-xl border border-dashed border-[#9eb0a7] bg-white/38 backdrop-blur-[1px]" aria-hidden="true" />
-          <div className="relative z-[1] grid max-w-[20rem] justify-items-center gap-3 rounded-xl border border-[#dce5df] bg-white/94 px-5 py-4 shadow-[0_16px_40px_rgba(15,61,46,.10)]">
+          <div className="protected-preview-lock-card relative z-[1] grid max-w-[24rem] justify-items-center gap-3 rounded-xl border border-[#dce5df] bg-white/94 px-5 py-4 shadow-[0_16px_40px_rgba(15,61,46,.10)]">
             <span className="inline-flex items-center gap-2 rounded-lg border border-[#cbd5e1] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
               <FileLock2 size={14} strokeWidth={1.8} aria-hidden="true" />
               Protected preview
@@ -42,6 +47,11 @@ export function ProtectedPreview({
               <strong className="block text-lg font-black text-tjc-ink">{label}</strong>
               <span className="mt-1 block text-sm font-semibold leading-snug text-tjc-muted">{detail}</span>
             </span>
+          </div>
+          <div className="protected-preview-stage-notes" aria-hidden="true">
+            <span>Open verdict first</span>
+            <span>Approved copy only</span>
+            <span>Source file by request</span>
           </div>
         </div>
         <ul className="protected-preview-signals" aria-label="Preview safety checks">

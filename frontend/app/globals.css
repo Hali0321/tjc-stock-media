@@ -6155,6 +6155,57 @@ body,
   justify-items: center;
 }
 
+.protected-preview-watermark {
+  position: absolute;
+  inset: .85rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: .45rem;
+  pointer-events: none;
+}
+
+.protected-preview-watermark span {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(107,125,116,.2);
+  border-radius: .28rem;
+  background:
+    repeating-linear-gradient(135deg, rgba(6,71,61,.06) 0 1px, transparent 1px 10px),
+    rgba(255,255,255,.24);
+  color: rgba(50,66,58,.28);
+  font-size: clamp(1rem, 2.5vw, 2.15rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.protected-preview-lock-card {
+  min-width: min(100%, 22rem);
+}
+
+.protected-preview-stage-notes {
+  position: absolute;
+  right: .85rem;
+  bottom: .85rem;
+  left: .85rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: .4rem;
+}
+
+.protected-preview-stage-notes span {
+  min-height: 1.8rem;
+  border: 1px solid rgba(207,218,211,.92);
+  border-radius: .25rem;
+  background: rgba(255,255,255,.9);
+  padding: .35rem .5rem;
+  color: #425048;
+  font-size: .68rem;
+  font-weight: 850;
+  line-height: 1.05;
+  text-align: center;
+}
+
 .protected-preview-signals {
   display: flex;
   max-width: min(100%, 36rem);
@@ -6232,8 +6283,8 @@ body,
 }
 
 .asset-detail-protected-preview .protected-preview-frame {
-  max-width: min(70%, 36rem) !important;
-  min-height: 14rem !important;
+  max-width: min(82%, 48rem) !important;
+  min-height: min(36dvh, 22rem) !important;
 }
 
 .asset-detail-protected-preview .protected-preview-frame::before {
@@ -6381,6 +6432,22 @@ body,
   .asset-detail-protected-preview .protected-preview-frame {
     max-width: 100% !important;
     min-height: 9rem !important;
+  }
+
+  .protected-preview-watermark {
+    inset: .55rem;
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .protected-preview-watermark span:nth-child(n+2) {
+    display: none;
+  }
+
+  .protected-preview-stage-notes {
+    position: static;
+    grid-template-columns: minmax(0,1fr);
+    width: 100%;
+    margin-top: .65rem;
   }
 
   .protected-preview-signals {
