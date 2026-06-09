@@ -165,9 +165,9 @@ export const savedViewDefinitions: SavedViewDefinition[] = [
   },
   {
     id: "ai-enrichment",
-    label: "AI enrichment queue",
+    label: "Metadata enrichment queue",
     description: "Assets that need tags, dimensions, people check, or TJC vocabulary.",
-    reason: "Best-in-class DAMs use AI to suggest metadata; humans still approve rights and tags.",
+    reason: "Metadata suggestions need human review before rights, tags, or reuse guidance change.",
     match: assetNeedsAiEnrichment
   },
   {
@@ -318,7 +318,7 @@ function matchesFilters(asset: StockMediaAsset, filters: string[]) {
     if (value === "missing source") return assetNeedsSourceReview(asset);
     if (value === "rights review") return reviewRiskFlags(asset).includes("Rights unclear");
     if (value === "portal ready") return assetIsPortalReady(asset);
-    if (value === "ai enrichment") return assetNeedsAiEnrichment(asset);
+    if (value === "ai enrichment" || value === "metadata enrichment") return assetNeedsAiEnrichment(asset);
     if (value === "taxonomy drift") return assetHasTaxonomyDrift(asset);
     if (value === "duplicate candidate") return assetIsDuplicateCandidate(asset);
     if (value === "stale approval") return assetNeedsStaleApprovalReview(asset);

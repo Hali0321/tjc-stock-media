@@ -412,7 +412,7 @@ export function AdminPage() {
             { label: "Rights review", value: data.metrics.rightsReview.toLocaleString(), detail: "Consent checks", tone: data.metrics.rightsReview > 0 ? "warn" : "ok" },
             { label: "Missing source", value: data.metrics.missingSource.toLocaleString(), detail: "Traceability", tone: data.metrics.missingSource > 0 ? "danger" : "ok" },
             { label: "Children/youth", value: data.metrics.childrenYouth.toLocaleString(), detail: "People risk", tone: data.metrics.childrenYouth > 0 ? "warn" : "ok" },
-            { label: "AI enrichment", value: data.metrics.aiEnrichment.toLocaleString(), detail: "Tag backlog", tone: "info" },
+            { label: "Metadata enrichment", value: data.metrics.aiEnrichment.toLocaleString(), detail: "Tag backlog", tone: "info" },
             { label: "Taxonomy drift", value: data.metrics.taxonomyDrift.toLocaleString(), detail: "Vocabulary", tone: data.metrics.taxonomyDrift > 0 ? "warn" : "ok" },
             { label: "Duplicates", value: data.metrics.duplicateCandidates.toLocaleString(), detail: "Merge review", tone: data.metrics.duplicateCandidates > 0 ? "info" : "ok" },
             { label: "Rendition gaps", value: data.metrics.renditionGaps.toLocaleString(), detail: "Approved copy gaps", tone: data.metrics.renditionGaps > 0 ? "warn" : "ok" }

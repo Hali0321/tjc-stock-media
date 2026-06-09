@@ -372,7 +372,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
       pillar: "Find",
       label: "Search quality",
       score: average([taxonomyScore, enrichmentScore]),
-      detail: "Controlled vocabulary, AI enrichment backlog, and useful titles.",
+      detail: "Controlled vocabulary, metadata enrichment backlog, and useful titles.",
       action: "Clear taxonomy drift and enrichment queues.",
       savedViewId: "taxonomy-drift",
       tone: "info"

@@ -68,7 +68,7 @@ const keyReviewerQueueIds: ReviewQueueId[] = ["pending", "rights-review", "child
 const advancedMetricCards: Array<{ key: keyof Governance; label: string }> = [
   { key: "missingSource", label: "Missing source" },
   { key: "duplicateCandidates", label: "Duplicates" },
-  { key: "aiEnrichment", label: "AI enrichment" },
+  { key: "aiEnrichment", label: "Metadata enrichment" },
   { key: "taxonomyDrift", label: "Taxonomy drift" },
   { key: "renditionGaps", label: "Rendition gaps" },
   { key: "staleApprovals", label: "Stale approval" },

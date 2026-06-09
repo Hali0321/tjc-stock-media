@@ -6,7 +6,7 @@ export const filterGroups = [
   { label: "People/minors", priority: "primary", options: ["No people", "Adults only", "People unknown", "Children/youth"] },
   { label: "Media type", priority: "primary", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
   { label: "Ministry", priority: "primary", options: ["Worship", "Bible Study", "Fellowship", "Sabbath", "Welcome Team"] },
-  { label: "Governance", priority: "advanced", options: ["Missing source", "Rights review", "Portal ready", "AI enrichment", "Taxonomy drift", "Duplicate candidate", "Stale approval", "Rendition gap"] },
+  { label: "Governance", priority: "advanced", options: ["Missing source", "Rights review", "Portal ready", "Metadata enrichment", "Taxonomy drift", "Duplicate candidate", "Stale approval", "Rendition gap"] },
   { label: "Event/date", priority: "advanced", options: ["2026", "2025", "2024"] },
   { label: "Orientation", priority: "advanced", options: ["Landscape", "Square", "Portrait"] },
   { label: "Source", priority: "advanced", options: ["LM Photos", "Media library", "Photographer"] }

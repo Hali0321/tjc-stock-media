@@ -99,7 +99,7 @@ export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: M
   if (!meaningfulMetadataValue(asset.consentStatus)) flags.push("Consent unknown");
   if (assetNeedsUsageGuidance(asset)) flags.push("No usage guidance");
   if (assetIsDuplicateCandidate(asset, duplicateGroupCounts)) flags.push("Possible duplicate");
-  if (assetNeedsAiEnrichment(asset)) flags.push("AI enrichment");
+  if (assetNeedsAiEnrichment(asset)) flags.push("Metadata enrichment");
   if (assetHasTaxonomyDrift(asset)) flags.push("Taxonomy drift");
   if (assetNeedsStaleApprovalReview(asset)) flags.push("Stale approval");
   if (asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES) flags.push("Large media");
