@@ -270,12 +270,12 @@ function buildIntegrationReadiness({
     },
     {
       id: "review-writes",
-      label: "ResourceSpace write mapping",
+      label: "Review decision handoff",
       ready: apiConfigured,
       owner: "ResourceSpace",
       detail: apiConfigured
-        ? "API credentials are present; field refs still need production write verification before automatic sync."
-        : "Review actions queue locally. ResourceSpace API write mapping is not configured yet."
+        ? "Production sync credentials are present; final write verification is still required before automatic sync."
+        : "Review decisions queue for media-team follow-up until production sync is verified."
     },
     {
       id: "pending-review-writes",

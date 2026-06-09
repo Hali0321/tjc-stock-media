@@ -53,7 +53,7 @@ export function viewerVerdictForAsset(asset: StockMediaAsset, role: DemoRole): V
       title: "Ready to use",
       reason: asset.usageGuidance || "Approved copy available. Check use guidance before sharing.",
       primaryAction: "Download approved copy",
-      secondaryActions: ["Copy credit", "View use guidance"],
+      secondaryActions: ["View credit", "View use guidance"],
       canDownload,
       downloadHref,
       blockers

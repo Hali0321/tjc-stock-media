@@ -78,7 +78,7 @@ export function VerdictPanel({
   compact?: boolean;
 }) {
   function secondaryActionProps(action: string) {
-    if (action === "Copy credit") return { href: "#credit", icon: Info };
+    if (action === "View credit") return { href: "#credit", icon: Info };
     if (action === "View use guidance") return { href: "#use-guidance", icon: Info };
     return requestHref ? { href: requestHref, icon: action.includes("source") ? FileLock2 : Mail } : { onClick: onRequestReview, icon: action.includes("source") ? FileLock2 : Mail };
   }
@@ -99,9 +99,9 @@ export function VerdictPanel({
           <PrimaryAction href={requestHref} onClick={requestHref ? undefined : onRequestReview} icon={Mail}>Request DAM review</PrimaryAction>
         )}
         <div className="flex flex-wrap gap-2">
-          {verdict.secondaryActions.slice(0, 2).map((action) => (
-            <PrimaryAction key={action} tone="secondary" {...secondaryActionProps(action)}>{action}</PrimaryAction>
-          ))}
+          {verdict.secondaryActions.slice(0, 2).map((action) => {
+            return <PrimaryAction key={action} tone="secondary" {...secondaryActionProps(action)}>{action}</PrimaryAction>;
+          })}
         </div>
       </div>
     </section>

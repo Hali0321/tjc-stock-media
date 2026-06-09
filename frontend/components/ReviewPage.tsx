@@ -483,30 +483,9 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <section className="review-compact-header" aria-label="Review inbox">
-        <div>
-          <h1>Review Inbox</h1>
-          <p>Evidence gates approval.</p>
-        </div>
-        <dl aria-label="Current review queue">
-          <div>
-            <dt>Queue</dt>
-            <dd>{activeQueueSummary?.label || "Loading"}</dd>
-          </div>
-          <div>
-            <dt>Total</dt>
-            <dd>{activeQueueSummary ? activeQueueSummary.count.toLocaleString() : "-"}</dd>
-          </div>
-          <div>
-            <dt>Loaded</dt>
-            <dd>{data?.assets.length ?? 0}</dd>
-          </div>
-        </dl>
-      </section>
-
-	      {error ? (
-	        <StatusBanner className="mt-4" tone="critical" title="Review queue did not load">{error}</StatusBanner>
-	      ) : null}
+      {error ? (
+        <StatusBanner className="mt-4" tone="critical" title="Review queue did not load">{error}</StatusBanner>
+      ) : null}
 
       <section className="mt-4 rounded-lg border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Review queues">
         <label className="grid gap-1 text-sm font-black text-tjc-evergreen">
@@ -529,7 +508,32 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </p>
       </section>
 
-      <section className="mt-5 hidden gap-2 rounded-[12px] border border-[#e1e8e2] bg-[#fbfcfa] p-2 md:grid" aria-label="Review filters">
+      <section className="review-workbench-command mt-1 hidden gap-3 rounded-[12px] border border-[#d9e2dc] bg-white p-3 md:grid" aria-label="Review filters">
+        <div className="review-workbench-command-head">
+          <div>
+            <span className="dam-kicker">Review Inbox</span>
+            <h1>{activeQueueSummary?.label || "Current queue"}</h1>
+            <p>Approval remains locked until evidence is complete.</p>
+          </div>
+          <dl aria-label="Review queue summary">
+            <div>
+              <dt>Awaiting</dt>
+              <dd>{data?.governance.pendingReview.toLocaleString() ?? "-"}</dd>
+            </div>
+            <div>
+              <dt>Rights</dt>
+              <dd>{data?.governance.rightsReview.toLocaleString() ?? "-"}</dd>
+            </div>
+            <div>
+              <dt>People/youth</dt>
+              <dd>{data?.governance.childrenYouth.toLocaleString() ?? "-"}</dd>
+            </div>
+            <div>
+              <dt>Approved</dt>
+              <dd>{data?.governance.approvedThisMonth.toLocaleString() ?? "-"}</dd>
+            </div>
+          </dl>
+        </div>
         <div className="flex max-w-full min-w-0 flex-wrap gap-2">
           {keyReviewerQueues.map((queue) => (
             <button

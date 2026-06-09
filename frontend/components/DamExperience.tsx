@@ -282,7 +282,7 @@ export function VerdictPanel({
   compact?: boolean;
 }) {
   function secondaryActionProps(action: string) {
-    if (action === "Copy credit") return { href: "#credit", icon: Info };
+    if (action === "View credit") return { href: "#credit", icon: Info };
     if (action === "View use guidance") return { href: "#use-guidance", icon: Info };
     return requestHref ? { href: requestHref, icon: action.includes("source") ? FileLock2 : Mail } : { onClick: onRequestReview, icon: action.includes("source") ? FileLock2 : Mail };
   }
@@ -298,9 +298,9 @@ export function VerdictPanel({
           ) : (
             <PrimaryAction href={requestHref} onClick={requestHref ? undefined : onRequestReview} icon={Mail}>Request DAM review</PrimaryAction>
           )}
-          {verdict.secondaryActions.slice(0, 2).map((action) => (
-            <PrimaryAction key={action} tone="secondary" {...secondaryActionProps(action)}>{action}</PrimaryAction>
-          ))}
+          {verdict.secondaryActions.slice(0, 2).map((action) => {
+            return <PrimaryAction key={action} tone="secondary" {...secondaryActionProps(action)}>{action}</PrimaryAction>;
+          })}
         </div>
       </div>
     </section>
@@ -335,7 +335,7 @@ export function MediaCard({ asset, role, priority = false }: { asset: StockMedia
           <span className="line-clamp-1 text-sm font-semibold text-[#3f4a43]">{display.usage || display.cardSubtitle}</span>
         </div>
         {verdict.canDownload ? (
-          <PrimaryAction href={verdict.downloadHref} icon={Download}>Use this media</PrimaryAction>
+          <PrimaryAction href={verdict.downloadHref} icon={Download}>Download approved copy</PrimaryAction>
         ) : (
           <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`}>
             View guidance

@@ -346,7 +346,7 @@ function MediaCard({ asset, role, priority = false }: { asset: StockMediaAsset; 
           <span className="line-clamp-2 text-sm font-semibold text-[#3f4a43]">{display.usage || display.cardSubtitle}</span>
         </div>
         {verdict.canDownload ? (
-          <PrimaryAction href={verdict.downloadHref} icon={Download}>Use this media</PrimaryAction>
+          <PrimaryAction href={verdict.downloadHref} icon={Download}>Download approved copy</PrimaryAction>
         ) : (
           <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#c5d1c9] bg-white px-4 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`}>
             View guidance

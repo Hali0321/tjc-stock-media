@@ -21,13 +21,13 @@ export async function updateResourceReviewStatus() {
     return {
       ok: false,
       status: 409,
-      message: "Review action is ready, but ResourceSpace API write mapping is not configured yet."
+      message: "Review decision passed evidence checks and is queued for media-team follow-up. Final library update is not completed from this page."
     };
   }
 
   return {
     ok: false,
     status: 501,
-    message: "Review action is ready, but ResourceSpace API write mapping is not configured yet."
+    message: "Review decision passed evidence checks and is queued for media-team follow-up. Final library update is not completed from this page."
   };
 }

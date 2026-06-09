@@ -143,6 +143,7 @@ export function DamShell({ children }: { children: ReactNode }) {
 
       <aside className="dam-desktop-rail hidden border-r border-[#d7dde2] bg-white lg:block" aria-label="Desktop workspace navigation">
         <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] content-start gap-3 p-3">
+          <DamBrand opsShell={opsShell} />
           <div className="dam-rail-heading">
             <span>{opsShell ? "Operations" : "Library"}</span>
             <strong>{opsShell ? "Workbench" : "Workspace"}</strong>
