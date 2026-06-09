@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Database, Filter, FolderOpen, Mail, Package, RotateCcw, Search, UploadCloud } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Database, Filter, FolderOpen, Mail, Package, RotateCcw, Search, ShieldCheck, UploadCloud } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
 import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamMediaCard as MediaCard, DamPrimaryAction as PrimaryAction, DamUseCaseCard as UseCaseCard, findUseCases } from "@/components/dam/DamWorkspace";
 import { FilterSidebar } from "@/components/FilterSidebar";
@@ -23,6 +23,30 @@ const viewerFacetGroups = [
   { label: "Availability", options: ["Approved copies", "Review required before use"] }
 ] as const;
 
+const viewerEmptyGuidance = [
+  {
+    label: "Start with packages",
+    detail: "Curated kits may already match the ministry use.",
+    action: "Open packages",
+    href: "/collections",
+    icon: Package
+  },
+  {
+    label: "Request review",
+    detail: "Ask the media team to clear rights, people, and use guidance.",
+    action: "Request review",
+    href: "mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20media%20for%20safe%20reuse.%0AContext:%20",
+    icon: ClipboardCheck
+  },
+  {
+    label: "Send new media",
+    detail: "Build a reviewer packet. Sending never publishes.",
+    action: "Send media",
+    href: "/upload",
+    icon: UploadCloud
+  }
+] as const;
+
 function healthTone(score: number) {
   if (score >= 90) return "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]";
   if (score >= 70) return "border-[#ead6a8] bg-[#fff7e5] text-[#725216]";
@@ -36,11 +60,11 @@ function OpsAssetRow({ asset, selected }: { asset: StockMediaAsset; selected?: b
     <Link
       href={`/assets/${asset.id}`}
       className={cn(
-        "grid min-h-24 gap-3 border-b border-[#e1e7e2] bg-white px-3 py-3 text-sm transition last:border-b-0 hover:bg-[#f7faf7] md:grid-cols-[5rem_minmax(13rem,1.2fr)_8rem_9rem_8rem_8rem_7rem]",
+        "grid min-h-32 items-center gap-3 border-b border-[#e1e7e2] bg-white px-3 py-3 text-sm transition last:border-b-0 hover:bg-[#f7faf7] xl:grid-cols-[minmax(9rem,12rem)_minmax(10rem,1fr)_minmax(6rem,8rem)_minmax(7rem,9rem)_minmax(6rem,8rem)_minmax(6rem,8rem)_minmax(5rem,7rem)]",
         selected && "bg-[#eef8f2]"
       )}
     >
-      <span className="block aspect-[4/3] overflow-hidden rounded-[12px] bg-[#e9efeb]">
+      <span className="block aspect-video w-full overflow-hidden rounded-[12px] bg-[#e9efeb]">
         {display.image ? <img className="h-full w-full object-cover" src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : null}
       </span>
       <span className="min-w-0">
@@ -434,6 +458,45 @@ export function LibraryPage() {
                 <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
                   Show items needing review, downloads stay blocked
                 </button>
+                <section className="approved-copy-workbench mt-3" aria-label="Approved-copy next steps">
+                  <div className="approved-copy-workbench-main">
+                    <header>
+                      <span>Approved-copy map</span>
+                      <h3>Use the holding lanes while the library is empty.</h3>
+                    </header>
+                    <div className="approved-copy-flow" aria-hidden="true">
+                      <span>Find</span>
+                      <span>Open record</span>
+                      <span>Check use</span>
+                      <span>Request review</span>
+                    </div>
+                    <div className="approved-copy-workbench-grid">
+                      {viewerEmptyGuidance.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link className="approved-copy-next-card" href={item.href} key={item.label}>
+                            <span className="approved-copy-next-icon"><Icon size={17} strokeWidth={1.9} aria-hidden="true" /></span>
+                            <span>
+                              <strong>{item.label}</strong>
+                              <small>{item.detail}</small>
+                            </span>
+                            <em>{item.action}</em>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <aside className="approved-copy-safety-panel">
+                    <ShieldCheck size={19} strokeWidth={1.9} aria-hidden="true" />
+                    <strong>Safe-use rule</strong>
+                    <p>Normal users reuse media only after a media record says it is ready. Source-file access stays request-only.</p>
+                    <dl>
+                      <div><dt>Approved copy</dt><dd>Self-serve when cleared</dd></div>
+                      <div><dt>Unknown rights</dt><dd>Request review</dd></div>
+                      <div><dt>People/youth</dt><dd>Open record first</dd></div>
+                    </dl>
+                  </aside>
+                </section>
               </div>
             ) : (
               <EmptyState
@@ -456,7 +519,7 @@ export function LibraryPage() {
 
         {!loading && assets.length && opsView ? (
           <div className="overflow-hidden rounded-[12px] border border-[#d8e1da] bg-white">
-            <div className="hidden grid-cols-[5rem_minmax(13rem,1.2fr)_8rem_9rem_8rem_8rem_7rem] gap-3 border-b border-[#d8e1da] bg-[#f3f6f4] px-3 py-2 text-xs font-black text-[#526059] md:grid">
+            <div className="hidden grid-cols-[minmax(9rem,12rem)_minmax(10rem,1fr)_minmax(6rem,8rem)_minmax(7rem,9rem)_minmax(6rem,8rem)_minmax(6rem,8rem)_minmax(5rem,7rem)] gap-3 border-b border-[#d8e1da] bg-[#f3f6f4] px-3 py-2 text-xs font-black text-[#526059] xl:grid">
               <span>Preview</span><span>Asset</span><span>Workflow</span><span>Distribution</span><span>People</span><span>Reference</span><span>Health</span>
             </div>
             {assets.map((asset) => <OpsAssetRow asset={asset} key={asset.id} />)}
