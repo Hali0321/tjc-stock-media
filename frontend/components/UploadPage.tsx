@@ -17,7 +17,7 @@ type UploadReceipt = {
   message?: string;
   eventName?: string;
   fileCount?: number;
-  sourceLink?: string | null;
+  sourceLinkCaptured?: boolean;
   reviewWarnings?: string[];
 };
 
@@ -443,7 +443,7 @@ export function UploadPage() {
               <div><dt className="text-xs font-black">Status</dt><dd>{receipt.defaultReviewState || uploadDefaultState.status}</dd></div>
               <div><dt className="text-xs font-black">Event</dt><dd>{receipt.eventName || "Not provided"}</dd></div>
               <div><dt className="text-xs font-black">Files</dt><dd>{receipt.fileCount ?? 0}</dd></div>
-              <div><dt className="text-xs font-black">Source link</dt><dd>{receipt.sourceLink ? "Captured" : "Not provided"}</dd></div>
+              <div><dt className="text-xs font-black">Source link</dt><dd>{receipt.sourceLinkCaptured ? "Captured" : "Not provided"}</dd></div>
             </dl>
             {receipt.reviewWarnings?.length ? (
               <div className="flex flex-wrap gap-2">

@@ -626,7 +626,10 @@ for (const width of qaViewports) {
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
   await page.waitForSelector("text=Queue decision for sync");
   await page.getByRole("button", { name: "Queue decision for sync" }).click();
-  await page.waitForSelector("text=Audit preview");
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll("h3")]
+      .some((node) => node.textContent?.trim() === "Audit preview" && node.checkVisibility())
+  );
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
   await closeContext(context);
 }

@@ -68,6 +68,7 @@ const forbiddenKeys = new Set([
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",
+  "sourceLink",
   "originalFilename",
   "checksumSha256",
   "fileSizeBytes",
@@ -213,11 +214,15 @@ expect_json_status 400 noncanonical-upload-tags-payload-safe "$normal_user_paylo
 
 expect_json source-link-upload-contributor '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-if (data.status !== "validated" || data.fileCount !== 0 || !data.sourceLink) {
+if (data.status !== "validated" || data.fileCount !== 0 || data.sourceLinkCaptured !== true) {
   console.error("FAIL: source-link intake was not accepted without local files");
   process.exit(1);
 }
 const text = JSON.stringify(data);
+if (/drive\.google\.com/i.test(text) || Object.prototype.hasOwnProperty.call(data, "sourceLink")) {
+  console.error("FAIL: contributor upload response echoed source-link details");
+  process.exit(1);
+}
 if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b/i.test(text)) {
   console.error("FAIL: contributor upload response leaked operational copy");
   process.exit(1);

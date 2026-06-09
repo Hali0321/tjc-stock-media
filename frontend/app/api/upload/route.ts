@@ -80,7 +80,9 @@ export async function POST(request: NextRequest) {
       status: "large-media-intake",
       message: uploadDefaultState.largeMediaMessage,
       defaultReviewState: uploadDefaultState.status,
-      files: largeFiles.map((file) => ({ name: file.name, size: file.size }))
+      fileCount: files.length,
+      largeFileCount: largeFiles.length,
+      sourceLinkCaptured: Boolean(sourceLink)
     });
   }
 
@@ -108,7 +110,7 @@ export async function POST(request: NextRequest) {
       "Upload intake validated. New media remains Needs Review / Do Not Publish until a reviewer clears the record.",
     eventName,
     fileCount: files.length,
-    sourceLink: sourceLink || null,
+    sourceLinkCaptured: Boolean(sourceLink),
     reviewWarnings
   });
 }

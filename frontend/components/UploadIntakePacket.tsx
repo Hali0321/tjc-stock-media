@@ -73,7 +73,7 @@ export function UploadIntakePacket({ selectedFiles, suggestedTags, hasSourceLink
             <span>
               <strong className="block text-sm font-black">Persistence mode</strong>
               <span className="mt-1 block text-xs font-semibold leading-snug text-current/75">
-                {opsView ? "Server-routed intake only. Production writes still need ResourceSpace API field mapping." : "Send-for-review only. A reviewer must approve media before anyone can reuse it."}
+                {opsView ? "Server-routed intake only. Final library updates happen through media-team review." : "Send-for-review only. A reviewer must approve media before anyone can reuse it."}
               </span>
             </span>
           </div>
