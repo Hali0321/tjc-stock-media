@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Database, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
-import { DamAuditPanel, DamBlockerTable, DamDiagnosticPanel, DamGovernanceCockpit, DamLaunchGatePanel, DamMappingPanel, DamReadinessScorecard } from "@/components/dam/DamOperations";
+import { DamAuditPanel, DamBlockerRegister, DamDiagnosticPanel, DamDiagnosticsGrid, DamGovernanceCockpit, DamGovernanceStatusStrip, DamLaunchDecisionRail, DamMappingPanel } from "@/components/dam/DamOperations";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { AdminActionItem, DamReadinessItem, DamReadinessResult, IntegrationReadinessItem, VocabularyInsight } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -35,15 +35,6 @@ function pillarIcon(pillar: DamReadinessItem["pillar"]) {
   if (pillar === "Review") return ListChecks;
   if (pillar === "Share") return Share2;
   return Layers;
-}
-
-function MetricTile({ label, value }: { label: string; value?: number }) {
-  return (
-    <div className="min-w-0 border-r border-[#d6dfd8] px-3 py-2 last:border-r-0">
-      <strong className="block text-lg font-black tabular-nums text-tjc-ink">{(value ?? 0).toLocaleString()}</strong>
-      <span className="mt-0.5 block truncate text-xs font-semibold leading-tight text-tjc-muted">{label}</span>
-    </div>
-  );
 }
 
 function zeroCountLabel(item: AdminActionItem) {
@@ -325,12 +316,12 @@ export function AdminPage() {
         onExport={exportReadinessCsv}
       >
         <div className="mt-4">
-          <DamReadinessScorecard
+          <DamGovernanceStatusStrip
             items={[
-              { label: "Score", value: `${data.score}%`, tone: data.score >= 80 ? "ok" : data.score >= 55 ? "info" : "danger" },
-              { label: "Assets", value: data.assetCount.toLocaleString(), tone: "info" },
-              { label: "Portal ready", value: data.metrics.portalReady.toLocaleString(), tone: data.metrics.portalReady > 0 ? "ok" : "warn" },
-              { label: "Needs review", value: data.metrics.needsReview.toLocaleString(), tone: data.metrics.needsReview > 0 ? "warn" : "ok" }
+              { label: "Score", value: `${data.score}%`, detail: "Launch readiness", tone: data.score >= 80 ? "ok" : data.score >= 55 ? "info" : "danger" },
+              { label: "Assets", value: data.assetCount.toLocaleString(), detail: "In governance scope", tone: "info" },
+              { label: "Portal ready", value: data.metrics.portalReady.toLocaleString(), detail: "Cleared for reuse", tone: data.metrics.portalReady > 0 ? "ok" : "warn" },
+              { label: "Needs review", value: data.metrics.needsReview.toLocaleString(), detail: "Blocked from download", tone: data.metrics.needsReview > 0 ? "warn" : "ok" }
             ]}
           />
         </div>
@@ -366,29 +357,10 @@ export function AdminPage() {
         hidden={activeAdminTab !== "Overview"}
       >
       <div className="mt-5">
-      <DamBlockerTable>
-        <div className="hidden gap-3 border-b border-[#e5e7eb] bg-[#f8faf8] px-3 py-2 text-xs font-black text-tjc-muted md:grid md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem]">
-          <span>Priority</span>
-          <span>Blocker</span>
-          <span>Count</span>
-          <span>Queue</span>
-        </div>
-        {topBlockers.map((item, index) => (
-          <Link
-            key={item.id}
-            href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-            className="admin-priority-card grid gap-2 border-b border-[#eef2ef] px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem] md:items-center"
-          >
-            <span className="text-xs font-black uppercase text-tjc-muted">P{index + 1}</span>
-            <span className="min-w-0">
-              <strong className="block text-sm font-black leading-tight text-tjc-ink">{item.label}</strong>
-              <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">{item.action}</span>
-            </span>
-            <span className={cn("w-fit rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
-            <span className="text-xs font-black uppercase tracking-[.04em] text-tjc-evergreen">{item.count === 0 ? zeroCountLabel(item) : "Open queue"}</span>
-          </Link>
-        ))}
-      </DamBlockerTable>
+      <DamBlockerRegister
+        items={topBlockers}
+        getHref={(item) => item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
+      />
       </div>
       </section>
 
@@ -399,15 +371,7 @@ export function AdminPage() {
         hidden={activeAdminTab !== "Launch Gate"}
       >
       <div className="mt-4 scroll-mt-24" id="launch-gate">
-      <DamLaunchGatePanel>
-        {launchDecisions.map((decision) => (
-          <div className="grid gap-2 border-b border-[#d6dfd8] px-4 py-4 last:border-b-0 md:grid-cols-[15rem_8rem_minmax(0,1fr)]" key={decision.question}>
-            <strong className="text-sm text-tjc-ink">{decision.question}</strong>
-            <span className={cn("w-fit rounded border px-2 py-0.5 text-xs font-semibold", toneClass(decision.tone))}>{decision.answer}</span>
-            <span className="text-sm leading-relaxed text-tjc-muted">{decision.detail}</span>
-          </div>
-        ))}
-      </DamLaunchGatePanel>
+      <DamLaunchDecisionRail decisions={launchDecisions} />
       </div>
       </section>
 
@@ -439,42 +403,32 @@ export function AdminPage() {
         </div>
       </details>
 
-      <section className={cn("mt-5 hidden grid-cols-2 overflow-hidden rounded-[12px] border border-[#e5e7eb] bg-white md:grid md:grid-cols-5 xl:grid-cols-10", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Governance operating metrics">
-        <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
-        <MetricTile label="External ready" value={data.metrics.portalReady} />
-        <MetricTile label="Needs review" value={data.metrics.needsReview} />
-        <MetricTile label="Rights review" value={data.metrics.rightsReview} />
-        <MetricTile label="Missing source" value={data.metrics.missingSource} />
-        <MetricTile label="Children/youth" value={data.metrics.childrenYouth} />
-        <MetricTile label="AI enrichment" value={data.metrics.aiEnrichment} />
-        <MetricTile label="Taxonomy drift" value={data.metrics.taxonomyDrift} />
-        <MetricTile label="Duplicates" value={data.metrics.duplicateCandidates} />
-        <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
-      </section>
+      <div className={cn("mt-5 hidden md:block", activeAdminTab !== "Overview" && "md:hidden")}>
+        <DamGovernanceStatusStrip
+          items={[
+            { label: "Approved public", value: data.metrics.approvedPublic.toLocaleString(), detail: "Delivery output", tone: "ok" },
+            { label: "External ready", value: data.metrics.portalReady.toLocaleString(), detail: "Download-safe", tone: data.metrics.portalReady > 0 ? "ok" : "warn" },
+            { label: "Needs review", value: data.metrics.needsReview.toLocaleString(), detail: "Self-serve blocked", tone: "warn" },
+            { label: "Rights review", value: data.metrics.rightsReview.toLocaleString(), detail: "Consent checks", tone: data.metrics.rightsReview > 0 ? "warn" : "ok" },
+            { label: "Missing source", value: data.metrics.missingSource.toLocaleString(), detail: "Traceability", tone: data.metrics.missingSource > 0 ? "danger" : "ok" },
+            { label: "Children/youth", value: data.metrics.childrenYouth.toLocaleString(), detail: "People risk", tone: data.metrics.childrenYouth > 0 ? "warn" : "ok" },
+            { label: "AI enrichment", value: data.metrics.aiEnrichment.toLocaleString(), detail: "Tag backlog", tone: "info" },
+            { label: "Taxonomy drift", value: data.metrics.taxonomyDrift.toLocaleString(), detail: "Vocabulary", tone: data.metrics.taxonomyDrift > 0 ? "warn" : "ok" },
+            { label: "Duplicates", value: data.metrics.duplicateCandidates.toLocaleString(), detail: "Merge review", tone: data.metrics.duplicateCandidates > 0 ? "info" : "ok" },
+            { label: "Rendition gaps", value: data.metrics.renditionGaps.toLocaleString(), detail: "Approved copy gaps", tone: data.metrics.renditionGaps > 0 ? "warn" : "ok" }
+          ]}
+        />
+      </div>
 
       <DamDiagnosticPanel title="Operational diagnostics" defaultOpen className={cn("mt-4 hidden md:block", activeAdminTab !== "Overview" && "md:hidden")}>
-        <section className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-md border border-[#d6dfd8] bg-white p-4">
-            <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
-            <strong className="mt-1 block text-sm text-tjc-ink">{data.source.label}</strong>
-            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{data.source.detail}</p>
-          </div>
-          <div className="rounded-md border border-[#d6dfd8] bg-white p-4">
-            <span className="text-xs font-semibold uppercase text-tjc-muted">API read configured</span>
-            <strong className="mt-1 block text-sm text-tjc-ink">{readBridge?.ready ? "yes" : "no"}</strong>
-            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{readBridge?.detail || "Read bridge unavailable."}</p>
-          </div>
-          <div className="rounded-md border border-[#d6dfd8] bg-white p-4">
-            <span className="text-xs font-semibold uppercase text-tjc-muted">API write configured</span>
-            <strong className="mt-1 block text-sm text-tjc-ink">{writeMapping?.ready ? "yes" : "no"}</strong>
-            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">{writeMapping?.detail || "Write mapping unavailable."}</p>
-          </div>
-          <div className="rounded-md border border-[#d6dfd8] bg-white p-4">
-            <span className="text-xs font-semibold uppercase text-tjc-muted">Required field refs</span>
-            <strong className="mt-1 block text-sm text-tjc-ink">{requiredFieldRefsPresent} present / {Math.max(0, requiredFields.length - requiredFieldRefsPresent)} missing</strong>
-            <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Pending review write queue: {pendingQueue?.detail || "none"}</p>
-          </div>
-        </section>
+        <DamDiagnosticsGrid
+          items={[
+            { label: "Current data source", value: data.source.label, detail: data.source.detail, tone: "info" },
+            { label: "API read configured", value: readBridge?.ready ? "yes" : "no", detail: readBridge?.detail || "Read bridge unavailable.", tone: readBridge?.ready ? "ok" : "danger" },
+            { label: "API write configured", value: writeMapping?.ready ? "yes" : "no", detail: writeMapping?.detail || "Write mapping unavailable.", tone: writeMapping?.ready ? "ok" : "danger" },
+            { label: "Required field refs", value: `${requiredFieldRefsPresent} present / ${Math.max(0, requiredFields.length - requiredFieldRefsPresent)} missing`, detail: `Pending review write queue: ${pendingQueue?.detail || "none"}`, tone: requiredFieldRefsPresent === requiredFields.length ? "ok" : "warn" }
+          ]}
+        />
       </DamDiagnosticPanel>
 
       <section id="pillars" className={cn("mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white md:block", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Production DAM pillars">

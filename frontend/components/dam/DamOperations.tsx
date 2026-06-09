@@ -1,5 +1,7 @@
 import { forwardRef, type ReactNode } from "react";
+import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Database, Gauge, ListChecks, Lock, type LucideIcon } from "lucide-react";
+import type { AdminActionItem } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
 export {
@@ -19,6 +21,17 @@ function opsToneClass(tone: OpsTone) {
   if (tone === "danger") return "border-[#dfb9b5] bg-[#fff1ef] text-[#7b332f]";
   if (tone === "warn") return "border-[#ead6a8] bg-[#fff8e8] text-[#71500f]";
   return "border-[#c8d7e6] bg-[#f2f7fb] text-[#27435b]";
+}
+
+function opsSeverityClass(severity: AdminActionItem["severity"]) {
+  if (severity === "critical") return "border-[#dfb9b5] bg-[#fff1ef] text-[#7b332f]";
+  if (severity === "high") return "border-[#ead6a8] bg-[#fff8e8] text-[#71500f]";
+  if (severity === "medium") return "border-[#c8d7e6] bg-[#f2f7fb] text-[#27435b]";
+  return "border-[#b8d9c6] bg-[#eef8f2] text-[#194f34]";
+}
+
+function blockerZeroLabel(item: AdminActionItem) {
+  return item.owner === "DAM Admin" ? "View policy" : "No open items";
 }
 
 export function DamOpsBanner({
@@ -237,6 +250,107 @@ export function DamReadinessScorecard({
           <strong className="block text-base font-black tabular-nums">{item.value}</strong>
           <span className="text-[.68rem] font-black uppercase tracking-[.04em]">{item.label}</span>
         </div>
+      ))}
+    </section>
+  );
+}
+
+export function DamGovernanceStatusStrip({
+  items
+}: {
+  items: Array<{ label: string; value: ReactNode; detail: string; tone?: OpsTone }>;
+}) {
+  return (
+    <section className="dam-governance-status-strip" aria-label="Governance readiness strip" data-component="DamGovernanceStatusStrip">
+      {items.map((item) => (
+        <article className={cn("dam-governance-status-cell", item.tone && `is-${item.tone}`)} key={item.label}>
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+          <small>{item.detail}</small>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+export function DamBlockerRegister({
+  items,
+  getHref
+}: {
+  items: AdminActionItem[];
+  getHref: (item: AdminActionItem) => string;
+}) {
+  return (
+    <section className="dam-blocker-register" aria-label="Blocker ownership register" data-component="DamBlockerRegister">
+      <header>
+        <div>
+          <span>Owner action register</span>
+          <h2>Top production blockers</h2>
+        </div>
+        <small>Sorted by severity and affected assets</small>
+      </header>
+      <div className="dam-blocker-register-head" aria-hidden="true">
+        <span>Rank</span>
+        <span>Blocker and required action</span>
+        <span>Owner</span>
+        <span>Assets</span>
+        <span>Next step</span>
+      </div>
+      <div className="dam-blocker-register-body">
+        {items.map((item, index) => (
+          <Link className="dam-blocker-register-row" href={getHref(item)} key={item.id}>
+            <span className="dam-register-rank">P{index + 1}</span>
+            <span className="dam-register-main">
+              <strong>{item.label}</strong>
+              <small>{item.action}</small>
+            </span>
+            <span className="dam-register-owner">{item.owner}</span>
+            <span className={cn("dam-register-count", opsSeverityClass(item.severity))}>{item.count.toLocaleString()}</span>
+            <span className="dam-register-action">{item.count === 0 ? blockerZeroLabel(item) : "Open queue"}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function DamLaunchDecisionRail({
+  decisions
+}: {
+  decisions: ReadonlyArray<{ question: string; answer: string; detail: string; tone?: OpsTone }>;
+}) {
+  return (
+    <section className="dam-launch-decision-rail" aria-label="Launch decision rail" data-component="DamLaunchDecisionRail">
+      <header>
+        <span>Launch gate</span>
+        <h2>Decision checks</h2>
+      </header>
+      <div>
+        {decisions.map((decision) => (
+          <article className="dam-launch-decision-row" key={decision.question}>
+            <strong>{decision.question}</strong>
+            <span className={cn("dam-launch-decision-answer", opsToneClass(decision.tone || "info"))}>{decision.answer}</span>
+            <p>{decision.detail}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function DamDiagnosticsGrid({
+  items
+}: {
+  items: Array<{ label: string; value: ReactNode; detail: string; tone?: OpsTone }>;
+}) {
+  return (
+    <section className="dam-diagnostics-grid" aria-label="Operational diagnostics grid" data-component="DamDiagnosticsGrid">
+      {items.map((item) => (
+        <article className={cn("dam-diagnostic-tile", item.tone && `is-${item.tone}`)} key={item.label}>
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+          <p>{item.detail}</p>
+        </article>
       ))}
     </section>
   );

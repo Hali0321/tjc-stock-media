@@ -3319,6 +3319,339 @@ body,
   }
 }
 
+/* Governance command center pass: dense DAM registers instead of generic cards. */
+.dam-governance-status-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .38rem;
+  background: #fff;
+}
+
+.dam-governance-status-cell {
+  min-width: 0;
+  border-left: 1px solid var(--dam-v3-line);
+  padding: .72rem .82rem;
+  box-shadow: inset 0 3px 0 #d8e0db;
+}
+
+.dam-governance-status-cell:first-child {
+  border-left: 0;
+}
+
+.dam-governance-status-cell.is-ok {
+  box-shadow: inset 0 3px 0 #2f7d55;
+}
+
+.dam-governance-status-cell.is-warn {
+  box-shadow: inset 0 3px 0 #c79020;
+}
+
+.dam-governance-status-cell.is-danger {
+  box-shadow: inset 0 3px 0 #b84a43;
+}
+
+.dam-governance-status-cell.is-info {
+  box-shadow: inset 0 3px 0 #5b778a;
+}
+
+.dam-governance-status-cell span,
+.dam-blocker-register header span,
+.dam-launch-decision-rail header span,
+.dam-diagnostic-tile span {
+  display: block;
+  color: #66726d;
+  font-size: .66rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.dam-governance-status-cell strong {
+  display: block;
+  margin-top: .3rem;
+  color: var(--dam-v3-ink);
+  font-size: clamp(1.05rem, 1.6vw, 1.55rem);
+  font-weight: 850;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dam-governance-status-cell small {
+  display: block;
+  margin-top: .35rem;
+  color: #56635d;
+  font-size: .72rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.dam-blocker-register {
+  overflow: hidden;
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .42rem;
+  background: #fff;
+}
+
+.dam-blocker-register > header,
+.dam-launch-decision-rail > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--dam-v3-line);
+  background: #f6f8f6;
+  padding: .85rem 1rem;
+}
+
+.dam-blocker-register h2,
+.dam-launch-decision-rail h2 {
+  margin-top: .15rem;
+  color: var(--dam-v3-ink);
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.dam-blocker-register header small {
+  color: #56635d;
+  font-size: .75rem;
+  font-weight: 750;
+}
+
+.dam-blocker-register-head,
+.dam-blocker-register-row {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) 9rem 6rem 7.5rem;
+  gap: .8rem;
+  align-items: center;
+}
+
+.dam-blocker-register-head {
+  border-bottom: 1px solid #e8ede9;
+  background: #fbfcfb;
+  padding: .45rem 1rem;
+  color: #66726d;
+  font-size: .66rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.dam-blocker-register-row {
+  min-height: 4rem;
+  border-bottom: 1px solid #edf1ee;
+  padding: .75rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.dam-blocker-register-row:last-child {
+  border-bottom: 0;
+}
+
+.dam-blocker-register-row:hover {
+  background: #f7faf8;
+}
+
+.dam-register-rank,
+.dam-register-owner,
+.dam-register-action {
+  color: #56635d;
+  font-size: .75rem;
+  font-weight: 850;
+}
+
+.dam-register-main {
+  min-width: 0;
+}
+
+.dam-register-main strong {
+  display: block;
+  color: var(--dam-v3-ink);
+  font-size: .92rem;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.dam-register-main small {
+  display: block;
+  margin-top: .25rem;
+  color: #56635d;
+  font-size: .78rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.dam-register-count {
+  width: fit-content;
+  border: 1px solid;
+  border-radius: .3rem;
+  padding: .28rem .5rem;
+  font-size: .76rem;
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dam-register-action {
+  color: var(--dam-v3-green);
+  text-transform: uppercase;
+}
+
+.dam-launch-decision-rail {
+  overflow: hidden;
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .42rem;
+  background: #fff;
+}
+
+.dam-launch-decision-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, .9fr) 8rem minmax(0, 1.4fr);
+  gap: 1rem;
+  align-items: start;
+  border-bottom: 1px solid #edf1ee;
+  padding: .95rem 1rem;
+}
+
+.dam-launch-decision-row:last-child {
+  border-bottom: 0;
+}
+
+.dam-launch-decision-row strong {
+  color: var(--dam-v3-ink);
+  font-size: .9rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.dam-launch-decision-answer {
+  width: fit-content;
+  border: 1px solid;
+  border-radius: .3rem;
+  padding: .3rem .48rem;
+  font-size: .74rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.dam-launch-decision-row p {
+  color: #56635d;
+  font-size: .84rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.dam-diagnostics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.dam-diagnostic-tile {
+  min-width: 0;
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .35rem;
+  background: #fbfcfb;
+  padding: .85rem;
+  box-shadow: inset 3px 0 0 #d8e0db;
+}
+
+.dam-diagnostic-tile.is-ok {
+  box-shadow: inset 3px 0 0 #2f7d55;
+}
+
+.dam-diagnostic-tile.is-warn {
+  box-shadow: inset 3px 0 0 #c79020;
+}
+
+.dam-diagnostic-tile.is-danger {
+  box-shadow: inset 3px 0 0 #b84a43;
+}
+
+.dam-diagnostic-tile.is-info {
+  box-shadow: inset 3px 0 0 #5b778a;
+}
+
+.dam-diagnostic-tile strong {
+  display: block;
+  margin-top: .42rem;
+  color: var(--dam-v3-ink);
+  font-size: .92rem;
+  font-weight: 850;
+  line-height: 1.18;
+}
+
+.dam-diagnostic-tile p {
+  margin-top: .45rem;
+  color: #56635d;
+  font-size: .78rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .dam-governance-status-strip,
+  .dam-diagnostics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dam-governance-status-cell:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .dam-governance-status-cell:nth-child(n + 3) {
+    border-top: 1px solid var(--dam-v3-line);
+  }
+}
+
+@media (max-width: 760px) {
+  .dam-governance-status-strip,
+  .dam-diagnostics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dam-governance-status-cell,
+  .dam-governance-status-cell:nth-child(odd) {
+    border-left: 0;
+    border-top: 1px solid var(--dam-v3-line);
+  }
+
+  .dam-governance-status-cell:first-child {
+    border-top: 0;
+  }
+
+  .dam-blocker-register > header,
+  .dam-launch-decision-rail > header {
+    align-items: start;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .8rem;
+  }
+
+  .dam-blocker-register-head {
+    display: none;
+  }
+
+  .dam-blocker-register-row,
+  .dam-launch-decision-row {
+    grid-template-columns: 1fr;
+    gap: .45rem;
+    padding: .85rem;
+  }
+
+  .dam-register-count,
+  .dam-launch-decision-answer {
+    justify-self: start;
+  }
+}
+
 @media (max-width: 1279px) {
   .dam-packet-workbench {
     grid-template-columns: minmax(0,1fr) !important;
