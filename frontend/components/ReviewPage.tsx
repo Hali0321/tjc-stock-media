@@ -261,7 +261,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     if (!selectedId) return;
     setActiveInspectorTab("Overview");
     setEvidenceOpen(true);
-    resetSelectedWorkspace({ bringIntoView: typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches });
+    resetSelectedWorkspace();
   }, [selectedId]);
 
   useEffect(() => {

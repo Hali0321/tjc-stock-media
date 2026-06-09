@@ -36,6 +36,8 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const nextCheck = nextCheckLabel(missing, risks);
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
   const rowTone = severity === "High" ? "High" : missing.length ? "Open" : "Ready";
+  const evidenceLabel = missing.length ? `${missing.length} gaps` : "Ready";
+  const recordMeta = `${asset.mediaType} · Ref ${asset.id}`;
 
   return (
     <>
@@ -92,10 +94,10 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
             {compactRisk}
           </span>
           <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[10px] font-black text-[#536057]">
-            {missing.length ? `${missing.length} gaps` : "Fields ready"}
+            {evidenceLabel}
           </span>
           <span className="rounded-md border border-[#cfd9dd] bg-white px-2 py-1 text-[10px] font-black text-[#52677a]">
-            {missing.length ? `${missing.length} gaps` : "Fields ready"}
+            {nextCheck}
           </span>
         </div>
         <div className="mt-2 grid gap-2">
@@ -113,12 +115,13 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
     <article
       className={cn(
-        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-2.5 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid md:grid-cols-[4.75rem_minmax(0,1fr)_7rem_6.75rem]",
+        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-2.5 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid md:grid-cols-[4.5rem_minmax(0,1fr)_9.25rem_5.75rem]",
         selected && "bg-[#e5f3ea] ring-1 ring-inset ring-[#8fb2a5]"
       )}
       data-component="ExpandedReviewQueueCard"
       data-testid={selected ? "review-selected-queue-item" : undefined}
     >
+      {selected ? <span className="sr-only">Selected</span> : null}
       <Link
         href={`/assets/${asset.id}`}
         className="review-row-thumb review-media-reveal block aspect-[4/3] overflow-hidden rounded-md border border-black/10 bg-[#eef1ed] max-sm:rounded-lg"
@@ -128,20 +131,14 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       </Link>
 
       <div className="review-row-record min-w-0 self-center">
-        <div className="flex min-w-0 items-center gap-2">
-          <h2 className="min-w-0 flex-1 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
-          {selected ? <span className="review-row-state shrink-0">Selected</span> : null}
-        </div>
-        <div className="mt-1 flex min-w-0 items-center gap-2 text-xs font-semibold text-tjc-muted">
-          <span className="shrink-0 text-tjc-evergreen">{nextCheck}</span>
-          <span aria-hidden="true">•</span>
-          <span className="truncate">{compactRisk}</span>
-        </div>
+        <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
+        <p className="review-row-subline">{recordMeta}</p>
       </div>
 
       <div className="hidden self-center md:block">
-        <span className={cn("inline-flex min-h-8 w-full items-center justify-center rounded-md border px-2 text-xs font-black tabular-nums", severity === "High" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : missing.length ? "border-[#cfd9dd] bg-white text-[#52677a]" : "border-[#b8d9c6] bg-[#eef8f2] text-[#194f34]")}>
-          {missing.length ? `${missing.length} gaps` : "Ready"}
+        <span className={cn("review-row-evidence", severity === "High" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : missing.length ? "border-[#cfd9dd] bg-white text-[#52677a]" : "border-[#b8d9c6] bg-[#eef8f2] text-[#194f34]")}>
+          <strong>{evidenceLabel}</strong>
+          <span>{nextCheck}</span>
         </span>
       </div>
 
@@ -156,7 +153,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
             onClick={() => onInspect(asset.id)}
             aria-pressed={selected}
           >
-            {selected ? "Selected" : "Review"}
+            Review
           </button>
           <Link className="sr-only" href={`/assets/${asset.id}`}>
             <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />

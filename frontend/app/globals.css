@@ -5197,11 +5197,11 @@ body,
 }
 
 .review-queue-row-v2 {
-  grid-template-columns: 4.75rem minmax(0,1fr) 7rem 6.75rem !important;
-  gap: .65rem !important;
+  grid-template-columns: 4.5rem minmax(0,1fr) 9.25rem 5.75rem !important;
+  gap: .7rem !important;
   align-items: center;
   border-color: #e7ece9 !important;
-  padding: .62rem .72rem !important;
+  padding: .52rem .72rem !important;
 }
 
 .review-queue-row-v2:hover {
@@ -5215,7 +5215,7 @@ body,
 
 .review-row-thumb {
   width: 100%;
-  height: 3.8rem;
+  height: 3.35rem;
   align-self: start;
   border-radius: .24rem !important;
 }
@@ -5235,10 +5235,40 @@ body,
 .review-row-subline {
   display: block;
   overflow: hidden;
-  margin-top: .1rem !important;
+  margin-top: .18rem !important;
   color: var(--dam-v3-muted) !important;
   font-size: .72rem !important;
   line-height: 1.25 !important;
+  text-transform: capitalize;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-row-evidence {
+  display: grid;
+  min-height: 2.6rem;
+  align-content: center;
+  border: 1px solid;
+  border-radius: .26rem;
+  padding: .34rem .48rem;
+}
+
+.review-row-evidence strong {
+  color: currentColor;
+  font-size: .75rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+
+.review-row-evidence span {
+  overflow: hidden;
+  margin-top: .22rem;
+  color: color-mix(in srgb, currentColor 72%, #111827);
+  font-size: .62rem;
+  font-weight: 760;
+  line-height: 1.1;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5387,6 +5417,14 @@ body,
 .review-selected-workbench textarea {
   border-radius: .28rem !important;
   min-height: 5.75rem !important;
+}
+
+@media (min-width: 1280px) {
+  .review-selected-workbench {
+    position: sticky !important;
+    top: calc(var(--app-header-height) + 1rem) !important;
+    height: calc(100vh - var(--app-header-height) - 11rem) !important;
+  }
 }
 
 .dam-evidence-matrix {
