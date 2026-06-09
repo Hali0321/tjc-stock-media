@@ -79,19 +79,19 @@ export async function POST(request: NextRequest) {
     ok: false,
     mode: "review-preview",
     title,
-    state: blockedPublic ? "private draft - public gate blocked" : audience,
+    state: blockedPublic ? "private draft - sharing blocked" : audience,
     owner: normalizeTextField(body.owner, "Ministry media", 80),
     expiry: body.expiry || null,
     assetCount: found.length,
     sharePath: `/collections/${slugify(title)}`,
-    blockedPublic,
-    portalReadiness: {
+    sharingBlocked: blockedPublic,
+    reuseReadiness: {
       ready: found.length - portalBlockedAssets.length,
       blocked: portalBlockedAssets.length,
-      blockedAssetIds: portalBlockedAssets.map((asset) => asset.id)
+      blockedReferences: portalBlockedAssets.map((asset) => asset.id)
     },
     message: blockedPublic
-      ? `Collection draft preview ready with ${found.length} asset${found.length === 1 ? "" : "s"}. Public portal blocked until every asset is portal-ready with current approval, source, rights, people, and derivatives.`
+      ? `Collection draft preview ready with ${found.length} asset${found.length === 1 ? "" : "s"}. External sharing stays blocked until every item clears approval, source, rights, people, and safe-copy checks.`
       : `Collection draft preview ready with ${found.length} asset${found.length === 1 ? "" : "s"} for ${audience}. Sharing stays paused until each item is reviewed and cleared.`
   });
 }

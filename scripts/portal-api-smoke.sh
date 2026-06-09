@@ -73,6 +73,9 @@ const forbiddenKeys = new Set([
   "fileSizeBytes",
   "pendingReviewWrite",
   "pendingWrites",
+  "portalReadiness",
+  "blockedPublic",
+  "blockedAssetIds",
   "fieldMappings",
   "integrationReadiness",
   "auditLog",
@@ -288,7 +291,7 @@ if (data.ok !== false || data.assetCount !== 1 || !/Sharing stays paused/.test(d
   process.exit(1);
 }
 const text = JSON.stringify(data);
-if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|Persistence/i.test(text)) {
+if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|public gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|Persistence/i.test(text)) {
   console.error("FAIL: contributor collection response leaked operational copy");
   process.exit(1);
 }
@@ -298,8 +301,13 @@ if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnost
 
 expect_json public-portal-collection-gate '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-if (data.ok !== false || data.blockedPublic !== true || !data.portalReadiness?.blockedAssetIds?.includes("368")) {
+if (data.ok !== false || data.sharingBlocked !== true || !data.reuseReadiness?.blockedReferences?.includes("368")) {
   console.error("FAIL: public portal draft did not block non-portal-ready approved asset");
+  process.exit(1);
+}
+const text = JSON.stringify(data);
+if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|public gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|Persistence/i.test(text) || data.portalReadiness || data.blockedPublic) {
+  console.error("FAIL: public collection gate response leaked operational copy");
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
