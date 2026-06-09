@@ -218,17 +218,14 @@ function UseCaseCard({
 }
 
 function AssistantLaneCard({
-  index,
   label,
   detail
 }: {
-  index: number;
   label: string;
   detail: string;
 }) {
   return (
     <div className="help-lane-card grid gap-1">
-      <span className="text-[11px] font-black tabular-nums text-tjc-evergreen">0{index + 1}</span>
       <strong>{label}</strong>
       <small>{detail}</small>
     </div>

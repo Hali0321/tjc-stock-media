@@ -130,7 +130,7 @@ export function GuidePage() {
                 className="min-h-11 min-w-0 bg-transparent px-3 text-sm font-semibold text-[#111827] placeholder:text-[#6b7280]"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search help, children, download, package..."
+                placeholder="Search help..."
                 type="search"
               />
             </form>
@@ -150,8 +150,8 @@ export function GuidePage() {
         </div>
 
         <section className="help-lane-strip mt-3 grid gap-2 md:grid-cols-3" aria-label="Help decision lanes">
-          {assistantLanes.map(([label, detail], index) => (
-            <DamAssistantLaneCard index={index} label={label} detail={detail} key={label} />
+          {assistantLanes.map(([label, detail]) => (
+            <DamAssistantLaneCard label={label} detail={detail} key={label} />
           ))}
         </section>
 
