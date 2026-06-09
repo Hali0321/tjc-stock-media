@@ -113,7 +113,11 @@ const forbiddenText = [
   /checksum/i,
   /raw ResourceSpace/i,
   /ResourceSpace ID/i,
-  /\bRS\s+\d+\b/
+  /\bRS\s+\d+\b/,
+  /MVP 2024/i,
+  /stock media candidate/i,
+  /prototype/i,
+  /Demo role/i
 ];
 const leaks = [];
 function walk(value, path) {
@@ -464,6 +468,7 @@ if (!data.source || data.source.label !== "Media library" || data.source.adapter
 expect_json viewer-search-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/search?role=Viewer&limit=1"
 expect_json contributor-search-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/search?role=Contributor&limit=1"
 expect_json viewer-asset-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/367?role=Viewer"
+expect_json viewer-asset-detail-scaffold-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/368?role=Viewer"
 expect_json contributor-asset-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/367?role=Contributor"
 expect_json_status 403 viewer-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Viewer"
 expect_json_status 403 contributor-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Contributor"
