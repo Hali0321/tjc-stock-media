@@ -5,19 +5,9 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
-import type { DemoRole, MediaSourceStatus } from "@/lib/types";
+import { sourceForRole } from "@/lib/source-redaction";
 
 export const dynamic = "force-dynamic";
-
-function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaSourceStatus {
-  if (role !== "Viewer") return source;
-  return {
-    adapter: "demo-fallback",
-    label: "Media library",
-    detail: "Operational source diagnostics are available to reviewers.",
-    readOnly: true
-  };
-}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);

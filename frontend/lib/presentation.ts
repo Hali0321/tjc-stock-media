@@ -6,6 +6,21 @@ import { buildReuseDecision, canPreviewAsset, metadataConfidence } from "@/lib/r
 import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
+function redactRestrictedMetadata(asset: StockMediaAsset, hideResourceSpaceId = false): StockMediaAsset {
+  const {
+    checksumSha256: _checksumSha256,
+    fileSizeBytes: _fileSizeBytes,
+    masterDrivePath: _masterDrivePath,
+    originalFilename: _originalFilename,
+    sourceAlbumPath: _sourceAlbumPath,
+    sourcePath: _sourcePath,
+    ...safeAsset
+  } = asset;
+  if (!hideResourceSpaceId) return safeAsset;
+  const { resourceSpaceId: _resourceSpaceId, ...viewerSafeAsset } = safeAsset;
+  return viewerSafeAsset;
+}
+
 export function imageUrlForRole(url: string | undefined, role?: DemoRole) {
   if (!url || !role) return url;
   const hashIndex = url.indexOf("#");
@@ -19,18 +34,7 @@ export function imageUrlForRole(url: string | undefined, role?: DemoRole) {
 
 function assetMetadataForRole(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
   if (decideAccess(role, "viewOriginalMetadata", asset).allowed) return asset;
-  const {
-    checksumSha256: _checksumSha256,
-    fileSizeBytes: _fileSizeBytes,
-    masterDrivePath: _masterDrivePath,
-    originalFilename: _originalFilename,
-    resourceSpaceId: _resourceSpaceId,
-    sourceAlbumPath: _sourceAlbumPath,
-    sourcePath: _sourcePath,
-    ...safeAsset
-  } = asset;
-  if (role === "Viewer") return safeAsset;
-  return { ...safeAsset, resourceSpaceId: asset.resourceSpaceId };
+  return redactRestrictedMetadata(asset, role === "Viewer");
 }
 
 export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
