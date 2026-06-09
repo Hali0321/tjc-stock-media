@@ -32,6 +32,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const { role } = useDemoRole();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const opsShell = role === "Reviewer" || role === "DAM Admin";
+  const canOpenGovernance = role === "DAM Admin";
   const navLabel = opsShell ? "DAM operations" : "Find and Use";
 
   return (
@@ -57,7 +58,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             <Link href="/guide" className="grid h-10 w-10 place-items-center rounded-md border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
               <HelpCircle size={18} strokeWidth={1.9} aria-hidden="true" />
             </Link>
-            {opsShell ? (
+            {canOpenGovernance ? (
               <Link href="/admin" className="grid h-10 w-10 place-items-center rounded-md border border-[#cbd8cf] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open governance">
                 <Settings2 size={18} strokeWidth={1.9} aria-hidden="true" />
               </Link>

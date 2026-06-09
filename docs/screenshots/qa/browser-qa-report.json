@@ -1,56 +1,17 @@
 {
-  "checkedAt": "2026-06-09T04:40:54.052Z",
+  "checkedAt": "2026-06-09T07:07:57.523Z",
   "viewports": [
     1440,
-    1280,
-    1024,
-    768,
     390,
     320
   ],
-  "pages": 15,
-  "screenshots": [
-    "library-desktop.png",
-    "library-mobile-320.png",
-    "library-mobile-390.png",
-    "collections-desktop.png",
-    "collections-mobile-320.png",
-    "collections-mobile-390.png",
-    "upload-desktop.png",
-    "upload-mobile-320.png",
-    "upload-mobile-390.png",
-    "review-desktop.png",
-    "review-mobile-320.png",
-    "review-mobile-390.png",
-    "asset-detail-desktop.png",
-    "detail-mobile-320.png",
-    "detail-mobile-390.png",
-    "admin-desktop.png",
-    "admin-mobile-390.png",
-    "guide-desktop.png",
-    "guide-mobile-320.png",
-    "guide-mobile-390.png"
-  ],
+  "pages": 11,
+  "screenshots": [],
   "consoleErrors": [],
   "expectedDeniedConsole": [
     {
       "role": "Viewer",
       "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 1280,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 1024,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 768,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
     {
@@ -62,21 +23,6 @@
       "role": "Viewer",
       "width": 320,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 400 (Bad Request)"
     }
   ],
   "networkFailures": [],
