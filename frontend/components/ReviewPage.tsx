@@ -59,7 +59,7 @@ type AuditPreview = {
   assetId: string;
 };
 
-const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Pending write"] as const;
+const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Sync status"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
 const desktopReviewRowsPageSize = 12;
 const mobileReviewRowsPageSize = 6;
@@ -145,7 +145,7 @@ function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
         <div><dt className="font-semibold">Reviewer role</dt><dd>{auditPreview.role}</dd></div>
         <div><dt className="font-semibold">Asset ID</dt><dd>{auditPreview.assetId}</dd></div>
         <div><dt className="font-semibold">Timestamp</dt><dd>{auditPreview.timestamp}</dd></div>
-        <div><dt className="font-semibold">Required before real write</dt><dd>ResourceSpace field mapping, signed API write, reviewer identity, and status audit fields.</dd></div>
+        <div><dt className="font-semibold">Required before sync</dt><dd>Reviewer identity, evidence, audit fields, and a configured library sync.</dd></div>
       </dl>
     </section>
   );
@@ -366,17 +366,17 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       setMessage(body.message || body.error || "Review route responded.");
       if (response.ok) {
         toastReviewQueued({ label: "Open review queue", onClick: () => router.push(`/review?queue=${activeQueue}`) });
-        toastPendingWriteQueued({ label: "View pending writes", onClick: () => setActiveInspectorTab("Pending write") });
-        setActiveInspectorTab("Pending write");
+        toastPendingWriteQueued({ label: "View sync status", onClick: () => setActiveInspectorTab("Sync status") });
+        setActiveInspectorTab("Sync status");
         setReviewNote("");
         setChecklist(emptyChecklist);
         setPendingAction(null);
       } else {
-        toastSaveFailed(body.error || "No ResourceSpace write was attempted.");
+        toastSaveFailed(body.error || "No library sync was attempted.");
       }
     } catch {
-      setMessage("Review route did not respond. No ResourceSpace write was attempted.");
-      toastSaveFailed("Review route did not respond. No ResourceSpace write was attempted.");
+      setMessage("Review route did not respond. No library sync was attempted.");
+      toastSaveFailed("Review route did not respond. No library sync was attempted.");
     } finally {
       setSubmittingReview(false);
     }
@@ -650,9 +650,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 <strong className="block font-black">{reviewRiskFlags(selectedAsset)[0] || "Standard review"}</strong>
                 <span className="mt-1 block leading-snug">{reviewNextCheckLabel(selectedAsset)}</span>
               </div>
+              <div className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">
+                Sync setup is required before queued decisions update source records.
+              </div>
               <div className="grid gap-1 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
-                <span>RS {selectedAsset.resourceSpaceId || selectedAsset.id}</span>
-                <span>Original/master restricted</span>
+                <span>Ref {selectedAsset.resourceSpaceId || selectedAsset.id}</span>
+                <span>Source access restricted</span>
               </div>
               <section className="grid gap-2 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Typed decision lanes">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -699,9 +702,9 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
             <section id={damTabPanelId("review-inspector", "Metadata")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Metadata")} hidden={activeInspectorTab !== "Metadata"}>
                 <dl className="grid gap-2">
-                  <div className={factItemClass}><dt className={factTermClass}>Raw ResourceSpace status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Library status</dt><dd className={factDescClass}>{selectedAsset.status}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Portal reuse state</dt><dd className={factDescClass}>{selectedAsset.reuseDecision ? `${selectedAsset.reuseDecision.label} - ${selectedAsset.reuseDecision.summary}` : "Computed by TJC Stock Media policy"}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>ResourceSpace ID</dt><dd className={factDescClass}>{selectedAsset.resourceSpaceId || selectedAsset.id}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Record reference</dt><dd className={factDescClass}>{selectedAsset.resourceSpaceId || selectedAsset.id}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Collection</dt><dd className={factDescClass}>{selectedAsset.collection}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Usage scope</dt><dd className={factDescClass}>{selectedAsset.usageScope}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Missing fields</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? missingReviewFields(selectedAsset).join(", ") : "Required fields present"}</dd></div>
@@ -726,17 +729,17 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <div className={factItemClass}><dt className={factTermClass}>Reviewed date</dt><dd className={factDescClass}>{selectedAsset.reviewedDate || "Pending"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>AI enrichment signal</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? "Suggested metadata needs reviewer confirmation before write." : "Exported fields look complete; reviewer evidence still required for action."}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Last exported state</dt><dd className={factDescClass}>Read from ResourceSpace metadata export. Local pending writes are shown separately.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Last library state</dt><dd className={factDescClass}>Read from the current media-library export. Sync status is shown separately.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
 
-            <section id={damTabPanelId("review-inspector", "Pending write")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Pending write")} hidden={activeInspectorTab !== "Pending write"}>
+            <section id={damTabPanelId("review-inspector", "Sync status")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Sync status")} hidden={activeInspectorTab !== "Sync status"}>
                 <dl className="grid gap-2">
-                  <div className={factItemClass}><dt className={factTermClass}>Pending write</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Write mode</dt><dd className={factDescClass}>Pending local queue only until ResourceSpace API field mapping is configured.</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>ResourceSpace truth</dt><dd className={factDescClass}>Raw status remains {selectedAsset.status}. Pending review write is not final ResourceSpace persistence.</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Write adapter</dt><dd className={factDescClass}>Review action is ready, but ResourceSpace API write mapping is not configured yet.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Queued decision</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Sync mode</dt><dd className={factDescClass}>Review decisions are queued for library sync; source records stay unchanged until sync completes.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Current library state</dt><dd className={factDescClass}>Current status remains {selectedAsset.status}. Queued review decisions are not final until synced.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Next system step</dt><dd className={factDescClass}>Sync setup is required before queued decisions update source records.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
@@ -749,6 +752,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 asset={selectedAsset}
                 resourceSpaceUrl={data?.resourceSpaceUrls[selectedAsset.id] || null}
                 canOpenResourceSpace={Boolean(data?.resourceSpaceUrls[selectedAsset.id])}
+                canExposeResourceSpaceId={role === "DAM Admin"}
               />
             </div>
             </section>

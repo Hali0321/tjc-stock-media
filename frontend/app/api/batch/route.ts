@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     ok: false,
-    mode: "server-route-contract",
+    mode: "review-preview",
     action: body.action,
     count: found.length,
     auditRecords: found.map((asset) => ({
@@ -64,6 +64,6 @@ export async function POST(request: NextRequest) {
       reviewerRole: role,
       timestamp
     })),
-    message: `Batch action preview ready for ${found.length} asset${found.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. ResourceSpace API write mapping must be configured before persistence.`
+    message: `Batch action preview ready for ${found.length} asset${found.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. Sharing and library sync stay paused until each selected item is reviewed and cleared.`
   });
 }

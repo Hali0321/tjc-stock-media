@@ -40,7 +40,7 @@ export function ReviewActionDialog({
     <Dialog
       open={open}
       title={actionLabel}
-      description="Queue a local pending review write. ResourceSpace is not updated until API field mapping is configured."
+      description="Queue a reviewed decision for library sync. Source records stay unchanged until sync completes."
       onClose={onCancel}
       maxWidthClassName="max-w-2xl"
       tone="warning"
@@ -66,7 +66,7 @@ export function ReviewActionDialog({
           <div>
             <span className="text-xs font-semibold text-tjc-muted">Asset</span>
             <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-            <span className="mt-1 block text-xs font-semibold text-tjc-muted">ResourceSpace ID {resourceSpaceId}</span>
+            <span className="mt-1 block text-xs font-semibold text-tjc-muted">Reference code {resourceSpaceId}</span>
           </div>
           <div>
             <span className="text-xs font-semibold text-tjc-muted">Status change requested</span>
@@ -79,11 +79,11 @@ export function ReviewActionDialog({
           <div className="flex items-start gap-2">
             <AlertTriangle size={17} strokeWidth={1.8} aria-hidden="true" className="mt-0.5 shrink-0" />
             <div>
-              <strong className="block text-sm">Pending, not final ResourceSpace truth</strong>
+              <strong className="block text-sm">Queued, not final library status</strong>
               <p className="mt-1 text-sm leading-relaxed">
                 {sourceReadOnly
-                  ? "Current source is export-backed. This action creates an audit record in the local pending-write queue only."
-                  : "This action still writes through the review route and must preserve ResourceSpace audit fields."}
+                  ? "Current records are export-backed. This action creates an audit record and waits for sync."
+                  : "This action writes through the review route and preserves audit fields."}
               </p>
             </div>
           </div>

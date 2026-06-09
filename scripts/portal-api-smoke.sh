@@ -253,7 +253,7 @@ expect_code 404 batch-missing-asset \
 
 expect_json batch-preview-reviewer '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-if (data.ok !== false || data.count !== 1 || !/write mapping/.test(data.message || "")) {
+if (data.ok !== false || data.count !== 1 || !/library sync stay paused/.test(data.message || "")) {
   console.error("FAIL: batch preview did not stay read-only/honest");
   process.exit(1);
 }

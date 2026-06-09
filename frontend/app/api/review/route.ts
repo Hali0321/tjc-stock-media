@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
       action: body.action,
       label: body.label || body.action,
       notes: note,
-      message: "Pending review write queued. It has not yet been written to ResourceSpace.",
+      message: "Review decision queued for sync. Source records remain unchanged until sync completes.",
       pendingWriteId: pending.id,
       syncState: pending.syncState,
       auditRecord: {
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
         checklist,
         blockers: pending.blockers
       },
-      mode: "server-route-contract"
+      mode: "review-sync-preview"
     },
     { status: 202 }
   );

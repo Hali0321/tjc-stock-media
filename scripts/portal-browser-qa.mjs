@@ -315,7 +315,7 @@ async function inspectPage(page, expected) {
       headerOverlaps: headerOverlaps.slice(0, 10),
       fixedMobileNavs,
     hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review") || visibleText.includes("Review required before use") || visibleText.includes("Source file restricted") || visibleText.includes("Request DAM review"),
-      hasReviewBlocker: visibleText.includes("ResourceSpace API write mapping is not configured yet"),
+      hasReviewBlocker: visibleText.includes("Sync setup is required"),
       hasViewerReviewBlock: visibleText.includes("Review inbox requires reviewer access"),
       hasViewerUploadBlock: visibleText.includes("Send media requires Contributor access"),
       hasAdminBlock: visibleText.includes("Governance requires DAM Admin role"),
@@ -605,15 +605,15 @@ for (const width of qaViewports) {
   if (overviewSelected !== "true") failures.push("review console: selecting a new asset did not reset inspector to Overview");
   if ((await page.getByTestId("review-decision-requirements").count()) !== 1) failures.push("review console: decision lock panel should appear once");
   if ((await page.getByText(/disabled because/).count()) > 0) failures.push("review console: repeated verbose disabled reason copy returned");
-  if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("review console: pending-write warning missing");
+  if ((await page.getByText("Sync setup is required").count()) < 1) failures.push("review console: sync warning missing");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("review console: fake ResourceSpace success visible");
   if ((await page.getByRole("button", { name: "Show more review items" }).count()) < 1) failures.push("review queue load more: button missing");
   await page.getByRole("button", { name: "Asset actions" }).click();
-  if ((await page.getByRole("menuitem", { name: /Copy ResourceSpace ID/ }).count()) < 1) failures.push("review asset actions menu: copy ResourceSpace ID missing");
+  if ((await page.getByRole("menuitem", { name: /Copy reference code/ }).count()) < 1) failures.push("review asset actions menu: copy reference code missing");
   if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) > 0) failures.push("review asset actions menu: Reviewer can see ResourceSpace admin action");
   await page.keyboard.press("Escape");
   await page.getByRole("tab", { name: "Metadata", exact: true }).click();
-  if ((await page.getByText("Raw ResourceSpace status").count()) < 1) failures.push("review inspector tabs: Metadata panel missing raw status");
+  if ((await page.getByText("Library status").count()) < 1) failures.push("review inspector tabs: Metadata panel missing library status");
   await page.getByRole("tab", { name: "Metadata", exact: true }).press("ArrowRight");
   if ((await page.getByText("People/minors").count()) < 1) failures.push("review inspector tabs: ArrowRight did not open Usage panel");
   await page.getByRole("tab", { name: "Overview", exact: true }).click();
@@ -626,7 +626,7 @@ for (const width of qaViewports) {
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
   await page.waitForSelector("text=Queue pending review write");
   await page.getByRole("button", { name: "Queue pending review write" }).click();
-  await page.waitForSelector("text=ResourceSpace API write mapping is not configured yet");
+  await page.waitForSelector("text=Sync setup is required");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
   await closeContext(context);
 }
@@ -646,7 +646,7 @@ for (const width of qaViewports) {
   if ((await page.getByTestId("review-decision-requirements").getByText(/Complete before approval/).count()) < 1) failures.push("reviewer-decision-workflow: requirements summary missing");
   if ((await page.getByTestId("review-disabled-decision-group").getByRole("button", { name: "Approve for church-wide use" }).isDisabled()) !== true) failures.push("reviewer-decision-workflow: approve should be disabled before evidence");
   if ((await page.getByText(/Approve for church-wide use disabled because/).count()) > 0) failures.push("reviewer-decision-workflow: repeated disabled reason copy returned");
-  if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("reviewer-decision-workflow: pending-write warning missing");
+  if ((await page.getByText("Sync setup is required").count()) < 1) failures.push("reviewer-decision-workflow: sync warning missing");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("reviewer-decision-workflow: fake ResourceSpace success visible");
   await loadedQueueList.locator("summary").click();
   await loadedQueueList.locator("button").nth(1).click();
@@ -661,7 +661,7 @@ for (const width of qaViewports) {
   }
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
   await page.waitForSelector("text=Queue pending review write");
-  if ((await page.getByText("ResourceSpace is not updated until API field mapping is configured.").count()) < 1) failures.push("reviewer-decision-workflow: pending-write confirmation copy missing");
+  if ((await page.getByText("Source records stay unchanged until sync completes.").count()) < 1) failures.push("reviewer-decision-workflow: sync confirmation copy missing");
   await closeContext(context);
 }
 
