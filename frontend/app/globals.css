@@ -1311,6 +1311,293 @@ textarea:focus-visible {
   }
 }
 
+/* Workbench V2 visual system. This section intentionally overrides earlier stable
+   surfaces so every route has a visible redesign without changing policy logic. */
+:root {
+  --app-header-height: 88px;
+  --workbench-green: #0b4b42;
+  --workbench-green-deep: #06352f;
+  --workbench-mint: #e5f1eb;
+  --workbench-cream: #fbfaf6;
+  --workbench-ink: #111827;
+  --workbench-line: #cbd8cf;
+}
+
+body {
+  background:
+    linear-gradient(90deg, rgba(11, 75, 66, .035) 0 1px, transparent 1px 72px),
+    linear-gradient(180deg, #eef3f0 0%, #f8faf9 36%, #eef2ef 100%);
+}
+
+.grain-overlay {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .12;
+  background-image:
+    linear-gradient(135deg, rgba(15, 61, 46, .18) 0 1px, transparent 1px),
+    linear-gradient(45deg, rgba(17, 24, 39, .12) 0 1px, transparent 1px);
+  background-size: 5px 5px, 7px 7px;
+  mix-blend-mode: multiply;
+}
+
+.dam-app-header {
+  border-bottom: 1px solid rgba(11, 75, 66, .18);
+  background:
+    linear-gradient(90deg, rgba(246, 250, 247, .97), rgba(255, 255, 255, .94)),
+    linear-gradient(180deg, rgba(11, 75, 66, .08), transparent);
+  box-shadow: 0 10px 34px rgba(31, 46, 38, .08);
+  backdrop-filter: blur(18px);
+}
+
+.dam-brand-lockup {
+  border-radius: 1rem;
+}
+
+.dam-brand-mark {
+  border: 1px solid rgba(255, 255, 255, .28);
+  background:
+    linear-gradient(145deg, #0f5b4d, #06352f),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.24) 0 1px, transparent 1px 9px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 14px 30px rgba(6, 53, 47, .22);
+}
+
+.dam-shell-mode,
+.dam-header-icon,
+.dam-app-header select {
+  border-color: rgba(11, 75, 66, .2) !important;
+  background: rgba(255,255,255,.78) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 8px 22px rgba(15, 61, 46, .06);
+}
+
+.workbench-nav {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 10px 28px rgba(15, 61, 46, .08);
+}
+
+.workbench-menu-nav a {
+  background: rgba(255,255,255,.58);
+}
+
+.workbench-mobile-menu {
+  box-shadow: 0 24px 80px rgba(15, 61, 46, .22), inset 0 1px 0 rgba(255,255,255,.86) !important;
+}
+
+.dam-shell {
+  width: min(100%, 1700px);
+  padding-top: 1.9rem;
+}
+
+.dam-page-title {
+  color: #101820;
+  text-wrap: balance;
+}
+
+.find-hero {
+  border-color: rgba(11, 75, 66, .18);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.96), rgba(246,250,247,.94) 55%, rgba(230,241,235,.92)),
+    repeating-linear-gradient(90deg, rgba(11,75,66,.07) 0 1px, transparent 1px 44px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88), 0 18px 46px rgba(28, 43, 36, .08);
+}
+
+.find-hero::before,
+.asset-bank-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: .45rem;
+  background: linear-gradient(180deg, #0b4b42, #2b7a55 58%, #dfbd73);
+}
+
+.hero-search-shell {
+  border-color: rgba(11, 75, 66, .2) !important;
+  border-radius: 1rem !important;
+  background: #fff !important;
+  box-shadow: 0 14px 32px rgba(15, 61, 46, .10) !important;
+}
+
+.hero-search-shell input {
+  min-height: 3.25rem;
+  background: #f7faf8 !important;
+}
+
+.asset-bank-controlbar {
+  border-top-color: rgba(11, 75, 66, .12);
+}
+
+.find-usecase-grid > * {
+  min-height: 5.35rem !important;
+  border-color: rgba(11, 75, 66, .14) !important;
+  border-radius: 1rem !important;
+  background:
+    linear-gradient(135deg, #ffffff 0%, #f6faf7 58%, #eef6f1 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.84), 0 10px 24px rgba(21, 35, 28, .05) !important;
+}
+
+.find-usecase-grid > *:hover {
+  transform: translateY(-1px);
+  border-color: rgba(11, 75, 66, .32) !important;
+  background: #f1f8f4 !important;
+}
+
+.asset-results-toolbar {
+  border-color: rgba(11, 75, 66, .16) !important;
+  border-radius: 1rem !important;
+  background: rgba(255,255,255,.82) !important;
+  box-shadow: inset 4px 0 0 #0b4b42, 0 10px 28px rgba(28,43,36,.06);
+}
+
+.media-card,
+.package-card,
+.package-inspector,
+.help-side-panel,
+.help-detail-panel,
+.dam-card,
+.dam-contact-sheet,
+.dam-studio {
+  border-color: rgba(11, 75, 66, .14) !important;
+  border-radius: 1.15rem !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,251,249,.94)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 14px 36px rgba(31,46,38,.07) !important;
+}
+
+.media-card:hover,
+.package-card:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 24px 54px rgba(31,46,38,.11) !important;
+}
+
+.media-card > a,
+.package-cover,
+.review-selected-preview > div:first-child {
+  border-radius: .95rem !important;
+}
+
+.protected-preview {
+  background:
+    radial-gradient(circle at 50% 36%, rgba(255,255,255,.92), rgba(234,242,237,.78) 35%, transparent 36%),
+    linear-gradient(135deg, #ecf4ef, #f8faf9),
+    repeating-linear-gradient(135deg, rgba(15, 61, 46, .10) 0 1px, transparent 1px 13px);
+}
+
+.protected-preview-frame {
+  border-radius: 1.15rem !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.86), 0 18px 40px rgba(15,61,46,.10);
+}
+
+.verdict-panel {
+  border-radius: 1.2rem !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 16px 42px rgba(31,46,38,.09);
+}
+
+.ops-workbench,
+[data-testid="review-primary-queue"],
+[data-testid="review-current-workspace"],
+.admin-launch-card {
+  border-color: rgba(11, 75, 66, .18) !important;
+  border-radius: 1.15rem !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(246,250,247,.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88), 0 18px 46px rgba(31,46,38,.08) !important;
+}
+
+[data-component="ExpandedReviewQueueCard"] {
+  border-color: rgba(11,75,66,.10) !important;
+}
+
+[data-component="ExpandedReviewQueueCard"]:hover {
+  background: #f2f8f4 !important;
+}
+
+.admin-cockpit-hero {
+  background:
+    linear-gradient(135deg, #102f2a 0%, #174d37 38%, #f8faf9 38.2%, #ffffff 100%) !important;
+}
+
+.admin-cockpit-hero .admin-cockpit-intro,
+.admin-cockpit-hero .admin-cockpit-intro .dam-page-title,
+.admin-cockpit-hero .admin-cockpit-intro > span {
+  color: white !important;
+}
+
+.admin-cockpit-hero .admin-cockpit-intro p {
+  color: rgba(255,255,255,.78) !important;
+}
+
+.admin-top-blocker {
+  border-color: rgba(255,255,255,.18) !important;
+}
+
+.admin-top-blocker strong,
+.admin-top-blocker > span:first-child {
+  color: white !important;
+}
+
+.help-hero {
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, #ffffff, #f2f8f4 62%, #e5f1eb);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88), 0 18px 46px rgba(31,46,38,.08);
+}
+
+.help-topic-button {
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #fff, #f6faf7);
+}
+
+.help-topic-button.is-active {
+  background: #0b4b42;
+  color: white;
+}
+
+.help-topic-button.is-active small {
+  color: rgba(255,255,255,.76);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --app-header-height: 78px;
+  }
+
+  .dam-app-header {
+    padding-block: .75rem !important;
+  }
+
+  .dam-brand-mark {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+  }
+
+  .dam-brand-lockup strong {
+    font-size: 1rem !important;
+  }
+
+  .dam-shell {
+    padding-top: 1rem;
+  }
+
+  .find-hero {
+    border-radius: 1rem;
+  }
+
+  .find-hero::before,
+  .asset-bank-header::before {
+    width: .32rem;
+  }
+
+  .find-usecase-grid > * {
+    min-height: 4.15rem !important;
+  }
+
+  .admin-cockpit-hero {
+    background: linear-gradient(180deg, #103d34 0%, #174d37 18rem, #ffffff 18.05rem, #ffffff 100%) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

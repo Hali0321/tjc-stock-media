@@ -58,8 +58,8 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
     <nav
       className={cn(
         "tubelight-nav border border-[#c9d4d5] bg-white",
-        top && "flex max-w-full items-center gap-1 border-transparent bg-transparent p-0 shadow-none",
-        menu && "grid gap-1 rounded-lg border-[#d7dde2] p-1 shadow-none",
+        top && "workbench-nav flex max-w-full items-center gap-1 rounded-2xl border-[#c6d6ce] bg-[#f8fbf8] p-1 shadow-none",
+        menu && "workbench-menu-nav grid gap-1 rounded-xl border-[#d7dde2] bg-[#f8fbf8] p-1 shadow-none",
         !top && !menu && "mx-auto flex w-full max-w-[34rem] items-center gap-1 rounded-lg p-1 shadow-none"
       )}
       aria-label="Primary navigation"
@@ -73,9 +73,9 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              "group relative inline-flex min-w-0 flex-1 items-center justify-center font-black text-[#5b655f] transition-colors duration-200 hover:text-tjc-evergreen active:translate-y-px",
-              top && "min-h-10 flex-none gap-2 rounded-md px-3 text-sm",
-              menu && "min-h-11 justify-start gap-3 rounded-md px-3 text-sm",
+              "group relative inline-flex min-w-0 flex-1 items-center justify-center font-black text-[#5b655f] transition-all duration-200 hover:text-tjc-evergreen active:translate-y-px",
+              top && "min-h-11 flex-none gap-2 rounded-xl px-4 text-sm",
+              menu && "min-h-12 justify-start gap-3 rounded-xl px-3 text-sm",
               !top && !menu && "min-h-14 flex-col gap-1 rounded-md px-1.5 text-[11px]",
               isActive && "text-tjc-evergreen"
             )}
@@ -83,7 +83,7 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
             aria-current={isActive ? "page" : undefined}
             onClick={onNavigate}
           >
-            {isActive ? <span className="absolute inset-0 rounded-[inherit] bg-[#edf4ef]" aria-hidden="true" /> : null}
+            {isActive ? <span className="absolute inset-0 rounded-[inherit] bg-white shadow-[0_8px_24px_rgba(15,61,46,.10)]" aria-hidden="true" /> : null}
             <Icon className={cn("relative z-10 shrink-0", top ? "h-[16px] w-[16px]" : menu ? "h-[17px] w-[17px]" : "h-5 w-5")} aria-hidden="true" strokeWidth={1.9} />
             <span className={cn("nav-label relative z-10 truncate leading-none", top && "max-w-none")}>{label}</span>
           </Link>

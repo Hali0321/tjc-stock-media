@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, History, Search } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import { DamEmptyState as EmptyState, DamPrimaryAction as PrimaryAction } from "@/components/dam/DamWorkspace";
-import { DamProtectedPreview as ProtectedPreview, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
+import { DamProtectedPreview as ProtectedPreview, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { useDemoRole } from "@/components/RoleProvider";
 import { decideAccess } from "@/lib/access-decisions";
@@ -26,10 +26,7 @@ function FieldList({ items }: { items: Array<{ label: string; value?: string }> 
   return (
     <dl className="grid gap-3">
       {items.map((item) => (
-        <div className="border-t border-[#e2e9e3] pt-3 first:border-t-0 first:pt-0" key={item.label}>
-          <dt className="text-sm font-black text-tjc-evergreen">{item.label}</dt>
-          <dd className="mt-1 break-words text-sm font-semibold leading-relaxed text-tjc-muted">{item.value || "Not provided"}</dd>
-        </div>
+        <RecordMetadataRow label={item.label} value={item.value} key={item.label} />
       ))}
     </dl>
   );
@@ -264,20 +261,15 @@ export function AssetDetailPage({ id }: { id: string }) {
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Use guidance">
         <div className="grid gap-4">
-          <section id="use-guidance" className="scroll-mt-28 rounded-[12px] border border-[#e5e7eb] bg-white p-5">
-            <h2 className="text-xl font-black text-tjc-ink">Use guidance</h2>
-            <div className="mt-4">
+          <RecordMetadataSection title="Use guidance" className="scroll-mt-28" >
               <FieldList items={display.guidanceFacts.map((fact) => ({ label: fact.label, value: fact.value }))} />
-            </div>
-          </section>
+          </RecordMetadataSection>
 
-          <section id="credit" className="scroll-mt-28 rounded-[12px] border border-[#e5e7eb] bg-white p-5">
-            <h2 className="text-xl font-black text-tjc-ink">Credit</h2>
+          <RecordMetadataSection title="Credit" className="scroll-mt-28">
             <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{asset.rightsNotes?.toLowerCase().includes("credit") ? asset.rightsNotes : "Credit not required unless noted by reviewer."}</p>
-          </section>
+          </RecordMetadataSection>
 
-          <section className="rounded-[12px] border border-[#e5e7eb] bg-white p-5">
-            <h2 className="text-xl font-black text-tjc-ink">People/youth note</h2>
+          <RecordMetadataSection title="People/youth note">
             <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">
               {asset.peopleRisk === "Possible minors"
                 ? "People or youth may be visible. Review is required before public reuse."
@@ -285,15 +277,13 @@ export function AssetDetailPage({ id }: { id: string }) {
                   ? asset.peopleRisk
                   : "People visibility has not been confirmed. Request review before public reuse."}
             </p>
-          </section>
+          </RecordMetadataSection>
 
           <RelatedMedia assets={data.related} role={role} />
         </div>
 
         <aside className="grid gap-4">
-          <section className="rounded-[12px] border border-[#e5e7eb] bg-white p-5">
-            <h2 className="text-xl font-black text-tjc-ink">Media source</h2>
-            <div className="mt-4">
+          <RecordMetadataSection title="Media source">
               <FieldList
                 items={[
                   { label: "Event / package", value: asset.eventName || asset.collection },
@@ -302,8 +292,7 @@ export function AssetDetailPage({ id }: { id: string }) {
                   { label: "Source file", value: verdict.canDownload ? "Use approved copy. Source-file access stays restricted." : "Restricted until approved access is granted." }
                 ]}
               />
-            </div>
-          </section>
+          </RecordMetadataSection>
           <TagSection asset={asset} />
         </aside>
       </section>

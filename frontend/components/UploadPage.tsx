@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FileText, Link as LinkIcon, RotateCcw, Save, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
-import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
+import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamPacketStepper as PacketStepper, DamPacketSubmitBar as PacketSubmitBar, DamPacketSummary as PacketSummary, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
 import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canUpload } from "@/lib/permissions";
@@ -262,21 +262,9 @@ export function UploadPage() {
         </p>
       </section>
 
-      <section className="rounded-[14px] border border-[#e5e7eb] bg-white p-4" aria-label="Send progress">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <span className="text-xs font-black text-tjc-evergreen">Step {step + 1} of {steps.length}</span>
-            <h2 className="mt-1 text-xl font-black leading-tight text-tjc-ink">{steps[step]}</h2>
-          </div>
-          <span className="rounded-[10px] bg-[#eef7f1] px-3 py-1 text-xs font-black tabular-nums text-tjc-evergreen">{step + 1}/{steps.length}</span>
-        </div>
-        <div className="mt-4 grid grid-cols-5 gap-1" aria-hidden="true">
-          {steps.map((item, index) => (
-            <span className={cn("h-1.5 rounded-full", index <= step ? "bg-tjc-evergreen" : "bg-[#dbe4dd]")} key={item} />
-          ))}
-        </div>
-      </section>
+      <PacketStepper steps={steps} current={step} />
 
+      <div className="dam-packet-workbench grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
       <form ref={formRef} className="grid gap-4" onSubmit={submit} noValidate>
         <input type="hidden" name="intakeType" value={intakeType} />
 
@@ -409,7 +397,7 @@ export function UploadPage() {
 
         {message ? <div className="rounded-[16px] border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-black text-[#27435b]" role="status">{message}</div> : null}
 
-        <section className="grid gap-3 rounded-[14px] border border-[#e5e7eb] bg-white p-4" aria-label="Send actions">
+        <PacketSubmitBar>
           <div className="flex flex-wrap gap-2">
             <PrimaryAction tone="secondary" onClick={saveDraftNotice} icon={Save}>Save draft</PrimaryAction>
             <PrimaryAction tone="secondary" onClick={resetSendDetails} icon={RotateCcw}>Clear files</PrimaryAction>
@@ -423,7 +411,7 @@ export function UploadPage() {
           <p className="text-xs font-semibold leading-relaxed text-tjc-muted">
             {draftSaved ? "Draft saved locally. " : ""}Send never publishes. New media remains {uploadDefaultState.status}.
           </p>
-        </section>
+        </PacketSubmitBar>
 
         {receipt ? (
           <section className="grid gap-4 rounded-[14px] border border-[#b9d8c6] bg-[#eef8f2] p-5 text-[#194f34]" aria-label="Final submission summary">
@@ -450,6 +438,19 @@ export function UploadPage() {
           </section>
         ) : null}
       </form>
+      <PacketSummary
+        typeLabel={selectedType.label}
+        fileCount={selectedFiles.length}
+        hasSourceLink={hasValidSourceLink}
+        tagCount={tagCount}
+        ready={submitReady}
+      >
+        <EvidenceChecklist items={packetItems} />
+        <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-relaxed text-[#71500f]">
+          Send never publishes. New media remains Needs Review / Do Not Publish.
+        </div>
+      </PacketSummary>
+      </div>
     </div>
   );
 }

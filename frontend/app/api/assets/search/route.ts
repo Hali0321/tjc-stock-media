@@ -3,6 +3,7 @@ import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { normalizeTextField } from "@/lib/request-validation";
 import { sourceForRole } from "@/lib/source-redaction";
+import type { DemoRole, SearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,37 @@ function normalizeLimit(value: string | null) {
 function normalizeOffset(value: string | null) {
   const parsed = Number(value || 0);
   return Number.isFinite(parsed) ? Math.max(Math.trunc(parsed), 0) : 0;
+}
+
+function canSeeOperationalSearch(role: DemoRole) {
+  return role === "Reviewer" || role === "DAM Admin";
+}
+
+function searchResultForRole(role: DemoRole, result: SearchResult) {
+  const source = sourceForRole(role, result.source);
+  if (canSeeOperationalSearch(role)) {
+    return {
+      ...result,
+      source
+    };
+  }
+
+  return {
+    assets: result.assets,
+    total: result.total,
+    pagination: result.pagination,
+    source,
+    counts: {
+      currentlyShown: result.counts.currentlyShown,
+      totalMatching: result.counts.totalMatching,
+      totalRendered: result.counts.totalRendered,
+      matching: result.counts.matching,
+      rendered: result.counts.rendered
+    },
+    appliedIntent: result.appliedIntent,
+    savedViews: result.savedViews,
+    collections: result.collections
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -38,8 +70,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unknown collection.", collection }, { status: 400 });
   }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
-  return NextResponse.json({
-    ...result,
-    source: sourceForRole(role, result.source)
-  });
+  return NextResponse.json(searchResultForRole(role, result));
 }

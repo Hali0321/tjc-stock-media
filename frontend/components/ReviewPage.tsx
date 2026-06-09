@@ -8,7 +8,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DamAssetActionsMenu as AssetActionsMenu, DamMediaPreviewPanel as MediaPreviewPanel } from "@/components/dam/DamRecord";
-import { DamHoldToConfirmButton as HoldToConfirmButton, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard } from "@/components/dam/DamOperations";
+import { DamDecisionActions, DamEvidenceMatrix, DamHoldToConfirmButton as HoldToConfirmButton, DamOpsBanner, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard, DamReviewQueueRail, DamReviewSelectedAsset } from "@/components/dam/DamOperations";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
@@ -407,17 +407,15 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           rows={3}
         />
       </label>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Review checklist" data-component="ReviewChecklist">
-        {checklistLabels.map(([field, label]) => (
-          <label className="flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-2.5 text-xs font-semibold text-[#3f4a43]" key={field}>
-            <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={checklist[field]} onChange={() => toggleChecklist(field)} />
-            {label}
-          </label>
-        ))}
+      <div className="mt-3">
+        <DamEvidenceMatrix
+          items={checklistLabels.map(([field, label]) => ({ id: field, label, complete: checklist[field] }))}
+          onToggle={(field) => toggleChecklist(field as keyof ReviewEvidenceChecklist)}
+        />
       </div>
       <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Decision</h3>
       <DamReviewDecisionLockPanel missingLabels={missingRequirementLabels} completed={completedRequirementCount} total={decisionRequirements.length} />
-      <div className="mt-2 grid min-w-0 max-w-full gap-2" data-component="ReviewActionButtons" data-testid="review-disabled-decision-group">
+      <DamDecisionActions>
         {reviewActions.map((action) => {
           const missing = missingEvidenceFor(action);
           const title = missing.length ? `Missing: ${formatMissingEvidence(missing)}` : "Review evidence and queue pending write";
@@ -447,7 +445,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             </div>
           );
         })}
-      </div>
+      </DamDecisionActions>
       {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
     </div>
   );
@@ -478,18 +476,18 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <section className="find-hero grid gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_30rem]">
-        <div>
-          <span className="text-sm font-black text-tjc-evergreen">Approval workbench</span>
-          <h1 className="mt-2 dam-page-title">Review Inbox</h1>
-          <p className="mt-3 max-w-[66ch] text-lg font-semibold leading-relaxed text-tjc-muted">Make safe, evidence-based decisions quickly. Approval stays locked until required evidence is complete.</p>
-        </div>
-        <div className="grid content-center gap-2 rounded-[12px] border border-[#e5e7eb] bg-white p-4">
-          <span className="text-sm font-black text-tjc-evergreen">Current queue</span>
-          <strong className="block text-4xl font-black tabular-nums text-tjc-ink">{activeQueueSummary ? activeQueueSummary.count.toLocaleString() : "-"}</strong>
-          <span className="block text-sm font-semibold leading-relaxed text-tjc-muted">{activeQueueSummary ? `${activeQueueSummary.label}. ${data?.assets.length ?? 0} loaded for this session.` : "Loading queue"}</span>
-        </div>
-	      </section>
+      <DamOpsBanner
+        kicker="Approval workbench"
+        title="Review Inbox"
+        description="Make safe, evidence-based decisions quickly. Approval stays locked until required evidence is complete."
+        metric={(
+          <>
+            <span className="text-sm font-black text-tjc-evergreen">Current queue</span>
+            <strong className="block text-4xl font-black tabular-nums text-tjc-ink">{activeQueueSummary ? activeQueueSummary.count.toLocaleString() : "-"}</strong>
+            <span className="block text-sm font-semibold leading-relaxed text-tjc-muted">{activeQueueSummary ? `${activeQueueSummary.label}. ${data?.assets.length ?? 0} loaded for this session.` : "Loading queue"}</span>
+          </>
+        )}
+      />
 
 	      {error ? (
 	        <StatusBanner className="mt-4" tone="critical" title="Review queue did not load">{error}</StatusBanner>
@@ -570,11 +568,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       <section ref={workbenchRef} className="mt-5 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
         <aside className="hidden min-w-0 2xl:grid 2xl:content-start 2xl:gap-3" aria-label="Review queue groups">
-          <section className="sticky top-24 grid gap-2 rounded-lg border border-[#c9d4d5] bg-white p-3">
-            <div>
-              <h2 className="text-sm font-black text-tjc-evergreen">Queue groups</h2>
-              <p className="mt-1 text-xs font-semibold leading-relaxed text-tjc-muted">Select work by blocker, assignment, or write state.</p>
-            </div>
+          <DamReviewQueueRail title="Queue groups" description="Select work by blocker, assignment, or write state.">
             {keyReviewerQueues.map((queue) => (
               <button
                 key={`left-${queue.id}`}
@@ -604,7 +598,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 ))}
               </div>
             </details>
-          </section>
+          </DamReviewQueueRail>
         </aside>
         <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
           <details className="review-mobile-queue rounded-xl border border-[#d7dde2] bg-white md:hidden" data-testid="review-mobile-collapsed-queue">
@@ -675,7 +669,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </div>
 
         {selectedAsset ? (
-          <aside ref={selectedWorkspaceRef} className="order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-[12px] border border-[#d4ded7] bg-white p-4 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="SelectedReviewAssetBlock" data-testid="review-current-workspace">
+          <DamReviewSelectedAsset ref={selectedWorkspaceRef}>
             <section className="grid gap-3" aria-label="Selected asset review summary">
               <MediaPreviewPanel className="review-selected-preview" asset={selectedAsset} src={selectedPreview} alt={selectedAsset.thumbnailAlt} title={assetPresentation(selectedAsset, role).title} compact />
               <div>
@@ -796,7 +790,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               <span>Review action is ready, but ResourceSpace API write mapping is not configured yet.</span>
             </div>
             </section>
-          </aside>
+          </DamReviewSelectedAsset>
         ) : null}
       </section>
       {selectedAsset && pendingAction ? (

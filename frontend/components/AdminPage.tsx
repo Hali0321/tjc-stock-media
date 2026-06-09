@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Database, Download, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
+import { Database, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
+import { DamAuditPanel, DamBlockerTable, DamDiagnosticPanel, DamGovernanceCockpit, DamLaunchGatePanel, DamMappingPanel, DamReadinessScorecard } from "@/components/dam/DamOperations";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { AdminActionItem, DamReadinessItem, DamReadinessResult, IntegrationReadinessItem, VocabularyInsight } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -316,56 +317,37 @@ export function AdminPage() {
       </aside>
 
       <main className="min-w-0">
-      <section id="overview" className="admin-cockpit-hero find-hero scroll-mt-24 grid gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <div className="admin-cockpit-intro">
-          <span className="text-sm font-black text-tjc-evergreen">Governance cockpit</span>
-          <h1 className="mt-2 dam-page-title">Launch blocked</h1>
-          <p className="mt-3 max-w-[72ch] text-lg font-semibold leading-relaxed text-tjc-muted">See what is blocked, why it is blocked, who owns it, and the next queue to open.</p>
-          <div className="admin-mobile-metric-strip mt-4 grid grid-cols-2 gap-2 md:hidden" aria-label="Mobile readiness summary">
-            {[
-              ["Score", `${data.score}%`],
-              ["Assets", data.assetCount.toLocaleString()],
-              ["Portal ready", data.metrics.portalReady.toLocaleString()],
-              ["Needs review", data.metrics.needsReview.toLocaleString()]
-            ].map(([label, value]) => (
-              <div className="rounded-md border border-[#e5e7eb] bg-[#fbfcfd] px-3 py-2" key={label}>
-                <strong className="block text-base font-black tabular-nums text-tjc-ink">{value}</strong>
-                <span className="text-[.68rem] font-black uppercase tracking-[.04em] text-tjc-muted">{label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="admin-top-blockers mt-5 grid gap-2">
-            {topBlockers.map((item, index) => (
-              <Link
-                className="admin-top-blocker grid gap-2 border-t border-[#e5e7eb] py-3 first:border-t-0 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center"
-                href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-                key={item.id}
-              >
-                <span className="text-xs font-black text-tjc-muted">Blocker {index + 1}</span>
-                <strong className="block text-base font-black leading-tight text-tjc-ink">{item.label}</strong>
-                <span className={cn("w-fit rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
-              </Link>
-            ))}
-          </div>
+      <DamGovernanceCockpit
+        title={data.score >= 80 ? "Launch ready" : "Launch blocked"}
+        score={data.score}
+        assetCount={data.assetCount}
+        sourceLabel={data.source.label}
+        onExport={exportReadinessCsv}
+      >
+        <div className="mt-4">
+          <DamReadinessScorecard
+            items={[
+              { label: "Score", value: `${data.score}%`, tone: data.score >= 80 ? "ok" : data.score >= 55 ? "info" : "danger" },
+              { label: "Assets", value: data.assetCount.toLocaleString(), tone: "info" },
+              { label: "Portal ready", value: data.metrics.portalReady.toLocaleString(), tone: data.metrics.portalReady > 0 ? "ok" : "warn" },
+              { label: "Needs review", value: data.metrics.needsReview.toLocaleString(), tone: data.metrics.needsReview > 0 ? "warn" : "ok" }
+            ]}
+          />
         </div>
-        <div className="admin-launch-card grid content-center gap-4 rounded-[12px] border border-[#e5e7eb] bg-white p-5">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#7d2d2a]">
-              <AlertTriangle size={19} strokeWidth={1.8} aria-hidden="true" />
-              Launch gate status
-            </div>
-            <strong className="mt-1 block text-5xl font-black text-tjc-ink">Blocked</strong>
-            <span className="mt-1 block text-sm font-semibold text-tjc-muted">Readiness score {data.score}% across {data.assetCount.toLocaleString()} assets from {data.source.label}</span>
-            <span className="mt-3 block h-2 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
-              <span className={cn("block h-full rounded-full", scoreTone(data.score) === "ok" ? "bg-[#2f7d55]" : scoreTone(data.score) === "info" ? "bg-[#5a7f95]" : "bg-[#d64545]")} style={{ width: `${Math.max(3, Math.min(data.score, 100))}%` }} />
-            </span>
-          </div>
-          <button className="inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-[10px] bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#082f29]" type="button" onClick={exportReadinessCsv}>
-            <Download size={15} strokeWidth={1.8} aria-hidden="true" />
-            Export report
-          </button>
+        <div className="admin-top-blockers mt-5 grid gap-2">
+          {topBlockers.map((item, index) => (
+            <Link
+              className="admin-top-blocker grid gap-2 border-t border-[#e5e7eb] py-3 first:border-t-0 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center"
+              href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
+              key={item.id}
+            >
+              <span className="text-xs font-black text-tjc-muted">Blocker {index + 1}</span>
+              <strong className="block text-base font-black leading-tight text-tjc-ink">{item.label}</strong>
+              <span className={cn("w-fit rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
+            </Link>
+          ))}
         </div>
-      </section>
+      </DamGovernanceCockpit>
 
       <DamTabs
         tabs={adminTabs}
@@ -383,7 +365,8 @@ export function AdminPage() {
         aria-labelledby={damTabId("admin-readiness", "Overview")}
         hidden={activeAdminTab !== "Overview"}
       >
-      <section className="mt-5 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white" aria-label="Top readiness blockers">
+      <div className="mt-5">
+      <DamBlockerTable>
         <div className="hidden gap-3 border-b border-[#e5e7eb] bg-[#f8faf8] px-3 py-2 text-xs font-black text-tjc-muted md:grid md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem]">
           <span>Priority</span>
           <span>Blocker</span>
@@ -405,7 +388,8 @@ export function AdminPage() {
             <span className="text-xs font-black uppercase tracking-[.04em] text-tjc-evergreen">{item.count === 0 ? zeroCountLabel(item) : "Open queue"}</span>
           </Link>
         ))}
-      </section>
+      </DamBlockerTable>
+      </div>
       </section>
 
       <section
@@ -414,7 +398,8 @@ export function AdminPage() {
         aria-labelledby={damTabId("admin-readiness", "Launch Gate")}
         hidden={activeAdminTab !== "Launch Gate"}
       >
-      <section id="launch-gate" className="mt-4 scroll-mt-24 rounded-md border border-[#d6dfd8] bg-white" aria-label="Launch decisions">
+      <div className="mt-4 scroll-mt-24" id="launch-gate">
+      <DamLaunchGatePanel>
         {launchDecisions.map((decision) => (
           <div className="grid gap-2 border-b border-[#d6dfd8] px-4 py-4 last:border-b-0 md:grid-cols-[15rem_8rem_minmax(0,1fr)]" key={decision.question}>
             <strong className="text-sm text-tjc-ink">{decision.question}</strong>
@@ -422,7 +407,8 @@ export function AdminPage() {
             <span className="text-sm leading-relaxed text-tjc-muted">{decision.detail}</span>
           </div>
         ))}
-      </section>
+      </DamLaunchGatePanel>
+      </div>
       </section>
 
       <details className="mt-4 rounded-md border border-[#d6dfd8] bg-white p-4 md:hidden" aria-label="Collapsed admin diagnostics">
@@ -466,8 +452,7 @@ export function AdminPage() {
         <MetricTile label="Rendition gaps" value={data.metrics.renditionGaps} />
       </section>
 
-      <details className={cn("mt-4 hidden rounded-md border border-[#d6dfd8] bg-white p-4 md:block", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Operational diagnostics">
-        <summary className="cursor-pointer font-black text-tjc-evergreen">Operational diagnostics</summary>
+      <DamDiagnosticPanel title="Operational diagnostics" defaultOpen className={cn("mt-4 hidden md:block", activeAdminTab !== "Overview" && "md:hidden")}>
         <section className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-md border border-[#d6dfd8] bg-white p-4">
             <span className="text-xs font-semibold uppercase text-tjc-muted">Current data source</span>
@@ -490,7 +475,7 @@ export function AdminPage() {
             <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Pending review write queue: {pendingQueue?.detail || "none"}</p>
           </div>
         </section>
-      </details>
+      </DamDiagnosticPanel>
 
       <section id="pillars" className={cn("mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white md:block", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Production DAM pillars">
         {data.readiness.map((item) => {
@@ -624,7 +609,8 @@ export function AdminPage() {
         hidden={activeAdminTab !== "Mapping"}
       >
       <section className={cn("mt-4 hidden gap-4 md:grid xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,.8fr)]", activeAdminTab !== "Mapping" && "md:hidden")}>
-        <section id="mappings" className={cn("scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4", activeAdminTab !== "Mapping" && "hidden")} aria-label="ResourceSpace field mapping">
+        <div id="mappings" className={cn("scroll-mt-24", activeAdminTab !== "Mapping" && "hidden")}>
+        <DamMappingPanel>
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-xl font-semibold"><Database size={18} strokeWidth={1.8} aria-hidden="true" /> Field mapping coverage</h2>
@@ -660,7 +646,8 @@ export function AdminPage() {
               ))}
             </div>
           </details>
-        </section>
+        </DamMappingPanel>
+        </div>
 
         <section id="vocabulary" className="scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4" aria-label="Controlled vocabulary">
           <h2 className="flex items-center gap-2 text-xl font-semibold"><Tags size={18} strokeWidth={1.8} aria-hidden="true" /> Vocabulary control</h2>
@@ -708,7 +695,8 @@ export function AdminPage() {
         aria-labelledby={damTabId("admin-readiness", "Audit")}
         hidden={activeAdminTab !== "Audit"}
       >
-      <section id="audit-log" className="mt-4 hidden scroll-mt-24 rounded-lg border border-[#d6dfd8] bg-white p-4 md:block" aria-label="Audit log">
+      <div id="audit-log" className="mt-4 hidden scroll-mt-24 md:block">
+      <DamAuditPanel>
         <h2 className="flex items-center gap-2 text-xl font-semibold"><ScrollText size={18} strokeWidth={1.8} aria-hidden="true" /> Audit log</h2>
         <p className="mt-1 max-w-[78ch] text-sm leading-relaxed text-tjc-muted">
           Read-only portal audit signals. Pending writes are local queue records until ResourceSpace write mapping is configured.
@@ -766,7 +754,8 @@ export function AdminPage() {
             </div>
           ))}
         </div>
-      </section>
+      </DamAuditPanel>
+      </div>
       </section>
       </main>
     </div>

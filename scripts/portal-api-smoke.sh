@@ -232,13 +232,49 @@ if (data.assets.length !== 5 || data.pagination?.rangeStart !== 6 || data.pagina
 }
 ' "$BASE_URL/api/assets/search?role=Viewer&limit=5&offset=5"
 
-expect_json approved-rights-unknown-stays-review '
+expect_json reviewer-approved-rights-unknown-stays-review '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if ((data.counts?.rightsReview || 0) < 1 || (data.metadataHealth?.needsRights || 0) < 1) {
   console.error("FAIL: approved assets with unknown rights/consent were treated as fully clear");
   process.exit(1);
 }
-' "$BASE_URL/api/assets/search?role=Viewer&view=approved-church-wide&limit=5"
+' "$BASE_URL/api/assets/search?role=Reviewer&view=approved-church-wide&limit=5"
+
+expect_json viewer-search-redacts-operational-diagnostics '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const forbiddenTopLevel = ["metadataHealth", "zeroResultInsights", "operationalInsights"];
+const leakedTopLevel = forbiddenTopLevel.filter((key) => key in data);
+if (leakedTopLevel.length) {
+  console.error(`FAIL: Viewer search leaked ${leakedTopLevel.join(", ")}`);
+  process.exit(1);
+}
+const forbiddenCounts = [
+  "rawTotal",
+  "visibleToRole",
+  "approvedRaw",
+  "approved",
+  "portalReady",
+  "batchApprovedWithBlockers",
+  "needsReview",
+  "pendingReview",
+  "archive",
+  "archiveCandidates",
+  "blocked",
+  "childrenYouth",
+  "missingSource",
+  "rightsReview",
+  "approvedThisMonth"
+];
+const leakedCounts = forbiddenCounts.filter((key) => data.counts && key in data.counts);
+if (leakedCounts.length) {
+  console.error(`FAIL: Viewer search leaked ${leakedCounts.map((key) => `counts.${key}`).join(", ")}`);
+  process.exit(1);
+}
+if (!data.source || data.source.label !== "Media library" || data.source.adapter !== "demo-fallback") {
+  console.error("FAIL: Viewer search source was not redacted");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&limit=1"
 
 expect_json rights-status-not-publish-status '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

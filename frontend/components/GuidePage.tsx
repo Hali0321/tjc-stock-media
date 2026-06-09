@@ -61,6 +61,14 @@ const helpTopics: HelpTopic[] = [
     route: "/upload",
     doText: "Provide context, people/youth answers, source, tags, and reviewer notes.",
     avoidText: "Do not send media expecting it to publish immediately."
+  },
+  {
+    id: "review",
+    title: "Request DAM review",
+    summary: "Ask the media team to confirm whether a media record can be reused.",
+    route: "/guide#request-review",
+    doText: "Include the media record, intended ministry use, channel, deadline, and the exact uncertainty.",
+    avoidText: "Do not publish or download a blocked record while waiting."
   }
 ];
 
