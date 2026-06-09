@@ -76,8 +76,8 @@ export function CommandPalette() {
       base.unshift({
         id: `resource-${resourceId}`,
         group: "Find",
-        label: reviewer ? `Open ResourceSpace ID ${resourceId}` : `Open reference code ${resourceId}`,
-        hint: reviewer ? "Open asset detail by exported ID/reference" : "Open media by reference code",
+        label: role === "DAM Admin" ? `Open ResourceSpace ID ${resourceId}` : `Open reference code ${resourceId}`,
+        hint: reviewer ? "Open asset detail by library reference" : "Open media by reference code",
         href: `/assets/${resourceId}`,
         keywords: resourceId,
         icon: KeyRound,
@@ -332,7 +332,7 @@ export function CommandPalette() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#c7d3cb] bg-[#f5f8f5] px-4 py-3 text-xs font-semibold text-tjc-muted sm:px-5">
               <span>↑↓ move. Enter opens {selectedCommand ? selectedCommand.label : "selected command"}. Esc closes.</span>
-              <span data-command-proof="footer-safety-copy">{reviewer ? "ResourceSpace writes remain pending until field mapping is configured." : "Downloads and source-file access stay governed by review."}</span>
+              <span data-command-proof="footer-safety-copy">{reviewer ? "Review decisions stay queued until library sync completes." : "Downloads and source-file access stay governed by review."}</span>
               {hiddenRoleCommandCount ? <span>{hiddenRoleCommandCount} role-restricted commands hidden for {role}.</span> : <span>Governance and reviewer commands visible for {role}.</span>}
             </div>
           </section>

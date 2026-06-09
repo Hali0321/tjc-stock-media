@@ -63,7 +63,7 @@ export function toastShareCopied(label = "Link copied") {
 
 export function toastReviewQueued(action?: ToastAction) {
   return toast.success("Review action queued", {
-    description: "Pending write remains local until ResourceSpace mapping is configured.",
+    description: "Decision waits for library sync before source records change.",
     action: actionConfig(action),
     icon: <CheckCircle2 size={16} strokeWidth={1.8} aria-hidden="true" />
   });
@@ -78,14 +78,14 @@ export function toastDownloadBlocked(detail: string, action?: ToastAction) {
 }
 
 export function toastPendingWriteQueued(action?: ToastAction) {
-  return toast.info("Pending write queued", {
-    description: "ResourceSpace truth is unchanged until signed write mapping exists.",
+  return toast.info("Sync queued", {
+    description: "Source records stay unchanged until library sync completes.",
     action: actionConfig(action),
     icon: <Info size={16} strokeWidth={1.8} aria-hidden="true" />
   });
 }
 
-export function toastSaveFailed(detail = "Save failed. No ResourceSpace write was attempted.", action?: ToastAction) {
+export function toastSaveFailed(detail = "Save failed. No library sync was attempted.", action?: ToastAction) {
   return toast.error("Save failed", {
     description: detail,
     action: actionConfig(action),

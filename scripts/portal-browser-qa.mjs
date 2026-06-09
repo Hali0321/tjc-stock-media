@@ -624,8 +624,8 @@ for (const width of qaViewports) {
   if ((await page.getByRole("button", { name: "Hold to queue Archive only", exact: true }).count()) < 1) failures.push("review high-risk action: archive hold button missing");
   if ((await page.getByRole("button", { name: "Hold to queue Do not publish externally", exact: true }).count()) < 1) failures.push("review high-risk action: do-not-publish hold button missing");
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
-  await page.waitForSelector("text=Queue pending review write");
-  await page.getByRole("button", { name: "Queue pending review write" }).click();
+  await page.waitForSelector("text=Queue decision for sync");
+  await page.getByRole("button", { name: "Queue decision for sync" }).click();
   await page.waitForSelector("text=Sync setup is required");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
   await closeContext(context);
@@ -660,7 +660,7 @@ for (const width of qaViewports) {
     await page.getByLabel(label).check();
   }
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
-  await page.waitForSelector("text=Queue pending review write");
+  await page.waitForSelector("text=Queue decision for sync");
   if ((await page.getByText("Source records stay unchanged until sync completes.").count()) < 1) failures.push("reviewer-decision-workflow: sync confirmation copy missing");
   await closeContext(context);
 }
@@ -844,7 +844,7 @@ await captureProof("review-hold-confirm-dialog.png", "Reviewer", 1440, 1000, "/r
     await page.getByLabel(label).check();
   }
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
-  await page.waitForSelector("text=Queue pending review write");
+  await page.waitForSelector("text=Queue decision for sync");
 });
 
 await captureProof("state-system-empty-error-loading.png", "Viewer", 1440, 900, "/?q=zzzzzz-no-visible-media-proof", async (page) => {

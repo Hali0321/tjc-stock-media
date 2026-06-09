@@ -9,7 +9,7 @@ export const filterGroups = [
   { label: "Governance", priority: "advanced", options: ["Missing source", "Rights review", "Portal ready", "AI enrichment", "Taxonomy drift", "Duplicate candidate", "Stale approval", "Rendition gap"] },
   { label: "Event/date", priority: "advanced", options: ["2026", "2025", "2024"] },
   { label: "Orientation", priority: "advanced", options: ["Landscape", "Square", "Portrait"] },
-  { label: "Source", priority: "advanced", options: ["LM Photos", "ResourceSpace", "Photographer"] }
+  { label: "Source", priority: "advanced", options: ["LM Photos", "Media library", "Photographer"] }
 ];
 
 export function FilterSidebar({

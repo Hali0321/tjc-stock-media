@@ -56,7 +56,7 @@ export function ReviewActionDialog({
             disabled={submitting}
           >
             <ShieldCheck size={16} strokeWidth={1.8} aria-hidden="true" />
-            {submitting ? "Queueing..." : "Queue pending review write"}
+            {submitting ? "Queueing..." : "Queue decision for sync"}
           </button>
         </>
       )}

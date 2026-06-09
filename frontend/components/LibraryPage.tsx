@@ -290,7 +290,7 @@ export function LibraryPage() {
               <Database size={17} strokeWidth={1.9} aria-hidden="true" />
               <strong>{result?.source.label || "Loading source"}</strong>
             </div>
-            <p>{result?.source.detail || "Loading ResourceSpace source state."}</p>
+            <p>{result?.source.detail || "Loading media-library source state."}</p>
           </div>
         </section>
       )}

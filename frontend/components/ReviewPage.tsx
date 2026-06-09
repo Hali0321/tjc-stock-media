@@ -419,7 +419,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <DamDecisionActions>
         {reviewActions.map((action) => {
           const missing = missingEvidenceFor(action);
-          const title = missing.length ? `Missing: ${formatMissingEvidence(missing)}` : "Review evidence and queue pending write";
+          const title = missing.length ? `Missing: ${formatMissingEvidence(missing)}` : "Review evidence and queue decision for sync";
           const icon = action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />;
           if (highRiskActionIds.has(action.id)) {
             return (
