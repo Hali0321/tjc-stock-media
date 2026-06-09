@@ -87,3 +87,23 @@
 | `make frontend-check` | PASS | Typecheck and build complete. |
 | `make demo-check` | PASS | Frontend check plus demo validation complete. |
 | `make launch-readiness` | PASS | `failures=0`, `warnings=1` for existing `.env` placeholders. |
+
+## Continuation Hardening Notes
+
+- `288e432` tightened Send media source-link language so Contributor UI no longer mentions Drive-folder specifics while keeping "Send never publishes" and Needs Review / Do Not Publish safety.
+- `084b50a` compacted Admin mobile tabs with short display labels while preserving full accessible tab names and stable panel IDs.
+- `ba6d6dd` compacted mobile package cards into scannable ministry-kit rows so packages feel curated without repeating oversized generated covers.
+- `3fce928` compacted mobile related records on Asset Detail so the record remains readable at 320/390 without weakening item-level approval warnings.
+- `19e1ec0` changed normal-user API source payloads from scaffold adapter text to `media-library` and added smoke coverage against `demo-fallback` leaks.
+- `cb828c0` hid Review Inbox from Viewer command-palette results and added browser QA assertions for Viewer-hidden Review/Governance/pending-write commands.
+- `d59b748` made batch-action denial copy viewer-safe and added API smoke coverage so Viewer denial payloads do not expose governance or source-system language.
+
+Latest verified gates after these slices:
+
+| Command | Result | Notes |
+|---|---:|---|
+| `npm --prefix frontend run typecheck` | PASS | Rerun after command-palette and API copy changes. |
+| `npm --prefix frontend run build` | PASS | Production build succeeds. |
+| `git diff --check` | PASS | No whitespace errors. |
+| `BASE_URL=http://localhost:3008 make portal-api-smoke` | PASS | Includes normal-user adapter, batch denial, download, upload, review, and search redaction guards. |
+| `BASE_URL=http://localhost:3008 make portal-browser-qa` | PASS | Command-palette role filtering verified; last passing run had `failures=0`, `consoleErrors=0`, `networkFailures=0`, `warnings=0`. |
