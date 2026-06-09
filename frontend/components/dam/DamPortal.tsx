@@ -251,5 +251,3 @@ export function packageCoverImages(collection: CatalogCollection, role: DemoRole
 }
 
 export { PackageCard as DamPackageCard, PackageInspector as DamPackageInspector };
-export { CollectionAlbumCard as DamCollectionAlbumCard } from "@/components/CollectionAlbumCard";
-export { CollectionShelfInspector as DamCollectionShelfInspector } from "@/components/CollectionShelfInspector";
