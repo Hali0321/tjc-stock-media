@@ -1,22 +1,10 @@
 "use client";
 
-import { CheckCircle2, FolderOpen, LayoutGrid, ListFilter, Search, ShieldAlert } from "lucide-react";
+import { FolderOpen, LayoutGrid, ListFilter, Search, ShieldAlert } from "lucide-react";
 import { DamEmptyState as EmptyState, DamPrimaryAction as PrimaryAction } from "@/components/dam/DamWorkspace";
 import { collectionImageUrl } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
 import type { CatalogCollection, DemoRole, StockMediaAsset } from "@/lib/types";
-
-function packageCoverTone(name: string) {
-  const tones = [
-    "from-[#0f3d2e] via-[#d8e8df] to-[#fbfaf6]",
-    "from-[#263d54] via-[#e6edf3] to-[#f8fafc]",
-    "from-[#57451f] via-[#f2e7c9] to-[#fffaf0]",
-    "from-[#34413c] via-[#e2ece7] to-[#fbfcfb]",
-    "from-[#1e4d43] via-[#dcebe3] to-[#fbfcfb]"
-  ];
-  const code = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return tones[code % tones.length];
-}
 
 function packageInitials(name: string) {
   return name
@@ -104,14 +92,14 @@ function PackageCover({
   const images = collection.images.slice(0, 4);
   if (images.length) {
     return (
-      <div className={cn("package-cover package-cover-photo relative grid aspect-[4/3] grid-cols-[1.25fr_.75fr] gap-1.5 overflow-hidden rounded-2xl bg-[#e8f1eb] p-1.5", large && "aspect-[16/10]")}>
-        <span className="package-cover-label absolute left-3 top-3 z-[2] rounded-lg bg-white/92 px-2.5 py-1 text-[11px] font-black uppercase tracking-[.08em] text-tjc-evergreen shadow-sm">Package</span>
-        <span className="package-cover-count absolute bottom-3 right-3 z-[2] rounded-lg bg-[#0b4b42]/92 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
-        <span className="row-span-2 overflow-hidden rounded-xl bg-white">
+      <div className={cn("package-cover package-cover-photo relative grid aspect-[4/3] grid-cols-[1.25fr_.75fr] gap-1.5 overflow-hidden bg-[#e8f1eb] p-1.5", large && "aspect-[16/10]")}>
+        <span className="package-cover-label absolute left-3 top-3 z-[2] bg-white/92 px-2.5 py-1 text-[11px] font-black uppercase tracking-[.08em] text-tjc-evergreen shadow-sm">Contact sheet</span>
+        <span className="package-cover-count absolute bottom-3 right-3 z-[2] bg-[#0b4b42]/92 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
+        <span className="row-span-2 overflow-hidden bg-white">
           <img className="h-full min-h-12 w-full object-cover transition duration-300 group-hover:scale-[1.025]" src={images[0].src} alt={images[0].alt} loading="lazy" />
         </span>
         {images.slice(1, 3).map((image) => (
-          <span className="overflow-hidden rounded-xl bg-white" key={image.src}>
+          <span className="overflow-hidden bg-white" key={image.src}>
             <img className="h-full min-h-12 w-full object-cover transition duration-300 group-hover:scale-[1.025]" src={image.src} alt={image.alt} loading="lazy" />
           </span>
         ))}
@@ -119,20 +107,23 @@ function PackageCover({
     );
   }
   return (
-    <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br p-3 text-white", packageCoverTone(collection.name), large && "aspect-[16/10]")}>
-      <div className="generated-package-contact-sheet absolute inset-3 grid grid-cols-3 gap-1.5 opacity-95" aria-hidden="true">
-        {Array.from({ length: large ? 9 : 6 }).map((_, index) => (
-          <span className={cn("rounded-md border border-white/70 bg-white/60", index % 4 === 0 && "bg-[#dfe8e3]", index % 5 === 0 && "bg-[#eef2f4]")} key={index} />
+    <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden p-3 text-tjc-ink", large && "aspect-[16/10]")}>
+      <div className="generated-package-spine" aria-hidden="true">
+        <span>{packageInitials(collection.name)}</span>
+      </div>
+      <div className="generated-package-contact-sheet absolute grid grid-cols-3 gap-1.5 opacity-95" aria-hidden="true">
+        {Array.from({ length: large ? 12 : 9 }).map((_, index) => (
+          <span className={cn(index % 4 === 0 && "is-paper", index % 5 === 0 && "is-ready")} key={index} />
         ))}
       </div>
       <div className="relative z-[1] grid h-full content-between">
         <div className="flex items-start justify-between gap-2">
-          <span className="rounded-md bg-white/90 px-2.5 py-1 text-xs font-black text-tjc-evergreen shadow-sm">{packageInitials(collection.name)}</span>
-          <span className="text-right text-[11px] font-black uppercase tracking-[.08em] text-white/85">Package</span>
+          <span className="package-cover-code bg-white/90 px-2.5 py-1 text-xs font-black text-tjc-evergreen shadow-sm">{packageReference(collection)}</span>
+          <span className="package-cover-kind text-right text-[11px] font-black uppercase tracking-[.08em] text-[#617168]">Contact sheet</span>
         </div>
-        <div className="rounded-md bg-white/90 p-2 text-tjc-ink shadow-sm">
-          <strong className="line-clamp-2 text-lg font-black leading-tight text-white drop-shadow-sm">{collection.name}</strong>
-          <span className="mt-1 block text-xs font-black text-white/90">{readyCount.toLocaleString()} ready</span>
+        <div className="package-cover-caption bg-white/92 p-2 text-tjc-ink shadow-sm">
+          <strong className="line-clamp-2 text-lg font-black leading-tight">{collection.name}</strong>
+          <span className="mt-1 block text-xs font-black text-[#52625a]">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
         </div>
       </div>
     </div>
@@ -160,7 +151,7 @@ export function PackageCard({
     >
       <div className="package-row-index" aria-hidden="true">
         <span>{reference}</span>
-        <CheckCircle2 size={16} strokeWidth={1.9} />
+        <small>{reviewNeeded ? "Review" : "Ready"}</small>
       </div>
       <PackageCover collection={collection} readyCount={readyCount} reviewNeeded={reviewNeeded} />
       <div className="package-row-main">
@@ -227,6 +218,11 @@ export function PackageInspector({
         <p>{collection.description}</p>
       </div>
       <PackageCover collection={collection} readyCount={readyCount} reviewNeeded={reviewNeeded} large />
+      <nav className="package-inspector-tabs" aria-label="Package detail sections">
+        <span className="is-active">Overview</span>
+        <span>Items</span>
+        <span>Safety</span>
+      </nav>
       <dl className="package-inspector-record">
         <div><dt>Reference code</dt><dd>{reference}</dd></div>
         <div><dt>Suggested use</dt><dd>{bestUse}</dd></div>
