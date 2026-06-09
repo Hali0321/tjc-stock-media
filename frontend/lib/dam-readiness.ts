@@ -298,7 +298,7 @@ function buildIntegrationReadiness({
       label: "Real authentication / SSO",
       ready: false,
       owner: "DAM Admin",
-      detail: "Demo role switch is useful for stakeholder review; production needs real identity and permissions."
+      detail: "Local access-role selection supports review rehearsal; production needs real identity and permissions."
     },
     {
       id: "master-originals",

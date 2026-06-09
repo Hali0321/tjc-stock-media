@@ -94,8 +94,8 @@ function DamFooter({ opsShell }: { opsShell: boolean }) {
       <Link href="/guide" className="font-black text-tjc-evergreen">Help</Link>
       {opsShell ? (
         <>
-          <span>Operations view shows source, sync, audit, and launch readiness.</span>
-          <span>Demo role switch is not production auth.</span>
+          <span>Operations view shows review queues, evidence, and audit-safe actions.</span>
+          <span>Production access uses assigned DAM roles.</span>
         </>
       ) : (
         <>

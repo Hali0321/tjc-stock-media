@@ -429,6 +429,7 @@ for (const width of qaViewports) {
   }
   const viewerHomeText = await page.locator("body").innerText();
   if (/ResourceSpace|Shared Drive|pending writes|launch gate/i.test(viewerHomeText)) failures.push("viewer-find: Viewer sees operations truth copy");
+  if (/RS approved|RS internal|Demo role|prototype|MVP 2024|stock media candidate/i.test(viewerHomeText)) failures.push("viewer-find: Viewer sees scaffold/source-system copy");
   if ((await page.locator(".media-card").getByText(/Ready to use/).count()) > 0) failures.push("viewer-find: ready verdict visible when portal-ready set is empty");
   if ((await page.getByText("Saved ops views").count()) > 0) failures.push("viewer-find: ops saved views visible to Viewer");
   const commandSearch = await openCommandPalette(page);
