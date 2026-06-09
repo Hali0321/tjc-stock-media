@@ -3610,3 +3610,152 @@ body,
     gap: .15rem;
   }
 }
+
+/* Help assistant console pass. */
+.dam-help-shell {
+  max-width: 1320px !important;
+}
+
+.help-hero {
+  border-left: 3px solid var(--dam-v3-green) !important;
+}
+
+.help-hero form {
+  border-radius: .32rem !important;
+  border-color: #cbd5d0 !important;
+}
+
+.help-lane-strip {
+  align-items: stretch;
+}
+
+.help-lane-card {
+  border: 1px solid var(--dam-v3-line);
+  border-radius: .38rem;
+  background: #fff;
+  padding: .75rem;
+}
+
+.help-lane-card strong {
+  color: var(--dam-v3-ink);
+  font-size: .98rem;
+  line-height: 1.1;
+}
+
+.help-lane-card small {
+  color: var(--dam-v3-muted);
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.help-topic-list {
+  gap: .45rem !important;
+}
+
+.help-topic-button {
+  min-height: 3.75rem !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  border-radius: .36rem !important;
+  padding: .65rem .75rem !important;
+}
+
+.help-topic-button em {
+  display: block;
+  margin-bottom: .15rem;
+  color: var(--dam-v3-green);
+  font-size: .62rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.help-topic-button.is-active em {
+  color: rgba(255,255,255,.78) !important;
+}
+
+.help-topic-button strong {
+  font-size: .98rem !important;
+}
+
+.help-topic-button small {
+  font-size: .78rem !important;
+}
+
+.help-selected-record {
+  border: 1px solid #dce4df;
+  border-radius: .36rem;
+  background: #f8faf9;
+  padding: .65rem;
+}
+
+.help-selected-record div {
+  min-width: 0;
+  border-right: 1px solid #e4e9e6;
+  padding-inline: .35rem;
+}
+
+.help-selected-record div:last-child {
+  border-right: 0;
+}
+
+.help-selected-record dt {
+  color: #6b7580;
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.help-selected-record dd {
+  margin-top: .2rem;
+  color: var(--dam-v3-ink);
+  font-size: .82rem;
+  font-weight: 820;
+}
+
+.help-guidance {
+  border-radius: .36rem !important;
+}
+
+.help-review-panel {
+  border-left: 3px solid #27435b !important;
+}
+
+.help-side-panel {
+  border-radius: .42rem !important;
+}
+
+@media (max-width: 767px) {
+  .help-lane-strip {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .help-lane-card {
+    min-height: 3.25rem;
+  }
+
+  .help-topic-button {
+    min-height: 3.35rem !important;
+  }
+
+  .help-topic-button small {
+    display: none !important;
+  }
+
+  .help-selected-record {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+
+  .help-selected-record div {
+    border-right: 0;
+    border-top: 1px solid #e4e9e6;
+    padding-block: .45rem;
+  }
+
+  .help-selected-record div:first-child {
+    border-top: 0;
+  }
+}

@@ -9,6 +9,7 @@ type HelpTopic = {
   title: string;
   summary: string;
   route: string;
+  lane: string;
   doText: string;
   avoidText: string;
 };
@@ -19,6 +20,7 @@ const helpTopics: HelpTopic[] = [
     title: "Find approved media",
     summary: "Search by use case, event, ministry, topic, or package.",
     route: "/",
+    lane: "Start here",
     doText: "Use plain terms like website image, slide background, youth-safe, Bible study, or newsletter.",
     avoidText: "Do not use media just because you remember seeing it somewhere."
   },
@@ -27,6 +29,7 @@ const helpTopics: HelpTopic[] = [
     title: "Download a copy",
     summary: "Open the media record and follow the verdict before reuse.",
     route: "/",
+    lane: "Record check",
     doText: "Download only when the record says Ready to use and the guidance matches your channel.",
     avoidText: "Do not treat review-required or source-file restricted media as approved."
   },
@@ -35,6 +38,7 @@ const helpTopics: HelpTopic[] = [
     title: "Use a package",
     summary: "Start from a curated ministry kit, then confirm each item.",
     route: "/collections",
+    lane: "Ministry kit",
     doText: "Open each media record before reuse. Item-level approval still matters.",
     avoidText: "Do not assume the whole package is approved for every use."
   },
@@ -43,6 +47,7 @@ const helpTopics: HelpTopic[] = [
     title: "Check people/youth",
     summary: "Use extra care when faces, children, youth, or private moments may appear.",
     route: "/?view=children-youth-review",
+    lane: "Safety check",
     doText: "Request review before public sharing when people/youth visibility is unclear.",
     avoidText: "Do not crop tightly, repost, or publish youth media before approval."
   },
@@ -51,6 +56,7 @@ const helpTopics: HelpTopic[] = [
     title: "Request source-file access",
     summary: "Source files are restricted and require a separate request.",
     route: "/guide#request-review",
+    lane: "Access request",
     doText: "Include the media record, ministry use, deadline, and why the approved copy is not enough.",
     avoidText: "Do not ask for source files as a normal download path."
   },
@@ -59,6 +65,7 @@ const helpTopics: HelpTopic[] = [
     title: "Send media for review",
     summary: "Submit files or links so reviewers can check rights, people, source, and use guidance.",
     route: "/upload",
+    lane: "New intake",
     doText: "Provide context, people/youth answers, source, tags, and reviewer notes.",
     avoidText: "Do not send media expecting it to publish immediately."
   },
@@ -67,6 +74,7 @@ const helpTopics: HelpTopic[] = [
     title: "Request DAM review",
     summary: "Ask the media team to confirm whether a media record can be reused.",
     route: "/guide#request-review",
+    lane: "Escalate",
     doText: "Include the media record, intended ministry use, channel, deadline, and the exact uncertainty.",
     avoidText: "Do not publish or download a blocked record while waiting."
   }
@@ -77,6 +85,12 @@ const decisionTree = [
   ["Verdict says Ready to use?", "Download approved copy and follow guidance."],
   ["People/youth, rights, or source unclear?", "Stop and request DAM review."],
   ["Need original/source file?", "Request source-file access. It is not automatic."]
+];
+
+const assistantLanes = [
+  ["Find", "Start with approved copies and packages."],
+  ["Verify", "Open the media record before reuse."],
+  ["Escalate", "Ask review when approval is unclear."]
 ];
 
 export function GuidePage() {
@@ -120,6 +134,16 @@ export function GuidePage() {
           </form>
         </div>
 
+        <section className="help-lane-strip mt-3 grid gap-2 md:grid-cols-3" aria-label="Help decision lanes">
+          {assistantLanes.map(([label, detail], index) => (
+            <div className="help-lane-card grid gap-1" key={label}>
+              <span className="text-[11px] font-black tabular-nums text-tjc-evergreen">0{index + 1}</span>
+              <strong>{label}</strong>
+              <small>{detail}</small>
+            </div>
+          ))}
+        </section>
+
         <section className="help-mobile-decision mt-3 grid gap-2 md:hidden" aria-label="Mobile quick help">
           <div className="rounded-[10px] border border-[#d7e1db] bg-white p-3">
             <p className="dam-kicker">Quick decision</p>
@@ -150,6 +174,7 @@ export function GuidePage() {
               aria-pressed={selected.id === topic.id}
             >
               <span>
+                <em>{topic.lane}</em>
                 <strong>{topic.title}</strong>
                 <small>{topic.summary}</small>
               </span>
@@ -175,6 +200,21 @@ export function GuidePage() {
               Open page
             </Link>
           </div>
+
+          <dl className="help-selected-record mt-4 grid gap-2 sm:grid-cols-3">
+            <div>
+              <dt>Lane</dt>
+              <dd>{selected.lane}</dd>
+            </div>
+            <div>
+              <dt>Decision</dt>
+              <dd>{selected.id === "download" ? "Open record first" : selected.id === "send" ? "Review only" : "Use guidance"}</dd>
+            </div>
+            <div>
+              <dt>Safe next step</dt>
+              <dd>{selected.id === "review" || selected.id === "source" ? "Request review" : "Open page"}</dd>
+            </div>
+          </dl>
 
           <div className="help-guidance-grid mt-4 grid gap-2 md:grid-cols-2">
             <div className="help-guidance help-guidance-do">
