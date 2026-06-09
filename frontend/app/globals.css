@@ -2189,6 +2189,11 @@ body {
     margin-left: var(--enterprise-rail-width);
   }
 
+  .dam-workbench-v2 > footer {
+    margin-left: var(--enterprise-rail-width);
+    width: calc(100% - var(--enterprise-rail-width));
+  }
+
   .dam-shell {
     width: min(100% - 2rem, 1680px) !important;
     padding-top: 1rem !important;
@@ -2498,6 +2503,11 @@ a[class*="bg-tjc-evergreen"] {
 
   #main-content {
     margin-left: 0 !important;
+  }
+
+  .dam-workbench-v2 > footer {
+    margin-left: auto;
+    width: 100%;
   }
 }
 
