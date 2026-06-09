@@ -525,7 +525,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </select>
         </label>
         <p id="review-queue-mobile-summary" className="mt-2 text-xs font-semibold text-tjc-muted">
-          {activeQueueSummary ? `${activeQueueSummary.count.toLocaleString()} total assets. Queue cards stay compact; actions live in selected asset panel.` : "Loading queue summary."}
+          {activeQueueSummary ? `${activeQueueSummary.count.toLocaleString()} assets need this review path. Decisions remain locked until evidence is complete.` : "Loading queue summary."}
         </p>
       </section>
 
@@ -691,7 +691,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <span className="block text-sm font-black text-tjc-evergreen">Action evidence</span>
-                        <span className="mt-1 block text-xs font-semibold text-tjc-muted">Checklist, note, and action buttons are collapsed to keep mobile queue short.</span>
+                        <span className="mt-1 block text-xs font-semibold text-tjc-muted">Approval stays locked until required checks and reviewer notes are complete.</span>
                       </div>
                       <span className="rounded-md border border-[#d6dfd8] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
                         {completedEvidenceCount}/{checklistLabels.length}
