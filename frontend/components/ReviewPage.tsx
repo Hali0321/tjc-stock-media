@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Database, ExternalLink, Info, ShieldCheck, ShieldX } from "lucide-react";
+import { ExternalLink, ShieldCheck, ShieldX } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DamAssetActionsMenu as AssetActionsMenu, DamMediaPreviewPanel as MediaPreviewPanel } from "@/components/dam/DamRecord";
-import { DamDecisionActions, DamEvidenceMatrix, DamHoldToConfirmButton as HoldToConfirmButton, DamOpsBanner, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard, DamReviewQueueHeader, DamReviewQueueRail, DamReviewSelectedAsset } from "@/components/dam/DamOperations";
+import { DamDecisionActions, DamEvidenceMatrix, DamHoldToConfirmButton as HoldToConfirmButton, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard, DamReviewQueueHeader, DamReviewSelectedAsset } from "@/components/dam/DamOperations";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
@@ -367,6 +367,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       if (response.ok) {
         toastReviewQueued({ label: "Open review queue", onClick: () => router.push(`/review?queue=${activeQueue}`) });
         toastPendingWriteQueued({ label: "View pending writes", onClick: () => setActiveInspectorTab("Pending write") });
+        setActiveInspectorTab("Pending write");
         setReviewNote("");
         setChecklist(emptyChecklist);
         setPendingAction(null);
@@ -476,28 +477,30 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   return (
     <div className="dam-shell">
-      <DamOpsBanner
-        kicker="Approval workbench"
-        title="Review Inbox"
-        description="Make safe, evidence-based decisions quickly. Approval stays locked until required evidence is complete."
-        metric={(
-          <>
-            <span className="text-sm font-black text-tjc-evergreen">Current queue</span>
-            <strong className="block text-4xl font-black tabular-nums text-tjc-ink">{activeQueueSummary ? activeQueueSummary.count.toLocaleString() : "-"}</strong>
-            <span className="block text-sm font-semibold leading-relaxed text-tjc-muted">{activeQueueSummary ? `${activeQueueSummary.label}. ${data?.assets.length ?? 0} loaded for this session.` : "Loading queue"}</span>
-          </>
-        )}
-      />
+      <section className="review-compact-header" aria-label="Review inbox">
+        <div>
+          <h1>Review Inbox</h1>
+          <p>Approval stays locked until required evidence is complete.</p>
+        </div>
+        <dl aria-label="Current review queue">
+          <div>
+            <dt>Queue</dt>
+            <dd>{activeQueueSummary?.label || "Loading"}</dd>
+          </div>
+          <div>
+            <dt>Total</dt>
+            <dd>{activeQueueSummary ? activeQueueSummary.count.toLocaleString() : "-"}</dd>
+          </div>
+          <div>
+            <dt>Loaded</dt>
+            <dd>{data?.assets.length ?? 0}</dd>
+          </div>
+        </dl>
+      </section>
 
 	      {error ? (
 	        <StatusBanner className="mt-4" tone="critical" title="Review queue did not load">{error}</StatusBanner>
 	      ) : null}
-
-	      {data?.source.readOnly ? (
-        <StatusBanner className="mt-3 hidden md:grid" tone="info" title="Review queue is reading ResourceSpace export" icon={Database}>
-          Review action is ready, but ResourceSpace API write mapping is not configured yet. Actions stay server-routed until field mapping is live.
-        </StatusBanner>
-      ) : null}
 
       <section className="mt-4 rounded-lg border border-[#d6dfd8] bg-white p-3 md:hidden" aria-label="Review queues">
         <label className="grid gap-1 text-sm font-black text-tjc-evergreen">
@@ -566,40 +569,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-5 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[13rem_minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
-        <aside className="hidden min-w-0 2xl:grid 2xl:content-start 2xl:gap-3" aria-label="Review queue groups">
-          <DamReviewQueueRail title="Queue groups" description="Select work by blocker, assignment, or write state.">
-            {keyReviewerQueues.map((queue) => (
-              <button
-                key={`left-${queue.id}`}
-                type="button"
-                className={cn("grid min-h-11 grid-cols-[1fr_auto] items-center gap-2 rounded-md border px-2 text-left text-xs font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e5f3ea] text-tjc-evergreen" : "border-transparent text-[#3f4a43]")}
-                onClick={() => selectQueue(queue.id)}
-                aria-pressed={activeQueue === queue.id}
-              >
-                <span className="truncate">{queue.label}</span>
-                <span className="rounded-md border border-[#d6dfd8] bg-white px-2 py-0.5 tabular-nums">{queue.count.toLocaleString()}</span>
-              </button>
-            ))}
-            <details className="border-t border-tjc-line pt-2">
-              <summary className="cursor-pointer text-xs font-black text-tjc-evergreen">Advanced queues</summary>
-              <div className="mt-2 grid gap-1">
-                {advancedQueues.map((queue) => (
-                  <button
-                    key={`left-advanced-${queue.id}`}
-                    type="button"
-                    className={cn("grid min-h-9 grid-cols-[1fr_auto] items-center gap-2 rounded-md px-2 text-left text-[11px] font-black transition hover:bg-[#eef7f1]", activeQueue === queue.id ? "bg-[#e5f3ea] text-tjc-evergreen" : "text-[#4d554d]")}
-                    onClick={() => selectQueue(queue.id)}
-                    aria-pressed={activeQueue === queue.id}
-                  >
-                    <span className="truncate">{queue.label}</span>
-                    <span className="tabular-nums">{queue.count.toLocaleString()}</span>
-                  </button>
-                ))}
-              </div>
-            </details>
-          </DamReviewQueueRail>
-        </aside>
+      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
         <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
           <details className="review-mobile-queue rounded-xl border border-[#d7dde2] bg-white md:hidden" data-testid="review-mobile-collapsed-queue">
             <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-black text-[#111827]">
@@ -766,6 +736,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <div className={factItemClass}><dt className={factTermClass}>Pending write</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Write mode</dt><dd className={factDescClass}>Pending local queue only until ResourceSpace API field mapping is configured.</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>ResourceSpace truth</dt><dd className={factDescClass}>Raw status remains {selectedAsset.status}. Pending review write is not final ResourceSpace persistence.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Write adapter</dt><dd className={factDescClass}>Review action is ready, but ResourceSpace API write mapping is not configured yet.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
@@ -779,10 +750,6 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 resourceSpaceUrl={data?.resourceSpaceUrls[selectedAsset.id] || null}
                 canOpenResourceSpace={Boolean(data?.resourceSpaceUrls[selectedAsset.id])}
               />
-            </div>
-            <div className="grid grid-cols-[auto_1fr] gap-2 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm text-[#52677a]">
-              <Info size={16} strokeWidth={1.8} aria-hidden="true" />
-              <span>Review action is ready, but ResourceSpace API write mapping is not configured yet.</span>
             </div>
             </section>
           </DamReviewSelectedAsset>

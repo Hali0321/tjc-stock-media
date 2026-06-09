@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { ExternalLink, ShieldAlert } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
-import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
-import { assetPresentation, provenanceSummary } from "@/lib/presentation";
+import { assetPresentation } from "@/lib/presentation";
 import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -16,10 +15,6 @@ type ReviewQueueAssetCardProps = {
   onInspect: (id: string) => void;
 };
 
-function sourceSummary(asset: StockMediaAsset, role: DemoRole) {
-  return provenanceSummary(asset, role).publicLabel || asset.collection || "Source pending";
-}
-
 function nextCheckLabel(missing: string[], risks: string[]) {
   if (missing.includes("source")) return "Verify source";
   if (missing.includes("people/minors")) return "Check people/minors";
@@ -27,17 +22,6 @@ function nextCheckLabel(missing: string[], risks: string[]) {
   if (missing.includes("usage guidance")) return "Add guidance";
   if (missing.includes("reviewer") || missing.includes("review date")) return "Record reviewer";
   return "Decision ready";
-}
-
-function ageLabel(asset: StockMediaAsset) {
-  const raw = asset.reviewedDate || asset.importDate || asset.capturedDate || asset.eventDate;
-  if (!raw) return "Age unknown";
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return "Age unknown";
-  const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000));
-  if (days === 0) return "Today";
-  if (days === 1) return "1 day";
-  return `${days} days`;
 }
 
 export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: ReviewQueueAssetCardProps) {
@@ -52,8 +36,6 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
   const nextCheck = nextCheckLabel(missing, risks);
   const evidenceProgress = missing.length ? `${missing.length} gaps` : "Fields ready";
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
-  const assignee = asset.reviewer || "Unassigned";
-  const age = ageLabel(asset);
   const sla = severity === "High" ? "SLA: review soon" : missing.length ? "SLA: open" : "SLA: ready";
 
   return (
@@ -132,7 +114,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
     <article
       className={cn(
-        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[6.5rem_minmax(13rem,1.1fr)_minmax(13rem,.9fr)_minmax(10rem,.7fr)] 2xl:grid-cols-[7rem_minmax(14rem,1.15fr)_minmax(16rem,1fr)_minmax(12rem,.8fr)]",
+        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[5.25rem_minmax(14rem,1.2fr)_minmax(12rem,.8fr)_8.75rem] 2xl:grid-cols-[5.5rem_minmax(16rem,1.2fr)_minmax(13rem,.8fr)_8.75rem]",
         selected && "bg-[#e5f3ea] ring-1 ring-inset ring-[#8fb2a5]"
       )}
       data-component="ExpandedReviewQueueCard"
@@ -147,22 +129,11 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       </Link>
 
       <div className="review-row-record min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            {selected ? <span className="mb-1 inline-flex rounded-md border border-[#8fb2a5] bg-white px-2 py-0.5 text-[10px] font-black text-tjc-evergreen">Currently reviewing</span> : null}
-            <h2 className="line-clamp-2 text-base font-black leading-tight text-tjc-ink max-sm:text-sm">{display.title}</h2>
-            <p className="mt-1 grid gap-1 text-sm font-medium text-tjc-muted max-sm:text-xs">
-              <span className="truncate">{asset.collection}</span>
-              <span className="truncate max-sm:hidden">{sourceSummary(asset, role)}</span>
-            </p>
-          </div>
-          <span className="rounded-md border border-[#cad8cf] bg-white px-2 py-1 text-[11px] font-black text-tjc-evergreen tabular-nums max-sm:hidden">RS {asset.resourceSpaceId || asset.id}</span>
-        </div>
-        <div className="review-row-badges mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
-          <StatusBadge status={asset.status} />
-          <UsageBadge scope={asset.usageScope} />
-          <span className="rounded-md border border-[#d7dfd8] bg-white px-2 py-1 text-[11px] font-black text-[#536057]">{assignee}</span>
-          <span className="rounded-md border border-[#d7dfd8] bg-white px-2 py-1 text-[11px] font-black text-[#536057]">{age}</span>
+        {selected ? <span className="review-row-state">Selected</span> : null}
+        <h2 className="line-clamp-1 text-base font-black leading-tight text-tjc-ink max-sm:text-sm">{display.title}</h2>
+        <div className="review-row-focus" aria-label="Review focus">
+          <span>{nextCheck}</span>
+          <strong>{missing.length ? `${missing.length} gaps` : "Ready"}</strong>
         </div>
       </div>
 
@@ -170,31 +141,17 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="review-row-blocker-card grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-lg border border-[#d7dfd8] bg-[#fbfcfa] p-2 text-sm">
           <ShieldAlert size={16} strokeWidth={1.8} aria-hidden="true" className="text-[#725216]" />
           <span className="min-w-0">
-            <strong className="block truncate font-black text-tjc-ink">{primaryRisk}</strong>
-            <span className="block truncate text-xs font-semibold text-tjc-muted">{nextCheck}</span>
+            <strong className="block truncate font-black text-tjc-ink">{compactRisk}</strong>
+            <span className="block truncate text-xs font-semibold text-tjc-muted">{evidenceProgress}</span>
           </span>
           <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[11px] font-black text-[#725216]">{severity}</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5" aria-label="Blocker summary">
-          {risks.slice(0, 3).map((flag) => (
-            <span className="rounded-md border border-[#ead6a8] bg-white px-2 py-1 text-[11px] font-black text-[#725216]" key={flag}>
-              {flag}
-            </span>
-          ))}
-          <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[11px] font-black text-[#536057]">
-            {missing.length ? `${missing.length} missing` : "Fields ready"}
-          </span>
-          <span className="rounded-md border border-[#cfd9dd] bg-white px-2 py-1 text-[11px] font-black text-[#52677a]">
-            {evidenceProgress}
-          </span>
         </div>
       </div>
 
       <div className="review-row-actions grid content-start gap-2 max-sm:col-span-2">
         <div className="review-row-next rounded-md border border-[#c9d8cf] bg-white p-3 max-sm:hidden">
-          <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Next check</span>
-          <strong className="mt-1 block text-sm text-tjc-ink">{nextCheck}</strong>
-          <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{evidenceProgress} · {sla} · {missing.length ? missing.slice(0, 3).join(", ") : "Ready for evidence note and decision."}</p>
+          <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">SLA</span>
+          <strong className="mt-1 block text-sm text-tjc-ink">{sla.replace("SLA: ", "")}</strong>
         </div>
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           <button
