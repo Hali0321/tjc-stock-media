@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileLock2, MessageCircle, Search, UploadCloud } from "lucide-react";
-import { DamAssistantLaneCard, DamHelpDecisionPanel, DamHelpTopicButton } from "@/components/dam/DamWorkspace";
+import { DamHelpDecisionPanel, DamHelpTopicButton } from "@/components/dam/DamWorkspace";
 
 type HelpTopic = {
   id: string;
@@ -88,12 +88,6 @@ const decisionTree = [
   ["Need original/source file?", "Request source-file access. It is not automatic."]
 ] as const;
 
-const assistantLanes = [
-  ["Find", "Start with approved copies and packages."],
-  ["Verify", "Open the media record before reuse."],
-  ["Escalate", "Ask review when approval is unclear."]
-] as const;
-
 export function GuidePage() {
   const [query, setQuery] = useState("");
   const [openTopic, setOpenTopic] = useState(helpTopics[0].id);
@@ -114,7 +108,7 @@ export function GuidePage() {
       <section className="min-w-0">
         <div className="help-hero">
           <div className="help-command-main">
-            <p className="dam-kicker">Help desk</p>
+            <p className="dam-kicker">Media use guide</p>
             <h1 className="mt-1 text-2xl font-black leading-tight tracking-[0] text-[#111827] sm:text-3xl">
               What are you trying to do?
             </h1>
@@ -148,12 +142,6 @@ export function GuidePage() {
             ))}
           </dl>
         </div>
-
-        <section className="help-lane-strip mt-3 grid gap-2 md:grid-cols-3" aria-label="Help decision lanes">
-          {assistantLanes.map(([label, detail]) => (
-            <DamAssistantLaneCard label={label} detail={detail} key={label} />
-          ))}
-        </section>
 
         <section className="help-mobile-decision mt-3 grid gap-2 md:hidden" aria-label="Mobile quick help">
           <DamHelpDecisionPanel items={decisionTree} mobile />

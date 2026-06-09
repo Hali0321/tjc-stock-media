@@ -2,10 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, History, Search } from "lucide-react";
+import { ArrowLeft, Copy, Download, FileLock2, History, Mail, PackagePlus, Search, ShieldCheck } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
-import { DamEmptyState as EmptyState, DamPrimaryAction as PrimaryAction } from "@/components/dam/DamWorkspace";
-import { DamProtectedPreview as ProtectedPreview, DamRecordCommandHeader as RecordCommandHeader, DamRecordFilmstrip as RecordFilmstrip, DamRecordLedger as RecordLedger, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection, DamRecordPreviewStage as RecordPreviewStage, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
+import { DamEmptyState as EmptyState } from "@/components/dam/DamWorkspace";
+import { DamProtectedPreview as ProtectedPreview, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection } from "@/components/dam/DamRecord";
+import { DamActionBar, DamActionButton } from "@/components/dam/ActionBar";
+import { DamDetailPanel, DamMetadataGrid, DamPreviewWorkbench, DamRelatedMediaStrip, DamSourceRestrictionCard } from "@/components/dam/DetailPanel";
+import { DamSafeCopy } from "@/components/dam/SafeCopy";
+import { DamVerdictBadge } from "@/components/dam/VerdictBadge";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { useDemoRole } from "@/components/RoleProvider";
 import { decideAccess } from "@/lib/access-decisions";
@@ -184,9 +188,9 @@ export function AssetDetailPage({ id }: { id: string }) {
   if (error) {
     return (
       <div className="dam-shell">
-        <PrimaryAction href="/" tone="secondary" icon={ArrowLeft}>Back to Find</PrimaryAction>
+        <DamActionButton href="/" tone="secondary" icon={ArrowLeft}>Back to Find</DamActionButton>
         <div className="mt-4">
-          <EmptyState title="Media record did not load" description={error} primary={<PrimaryAction href="/" icon={Search}>Find approved media</PrimaryAction>} />
+          <EmptyState title="Media record did not load" description={error} primary={<DamActionButton href="/" icon={Search} tone="primary">Find approved media</DamActionButton>} />
         </div>
       </div>
     );
@@ -206,47 +210,67 @@ export function AssetDetailPage({ id }: { id: string }) {
   const sourceGuidance = adminOps ? asset.sourceAccount || asset.sourceSystem || asset.sourcePlatform || "Source not exported" : opsView ? "Media library record" : "Media team";
   const referenceLabel = adminOps ? "ResourceSpace ID" : "Reference code";
   const referenceCode = adminOps ? asset.resourceSpaceId || asset.id : asset.id;
-  const previewStripItems = [asset, ...data.related].slice(0, 5).map((item, index) => ({
-    item,
-    index,
-    imageUrl: index === 0 ? preview : collectionImageUrl(item, role)
-  })).filter((item) => item.imageUrl);
+  const safeCopyTone = verdict.tone === "ready" ? "approved" : verdict.tone === "unavailable" ? "blocked" : verdict.tone === "restricted" ? "restricted" : "pending";
+  const sourceRestrictionCopy = verdict.canDownload
+    ? "Use the approved copy shown here. Source-file access stays request-only."
+    : "Source files stay with the Media Team. Request review before reuse or source-file access.";
+  const tags = Array.from(new Set([...(asset.usageTerms || []), ...(asset.tags || []), ...(asset.tjcTerms || [])])).slice(0, 10);
+  const metadataItems = [
+    { label: "Usage rights", value: asset.rightsStatus || asset.rightsNotes || "Reviewer should confirm before public use" },
+    { label: "Ministry / event", value: asset.eventName || asset.collection },
+    { label: "People sensitivity", value: asset.peopleRisk || "Unknown" },
+    { label: "Usage scope", value: asset.usageScope },
+    { label: "Review date", value: asset.reviewedDate || "Review pending" },
+    { label: referenceLabel, value: referenceCode },
+    { label: "Source file", value: verdict.canDownload ? "Approved copy available; source access restricted" : "Request-only" },
+    {
+      label: "Tags",
+      value: tags.length ? (
+        <span className="dam-record-tag-list">
+          {tags.map((tag) => <span key={tag}>{tag}</span>)}
+        </span>
+      ) : "Not provided"
+    }
+  ];
 
   return (
-    <div className="dam-shell grid gap-6">
-      <RecordCommandHeader
-        eyebrow={opsView ? "Enterprise media record" : "Media record"}
-        title={display.title}
-        subtitle={opsView ? provenance.publicLabel : asset.eventName || asset.collection}
-        referenceLabel={referenceLabel}
-        reference={referenceCode}
-      >
-        <PrimaryAction href="/" tone="secondary" icon={ArrowLeft}>Back to Find</PrimaryAction>
-        <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={adminOps} label={opsView ? "Asset actions" : "Record actions"} />
-      </RecordCommandHeader>
+    <div className="dam-shell dam-asset-record-v2 grid gap-5">
+      <section className="dam-record-command-v2" aria-label="Media record header">
+        <div className="dam-record-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/">Find</Link>
+          <span>/</span>
+          <span>{asset.collection}</span>
+          <span>/</span>
+          <strong>{display.title}</strong>
+        </div>
+        <div className="dam-record-command-row">
+          <div className="min-w-0">
+            <span className="dam-record-route-chip">{opsView ? "Enterprise media record" : "Asset record"}</span>
+            <h1>{display.title}</h1>
+            <p>{asset.mediaType} · {asset.fileExtension || "media"} · {asset.imageDimensions || "dimensions pending"} · {opsView ? provenance.publicLabel : asset.eventName || asset.collection}</p>
+          </div>
+          <div className="dam-record-command-actions">
+            <DamActionButton href="/" tone="secondary" icon={ArrowLeft}>Back to Find</DamActionButton>
+            <DamActionButton href="#credit" tone="quiet" icon={Copy}>Copy citation</DamActionButton>
+            <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={adminOps} label={opsView ? "Asset actions" : "Record actions"} />
+          </div>
+        </div>
+      </section>
 
-      <section className="asset-record-layout grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,.85fr)] xl:items-start" aria-label="Media record decision">
-        <div className="grid gap-4">
-          <RecordPreviewStage
-            title={display.title}
-            subtitle={preview ? display.cardSubtitle : "Protected preview stays blocked until the record clears reuse checks."}
-            status={preview ? "Preview available" : "Protected"}
-            filmstrip={previewStripItems.length > 1 ? (
-              <RecordFilmstrip>
-                {previewStripItems.map(({ item, index, imageUrl }) => (
-                  <Link
-                    href={`/assets/${item.id}`}
-                    className={cn("record-filmstrip-item", index === 0 && "is-active")}
-                    key={`${item.id}-${index}`}
-                    aria-label={index === 0 ? "Current media record" : `Open related media ${assetPresentation(item, role).title}`}
-                  >
-                    <MediaPreview src={imageUrl || undefined} alt={item.thumbnailAlt} label="Preview protected" detail="Open record for guidance" />
-                    <span>{index === 0 ? "Current" : "Related"}</span>
-                  </Link>
-                ))}
-              </RecordFilmstrip>
-            ) : null}
-          >
+      <DamDetailPanel
+        preview={
+          <div className="grid gap-4">
+            <DamPreviewWorkbench
+              title={display.title}
+              subtitle={preview ? display.cardSubtitle : "Protected preview stays blocked until the record clears reuse checks."}
+              status={preview ? "Preview available" : "Protected"}
+              facts={[
+                { label: "Dimensions", value: asset.imageDimensions || "Not exported" },
+                { label: "File type", value: asset.fileExtension || asset.mediaType },
+                { label: "Source", value: sourceGuidance },
+                { label: referenceLabel, value: referenceCode }
+              ]}
+            >
               {preview ? (
                 <MediaPreview src={preview} alt={asset.thumbnailAlt} label="Preview available" detail={display.cardSubtitle} loading="eager" />
               ) : (
@@ -257,38 +281,52 @@ export function AssetDetailPage({ id }: { id: string }) {
                   className="asset-detail-protected-preview h-full rounded-none"
                 />
               )}
-          </RecordPreviewStage>
-        </div>
+            </DamPreviewWorkbench>
+          </div>
+        }
+        decision={
+          <>
+            <section className={cn("dam-verdict-command-panel", verdict.tone === "ready" && "is-ready", verdict.tone === "restricted" && "is-restricted", verdict.tone === "unavailable" && "is-blocked")} data-testid="asset-primary-verdict">
+              <div className="dam-verdict-command-top">
+                <span>Can I use this?</span>
+                <DamVerdictBadge verdict={verdict} />
+              </div>
+              <h2>{verdict.title}</h2>
+              <p>{verdict.reason}</p>
+              <DamSafeCopy tone={safeCopyTone} title={verdict.canDownload ? "Approved copy available" : "Reuse is not self-serve yet"}>
+                {verdict.canDownload
+                  ? "Download the approved copy and keep the visible usage guidance with the media."
+                  : "Do not download, publish, or reuse this media until the record clears review."}
+              </DamSafeCopy>
+              <DamSourceRestrictionCard detail={sourceRestrictionCopy} />
+              <div className="dam-verdict-command-actions">
+                {verdict.canDownload ? (
+                  <DamActionButton href={verdict.downloadHref} tone="primary" icon={Download}>Download approved copy</DamActionButton>
+                ) : (
+                  <DamActionButton href={requestHref} tone="primary" icon={Mail}>Request DAM review</DamActionButton>
+                )}
+                <DamActionButton href={requestHref} tone="secondary" icon={FileLock2}>Request source-file access</DamActionButton>
+              </div>
+            </section>
+            <DamMetadataGrid title="Record metadata" items={metadataItems} />
+          </>
+        }
+      />
 
-        <aside className="record-verdict-rail grid gap-4 xl:sticky xl:top-[calc(var(--app-header-height)+1rem)]">
-          <RecordLedger
-            items={[
-              { label: "Use verdict", value: verdict.label },
-              { label: "Usage scope", value: asset.usageScope },
-              { label: "Preview", value: preview ? "Available" : "Protected" },
-              { label: "Source file", value: verdict.canDownload ? "Approved copy only" : "Request-only" }
-            ]}
-          />
-          <VerdictPanel
-            verdict={verdict}
-            requestHref={requestHref}
-            onRequestReview={() => {
-              window.location.href = requestHref;
-            }}
-          />
-        </aside>
-      </section>
+      <DamRelatedMediaStrip assets={data.related} role={role} />
 
       <section className="record-metadata-grid grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Use guidance">
         <div className="grid gap-4">
           <RecordMetadataSection title="Use guidance" id="use-guidance" className="scroll-mt-28" >
-              <FieldList items={display.guidanceFacts.map((fact) => ({ label: fact.label, value: fact.value }))} />
+            <FieldList items={display.guidanceFacts.map((fact) => ({ label: fact.label, value: fact.value }))} />
           </RecordMetadataSection>
 
           <RecordMetadataSection title="Credit" id="credit" className="scroll-mt-28">
             <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{asset.rightsNotes?.toLowerCase().includes("credit") ? asset.rightsNotes : "Credit not required unless noted by reviewer."}</p>
           </RecordMetadataSection>
+        </div>
 
+        <aside className="grid gap-4">
           <RecordMetadataSection title="People/youth note">
             <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">
               {asset.peopleRisk === "Possible minors"
@@ -298,24 +336,22 @@ export function AssetDetailPage({ id }: { id: string }) {
                   : "People visibility has not been confirmed. Request review before public reuse."}
             </p>
           </RecordMetadataSection>
-
-          <RelatedMedia assets={data.related} role={role} />
-        </div>
-
-        <aside className="grid gap-4">
-          <RecordMetadataSection title="Media source">
-              <FieldList
-                items={[
-                  { label: "Event / package", value: asset.eventName || asset.collection },
-                  { label: "Credit/source guidance", value: sourceGuidance },
-                  { label: referenceLabel, value: referenceCode },
-                  { label: "Source file", value: verdict.canDownload ? "Use approved copy. Source-file access stays restricted." : "Restricted until approved access is granted." }
-                ]}
-              />
-          </RecordMetadataSection>
           <TagSection asset={asset} />
         </aside>
       </section>
+
+      <DamActionBar
+        reminder={<><ShieldCheck size={17} strokeWidth={1.9} aria-hidden="true" /> Downloads follow the visible usage verdict.</>}
+      >
+        {verdict.canDownload ? (
+          <DamActionButton href={verdict.downloadHref} tone="primary" icon={Download}>Download approved copy</DamActionButton>
+        ) : (
+          <DamActionButton href={requestHref} tone="primary" icon={Mail}>Request DAM review</DamActionButton>
+        )}
+        <DamActionButton href="/" tone="secondary" icon={PackagePlus}>Add to package</DamActionButton>
+        <DamActionButton href={requestHref} tone="secondary" icon={FileLock2}>Source access</DamActionButton>
+        <DamActionButton href="#credit" tone="quiet" icon={Copy}>Copy citation</DamActionButton>
+      </DamActionBar>
 
       {adminOps ? <OpsDetails asset={asset} role={role} resourceSpaceUrl={data.resourceSpaceUrl ?? null} /> : null}
     </div>
