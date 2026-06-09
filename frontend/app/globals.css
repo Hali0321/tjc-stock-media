@@ -5773,12 +5773,26 @@ body,
   }
 
   .dam-related-record-row {
-    grid-template-columns: 4.5rem minmax(0,1fr);
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: .25rem .55rem;
+    padding-block: .48rem;
   }
 
-  .dam-related-record-verdict,
-  .dam-related-record-action {
+  .dam-related-record-thumb {
+    display: none;
+  }
+
+  .dam-related-record-main {
+    grid-column: 1;
+  }
+
+  .dam-related-record-verdict {
     grid-column: 2;
+    align-self: start;
+  }
+
+  .dam-related-record-action {
+    grid-column: 1 / -1;
     justify-content: flex-start;
   }
 
