@@ -2578,7 +2578,8 @@ a[class*="bg-tjc-evergreen"] {
 }
 
 .find-facet-rail {
-  box-shadow: inset 3px 0 0 #063f37;
+  border-color: #a9beb4 !important;
+  background: #fbfcfb !important;
 }
 
 .find-facet-rail button,
@@ -3046,12 +3047,14 @@ body,
 }
 
 .asset-results-toolbar {
-  box-shadow: inset 3px 0 0 var(--dam-v3-green) !important;
+  border-color: #a9beb4 !important;
+  background:
+    linear-gradient(90deg, #fff 0%, #fff 64%, #f6f8f7 64%, #f6f8f7 100%) !important;
 }
 
 .find-facet-rail {
   padding: .7rem !important;
-  box-shadow: inset 3px 0 0 var(--dam-v3-green) !important;
+  box-shadow: 0 0 0 2px rgba(6,71,61,.04) !important;
 }
 
 .find-facet-rail h2,
@@ -3073,14 +3076,18 @@ body,
 
 .find-usecase-grid {
   gap: .55rem !important;
+  border: 1px solid #dfe6e2;
+  border-radius: .42rem;
+  background: #f8faf9;
+  padding: .45rem;
 }
 
 .find-usecase-grid > *,
 .dam-packet-category,
 .help-topic-button {
-  min-height: 3.5rem !important;
+  min-height: 3.15rem !important;
   border: 1px solid var(--dam-v3-line) !important;
-  border-radius: .38rem !important;
+  border-radius: .26rem !important;
   background: #fff !important;
   box-shadow: none !important;
 }
@@ -3099,10 +3106,60 @@ body,
 
 .find-usecase-grid > * > span:first-child,
 .dam-packet-category > span:first-child {
-  width: 2rem !important;
-  height: 2rem !important;
-  border-radius: .3rem !important;
+  width: 1.85rem !important;
+  height: 1.85rem !important;
+  border-radius: .22rem !important;
   background: #edf3ef !important;
+}
+
+.library-empty-compact {
+  padding: .9rem !important;
+}
+
+.library-empty-compact > div:first-child {
+  grid-template-columns: minmax(0,1fr) minmax(16rem,.32fr) !important;
+  gap: .75rem !important;
+}
+
+.library-empty-compact .empty-state-ledger {
+  border-radius: .28rem !important;
+}
+
+.library-empty-compact .empty-state-ledger div {
+  padding-block: .55rem !important;
+}
+
+.library-empty-compact .empty-state-lanes {
+  margin-top: .75rem !important;
+  gap: .45rem !important;
+}
+
+.library-empty-compact .empty-state-lane {
+  border-radius: .26rem !important;
+  background: #fbfcfb !important;
+  padding: .55rem !important;
+}
+
+.library-empty-compact h2 {
+  font-size: 1.25rem !important;
+}
+
+.library-empty-compact p {
+  font-size: .84rem !important;
+}
+
+.asset-empty-inline > button {
+  border-radius: .26rem !important;
+}
+
+@media (max-width: 767px) {
+  .library-empty-compact > div:first-child {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+
+  .library-empty-compact .empty-state-ledger div {
+    grid-template-columns: minmax(5.5rem,.45fr) minmax(0,1fr) !important;
+  }
 }
 
 .media-results-grid {
