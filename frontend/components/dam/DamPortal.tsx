@@ -56,18 +56,20 @@ function PackageCover({
     );
   }
   return (
-    <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br p-4 text-white", packageCoverTone(collection.name), large && "aspect-[16/10]")}>
-      <div className="absolute inset-0 opacity-[.22]" aria-hidden="true">
-        <div className="h-full w-full bg-[linear-gradient(90deg,rgba(255,255,255,.82)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.82)_1px,transparent_1px)] bg-[size:26px_26px]" />
+    <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br p-3 text-white", packageCoverTone(collection.name), large && "aspect-[16/10]")}>
+      <div className="generated-package-contact-sheet absolute inset-3 grid grid-cols-3 gap-1.5 opacity-95" aria-hidden="true">
+        {Array.from({ length: large ? 9 : 6 }).map((_, index) => (
+          <span className={cn("rounded-md border border-white/70 bg-white/60", index % 4 === 0 && "bg-[#dfe8e3]", index % 5 === 0 && "bg-[#eef2f4]")} key={index} />
+        ))}
       </div>
       <div className="relative z-[1] grid h-full content-between">
         <div className="flex items-start justify-between gap-2">
-          <span className="rounded-xl bg-white/90 px-2.5 py-1 text-xs font-black text-tjc-evergreen shadow-sm">{packageInitials(collection.name)}</span>
+          <span className="rounded-md bg-white/90 px-2.5 py-1 text-xs font-black text-tjc-evergreen shadow-sm">{packageInitials(collection.name)}</span>
           <span className="text-right text-[11px] font-black uppercase tracking-[.08em] text-white/85">Package</span>
         </div>
-        <div>
+        <div className="rounded-md bg-white/90 p-2 text-tjc-ink shadow-sm">
           <strong className="line-clamp-2 text-lg font-black leading-tight text-white drop-shadow-sm">{collection.name}</strong>
-          <span className="mt-2 block text-xs font-black text-white/90">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
+          <span className="mt-1 block text-xs font-black text-white/90">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
         </div>
       </div>
     </div>
@@ -94,29 +96,32 @@ export function PackageCard({
   const bestUse = collection.searchQuery || `${collection.ministry} media`;
   return (
     <article
-      className={cn("package-card collectible-package-card group grid gap-4 overflow-hidden rounded-2xl border bg-white p-4 transition", active && "ring-2 ring-[#0b4b42]")}
+      className={cn("package-card collectible-package-card collection-row-card group grid gap-4 overflow-hidden rounded-2xl border bg-white p-4 transition md:grid-cols-[13rem_minmax(0,1fr)]", active && "ring-2 ring-[#0b4b42]")}
       onPointerEnter={onInspect}
     >
       <PackageCover collection={collection} readyCount={readyCount} reviewNeeded={reviewNeeded} />
-      <div className="grid gap-3">
+      <div className="grid min-w-0 gap-3">
         <div className="min-w-0">
-          <span className="text-xs font-black text-tjc-evergreen">{collection.ministry}</span>
-          <h2 className="mt-1 line-clamp-2 text-2xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black text-tjc-evergreen">{collection.ministry}</span>
+            <span className="rounded-md border border-[#d9dee3] bg-[#f8faf9] px-2 py-0.5 text-[11px] font-black uppercase tracking-[.04em] text-[#52606b]">Package</span>
+          </div>
+          <h2 className="mt-1 line-clamp-2 text-xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
           <p className="mt-2 line-clamp-2 text-sm font-semibold leading-relaxed text-tjc-muted">{collection.description}</p>
         </div>
-        <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-[#d6dfd8] bg-[#f7faf8] text-sm">
+        <div className="package-row-stats grid grid-cols-3 overflow-hidden rounded-xl border border-[#d6dfd8] bg-[#f7faf8] text-sm">
           <span className="px-3 py-2 font-black text-[#194f34]">{readyCount.toLocaleString()}<small className="mt-0.5 block font-semibold text-tjc-muted">ready</small></span>
           <span className="border-x border-[#d6dfd8] px-3 py-2 font-black text-[#71500f]">{reviewNeeded.toLocaleString()}<small className="mt-0.5 block font-semibold text-tjc-muted">review</small></span>
           <span className="min-w-0 px-3 py-2 font-black text-[#27435b]"><span className="block truncate">{collection.countLabel}</span><small className="mt-0.5 block font-semibold text-tjc-muted">items</small></span>
         </div>
-        <div className="grid gap-2 rounded-xl bg-[#f7faf8] p-3 text-sm leading-relaxed">
+        <div className="package-row-note grid gap-1 rounded-xl bg-[#f7faf8] p-3 text-sm leading-relaxed">
           <p className="font-semibold text-tjc-muted"><strong className="font-black text-tjc-ink">Best use:</strong> {bestUse}</p>
           <p className="font-semibold text-[#71500f]"><strong className="font-black">Safety:</strong> item-level approval required before reuse.</p>
         </div>
         {collection.peopleWarning ? (
           <p className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-xs font-black leading-relaxed text-[#71500f]">{collection.peopleWarning}</p>
         ) : null}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 md:justify-end">
           <PrimaryAction onClick={onOpen} icon={Search}>Open media</PrimaryAction>
           <PrimaryAction onClick={onInspect} tone="secondary" icon={FolderOpen}>View details</PrimaryAction>
         </div>

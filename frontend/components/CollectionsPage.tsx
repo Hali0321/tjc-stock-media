@@ -158,7 +158,7 @@ export function CollectionsPage() {
           </div>
 
           {loading ? (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-3">
               {Array.from({ length: 6 }).map((_, index) => <div className="skeleton h-72 rounded-[14px]" key={index} />)}
             </div>
           ) : null}
@@ -172,7 +172,7 @@ export function CollectionsPage() {
           ) : null}
 
           {!loading && collections.length ? (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="package-list-grid grid gap-3">
               {collections.map((collection) => (
                 <div key={collection.id}>
                   <PackageCard

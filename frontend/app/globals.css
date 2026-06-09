@@ -2529,3 +2529,263 @@ a[class*="bg-tjc-evergreen"] {
     padding: .85rem !important;
   }
 }
+
+/* Enterprise DAM reference pass: final compact layer. Borrowed patterns from
+   mature DAM tools: facet rail, contact-sheet packages, dense metadata rows. */
+:root {
+  --dam-console-border: #d8dde3;
+  --dam-console-subtle: #f2f4f6;
+  --dam-console-row: #ffffff;
+  --dam-console-row-hover: #f7f9fa;
+}
+
+.dam-shell {
+  padding-bottom: 2.25rem !important;
+}
+
+.find-hero,
+.send-hero,
+.help-hero,
+.dam-ops-banner,
+.admin-cockpit-hero {
+  border-radius: .45rem !important;
+}
+
+.find-hero .dam-page-title,
+.send-hero .dam-page-title,
+.dam-ops-banner .dam-page-title,
+.admin-cockpit-hero .dam-page-title {
+  font-size: clamp(1.45rem, 1.7vw, 2rem) !important;
+}
+
+.hero-search-shell {
+  display: grid !important;
+  gap: .35rem !important;
+  padding: .35rem !important;
+}
+
+.hero-search-shell input {
+  min-height: 2.5rem !important;
+  font-size: .92rem !important;
+}
+
+.hero-search-shell button {
+  min-height: 2.5rem !important;
+}
+
+.asset-bank-console {
+  align-items: start;
+}
+
+.find-facet-rail {
+  box-shadow: inset 3px 0 0 #063f37;
+}
+
+.find-facet-rail button,
+.find-facet-rail a {
+  outline-offset: 2px;
+}
+
+.asset-bank-results {
+  min-width: 0;
+  border-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.asset-results-toolbar {
+  border-radius: .45rem !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.empty-state-stage {
+  border-style: solid !important;
+  border-radius: .45rem !important;
+  background: #fff !important;
+}
+
+.empty-state-ledger dt,
+.empty-state-ledger dd {
+  min-width: 0;
+}
+
+.media-results-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14.5rem), 1fr)) !important;
+  gap: .75rem !important;
+}
+
+.media-card-catalog {
+  border-radius: .42rem !important;
+}
+
+.media-card-catalog > a {
+  aspect-ratio: 4 / 3 !important;
+}
+
+.media-card-catalog > div {
+  gap: .55rem !important;
+  padding: .75rem !important;
+}
+
+.media-card-catalog h2 {
+  font-size: .95rem !important;
+}
+
+.media-card-catalog p,
+.media-card-catalog span {
+  font-size: .78rem;
+}
+
+.package-list-grid {
+  gap: .7rem !important;
+}
+
+.collection-row-card {
+  border-radius: .45rem !important;
+  padding: .65rem !important;
+}
+
+.collection-row-card .package-cover {
+  min-height: 9rem;
+}
+
+.collection-row-card h2 {
+  font-size: 1.05rem !important;
+}
+
+.package-row-stats {
+  border-radius: .35rem !important;
+}
+
+.package-row-stats > span {
+  padding-block: .45rem !important;
+}
+
+.package-row-note {
+  border: 1px solid #e7ebef;
+  border-radius: .35rem !important;
+  background: #fafbfc !important;
+}
+
+.generated-package-contact-sheet span {
+  box-shadow: inset 0 0 0 1px rgba(82, 96, 107, .05);
+}
+
+.generated-package-cover {
+  background:
+    linear-gradient(90deg, rgba(6,63,55,.06) 0 1px, transparent 1px 22px),
+    linear-gradient(180deg, #f8fafc, #eceff2) !important;
+}
+
+.generated-package-cover > div:last-child > div:last-child,
+.generated-package-cover > div:last-child > div:last-child strong,
+.generated-package-cover > div:last-child > div:last-child span {
+  color: #111827 !important;
+}
+
+.package-inspector {
+  border-radius: .45rem !important;
+}
+
+.package-inspector .package-cover {
+  min-height: 14rem;
+}
+
+.admin-cockpit-hero {
+  min-height: 0 !important;
+}
+
+.admin-cockpit-hero .admin-cockpit-intro,
+.admin-cockpit-hero .admin-cockpit-intro .dam-page-title,
+.admin-cockpit-hero .admin-cockpit-intro > span,
+.admin-cockpit-hero .admin-cockpit-intro p,
+.admin-top-blocker strong,
+.admin-top-blocker > span:first-child {
+  color: #111827 !important;
+}
+
+.admin-top-blockers {
+  gap: 0 !important;
+  overflow: hidden;
+  border: 1px solid var(--dam-console-border);
+  border-radius: .45rem;
+  background: #fff;
+}
+
+.admin-top-blocker {
+  border-color: #edf0f2 !important;
+  padding-inline: .75rem !important;
+}
+
+.dam-readiness-scorecard > * {
+  min-height: 4.1rem !important;
+  border-radius: .35rem !important;
+  background: #fff !important;
+}
+
+.dam-blocker-table,
+.dam-diagnostic-panel,
+.dam-launch-gate-panel,
+.dam-mapping-panel,
+.dam-audit-panel {
+  border-radius: .45rem !important;
+}
+
+.record-preview-stage > div {
+  min-height: min(60dvh, 40rem) !important;
+}
+
+.dam-record-section {
+  border-radius: .45rem !important;
+  padding: 1rem !important;
+}
+
+.dam-record-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, .28fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.dam-packet-stepper,
+.dam-packet-panel,
+.dam-packet-summary,
+.dam-packet-submit-bar,
+.dam-packet-category {
+  border-radius: .45rem !important;
+}
+
+.help-topic-button {
+  min-height: 3.15rem !important;
+}
+
+@media (min-width: 1280px) {
+  .collection-row-card {
+    grid-template-columns: 12.5rem minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .asset-bank-console {
+    margin-top: .85rem !important;
+  }
+
+  .find-facet-rail {
+    position: static !important;
+    grid-template-columns: minmax(0, 1fr);
+    max-height: none;
+  }
+
+  .find-facet-rail section:nth-of-type(3) {
+    display: none;
+  }
+
+  .collection-row-card {
+    padding: .6rem !important;
+  }
+
+  .dam-record-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+  }
+}

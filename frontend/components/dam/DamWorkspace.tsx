@@ -90,21 +90,36 @@ function EmptyState({
 }) {
   return (
     <section className={cn("empty-state-stage relative overflow-hidden rounded-2xl border border-[#c9d8cf] bg-[#f8fbf8] p-5", className)} role="status">
-      <div className="absolute inset-y-0 right-0 hidden w-56 bg-[linear-gradient(135deg,rgba(15,61,46,.12)_0_1px,transparent_1px)] bg-[size:18px_18px] md:block" aria-hidden="true" />
-      <div className="relative z-[1] grid max-w-3xl gap-3">
-        <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#b8d9c6] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
-          <PackageCheck size={14} strokeWidth={1.9} aria-hidden="true" />
-          Approved-copy workspace
-        </span>
-        <div>
-          <h2 className="text-xl font-black leading-tight text-tjc-ink sm:text-2xl">{title}</h2>
-          <p className="mt-1 max-w-[62ch] text-sm font-semibold leading-relaxed text-tjc-muted">{description}</p>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+        <div className="grid max-w-3xl gap-3">
+          <span className="inline-flex w-fit items-center gap-2 rounded-md border border-[#b8d9c6] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
+            <PackageCheck size={14} strokeWidth={1.9} aria-hidden="true" />
+            Approved-copy workspace
+          </span>
+          <div>
+            <h2 className="text-xl font-black leading-tight text-tjc-ink sm:text-2xl">{title}</h2>
+            <p className="mt-1 max-w-[62ch] text-sm font-semibold leading-relaxed text-tjc-muted">{description}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {primary}
+            {secondary}
+            {tertiary}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {primary}
-          {secondary}
-          {tertiary}
-        </div>
+        <dl className="empty-state-ledger grid overflow-hidden rounded-lg border border-[#d9dee3] bg-white text-sm">
+          <div className="grid grid-cols-[7rem_1fr] border-b border-[#eef1f3] px-3 py-2 last:border-b-0">
+            <dt className="font-black text-[#52606b]">Default</dt>
+            <dd className="font-semibold text-tjc-ink">Ready copies only</dd>
+          </div>
+          <div className="grid grid-cols-[7rem_1fr] border-b border-[#eef1f3] px-3 py-2 last:border-b-0">
+            <dt className="font-black text-[#52606b]">Reuse</dt>
+            <dd className="font-semibold text-tjc-ink">Open record first</dd>
+          </div>
+          <div className="grid grid-cols-[7rem_1fr] px-3 py-2">
+            <dt className="font-black text-[#52606b]">Next</dt>
+            <dd className="font-semibold text-tjc-ink">Request review if unsure</dd>
+          </div>
+        </dl>
       </div>
     </section>
   );
@@ -131,6 +146,7 @@ function HeroSearch({
       <label className="sr-only" htmlFor="find-media-search">{ops ? "Ops Search" : "Search approved media"}</label>
       <input
         id="find-media-search"
+        aria-label={ops ? "Ops Search" : "Search approved media"}
         className="min-h-13 min-w-0 rounded-xl border border-transparent bg-[#fbfcfb] px-4 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d] focus:border-[#9cb9ab] sm:text-base"
         value={value}
         onChange={(event) => onChange(event.target.value)}

@@ -16,6 +16,12 @@ import { cn } from "@/lib/ui";
 
 const viewerDefaultView = "approved-church-wide";
 const sortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
+const viewerFacetGroups = [
+  { label: "Use", options: ["Website image", "Slide background", "Newsletter", "Youth-safe"] },
+  { label: "Media type", options: ["Photo", "Video", "Graphic", "Document"] },
+  { label: "People", options: ["No people", "Adults visible", "Youth review needed"] },
+  { label: "Availability", options: ["Approved copies", "Review required before use"] }
+] as const;
 
 function healthTone(score: number) {
   if (score >= 90) return "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]";
@@ -188,6 +194,7 @@ export function LibraryPage() {
   const subtitle = opsView
     ? "Search assets by title, source, review blocker, ID, package, or ministry queue."
     : "Search by ministry use, event, topic, or package.";
+  const currentWorkspaceLabel = activeCollection?.name || (selectedView === viewerDefaultView ? "Ready copies" : activeView?.label) || (submittedQuery ? `Search: ${submittedQuery}` : "Ready copies");
 
   return (
     <div className="dam-shell">
@@ -294,7 +301,72 @@ export function LibraryPage() {
         </section>
       ) : null}
 
-      <section className="asset-bank-results mt-5 grid gap-3" aria-label="Find results">
+      <div className={cn("asset-bank-console mt-5 grid gap-3", !opsView && "lg:grid-cols-[15.5rem_minmax(0,1fr)]")} data-testid="asset-bank-console">
+        {!opsView ? (
+          <aside className="find-facet-rail grid gap-3 self-start rounded-lg border border-[#d9dee3] bg-white p-3 lg:sticky lg:top-[calc(var(--app-header-height)+1rem)]" aria-label="Asset bank navigation">
+            <section className="grid gap-2">
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Workspace</h2>
+                <p className="mt-1 truncate text-sm font-black text-tjc-ink">{currentWorkspaceLabel}</p>
+              </div>
+              <div className="rounded-md border border-[#d9dee3] bg-[#f8faf9] px-2.5 py-2 text-xs font-semibold leading-relaxed text-tjc-muted">
+                Downloads stay blocked until each media record clears reuse checks.
+              </div>
+            </section>
+            <section className="grid gap-1.5" aria-label="Saved views">
+              <h3 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Saved views</h3>
+              {[
+                ["Ready copies", viewerDefaultView],
+                ["Website image", "website-hero"],
+                ["Slide background", "sermon-slides"],
+                ["Youth-safe", "no-people"]
+              ].map(([label, view]) => (
+                <button
+                  className={cn(
+                    "flex min-h-9 items-center justify-between rounded-md px-2 text-left text-xs font-black transition",
+                    selectedView === view ? "bg-[#e8f3ee] text-tjc-evergreen" : "text-[#3f4a43] hover:bg-[#f7faf8]"
+                  )}
+                  type="button"
+                  onClick={() => openSavedView(view)}
+                  key={view}
+                >
+                  <span>{label}</span>
+                  <span aria-hidden="true">›</span>
+                </button>
+              ))}
+              <Link className="flex min-h-9 items-center justify-between rounded-md px-2 text-xs font-black text-[#3f4a43] hover:bg-[#f7faf8]" href="/collections">
+                <span>Packages</span>
+                <span aria-hidden="true">›</span>
+              </Link>
+            </section>
+            <section className="grid gap-3" aria-label="Facets">
+              <h3 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Facets</h3>
+              {viewerFacetGroups.map((group) => (
+                <div className="grid gap-1.5" key={group.label}>
+                  <strong className="text-xs font-black text-tjc-ink">{group.label}</strong>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.options.map((filter) => (
+                      <button
+                        className={cn(
+                          "min-h-7 rounded-md border px-2 text-[11px] font-black transition",
+                          filters.includes(filter) ? "border-[#92b9aa] bg-[#e8f3ee] text-tjc-evergreen" : "border-[#d9dee3] bg-white text-[#52606b] hover:bg-[#f8faf9]"
+                        )}
+                        type="button"
+                        onClick={() => toggleFilter(filter)}
+                        aria-pressed={filters.includes(filter)}
+                        key={filter}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          </aside>
+        ) : null}
+
+      <section className="asset-bank-results grid gap-3" aria-label="Find results">
         {!(viewerSafeDefaultEmpty && !loading && !assets.length) ? (
         <div className="asset-results-toolbar flex flex-wrap items-end justify-between gap-3 rounded-lg border border-[#e5e7eb] bg-white px-3 py-3">
           <div>
@@ -403,6 +475,7 @@ export function LibraryPage() {
           />
         ) : null}
       </section>
+      </div>
 
       <Dialog
         open={filtersOpen}
@@ -426,7 +499,7 @@ export function LibraryPage() {
               { label: "Best use", options: ["Website image", "Slide background", "Newsletter", "Social", "Youth-safe"] },
               { label: "Media type", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
               { label: "People visibility", options: ["No people", "Adults visible", "People unknown", "Youth review needed"] },
-              { label: "Availability", options: ["Ready to use", "Review required before use", "Source file restricted"] }
+              { label: "Availability", options: ["Approved copies", "Review required before use", "Source file restricted"] }
             ].map((group) => (
               <section className="grid gap-2" key={group.label}>
                 <h3 className="text-sm font-black text-tjc-ink">{group.label}</h3>
