@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, FileLock2, Info, Mail } from "lucide-react";
+import { Download, FileLock2, Hash, Info, Mail } from "lucide-react";
 import { DamPrimaryAction as PrimaryAction, DamRecordStatusBadge as StatusBadge } from "@/components/dam/DamWorkspace";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { AssetTrustPanel } from "@/components/AssetTrustPanel";
@@ -99,17 +99,72 @@ export function ViewerReadyHint({ asset, role }: { asset: StockMediaAsset; role:
   );
 }
 
+function RecordCommandHeader({
+  eyebrow = "Media record",
+  title,
+  subtitle,
+  referenceLabel = "Reference code",
+  reference,
+  children
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  reference?: string;
+  referenceLabel?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <section className="record-command-header" aria-label="Media record command header">
+      <div className="record-command-copy">
+        <span>{eyebrow}</span>
+        <h1>{title}</h1>
+        {subtitle ? <p>{subtitle}</p> : null}
+      </div>
+      <div className="record-command-side">
+        {reference ? (
+          <div className="record-reference-chip">
+            <Hash size={14} strokeWidth={1.9} aria-hidden="true" />
+            <span>{referenceLabel}</span>
+            <strong>{reference}</strong>
+          </div>
+        ) : null}
+        {children ? <div className="record-command-actions">{children}</div> : null}
+      </div>
+    </section>
+  );
+}
+
+function RecordLedger({
+  items
+}: {
+  items: Array<{ label: string; value?: ReactNode }>;
+}) {
+  return (
+    <dl className="record-ledger" aria-label="Record summary">
+      {items.map((item) => (
+        <div key={item.label}>
+          <dt>{item.label}</dt>
+          <dd>{item.value || "Not provided"}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function RecordMetadataSection({
   title,
   children,
-  className
+  className,
+  id
 }: {
   title: string;
   children: ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
-    <section className={cn("dam-record-section rounded-2xl border border-[#e1e8e2] bg-white p-5", className)}>
+    <section id={id} className={cn("dam-record-section rounded-2xl border border-[#e1e8e2] bg-white p-5", className)}>
       <h2 className="text-xl font-black text-tjc-ink">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
@@ -135,7 +190,7 @@ function RecordActions({ children }: { children: ReactNode }) {
 
 export { StatusBadge as DamRecordStatusBadge };
 export { ProtectedPreview as DamProtectedPreview, VerdictPanel as DamVerdictPanel, ViewerReadyHint as DamViewerReadyHint };
-export { RecordActions as DamRecordActions, RecordMetadataRow as DamRecordMetadataRow, RecordMetadataSection as DamRecordMetadataSection };
+export { RecordActions as DamRecordActions, RecordCommandHeader as DamRecordCommandHeader, RecordLedger as DamRecordLedger, RecordMetadataRow as DamRecordMetadataRow, RecordMetadataSection as DamRecordMetadataSection };
 export { AssetActionsMenu as DamAssetActionsMenu };
 export { AssetTrustPanel as DamAssetTrustPanel };
 export { DownloadOptionsPanel as DamDownloadOptionsPanel };

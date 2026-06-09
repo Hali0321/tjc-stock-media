@@ -4659,3 +4659,255 @@ body,
     grid-template-columns: minmax(0,1fr) !important;
   }
 }
+
+/* Asset Detail enterprise record pass. */
+.record-command-header {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: .85rem;
+  align-items: stretch;
+  border: 1px solid var(--dam-v3-line);
+  border-left: 3px solid var(--dam-v3-green);
+  border-radius: .38rem;
+  background: #fff;
+  padding: .75rem;
+}
+
+.record-command-copy {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.record-command-copy span,
+.record-reference-chip span,
+.record-ledger dt,
+.dam-record-section h2 {
+  color: #66736c;
+  font-size: .66rem !important;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.record-command-copy h1 {
+  margin-top: .15rem;
+  color: var(--dam-v3-ink);
+  font-size: clamp(1.35rem, 1.8vw, 2.05rem);
+  font-weight: 850;
+  line-height: 1.06;
+}
+
+.record-command-copy p {
+  margin-top: .25rem;
+  color: var(--dam-v3-muted);
+  font-size: .88rem;
+  font-weight: 720;
+}
+
+.record-command-side {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: .5rem;
+  align-items: center;
+}
+
+.record-reference-chip {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: .2rem .38rem;
+  align-items: center;
+  min-width: 9.5rem;
+  border: 1px solid #dfe6e2;
+  border-radius: .3rem;
+  background: #f8faf9;
+  padding: .45rem .55rem;
+  color: var(--dam-v3-green);
+}
+
+.record-reference-chip svg {
+  grid-row: span 2;
+}
+
+.record-reference-chip strong {
+  color: var(--dam-v3-ink);
+  font-size: .9rem;
+  font-weight: 860;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-command-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .45rem;
+}
+
+.record-command-actions .dam-button-primary,
+.record-command-actions .dam-button-secondary,
+.record-command-actions button,
+.record-command-actions a {
+  min-height: 2.35rem !important;
+  border-radius: .28rem !important;
+  font-size: .78rem !important;
+}
+
+.asset-record-layout {
+  gap: .8rem !important;
+}
+
+.record-preview-stage {
+  border-radius: .36rem !important;
+  background:
+    linear-gradient(90deg, rgba(17,24,32,.035) 0 1px, transparent 1px 32px),
+    linear-gradient(180deg, #f2f5f4, #e9eeee) !important;
+}
+
+.record-preview-stage > div {
+  min-height: min(62dvh, 44rem) !important;
+}
+
+.record-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  overflow: hidden;
+  border: 1px solid #dfe6e2;
+  border-radius: .34rem;
+  background: #fff;
+}
+
+.record-ledger div {
+  min-width: 0;
+  border-left: 1px solid #e6ebe8;
+  border-top: 1px solid #e6ebe8;
+  padding: .55rem .65rem;
+}
+
+.record-ledger div:nth-child(odd) {
+  border-left: 0;
+}
+
+.record-ledger div:nth-child(-n+2) {
+  border-top: 0;
+}
+
+.record-ledger dd {
+  overflow: hidden;
+  margin-top: .18rem;
+  color: var(--dam-v3-ink);
+  font-size: .9rem;
+  font-weight: 830;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-verdict-rail {
+  border-left: 3px solid var(--dam-v3-green) !important;
+}
+
+.verdict-panel {
+  gap: .75rem !important;
+  border-radius: .34rem !important;
+}
+
+.verdict-panel h2 {
+  font-size: clamp(1.45rem, 1.8vw, 2rem) !important;
+}
+
+.verdict-panel .dam-button-primary,
+.verdict-panel .dam-button-secondary,
+.verdict-panel a,
+.verdict-panel button {
+  border-radius: .28rem !important;
+}
+
+.record-metadata-grid {
+  align-items: start;
+}
+
+.dam-record-section {
+  border-radius: .36rem !important;
+  padding: .85rem !important;
+}
+
+.dam-record-section > div {
+  margin-top: .65rem !important;
+}
+
+.dam-record-row {
+  grid-template-columns: minmax(9rem,.28fr) minmax(0,1fr) !important;
+  gap: .75rem !important;
+  padding-top: .65rem !important;
+}
+
+.dam-record-row dt {
+  font-size: .72rem !important;
+}
+
+.dam-record-row dd {
+  color: #34413b !important;
+  font-size: .83rem !important;
+  line-height: 1.35 !important;
+}
+
+.related-media-strip > a {
+  grid-template-columns: 4.75rem minmax(0,1fr) auto !important;
+  min-height: 4.8rem !important;
+  border-radius: .32rem !important;
+}
+
+.related-media-strip > a > span:first-child {
+  border-radius: .24rem !important;
+}
+
+[aria-label="Tags"] {
+  border-radius: .36rem !important;
+}
+
+[aria-label="Tags"] span {
+  border-radius: .24rem !important;
+  padding: .45rem .55rem !important;
+}
+
+@media (max-width: 767px) {
+  .record-command-header {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .record-command-side {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .record-command-actions {
+    justify-content: stretch;
+  }
+
+  .record-command-actions > * {
+    width: 100%;
+  }
+
+  .record-preview-stage > div {
+    min-height: 12rem !important;
+  }
+
+  .record-ledger {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .record-ledger div,
+  .record-ledger div:nth-child(odd),
+  .record-ledger div:nth-child(-n+2) {
+    border-left: 0;
+    border-top: 1px solid #e6ebe8;
+  }
+
+  .record-ledger div:first-child {
+    border-top: 0;
+  }
+
+  .dam-record-row {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: .2rem !important;
+  }
+}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, History, Search } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import { DamEmptyState as EmptyState, DamPrimaryAction as PrimaryAction } from "@/components/dam/DamWorkspace";
-import { DamProtectedPreview as ProtectedPreview, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
+import { DamProtectedPreview as ProtectedPreview, DamRecordCommandHeader as RecordCommandHeader, DamRecordLedger as RecordLedger, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { useDemoRole } from "@/components/RoleProvider";
 import { decideAccess } from "@/lib/access-decisions";
@@ -202,6 +202,9 @@ export function AssetDetailPage({ id }: { id: string }) {
 
   const { asset, display, verdict, provenance, preview } = content;
   const requestHref = requestReviewMailto(asset);
+  const sourceGuidance = opsView ? asset.sourceAccount || asset.sourceSystem || asset.sourcePlatform || "Source not exported" : "Media team";
+  const referenceLabel = opsView ? "ResourceSpace ID" : "Reference code";
+  const referenceCode = opsView ? asset.resourceSpaceId || asset.id : asset.id;
   const previewStripItems = [asset, ...data.related].slice(0, 5).map((item, index) => ({
     item,
     index,
@@ -210,10 +213,16 @@ export function AssetDetailPage({ id }: { id: string }) {
 
   return (
     <div className="dam-shell grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <RecordCommandHeader
+        eyebrow={opsView ? "Enterprise media record" : "Media record"}
+        title={display.title}
+        subtitle={opsView ? provenance.publicLabel : asset.eventName || asset.collection}
+        referenceLabel={referenceLabel}
+        reference={referenceCode}
+      >
         <PrimaryAction href="/" tone="secondary" icon={ArrowLeft}>Back to Find</PrimaryAction>
         <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={opsView} label={opsView ? "Asset actions" : "Record actions"} />
-      </div>
+      </RecordCommandHeader>
 
       <section className="asset-record-layout grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,.85fr)] xl:items-start" aria-label="Media record decision">
         <div className="grid gap-4">
@@ -245,10 +254,14 @@ export function AssetDetailPage({ id }: { id: string }) {
         </div>
 
         <aside className="record-verdict-rail grid gap-4 xl:sticky xl:top-[calc(var(--app-header-height)+1rem)]">
-          <div>
-            <h1 className="text-3xl font-black leading-[1.05] text-tjc-ink sm:text-4xl">{display.title}</h1>
-            <p className="mt-3 max-w-[64ch] text-base font-semibold leading-relaxed text-tjc-muted">{opsView ? provenance.publicLabel : asset.eventName || asset.collection}</p>
-          </div>
+          <RecordLedger
+            items={[
+              { label: "Use verdict", value: verdict.label },
+              { label: "Usage scope", value: asset.usageScope },
+              { label: "Preview", value: preview ? "Available" : "Protected" },
+              { label: "Source file", value: verdict.canDownload ? "Approved copy only" : "Request-only" }
+            ]}
+          />
           <VerdictPanel
             verdict={verdict}
             requestHref={requestHref}
@@ -261,11 +274,11 @@ export function AssetDetailPage({ id }: { id: string }) {
 
       <section className="record-metadata-grid grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Use guidance">
         <div className="grid gap-4">
-          <RecordMetadataSection title="Use guidance" className="scroll-mt-28" >
+          <RecordMetadataSection title="Use guidance" id="use-guidance" className="scroll-mt-28" >
               <FieldList items={display.guidanceFacts.map((fact) => ({ label: fact.label, value: fact.value }))} />
           </RecordMetadataSection>
 
-          <RecordMetadataSection title="Credit" className="scroll-mt-28">
+          <RecordMetadataSection title="Credit" id="credit" className="scroll-mt-28">
             <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{asset.rightsNotes?.toLowerCase().includes("credit") ? asset.rightsNotes : "Credit not required unless noted by reviewer."}</p>
           </RecordMetadataSection>
 
@@ -287,8 +300,8 @@ export function AssetDetailPage({ id }: { id: string }) {
               <FieldList
                 items={[
                   { label: "Event / package", value: asset.eventName || asset.collection },
-                  { label: "Credit/source guidance", value: asset.sourceAccount || "Provided by media team" },
-                  { label: opsView ? "ResourceSpace ID" : "Reference code", value: opsView ? asset.resourceSpaceId || asset.id : asset.id },
+                  { label: "Credit/source guidance", value: sourceGuidance },
+                  { label: referenceLabel, value: referenceCode },
                   { label: "Source file", value: verdict.canDownload ? "Use approved copy. Source-file access stays restricted." : "Restricted until approved access is granted." }
                 ]}
               />
