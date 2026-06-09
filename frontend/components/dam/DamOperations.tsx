@@ -79,6 +79,33 @@ export function DamReviewQueueRail({
   );
 }
 
+export function DamReviewQueueHeader({
+  loaded,
+  total,
+  selected,
+  queueLabel
+}: {
+  loaded: number;
+  total?: number;
+  selected: boolean;
+  queueLabel?: string;
+}) {
+  return (
+    <header className="review-queue-header-v2" data-component="DamReviewQueueHeader">
+      <div>
+        <span>Queue register</span>
+        <h2>Review queue</h2>
+        <p>{typeof total === "number" ? `${total.toLocaleString()} total in ${queueLabel || "current queue"}` : "Loading queue"}</p>
+      </div>
+      <dl aria-label="Review queue status">
+        <div><dt>Loaded</dt><dd>{loaded.toLocaleString()}</dd></div>
+        <div><dt>Selected</dt><dd>{selected ? "1" : "0"}</dd></div>
+        <div><dt>Lane</dt><dd>{queueLabel || "Queue"}</dd></div>
+      </dl>
+    </header>
+  );
+}
+
 export function DamEvidenceMatrix({
   items,
   onToggle
@@ -136,7 +163,7 @@ export function DamReviewDecisionLockPanel({
       </div>
       <p className="mt-1 text-xs font-semibold leading-relaxed">
         {locked
-          ? `Complete before approval: ${visibleMissing}${missingLabels.length > 4 ? ` and ${missingLabels.length - 4} more` : ""}.`
+          ? `Complete required evidence before approval. Complete before approval: ${visibleMissing}${missingLabels.length > 4 ? ` and ${missingLabels.length - 4} more` : ""}.`
           : "Evidence and note are ready for a pending review write."}
       </p>
     </section>

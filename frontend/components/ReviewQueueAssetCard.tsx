@@ -132,7 +132,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
     <article
       className={cn(
-        "group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[6.5rem_minmax(13rem,1.1fr)_minmax(13rem,.9fr)_minmax(10rem,.7fr)] 2xl:grid-cols-[7rem_minmax(14rem,1.15fr)_minmax(16rem,1fr)_minmax(12rem,.8fr)]",
+        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[6.5rem_minmax(13rem,1.1fr)_minmax(13rem,.9fr)_minmax(10rem,.7fr)] 2xl:grid-cols-[7rem_minmax(14rem,1.15fr)_minmax(16rem,1fr)_minmax(12rem,.8fr)]",
         selected && "bg-[#e5f3ea] ring-1 ring-inset ring-[#8fb2a5]"
       )}
       data-component="ExpandedReviewQueueCard"
@@ -140,13 +140,13 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
     >
       <Link
         href={`/assets/${asset.id}`}
-        className="review-media-reveal block aspect-[4/3] overflow-hidden rounded-md border border-black/10 bg-[#eef1ed] max-sm:rounded-lg"
+        className="review-row-thumb review-media-reveal block aspect-[4/3] overflow-hidden rounded-md border border-black/10 bg-[#eef1ed] max-sm:rounded-lg"
         aria-label={`Open ${display.title}`}
       >
         <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
       </Link>
 
-      <div className="min-w-0">
+      <div className="review-row-record min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             {selected ? <span className="mb-1 inline-flex rounded-md border border-[#8fb2a5] bg-white px-2 py-0.5 text-[10px] font-black text-tjc-evergreen">Currently reviewing</span> : null}
@@ -158,7 +158,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
           </div>
           <span className="rounded-md border border-[#cad8cf] bg-white px-2 py-1 text-[11px] font-black text-tjc-evergreen tabular-nums max-sm:hidden">RS {asset.resourceSpaceId || asset.id}</span>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
+        <div className="review-row-badges mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
           <StatusBadge status={asset.status} />
           <UsageBadge scope={asset.usageScope} />
           <span className="rounded-md border border-[#d7dfd8] bg-white px-2 py-1 text-[11px] font-black text-[#536057]">{assignee}</span>
@@ -166,8 +166,8 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         </div>
       </div>
 
-      <div className="grid content-start gap-2 max-sm:hidden">
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-lg border border-[#d7dfd8] bg-[#fbfcfa] p-2 text-sm">
+      <div className="review-row-blockers grid content-start gap-2 max-sm:hidden">
+        <div className="review-row-blocker-card grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-lg border border-[#d7dfd8] bg-[#fbfcfa] p-2 text-sm">
           <ShieldAlert size={16} strokeWidth={1.8} aria-hidden="true" className="text-[#725216]" />
           <span className="min-w-0">
             <strong className="block truncate font-black text-tjc-ink">{primaryRisk}</strong>
@@ -190,8 +190,8 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         </div>
       </div>
 
-      <div className="grid content-start gap-2 max-sm:col-span-2">
-        <div className="rounded-md border border-[#c9d8cf] bg-white p-3 max-sm:hidden">
+      <div className="review-row-actions grid content-start gap-2 max-sm:col-span-2">
+        <div className="review-row-next rounded-md border border-[#c9d8cf] bg-white p-3 max-sm:hidden">
           <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">Next check</span>
           <strong className="mt-1 block text-sm text-tjc-ink">{nextCheck}</strong>
           <p className="mt-1 text-xs font-medium leading-snug text-tjc-muted">{evidenceProgress} · {sla} · {missing.length ? missing.slice(0, 3).join(", ") : "Ready for evidence note and decision."}</p>

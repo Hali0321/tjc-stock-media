@@ -8,7 +8,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DamAssetActionsMenu as AssetActionsMenu, DamMediaPreviewPanel as MediaPreviewPanel } from "@/components/dam/DamRecord";
-import { DamDecisionActions, DamEvidenceMatrix, DamHoldToConfirmButton as HoldToConfirmButton, DamOpsBanner, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard, DamReviewQueueRail, DamReviewSelectedAsset } from "@/components/dam/DamOperations";
+import { DamDecisionActions, DamEvidenceMatrix, DamHoldToConfirmButton as HoldToConfirmButton, DamOpsBanner, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard, DamReviewQueueHeader, DamReviewQueueRail, DamReviewSelectedAsset } from "@/components/dam/DamOperations";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
@@ -635,17 +635,12 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           </details>
 
           <div className="hidden min-w-0 max-w-full overflow-hidden rounded-[12px] border border-[#d7dde2] bg-white md:block" data-testid="review-primary-queue" data-component="ReviewPrimaryQueueSurface">
-          <div className="grid gap-3 border-b border-tjc-line bg-[#f8faf8] px-4 py-4 text-sm lg:grid-cols-[1fr_auto]">
-            <div className="min-w-0">
-              <strong className="font-black text-tjc-ink">Review queue</strong>
-              <span className="ml-2 text-xs font-black tabular-nums text-tjc-muted">{Math.min(visibleReviewAssets.length, data?.assets.length || 0).toLocaleString()} loaded</span>
-              {activeQueueSummary ? <span className="mt-1 block text-xs font-semibold text-tjc-muted">{activeQueueSummary.count.toLocaleString()} total in {activeQueueSummary.label}</span> : null}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-muted">{selectedAsset ? "1 selected" : "0 selected"}</span>
-              <span className="rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">{activeQueueSummary?.label || "Queue"}</span>
-            </div>
-          </div>
+          <DamReviewQueueHeader
+            loaded={Math.min(visibleReviewAssets.length, data?.assets.length || 0)}
+            total={activeQueueSummary?.count}
+            selected={Boolean(selectedAsset)}
+            queueLabel={activeQueueSummary?.label}
+          />
           <div className="grid min-w-0 max-w-full">
             {visibleReviewAssets.map((asset) => (
                 <ReviewQueueAssetCard
