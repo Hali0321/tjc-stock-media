@@ -31,7 +31,7 @@ export function normalizeAssetTitle(rawTitle: string, originalFilename?: string,
   if (/^image\s*(\d+)/i.test(cleaned)) return `Image ${cleaned.match(/\d+/)?.[0] || ""}`.trim();
   if (/^bible\s+\d+/i.test(cleaned)) return context ? `${titleCase(context)} Detail` : "Bible Study Detail";
   if (/^mvp\s+2024\s+plant\s+\d+/i.test(cleaned)) return "Plant Detail";
-  if (/^mvp\s+2024\s+photo\s+\d+/i.test(cleaned)) return context ? `MVP 2024 ${titleCase(context)}` : titleCase(cleaned);
+  if (/^mvp\s+2024\s+photo\s+\d+/i.test(cleaned)) return context ? `${titleCase(context)} Detail` : "Media Detail";
   if (/^copy\s*of\s*img/i.test(source)) return titleCase(cleaned);
 
   return titleCase(cleaned || source);

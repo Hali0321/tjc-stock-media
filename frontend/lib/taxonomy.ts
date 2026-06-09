@@ -67,5 +67,5 @@ export const featuredCollections = [
 
 export const canonicalTags = {
   visibleTags: ["Bible", "book", "flower", "plant", "fountain", "water", "stage", "people", "landscape"],
-  tjcTerms: ["worship", "Bible study", "fellowship", "MVP 2024", "stock media candidate", "teaching"]
+  tjcTerms: ["worship", "Bible study", "fellowship", "teaching", "welcome", "baptism", "prayer", "hymn"]
 };

@@ -74,7 +74,7 @@ function cleanDisplayTitle(row: ResourceSpaceRecord, fallback: string) {
 
   if (/^_?DSC0*\d+/i.test(base)) {
     const serial = base.match(/\d+/)?.[0]?.replace(/^0+/, "") || "";
-    return `MVP 2024 Photo${serial ? ` ${serial}` : ""}`;
+    return `Photo${serial ? ` ${serial}` : ""}`;
   }
   if (/^(?:[a-f0-9]{8,}|[a-f0-9]{6,}\s+version\s+\d+|[a-f0-9]{6,}\s+\d{8,})/i.test(base)) {
     return `${archiveContext} Photo ${resourceId}`.trim();
@@ -87,7 +87,7 @@ function cleanDisplayTitle(row: ResourceSpaceRecord, fallback: string) {
   }
   if (/^[A-Z0-9-]{12,}$/i.test(base) || base.length < 3) {
     const context = [...tjcTerms, ...tags].find((item) => !/stock media candidate|mvp 2024/i.test(item));
-    return context ? `MVP 2024 ${titleCase(context)}` : `MVP 2024 Asset ${resourceId}`.trim();
+    return context ? `${titleCase(context)} Detail` : `Media Record ${resourceId}`.trim();
   }
   if (/^bible\s+\d+/i.test(base)) return titleCase(base);
   if (/^beach\s+\d+/i.test(base)) return titleCase(base);

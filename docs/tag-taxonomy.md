@@ -26,8 +26,6 @@ TJC terms describe ministry meaning:
 - baptism
 - prayer
 - hymn
-- MVP 2024
-- stock media candidate
 
 ## Search Policy
 
