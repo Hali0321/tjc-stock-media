@@ -120,7 +120,7 @@ export function DamShell({ children }: { children: ReactNode }) {
         <div className="dam-header-inner mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 xl:grid-cols-[minmax(18rem,.52fr)_minmax(0,1fr)_auto]">
           <DamBrand opsShell={opsShell} />
 
-          <div className="hidden min-w-0 justify-center 2xl:flex">
+          <div className="dam-top-nav-slot hidden min-w-0 justify-center 2xl:flex">
             <AppNav role={role} variant="top" />
           </div>
 
@@ -140,6 +140,16 @@ export function DamShell({ children }: { children: ReactNode }) {
 
         <DamMobileMenu open={mobileMenuOpen} role={role} opsShell={opsShell} onClose={() => setMobileMenuOpen(false)} />
       </header>
+
+      <aside className="dam-desktop-rail hidden border-r border-[#d7dde2] bg-white lg:block" aria-label="Desktop workspace navigation">
+        <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] grid-rows-[1fr_auto] gap-4 p-3">
+          <AppNav role={role} variant="menu" />
+          <div className="grid gap-2 border-t border-[#e5e7eb] pt-3 text-[11px] font-black uppercase tracking-[.06em] text-[#68756d]">
+            <span>{opsShell ? "Ops" : "DAM"}</span>
+            <span className="h-1.5 rounded-full bg-tjc-evergreen" aria-hidden="true" />
+          </div>
+        </div>
+      </aside>
 
       <main id="main-content" className="relative z-10 min-w-0 pb-4 md:pb-10">{children}</main>
 

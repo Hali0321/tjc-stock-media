@@ -2056,3 +2056,466 @@ body {
     transition-duration: .01ms !important;
   }
 }
+
+/* Enterprise DAM pass: compact, neutral, asset-management UI. This intentionally
+   mutes earlier decorative treatment so the app resembles mature DAM workbench
+   software rather than a generated landing page. */
+:root {
+  --enterprise-rail-width: 5.25rem;
+  --app-header-height: 72px;
+  --dam-enterprise-bg: #f5f6f7;
+  --dam-enterprise-panel: #ffffff;
+  --dam-enterprise-border: #d9dee3;
+  --dam-enterprise-muted: #5f6b76;
+}
+
+body {
+  background: var(--dam-enterprise-bg) !important;
+}
+
+.grain-overlay {
+  display: none !important;
+}
+
+.dam-workbench-v2 {
+  background: var(--dam-enterprise-bg) !important;
+}
+
+.dam-app-header {
+  min-height: var(--app-header-height);
+  border-bottom: 1px solid var(--dam-enterprise-border) !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 0 rgba(17, 24, 39, .04) !important;
+}
+
+.dam-header-inner {
+  min-height: calc(var(--app-header-height) - 1px);
+  grid-template-columns: minmax(14rem, .8fr) minmax(0, 1fr) auto !important;
+}
+
+.dam-app-header .dam-brand-lockup strong {
+  color: #101820 !important;
+  font-size: .98rem !important;
+}
+
+.dam-app-header .dam-brand-lockup small {
+  color: var(--dam-enterprise-muted) !important;
+  font-size: .72rem !important;
+}
+
+.dam-brand-mark {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: .45rem !important;
+  background: #063f37 !important;
+  box-shadow: none !important;
+}
+
+.dam-shell-mode,
+.dam-header-icon,
+.dam-app-header select,
+.workbench-nav {
+  border: 1px solid var(--dam-enterprise-border) !important;
+  border-radius: .45rem !important;
+  background: #ffffff !important;
+  color: #1f2933 !important;
+  box-shadow: none !important;
+}
+
+.dam-header-icon:hover,
+.dam-app-header select:hover {
+  background: #f7faf8 !important;
+  border-color: #b8c6c0 !important;
+}
+
+.dam-top-nav-slot {
+  display: none !important;
+}
+
+.dam-desktop-rail {
+  position: fixed;
+  left: 0;
+  top: var(--app-header-height);
+  z-index: 30;
+  width: var(--enterprise-rail-width);
+  height: calc(100dvh - var(--app-header-height));
+}
+
+.dam-desktop-rail .workbench-menu-nav {
+  display: flex !important;
+  flex-direction: column;
+  gap: .35rem;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.dam-desktop-rail .workbench-menu-nav a {
+  min-height: 4.25rem !important;
+  flex: 0 0 auto !important;
+  justify-content: center !important;
+  border-radius: .55rem !important;
+  padding: .45rem .25rem !important;
+  color: #52606b !important;
+}
+
+.dam-desktop-rail .workbench-menu-nav a[aria-current="page"] {
+  background: #e8f3ee !important;
+  color: #063f37 !important;
+}
+
+.dam-desktop-rail .workbench-menu-nav a[aria-current="page"] > span:first-child {
+  display: none !important;
+}
+
+.dam-desktop-rail .workbench-menu-nav .nav-label {
+  max-width: 4.25rem;
+  white-space: normal;
+  line-height: 1.05;
+  text-align: center;
+  font-size: .63rem;
+}
+
+#main-content,
+.dam-app-header,
+.dam-app-header + .dam-desktop-rail + #main-content,
+.dam-app-header + .dam-desktop-rail + main {
+  transition: margin-left .2s ease;
+}
+
+@media (min-width: 1024px) {
+  #main-content,
+  .dam-app-header + .dam-desktop-rail + main {
+    margin-left: var(--enterprise-rail-width);
+  }
+
+  .dam-shell {
+    width: min(100% - 2rem, 1680px) !important;
+    padding-top: 1rem !important;
+  }
+}
+
+.dam-shell {
+  color: #111827;
+}
+
+.dam-page-title {
+  font-size: clamp(1.75rem, 2.2vw, 2.7rem) !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0 !important;
+}
+
+.find-hero,
+.send-hero,
+.help-hero,
+.dam-ops-banner,
+.admin-cockpit-hero {
+  border: 1px solid var(--dam-enterprise-border) !important;
+  border-radius: .65rem !important;
+  background: var(--dam-enterprise-panel) !important;
+  box-shadow: none !important;
+}
+
+.find-hero::before,
+.find-hero::after,
+.send-hero::before,
+.send-hero::after,
+.help-hero::before,
+.help-hero::after,
+.admin-cockpit-hero::before,
+.admin-cockpit-hero::after {
+  display: none !important;
+}
+
+.dam-ops-banner > div:first-child,
+.dam-ops-banner > div:first-child .dam-page-title,
+.dam-ops-banner > div:first-child p,
+.dam-ops-banner > div:first-child span,
+.admin-cockpit-hero .admin-cockpit-intro,
+.admin-cockpit-hero .admin-cockpit-intro .dam-page-title,
+.admin-cockpit-hero .admin-cockpit-intro > span,
+.admin-cockpit-hero .admin-cockpit-intro p {
+  color: #111827 !important;
+}
+
+.find-hero,
+.send-hero {
+  padding: 1rem !important;
+}
+
+.find-hero .dam-page-title,
+.send-hero .dam-page-title,
+.help-hero h1 {
+  font-size: clamp(1.65rem, 2vw, 2.35rem) !important;
+}
+
+.hero-search-shell {
+  border-radius: .5rem !important;
+  border: 1px solid #cfd6dd !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.hero-search-shell input {
+  min-height: 2.75rem !important;
+  border-radius: .35rem !important;
+  background: #ffffff !important;
+}
+
+.hero-search-shell button,
+.dam-v2-action-primary,
+button[class*="bg-tjc-evergreen"],
+a[class*="bg-tjc-evergreen"] {
+  border-radius: .42rem !important;
+  box-shadow: none !important;
+}
+
+.asset-bank-rule,
+.asset-results-toolbar,
+.ops-workbench,
+[data-testid="review-primary-queue"],
+[data-testid="review-current-workspace"],
+.admin-launch-card,
+.dam-readiness-scorecard > *,
+.dam-record-section,
+.related-media-strip > a,
+.dam-packet-panel,
+.dam-packet-stepper,
+.dam-packet-summary,
+.dam-packet-submit-bar,
+.package-inspector,
+.help-side-panel,
+.help-detail-panel,
+.dam-card,
+.dam-contact-sheet,
+.dam-studio {
+  border-color: var(--dam-enterprise-border) !important;
+  border-radius: .55rem !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.find-usecase-grid {
+  gap: .65rem !important;
+}
+
+.find-usecase-grid > *,
+.dam-packet-category {
+  min-height: 4.2rem !important;
+  border: 1px solid var(--dam-enterprise-border) !important;
+  border-radius: .5rem !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+@media (min-width: 768px) {
+  .find-usecase-grid {
+    grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)) !important;
+  }
+
+  .find-usecase-grid > * {
+    min-height: 3.75rem !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    padding: .65rem .75rem !important;
+  }
+
+  .find-usecase-grid > * strong {
+    font-size: .9rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .find-usecase-grid > * span span {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: .75rem !important;
+  }
+}
+
+.find-usecase-grid > *::after,
+.dam-packet-category::after {
+  display: none !important;
+}
+
+.find-usecase-grid > *:hover,
+.dam-packet-category:hover,
+.media-card:hover,
+.package-card:hover,
+.help-topic-button:hover {
+  transform: none !important;
+  border-color: #aebbc6 !important;
+  background: #f8faf9 !important;
+  box-shadow: none !important;
+}
+
+.media-results-grid {
+  gap: 1rem !important;
+}
+
+.media-card-catalog,
+.collectible-package-card,
+.media-card,
+.package-card {
+  border: 1px solid var(--dam-enterprise-border) !important;
+  border-radius: .55rem !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.media-card-catalog::before,
+.collectible-package-card::before {
+  display: none !important;
+}
+
+.media-card-catalog > a {
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--dam-enterprise-border) !important;
+  border-radius: .55rem .55rem 0 0 !important;
+}
+
+.media-card-catalog h2,
+.collectible-package-card h2 {
+  font-size: 1rem !important;
+  line-height: 1.15 !important;
+}
+
+.package-cover,
+.record-preview-stage,
+.protected-preview,
+.protected-preview-frame {
+  border-radius: .45rem !important;
+}
+
+.protected-preview {
+  background: #f2f4f5 !important;
+}
+
+.package-cover {
+  background:
+    linear-gradient(180deg, #f8fafc, #edf1f3) !important;
+  box-shadow: inset 0 0 0 1px #d9dee3 !important;
+}
+
+.generated-package-cover {
+  color: #111827 !important;
+  background:
+    linear-gradient(90deg, rgba(6,63,55,.08) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg, #f8fafc, #edf1f3) !important;
+}
+
+.generated-package-cover *,
+.generated-package-cover strong {
+  color: #111827 !important;
+  text-shadow: none !important;
+}
+
+.generated-package-cover::after,
+.package-cover-photo::before {
+  display: none !important;
+}
+
+.package-cover-label,
+.package-cover-count {
+  background: #ffffff !important;
+  color: #063f37 !important;
+  border: 1px solid #d9dee3;
+  backdrop-filter: none !important;
+}
+
+.record-preview-stage {
+  background: #f0f3f5 !important;
+  box-shadow: none !important;
+}
+
+.record-preview-stage > div {
+  min-height: min(56dvh, 36rem) !important;
+}
+
+.record-verdict-rail {
+  border-radius: .55rem !important;
+  border-color: var(--dam-enterprise-border) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.verdict-panel {
+  border: 1px solid var(--dam-enterprise-border) !important;
+  border-radius: .55rem !important;
+  box-shadow: none !important;
+}
+
+.dam-packet-workbench {
+  border-radius: .65rem !important;
+  border-color: var(--dam-enterprise-border) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.dam-packet-stepper::before {
+  width: .2rem !important;
+  background: #063f37 !important;
+}
+
+.review-selected-workbench,
+.admin-cockpit-hero,
+.admin-launch-card {
+  box-shadow: none !important;
+}
+
+.admin-cockpit-hero,
+.dam-ops-banner {
+  align-items: start !important;
+}
+
+.admin-launch-card {
+  align-self: start !important;
+}
+
+.dam-blocker-table,
+.dam-diagnostic-panel,
+.dam-mapping-panel,
+.dam-audit-panel,
+.dam-launch-gate-panel {
+  box-shadow: none !important;
+}
+
+.help-topic-button {
+  border-radius: .5rem !important;
+  box-shadow: none !important;
+}
+
+.help-topic-button.is-active {
+  background: #063f37 !important;
+}
+
+@media (max-width: 1023px) {
+  .dam-desktop-rail {
+    display: none !important;
+  }
+
+  #main-content {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --app-header-height: 72px;
+  }
+
+  .dam-app-header {
+    padding-block: .65rem !important;
+  }
+
+  .dam-page-title {
+    font-size: 1.9rem !important;
+  }
+
+  .find-hero,
+  .send-hero {
+    padding: .85rem !important;
+  }
+}
