@@ -152,6 +152,58 @@ function RecordLedger({
   );
 }
 
+function RecordPreviewStage({
+  title,
+  subtitle,
+  status,
+  children,
+  filmstrip
+}: {
+  title: string;
+  subtitle?: string;
+  status: string;
+  children: ReactNode;
+  filmstrip?: ReactNode;
+}) {
+  return (
+    <section className="record-stage-console" aria-label="Protected media preview stage">
+      <header className="record-stage-header">
+        <div>
+          <span>Preview stage</span>
+          <h2>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
+        </div>
+        <dl>
+          <div>
+            <dt>Stage status</dt>
+            <dd>{status}</dd>
+          </div>
+          <div>
+            <dt>Reuse rule</dt>
+            <dd>Open verdict first</dd>
+          </div>
+        </dl>
+      </header>
+      <div className="record-stage-canvas">
+        {children}
+      </div>
+      {filmstrip ? <div className="record-stage-filmstrip">{filmstrip}</div> : null}
+    </section>
+  );
+}
+
+function RecordFilmstrip({
+  children
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <div className="record-filmstrip" aria-label="Record media strip">
+      {children}
+    </div>
+  );
+}
+
 function RecordMetadataSection({
   title,
   children,
@@ -190,7 +242,7 @@ function RecordActions({ children }: { children: ReactNode }) {
 
 export { StatusBadge as DamRecordStatusBadge };
 export { ProtectedPreview as DamProtectedPreview, VerdictPanel as DamVerdictPanel, ViewerReadyHint as DamViewerReadyHint };
-export { RecordActions as DamRecordActions, RecordCommandHeader as DamRecordCommandHeader, RecordLedger as DamRecordLedger, RecordMetadataRow as DamRecordMetadataRow, RecordMetadataSection as DamRecordMetadataSection };
+export { RecordActions as DamRecordActions, RecordCommandHeader as DamRecordCommandHeader, RecordFilmstrip as DamRecordFilmstrip, RecordLedger as DamRecordLedger, RecordMetadataRow as DamRecordMetadataRow, RecordMetadataSection as DamRecordMetadataSection, RecordPreviewStage as DamRecordPreviewStage };
 export { AssetActionsMenu as DamAssetActionsMenu };
 export { AssetTrustPanel as DamAssetTrustPanel };
 export { DownloadOptionsPanel as DamDownloadOptionsPanel };

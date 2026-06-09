@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, History, Search } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import { DamEmptyState as EmptyState, DamPrimaryAction as PrimaryAction } from "@/components/dam/DamWorkspace";
-import { DamProtectedPreview as ProtectedPreview, DamRecordCommandHeader as RecordCommandHeader, DamRecordLedger as RecordLedger, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
+import { DamProtectedPreview as ProtectedPreview, DamRecordCommandHeader as RecordCommandHeader, DamRecordFilmstrip as RecordFilmstrip, DamRecordLedger as RecordLedger, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection, DamRecordPreviewStage as RecordPreviewStage, DamVerdictPanel as VerdictPanel } from "@/components/dam/DamRecord";
 import { AssetActionsMenu } from "@/components/AssetActionsMenu";
 import { useDemoRole } from "@/components/RoleProvider";
 import { decideAccess } from "@/lib/access-decisions";
@@ -226,31 +226,32 @@ export function AssetDetailPage({ id }: { id: string }) {
 
       <section className="asset-record-layout grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,.85fr)] xl:items-start" aria-label="Media record decision">
         <div className="grid gap-4">
-          <div className="record-preview-stage overflow-hidden rounded-[14px] border border-[#d7dde2] bg-[#e9efeb]">
-            <div className="grid min-h-[18rem] sm:aspect-[16/10]">
+          <RecordPreviewStage
+            title={display.title}
+            subtitle={preview ? display.cardSubtitle : "Protected preview stays blocked until the record clears reuse checks."}
+            status={preview ? "Preview available" : "Protected"}
+            filmstrip={previewStripItems.length > 1 ? (
+              <RecordFilmstrip>
+                {previewStripItems.map(({ item, index, imageUrl }) => (
+                  <Link
+                    href={`/assets/${item.id}`}
+                    className={cn("record-filmstrip-item", index === 0 && "is-active")}
+                    key={`${item.id}-${index}`}
+                    aria-label={index === 0 ? "Current media record" : `Open related media ${assetPresentation(item, role).title}`}
+                  >
+                    <MediaPreview src={imageUrl || undefined} alt={item.thumbnailAlt} label="Preview protected" detail="Open record for guidance" />
+                    <span>{index === 0 ? "Current" : "Related"}</span>
+                  </Link>
+                ))}
+              </RecordFilmstrip>
+            ) : null}
+          >
               {preview ? (
                 <MediaPreview src={preview} alt={asset.thumbnailAlt} label="Preview available" detail={display.cardSubtitle} loading="eager" />
               ) : (
                 <ProtectedPreview label="Preview protected" detail={verdict.reason} className="asset-detail-protected-preview h-full rounded-none" />
               )}
-            </div>
-          </div>
-          {previewStripItems.length > 1 ? (
-          <div className="hidden grid-cols-2 gap-2 sm:grid sm:grid-cols-5">
-            {previewStripItems.map(({ item, index, imageUrl }) => {
-              return (
-                <Link
-                  href={`/assets/${item.id}`}
-                  className={cn("block aspect-[4/3] overflow-hidden rounded-[10px] border border-[#d7dde2] bg-[#e9efeb]", index === 0 && "ring-2 ring-[#9cb9ab]")}
-                  key={`${item.id}-${index}`}
-                  aria-label={index === 0 ? "Current media record" : `Open related media ${assetPresentation(item, role).title}`}
-                >
-                  <MediaPreview src={imageUrl || undefined} alt={item.thumbnailAlt} label="Preview protected" detail="Open record for guidance" />
-                </Link>
-              );
-            })}
-          </div>
-          ) : null}
+          </RecordPreviewStage>
         </div>
 
         <aside className="record-verdict-rail grid gap-4 xl:sticky xl:top-[calc(var(--app-header-height)+1rem)]">
