@@ -86,7 +86,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h2 className="line-clamp-2 text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
-            <p className="mt-0.5 truncate text-xs font-semibold text-tjc-muted">{asset.collection}</p>
+            <p className="mt-0.5 truncate text-xs font-semibold text-tjc-muted">{nextCheck}</p>
           </div>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -115,7 +115,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
     <article
       className={cn(
-        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-2.5 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid md:grid-cols-[4.5rem_minmax(0,1fr)_9.25rem_5.75rem]",
+        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-2.5 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid md:grid-cols-[4.5rem_minmax(0,1fr)_5.75rem]",
         selected && "bg-[#e5f3ea] ring-1 ring-inset ring-[#8fb2a5]"
       )}
       data-component="ExpandedReviewQueueCard"
@@ -132,14 +132,14 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
       <div className="review-row-record min-w-0 self-center">
         <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
-        <p className="review-row-subline">{recordMeta}</p>
-      </div>
-
-      <div className="hidden self-center md:block">
-        <span className={cn("review-row-evidence", severity === "High" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : missing.length ? "border-[#cfd9dd] bg-white text-[#52677a]" : "border-[#b8d9c6] bg-[#eef8f2] text-[#194f34]")}>
-          <strong>{evidenceLabel}</strong>
+        <div className="review-row-subline">
+          <span>{recordMeta}</span>
           <span>{nextCheck}</span>
-        </span>
+        </div>
+        <div className="review-row-chipline" aria-label="Review row status">
+          <span className={cn("review-row-chip", severity === "High" ? "is-warn" : missing.length ? "is-info" : "is-ok")}>{evidenceLabel}</span>
+          <span className="review-row-chip is-quiet">{compactRisk}</span>
+        </div>
       </div>
 
       <div className="review-row-actions grid content-center gap-2">
