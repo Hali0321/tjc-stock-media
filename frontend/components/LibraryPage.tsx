@@ -80,6 +80,39 @@ function OpsAssetRow({ asset, selected }: { asset: StockMediaAsset; selected?: b
   );
 }
 
+function ReviewNeededShelf({ assets, onOpen }: { assets: StockMediaAsset[]; onOpen: () => void }) {
+  if (!assets.length) return null;
+  return (
+    <section className="review-needed-shelf mt-3" aria-label="Items needing review">
+      <header>
+        <span>Holding shelf</span>
+        <div>
+          <h3>Approved records needing final reuse checks</h3>
+          <p>Open a record for guidance. Downloads stay blocked until reuse checks clear.</p>
+        </div>
+        <button type="button" onClick={onOpen}>Show all</button>
+      </header>
+      <div className="review-needed-shelf-grid">
+        {assets.slice(0, 6).map((asset) => {
+          const display = assetPresentation(asset, "Viewer");
+          return (
+            <Link className="review-needed-card" href={`/assets/${asset.id}`} key={asset.id}>
+              <span className="review-needed-thumb">
+                {display.image ? <img src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : <span>Preview protected</span>}
+              </span>
+              <span className="review-needed-copy">
+                <strong>{display.title}</strong>
+                <small>{asset.mediaType} - Open record first</small>
+              </span>
+              <em>Review needed</em>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function LibraryPage() {
   const { role, ready } = useDemoRole();
   const [query, setQuery] = useState("");
@@ -89,6 +122,7 @@ export function LibraryPage() {
   const [sort, setSort] = useState<CatalogSort>("Approved first");
   const [filters, setFilters] = useState<string[]>([]);
   const [result, setResult] = useState<SearchResult | null>(null);
+  const [reviewNeededPreview, setReviewNeededPreview] = useState<StockMediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -175,6 +209,29 @@ export function LibraryPage() {
       cancelled = true;
     };
   }, [apiUrl, ready]);
+
+  useEffect(() => {
+    if (!ready || role !== "Viewer") {
+      setReviewNeededPreview([]);
+      return;
+    }
+    let cancelled = false;
+    const params = new URLSearchParams({ role: "Viewer", view: "batch-approved-blockers", limit: "6" });
+    fetch(`/api/assets/search?${params.toString()}`)
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as SearchResult;
+      })
+      .then((data) => {
+        if (!cancelled) setReviewNeededPreview(data?.assets || []);
+      })
+      .catch(() => {
+        if (!cancelled) setReviewNeededPreview([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, role]);
 
   useEffect(() => {
     setPageOffset(0);
@@ -452,13 +509,14 @@ export function LibraryPage() {
                   description="Media may exist, but it still needs review, rights checks, or approved copies before normal users can reuse it."
                   primary={<PrimaryAction href="/collections" icon={Package}>Browse packages</PrimaryAction>}
                   secondary={<PrimaryAction href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20media%20for%20safe%20reuse.%0AContext:%20" tone="secondary" icon={Mail}>Request DAM review</PrimaryAction>}
-                  tertiary={<PrimaryAction href="/upload" tone="secondary" icon={UploadCloud}>Send new media</PrimaryAction>}
-                  className="library-empty-compact"
-                />
-                <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
-                  Show items needing review, downloads stay blocked
-                </button>
-                <section className="approved-copy-workbench mt-3" aria-label="Approved-copy next steps">
+	                  tertiary={<PrimaryAction href="/upload" tone="secondary" icon={UploadCloud}>Send new media</PrimaryAction>}
+	                  className="library-empty-compact"
+	                />
+	                <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
+	                  Show items needing review, downloads stay blocked
+	                </button>
+	                <ReviewNeededShelf assets={reviewNeededPreview} onOpen={() => openSavedView("batch-approved-blockers")} />
+	                <section className="approved-copy-workbench mt-3" aria-label="Approved-copy next steps">
                   <div className="approved-copy-workbench-main">
                     <header>
                       <span>Approved-copy map</span>
