@@ -21,7 +21,7 @@ function safePublicList(values?: string[]) {
 
 function safeSavedViewText(value: string) {
   return value
-    .replace(/ResourceSpace-approved/gi, "Batch-approved")
+    .replace(/ResourceSpace-approved/gi, "Library-approved")
     .replace(/ResourceSpace publish status/gi, "approval state")
     .replace(/ResourceSpace ID/gi, "reference code")
     .replace(/ResourceSpace/gi, "media library")
@@ -39,7 +39,32 @@ function safeSavedViewText(value: string) {
     .replace(/master\/original path/gi, "source-file access")
     .replace(/master files?/gi, "source files")
     .replace(/original filename/gi, "file reference")
-    .replace(/checksum/gi, "file check");
+    .replace(/checksum/gi, "file check")
+    .replace(/exported/gi, "recorded")
+    .replace(/metadata/gi, "details")
+    .replace(/derivatives?/gi, "approved copies")
+    .replace(/renditions?/gi, "approved copies");
+}
+
+const publicSavedViewIds = new Set([
+  "approved-church-wide",
+  "batch-approved-blockers",
+  "website-hero",
+  "sermon-slides",
+  "newsletter",
+  "social-media",
+  "no-people",
+  "people-unknown",
+  "children-youth-review",
+  "recently-approved",
+  "needs-review",
+  "archive-only"
+]);
+
+function canExposeSavedView(role: DemoRole, view: SavedViewSummary) {
+  if (canSeeOperationalSource(role)) return true;
+  if (role === "Contributor" && view.id === "internal-ministry") return true;
+  return publicSavedViewIds.has(view.id);
 }
 
 export function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaSourceStatus {
@@ -99,4 +124,8 @@ export function savedViewForRolePayload(role: DemoRole, view: SavedViewSummary):
     description: safeSavedViewText(view.description),
     reason: safeSavedViewText(view.reason)
   };
+}
+
+export function savedViewsForRolePayload(role: DemoRole, views: SavedViewSummary[]): SavedViewSummary[] {
+  return views.filter((view) => canExposeSavedView(role, view)).map((view) => savedViewForRolePayload(role, view));
 }
