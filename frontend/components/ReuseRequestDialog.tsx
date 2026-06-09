@@ -16,14 +16,15 @@ type ReuseRequestDialogProps = {
   blockers: string[];
   mailtoHref: string;
   opsView?: boolean;
+  adminOps?: boolean;
   onCancel: () => void;
 };
 
 const requestCopy: Record<ReuseRequestKind, { kicker: string; title: string; body: string; action: string }> = {
   original: {
-    kicker: "Original/master access",
-    title: "Request original access",
-    body: "Original and master files stay restricted in ResourceSpace and Google Shared Drive. This request does not grant access automatically.",
+    kicker: "Source-file access",
+    title: "Request source-file access",
+    body: "Source files stay restricted to approved media operations. This request does not grant access automatically.",
     action: "Open email request"
   },
   review: {
@@ -35,7 +36,7 @@ const requestCopy: Record<ReuseRequestKind, { kicker: string; title: string; bod
   coworker: {
     kicker: "Media coworker",
     title: "Ask a media coworker",
-    body: "Use this when the reuse decision is unclear or when ministry context is missing. The portal will not change ResourceSpace state.",
+    body: "Use this when the reuse decision is unclear or when ministry context is missing. The portal will not change library status.",
     action: "Open email"
   }
 };
@@ -76,7 +77,7 @@ function viewerBlockerLabel(blocker: string) {
   return blocker;
 }
 
-export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, rawStatus, portalReuseState, blockers, mailtoHref, opsView = false, onCancel }: ReuseRequestDialogProps) {
+export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, rawStatus, portalReuseState, blockers, mailtoHref, opsView = false, adminOps = false, onCancel }: ReuseRequestDialogProps) {
   const copy = requestCopy[kind];
   const viewerCopy = viewerRequestCopy(kind);
   const visibleBlockers = useMemo(() => (opsView ? blockers : blockers.map(viewerBlockerLabel)).slice(0, 8), [blockers, opsView]);
@@ -111,7 +112,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
           <div>
             <span className="text-xs font-semibold text-tjc-muted">Asset</span>
             <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-            <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Reference code ${resourceSpaceId}`}</span>
+            <span className="mt-1 block text-xs font-semibold text-tjc-muted">{adminOps ? `ResourceSpace ID ${resourceSpaceId}` : `Reference code ${resourceSpaceId}`}</span>
           </div>
           <div>
             <span className="text-xs font-semibold text-tjc-muted">{opsView ? "Current state" : "Use state"}</span>
@@ -126,7 +127,7 @@ export function ReuseRequestDialog({ open, kind, assetTitle, resourceSpaceId, ra
             <strong className="block text-sm">{kind === "original" ? "Original access is restricted" : "This does not approve reuse"}</strong>
             <span className="mt-1 block text-sm leading-relaxed">
               {opsView
-                ? "The request opens an email draft only. ResourceSpace status, portal reuse state, and pending review writes do not change here."
+                ? "The request opens an email draft only. Library status, portal reuse state, and queued review sync do not change here."
                 : "The request opens an email draft only. Download access and review status do not change here."}
             </span>
           </div>

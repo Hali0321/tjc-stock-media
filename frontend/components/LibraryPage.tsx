@@ -219,7 +219,7 @@ export function LibraryPage() {
                 onChange={setQuery}
                 onSubmit={submit}
                 ops={opsView}
-                placeholder={opsView ? "Search title, RS ID, source, blocker, package..." : "Search website, slides, youth-safe, newsletter..."}
+                placeholder={opsView ? `Search title, ${role === "DAM Admin" ? "ResourceSpace ID" : "record reference"}, source, blocker, package...` : "Search website, slides, youth-safe, newsletter..."}
               />
             </div>
             {!opsView ? (
@@ -454,7 +454,7 @@ export function LibraryPage() {
         {!loading && assets.length && opsView ? (
           <div className="overflow-hidden rounded-[12px] border border-[#d8e1da] bg-white">
             <div className="hidden grid-cols-[5rem_minmax(13rem,1.2fr)_8rem_9rem_8rem_8rem_7rem] gap-3 border-b border-[#d8e1da] bg-[#f3f6f4] px-3 py-2 text-xs font-black text-[#526059] md:grid">
-              <span>Preview</span><span>Asset</span><span>Workflow</span><span>Distribution</span><span>People</span><span>RS ID</span><span>Health</span>
+              <span>Preview</span><span>Asset</span><span>Workflow</span><span>Distribution</span><span>People</span><span>Reference</span><span>Health</span>
             </div>
             {assets.map((asset) => <OpsAssetRow asset={asset} key={asset.id} />)}
           </div>

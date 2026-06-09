@@ -100,9 +100,9 @@ function OpsDetails({
   const canOpenResourceSpace = decideAccess(role, "viewResourceSpaceAdminLink", asset).allowed;
   const canSeeOriginal = decideAccess(role, "viewOriginalMetadata", asset).allowed;
   return (
-    <section className="grid gap-3" aria-label="Reviewer and admin details">
+    <section className="grid gap-3" aria-label="Admin source details">
       <details className="rounded-[12px] border border-[#e5e7eb] bg-white p-4">
-        <summary className="cursor-pointer text-sm font-black text-tjc-evergreen">Reviewer/Admin source truth</summary>
+        <summary className="cursor-pointer text-sm font-black text-tjc-evergreen">Admin source truth</summary>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <FieldList
             items={[
@@ -202,9 +202,10 @@ export function AssetDetailPage({ id }: { id: string }) {
 
   const { asset, display, verdict, provenance, preview } = content;
   const requestHref = requestReviewMailto(asset);
-  const sourceGuidance = opsView ? asset.sourceAccount || asset.sourceSystem || asset.sourcePlatform || "Source not exported" : "Media team";
-  const referenceLabel = opsView ? "ResourceSpace ID" : "Reference code";
-  const referenceCode = opsView ? asset.resourceSpaceId || asset.id : asset.id;
+  const adminOps = role === "DAM Admin";
+  const sourceGuidance = adminOps ? asset.sourceAccount || asset.sourceSystem || asset.sourcePlatform || "Source not exported" : opsView ? "Media library record" : "Media team";
+  const referenceLabel = adminOps ? "ResourceSpace ID" : "Reference code";
+  const referenceCode = adminOps ? asset.resourceSpaceId || asset.id : asset.id;
   const previewStripItems = [asset, ...data.related].slice(0, 5).map((item, index) => ({
     item,
     index,
@@ -221,7 +222,7 @@ export function AssetDetailPage({ id }: { id: string }) {
         reference={referenceCode}
       >
         <PrimaryAction href="/" tone="secondary" icon={ArrowLeft}>Back to Find</PrimaryAction>
-        <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={opsView} label={opsView ? "Asset actions" : "Record actions"} />
+        <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={adminOps} label={opsView ? "Asset actions" : "Record actions"} />
       </RecordCommandHeader>
 
       <section className="asset-record-layout grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,.85fr)] xl:items-start" aria-label="Media record decision">
@@ -311,7 +312,7 @@ export function AssetDetailPage({ id }: { id: string }) {
         </aside>
       </section>
 
-      {opsView ? <OpsDetails asset={asset} role={role} resourceSpaceUrl={data.resourceSpaceUrl ?? null} /> : null}
+      {adminOps ? <OpsDetails asset={asset} role={role} resourceSpaceUrl={data.resourceSpaceUrl ?? null} /> : null}
     </div>
   );
 }

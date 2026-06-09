@@ -666,6 +666,17 @@ for (const width of qaViewports) {
 }
 
 {
+  const { page, context } = await newRolePage("Reviewer", 1440, 1000);
+  await gotoAndSettle(page, `${base}/assets/368`);
+  const reviewerDetailText = await page.locator("body").innerText();
+  if (/Reviewer\/Admin source truth|Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status|ResourceSpace ID/i.test(reviewerDetailText)) failures.push("asset detail: Reviewer sees admin source truth");
+  await page.getByRole("button", { name: "Asset actions" }).click();
+  if ((await page.getByRole("menuitem", { name: /Copy reference code/ }).count()) < 1) failures.push("asset actions menu: Reviewer copy reference code missing");
+  if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) > 0) failures.push("asset actions menu: Reviewer can see ResourceSpace admin action");
+  await closeContext(context);
+}
+
+{
   const { page, context } = await newRolePage("DAM Admin", 1440, 1000);
   await gotoAndSettle(page, `${base}/review`);
   await page.getByRole("button", { name: "Asset actions" }).click();

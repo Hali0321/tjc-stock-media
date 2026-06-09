@@ -306,7 +306,7 @@ export function assetGovernancePassport(asset: StockMediaAsset): AssetGovernance
       {
         label: "Original/master",
         available: false,
-        detail: "Original remains restricted to ResourceSpace or Google Shared Drive admin flow",
+        detail: "Source file remains restricted to approved media operations",
         intent: "Archive/master preservation"
       }
     ]

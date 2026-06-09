@@ -262,7 +262,7 @@ export function CommandPalette() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={onInputKeyDown}
-                  placeholder={reviewer ? "Search assets, RS ID, package, saved view..." : "Search media, reference code, package, saved view..."}
+                  placeholder={role === "DAM Admin" ? "Search assets, ResourceSpace ID, package, saved view..." : "Search media, reference code, package, saved view..."}
                   aria-label="Command search"
                   aria-activedescendant={visibleCommands[selectedIndex] ? `command-option-${visibleCommands[selectedIndex].id}` : undefined}
                   aria-controls="command-results"

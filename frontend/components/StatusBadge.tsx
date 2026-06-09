@@ -19,8 +19,8 @@ export type TjcStatusBadgeProps = {
 };
 
 const statusLabels: Record<StockMediaAsset["status"], string> = {
-  "Approved Public": "ResourceSpace Approved Public",
-  "Approved Internal": "ResourceSpace Approved Internal",
+  "Approved Public": "Library approved public",
+  "Approved Internal": "Library approved internal",
   "Needs Review": "Please review before public sharing",
   "Searchable Archive": "Archive only",
   "Do Not Use": "Do not publish externally",
@@ -144,7 +144,7 @@ export function RawStatusBadge({ status, size = "sm" }: { status: StockMediaAsse
       tone={rawStatusTones[status]}
       icon={icon}
       label={statusLabels[status]}
-      tooltip={`Raw ResourceSpace status: ${status}`}
+      tooltip={`Library status: ${status}`}
       size={size}
     />
   );
