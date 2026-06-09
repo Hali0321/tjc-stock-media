@@ -435,6 +435,12 @@ for (const width of qaViewports) {
   if ((await page.locator(".media-card").getByText(/Ready to use/).count()) > 0) failures.push("viewer-find: ready verdict visible when portal-ready set is empty");
   if ((await page.getByText("Saved ops views").count()) > 0) failures.push("viewer-find: ops saved views visible to Viewer");
   const commandSearch = await openCommandPalette(page);
+  if ((await page.getByRole("option", { name: /^Review inbox\b/i }).count()) > 0) failures.push("command palette: Viewer can see Review inbox command");
+  if ((await page.getByRole("option", { name: /Governance/i }).count()) > 0) failures.push("command palette: Viewer can see Governance command");
+  await commandSearch.fill("pending writes");
+  if ((await page.getByRole("option", { name: /Show pending writes/i }).count()) > 0) failures.push("command palette: Viewer can see pending writes command");
+  await commandSearch.fill("review inbox");
+  if ((await page.getByRole("option", { name: /^Review inbox\b/i }).count()) > 0) failures.push("command palette: Viewer can search Review inbox command");
   await commandSearch.fill("website hero");
   const firstActiveCommand = await commandSearch.getAttribute("aria-activedescendant");
   await page.keyboard.press("ArrowDown");

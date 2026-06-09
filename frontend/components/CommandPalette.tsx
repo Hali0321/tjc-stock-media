@@ -26,7 +26,7 @@ const commands: Command[] = [
   { id: "go-library", group: "Go to", label: "Find", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "find library home assets contact sheet", icon: Search, shortcut: "G F" },
   { id: "go-collections", group: "Go to", label: "Packages", hint: "Open curated ministry packages", href: "/collections", keywords: "deliver collections campaign ministry governed portals events packages", icon: FolderOpen, shortcut: "G P" },
   { id: "go-upload", group: "Go to", label: "Send media", hint: "Open contributor send-for-review flow", href: "/upload", keywords: "intake upload contributor submit files send media", icon: UploadCloud, shortcut: "G U" },
-  { id: "go-review", group: "Go to", label: "Review inbox", hint: "Open reviewer operations workbench", href: "/review", keywords: "review governance queue evidence inbox", icon: ShieldAlert, shortcut: "G R" },
+  { id: "go-review", group: "Go to", label: "Review inbox", hint: "Open reviewer operations workbench", href: "/review", keywords: "review governance queue evidence inbox", icon: ShieldAlert, shortcut: "G R", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
   { id: "go-guide", group: "Go to", label: "Guide", hint: "Open use guidance and policy notes", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle, shortcut: "G ?" },
   { id: "go-admin", group: "Go to", label: "Governance", hint: "Open operations console and blockers", href: "/admin", keywords: "governance admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Governance", tag: "Governance" },
 
