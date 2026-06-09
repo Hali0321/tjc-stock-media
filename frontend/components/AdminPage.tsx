@@ -54,6 +54,13 @@ const adminNav = [
 
 const adminTabs = ["Overview", "Mapping", "Action backlog", "Audit", "Launch Gate"] as const;
 type AdminTab = (typeof adminTabs)[number];
+const adminTabLabels: Record<AdminTab, string> = {
+  Overview: "Overview",
+  Mapping: "Mapping",
+  "Action backlog": "Backlog",
+  Audit: "Audit",
+  "Launch Gate": "Gate"
+};
 
 function AdminLoadingState() {
   return (
@@ -348,6 +355,7 @@ export function AdminPage() {
         idPrefix="admin-readiness"
         className="admin-tabs mt-4"
         size="sm"
+        getLabel={(tab) => adminTabLabels[tab]}
       />
 
       <section

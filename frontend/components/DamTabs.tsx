@@ -12,6 +12,7 @@ type DamTabsProps<T extends string> = {
   className?: string;
   size?: "sm" | "md";
   mountedPanels?: boolean;
+  getLabel?: (tab: T) => string;
 };
 
 function safeTabId(tab: string) {
@@ -26,7 +27,7 @@ export function damTabPanelId(idPrefix: string, tab: string) {
   return `${idPrefix}-${safeTabId(tab)}-panel`;
 }
 
-export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, idPrefix, className, size = "md" }: DamTabsProps<T>) {
+export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, idPrefix, className, size = "md", getLabel }: DamTabsProps<T>) {
   function moveFocus(nextTab: T) {
     onChange(nextTab);
     window.requestAnimationFrame(() => {
@@ -59,6 +60,7 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
       <div className="flex w-max min-w-full flex-nowrap items-center gap-1 whitespace-nowrap" role="tablist" aria-label={ariaLabel} aria-orientation="horizontal" onKeyDown={onKeyDown}>
         {tabs.map((tab) => {
           const selected = active === tab;
+          const label = getLabel?.(tab) || tab;
           return (
             <button
               id={damTabId(idPrefix, tab)}
@@ -66,6 +68,7 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
               type="button"
               role="tab"
               aria-selected={selected}
+              aria-label={label === tab ? undefined : tab}
               aria-controls={damTabPanelId(idPrefix, tab)}
               tabIndex={selected ? 0 : -1}
               data-state={selected ? "active" : "inactive"}
@@ -76,7 +79,7 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
               )}
               onClick={() => onChange(tab)}
             >
-              <span className="relative z-[1]">{tab}</span>
+              <span className="relative z-[1]">{label}</span>
             </button>
           );
         })}
