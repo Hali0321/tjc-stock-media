@@ -121,6 +121,34 @@ function EmptyState({
           </div>
         </dl>
       </div>
+      <div className="empty-state-lanes mt-4 grid gap-2 lg:grid-cols-[1fr_1fr_1fr]">
+        {[
+          ["Ready copy lane", "Approved records appear here with download decisions."],
+          ["Review lane", "Unclear rights, people/youth, or use scope stay blocked."],
+          ["Access lane", "Source-file requests stay separate from normal downloads."]
+        ].map(([label, detail], laneIndex) => (
+          <div className="empty-state-lane grid gap-2 rounded-lg border border-[#d9dee3] bg-white p-3" key={label}>
+            <div className="flex items-center justify-between gap-2">
+              <strong className="text-xs font-black text-tjc-evergreen">{label}</strong>
+              <span className="text-[11px] font-black text-[#68756d]">{laneIndex === 0 ? "Default" : "Blocked"}</span>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5" aria-hidden="true">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <span
+                  className={cn(
+                    "block aspect-[4/3] rounded-[4px] border border-[#e2e8e4] bg-[#f0f3f1]",
+                    laneIndex === 0 && index < 2 && "bg-[#e6f1eb]",
+                    laneIndex === 1 && index < 3 && "bg-[#fff3d8]",
+                    laneIndex === 2 && index < 1 && "bg-[#edf4fa]"
+                  )}
+                  key={index}
+                />
+              ))}
+            </div>
+            <p className="text-xs font-semibold leading-relaxed text-tjc-muted">{detail}</p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
