@@ -24,11 +24,13 @@ function assetMetadataForRole(asset: StockMediaAsset, role: DemoRole): StockMedi
     fileSizeBytes: _fileSizeBytes,
     masterDrivePath: _masterDrivePath,
     originalFilename: _originalFilename,
+    resourceSpaceId: _resourceSpaceId,
     sourceAlbumPath: _sourceAlbumPath,
     sourcePath: _sourcePath,
     ...safeAsset
   } = asset;
-  return safeAsset;
+  if (role === "Viewer") return safeAsset;
+  return { ...safeAsset, resourceSpaceId: asset.resourceSpaceId };
 }
 
 export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {

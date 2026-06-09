@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { normalizeTextField } from "@/lib/request-validation";
+import type { DemoRole, MediaSourceStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,16 @@ function normalizeLimit(value: string | null) {
 function normalizeOffset(value: string | null) {
   const parsed = Number(value || 0);
   return Number.isFinite(parsed) ? Math.max(Math.trunc(parsed), 0) : 0;
+}
+
+function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaSourceStatus {
+  if (role !== "Viewer") return source;
+  return {
+    adapter: "demo-fallback",
+    label: "Media library",
+    detail: "Operational source diagnostics are available to reviewers.",
+    readOnly: true
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -37,5 +48,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unknown collection.", collection }, { status: 400 });
   }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
-  return NextResponse.json(result);
+  return NextResponse.json({
+    ...result,
+    source: sourceForRole(role, result.source)
+  });
 }
