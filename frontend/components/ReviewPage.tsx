@@ -176,31 +176,37 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   }, [initialQueue]);
 
   useEffect(() => {
-	    if (!ready) return;
-	    let cancelled = false;
-	    setError("");
-	    fetch(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(activeQueue)}`)
-	      .then(async (response) => {
-	        const body = await response.json();
-	        if (!response.ok) throw new Error(body.error || "Unable to load review queue.");
-	        return body as ReviewResponse;
-	      })
-	      .then((body: ReviewResponse) => {
-	        if (!cancelled) {
-	          setData(body);
-	          setSelectedId((current) => (body.assets.some((asset) => asset.id === current) ? current : body.assets[0]?.id || ""));
-	        }
-	      })
-	      .catch((err: Error) => {
-	        if (!cancelled) {
-	          setError(err.message);
-	          setData(null);
-	        }
-	      });
+    if (!ready) return;
+    if (!reviewer) {
+      setError("");
+      setData(null);
+      setSelectedId("");
+      return;
+    }
+    let cancelled = false;
+    setError("");
+    fetch(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(activeQueue)}`)
+      .then(async (response) => {
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error || "Unable to load review queue.");
+        return body as ReviewResponse;
+      })
+      .then((body: ReviewResponse) => {
+        if (!cancelled) {
+          setData(body);
+          setSelectedId((current) => (body.assets.some((asset) => asset.id === current) ? current : body.assets[0]?.id || ""));
+        }
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+          setData(null);
+        }
+      });
     return () => {
       cancelled = true;
     };
-  }, [role, activeQueue, ready]);
+  }, [role, activeQueue, ready, reviewer]);
 
   const selectedAsset = useMemo(() => data?.assets.find((asset) => asset.id === selectedId) || data?.assets[0], [data?.assets, selectedId]);
   const activeQueueSummary = data?.queues.find((queue) => queue.id === activeQueue);
