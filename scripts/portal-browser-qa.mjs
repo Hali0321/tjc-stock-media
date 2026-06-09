@@ -108,6 +108,51 @@ async function gotoAndSettle(page, url) {
   return response;
 }
 
+async function waitForVisibleImages(page) {
+  await page.waitForFunction(() => {
+    const visibleImages = [...document.images].filter((img) => {
+      const rect = img.getBoundingClientRect();
+      return rect.width > 20 && rect.height > 20 && rect.bottom > 0 && rect.top < window.innerHeight;
+    });
+    return visibleImages.every((img) => img.complete);
+  }, { timeout: 1800 }).catch(() => {});
+}
+
+async function saveFullPageScreenshot(page, screenshotPath) {
+  const style = await page.addStyleTag({
+    content: ".dam-app-header{position:static!important;top:auto!important}"
+  });
+  try {
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+  } finally {
+    await style.evaluate((node) => node.remove()).catch(() => {});
+  }
+}
+
+async function fillUploadContextStep(page, prefix = "Browser QA") {
+  await page.getByLabel("Title").fill(`${prefix} intake`);
+  await page.getByLabel("Event").fill("Sabbath media QA");
+  await page.getByLabel("Date").fill("2026-06-06");
+  await page.getByLabel("Ministry/team").fill("Internet Ministry");
+  await page.getByLabel("Source / photographer").fill("QA reviewer");
+}
+
+async function fillUploadRightsStep(page) {
+  await page.getByLabel("People visible").selectOption("No");
+  await page.getByLabel("Children/youth visible").selectOption("No");
+  await page.getByLabel("Usage rights").selectOption("TJC-owned / permission confirmed");
+  await page.getByLabel("Suggested approval direction").selectOption("Likely internal ministry use only");
+  await page.getByLabel("Consent/restrictions").fill("No consent restrictions; no people visible.");
+}
+
+async function advanceUploadToFiles(page, prefix = "Browser QA") {
+  await page.getByRole("button", { name: "Next" }).click();
+  await fillUploadContextStep(page, prefix);
+  await page.getByRole("button", { name: "Next" }).click();
+  await fillUploadRightsStep(page);
+  await page.getByRole("button", { name: "Next" }).click();
+}
+
 async function inspectPage(page, expected) {
   return page.evaluate((expectedPage) => {
     const doc = document.documentElement;
@@ -160,6 +205,16 @@ async function inspectPage(page, expected) {
         }
       }
     }
+    const fixedMobileNavs = [...document.querySelectorAll('nav[aria-label="Primary navigation"]')]
+      .filter((el) => {
+        const rect = el.getBoundingClientRect();
+        const parent = el.parentElement;
+        const style = window.getComputedStyle(el);
+        const parentStyle = parent ? window.getComputedStyle(parent) : null;
+        const positionedFixed = style.position === "fixed" || parentStyle?.position === "fixed";
+        return positionedFixed && rect.width > 0 && rect.height > 0 && rect.bottom > window.innerHeight - 120;
+      })
+      .map((el) => (el.textContent || el.getAttribute("aria-label") || "mobile nav").trim().replace(/\s+/g, " "));
     return {
       expected: expectedPage,
       title: document.title,
@@ -172,7 +227,8 @@ async function inspectPage(page, expected) {
       brokenImages,
       clippedControls,
       headerOverlaps: headerOverlaps.slice(0, 10),
-    hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review"),
+      fixedMobileNavs,
+    hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review") || visibleText.includes("Review required before use") || visibleText.includes("Source file restricted") || visibleText.includes("Request DAM review"),
       hasReviewBlocker: visibleText.includes("ResourceSpace API write mapping is not configured yet"),
       hasViewerReviewBlock: visibleText.includes("Review inbox requires reviewer access"),
       hasViewerUploadBlock: visibleText.includes("Send media requires Contributor access"),
@@ -191,11 +247,13 @@ for (const width of qaViewports) {
   for (const item of qaPaths) {
     const { page, context } = await newRolePage(item.role, width, width <= 390 ? 900 : 1000);
     const response = await gotoAndSettle(page, `${base}${item.path}`);
+    await waitForVisibleImages(page);
     const state = await inspectPage(page, item);
     if (!response || response.status() >= 500) failures.push(`${item.label} ${width}: HTTP ${response?.status()}`);
     if (state.overflowX) failures.push(`${item.label} ${width}: horizontal overflow ${state.scrollWidth}/${state.clientWidth}`);
     if (state.clippedControls.length) failures.push(`${item.label} ${width}: clipped controls ${JSON.stringify(state.clippedControls)}`);
     if (state.headerOverlaps.length) failures.push(`${item.label} ${width}: header controls overlap ${JSON.stringify(state.headerOverlaps)}`);
+    if (width <= 767 && state.fixedMobileNavs.length) failures.push(`${item.label} ${width}: fixed mobile nav can cover content ${JSON.stringify(state.fixedMobileNavs)}`);
     if (state.missingTabControls.length) failures.push(`${item.label} ${width}: tab aria-controls missing targets ${state.missingTabControls.join(", ")}`);
     if (state.brokenImages.length) warnings.push(`${item.label} ${width}: broken images ${state.brokenImages.join(", ")}`);
     if (item.label === "detail-approved-viewer" && !state.hasBlockedDownload) failures.push(`${item.label} ${width}: portal-ready blocker missing`);
@@ -206,7 +264,7 @@ for (const width of qaViewports) {
     if (item.label === "library-reviewer" && state.hasOriginalFilenameOnCard) failures.push(`${item.label} ${width}: original filename exposed on Find card`);
     if (item.label === "viewer-needs-review-hidden" && state.textSample.includes("2012 Photo")) warnings.push(`${item.label} ${width}: viewer may see review asset copy`);
     if ((width === 1024 || width === 768 || width === 390 || width === 320) && ["library-viewer", "review-reviewer", "guide-viewer"].includes(item.label)) {
-      await page.screenshot({ path: path.join(outDir, "qa", `${item.label}-${width}.png`), fullPage: true });
+      await saveFullPageScreenshot(page, path.join(outDir, "qa", `${item.label}-${width}.png`));
     }
     await context.close();
   }
@@ -218,18 +276,19 @@ for (const width of qaViewports) {
   await page.getByRole("searchbox", { name: "Search approved media" }).fill("Bible");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
-  if ((await page.getByText("Search: Bible").count()) !== 1) failures.push("search interaction: active search chip missing");
+  if (!page.url().includes("q=Bible")) failures.push("search interaction: search query did not update URL");
+  if ((await page.getByRole("searchbox", { name: "Search approved media" }).inputValue()) !== "Bible") failures.push("search interaction: search input did not retain query");
   await context.close();
 }
 
 {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/?q=zzzzzz-no-visible-media-proof`);
-  if ((await page.getByTestId("library-empty-state").getByText("No matching approved assets").count()) < 1) failures.push("viewer-library-empty-to-collections: empty copy missing");
-  await page.getByRole("link", { name: "Open packages" }).click();
+  if ((await page.getByTestId("library-empty-state").getByText("No approved media matches this search").count()) < 1) failures.push("viewer-library-empty-to-collections: empty copy missing");
+  await page.getByTestId("library-empty-state").getByRole("link", { name: "Browse packages" }).click();
   await page.waitForURL(/\/collections/, { timeout: 10000 });
-  await page.getByRole("button", { name: /View details|Inspect metadata/ }).first().click();
-  await page.getByRole("button", { name: /Open (Find|Library) results/ }).first().click();
+  await page.getByRole("button", { name: /View details/ }).first().click();
+  await page.getByRole("button", { name: /Open media/ }).first().click();
   await page.waitForURL(/\?collection=/, { timeout: 10000 });
   if (!page.url().includes("collection=")) failures.push("viewer-library-empty-to-collections: collection did not open Find results");
   await context.close();
@@ -240,7 +299,7 @@ for (const width of qaViewports) {
   await gotoAndSettle(page, `${base}/collections`);
   if ((await page.getByText("Best use:").count()) < 1) failures.push("packages ministry kits: best-use summary missing");
   if ((await page.getByText("Safety:").count()) < 1) failures.push("packages ministry kits: safety summary missing");
-  if ((await page.getByText("Open Find results").count()) < 1) failures.push("packages ministry kits: open Find action missing");
+  if ((await page.getByText("Open media").count()) < 1) failures.push("packages ministry kits: open media action missing");
   await context.close();
 }
 
@@ -248,11 +307,8 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/assets/368`);
   if ((await page.getByText(/Review required before use|Source file restricted|Not available yet/).count()) < 1) failures.push("viewer-asset-blocked-request-review: blocked decision title missing");
-  if ((await page.getByTestId("asset-download-unavailable").getByText("Download unavailable").count()) < 1) failures.push("viewer-asset-blocked-request-review: unavailable download state missing");
-  await page.getByTestId("asset-primary-request-review").click();
-  if ((await page.getByRole("dialog", { name: "Request review" }).count()) < 1) failures.push("viewer-asset-blocked-request-review: request dialog did not open");
-  if ((await page.getByText("Download access and review status do not change here.").count()) < 1) failures.push("viewer-asset-blocked-request-review: no-fake-persistence copy missing");
-  const reviewRequestHref = await page.getByRole("link", { name: "Open review request" }).getAttribute("href");
+  if ((await page.getByRole("link", { name: "Download approved copy" }).count()) > 0) failures.push("viewer-asset-blocked-request-review: blocked record shows download action");
+  const reviewRequestHref = await page.getByRole("link", { name: "Request DAM review" }).first().getAttribute("href");
   const decodedReviewRequestHref = decodeURIComponent(reviewRequestHref || "");
   if (/ResourceSpace|Raw status/i.test(decodedReviewRequestHref)) failures.push("viewer-asset-blocked-request-review: viewer mailto exposes operations truth");
   await context.close();
@@ -261,15 +317,15 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, base);
-  if ((await page.getByText("What do you need media for?").count()) < 1) failures.push("viewer-find: task-first prompt missing");
-  if ((await page.getByText("No approved copies are ready yet.").count()) < 1) failures.push("viewer-find: safe empty state missing");
+  if ((await page.getByLabel("Common media tasks").getByText("Website image").count()) < 1) failures.push("viewer-find: use-case shortcuts missing");
+  if ((await page.getByText("No approved copies are ready yet").count()) < 1) failures.push("viewer-find: safe empty state missing");
   if ((await page.getByText("Media may exist, but it still needs review, rights checks, or approved copies before normal users can reuse it.").count()) < 1) failures.push("viewer-find: safe empty explanation missing");
-  for (const action of ["Browse ministry packages", "Request DAM review", "Send new media"]) {
+  for (const action of ["Browse packages", "Request DAM review", "Send new media"]) {
     if ((await page.getByText(action).count()) < 1) failures.push(`viewer-find: safe empty action missing ${action}`);
   }
   const viewerHomeText = await page.locator("body").innerText();
   if (/ResourceSpace|Shared Drive|pending writes|launch gate/i.test(viewerHomeText)) failures.push("viewer-find: Viewer sees operations truth copy");
-  if ((await page.getByText(/Ready to use/).count()) > 0) failures.push("viewer-find: ready verdict visible when portal-ready set is empty");
+  if ((await page.locator(".media-card").getByText(/Ready to use/).count()) > 0) failures.push("viewer-find: ready verdict visible when portal-ready set is empty");
   if ((await page.getByText("Saved ops views").count()) > 0) failures.push("viewer-find: ops saved views visible to Viewer");
   const commandSearch = await openCommandPalette(page);
   await commandSearch.fill("website hero");
@@ -290,7 +346,7 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/?view=batch-approved-blockers`);
-  const simpleVerdicts = await page.getByText(/Review first|Source restricted|Not available yet|Internal only/).count();
+  const simpleVerdicts = await page.locator(".media-card").getByText(/Review required before use|Source file restricted|Not available yet|Request access/).count();
   if (simpleVerdicts < 1) failures.push("viewer-review-needed-view: result cards do not show blocked simple verdicts");
   if ((await page.getByText("Ready to use").count()) > 0) failures.push("viewer-review-needed-view: unsafe result labelled ready to use");
   if ((await page.getByText(/ResourceSpace ID|RS [0-9]/).count()) > 0) failures.push("viewer-review-needed-view: ResourceSpace details visible to Viewer");
@@ -322,6 +378,7 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await gotoAndSettle(page, `${base}/upload`);
+  await advanceUploadToFiles(page, "Browser QA");
   if ((await page.getByText("Drop files here or browse").count()) < 1) failures.push("upload file dropzone: drop/browse affordance missing");
   await page.getByText("Drop files here or browse").evaluate((node) => {
     const label = node.closest("label");
@@ -331,20 +388,10 @@ for (const width of qaViewports) {
     label.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }));
   });
   if ((await page.getByLabel("Selected file preview").getByText("qa-drop.jpg").count()) < 1) failures.push("upload file dropzone: dropped file missing from preview");
-  await page.getByRole("button", { name: "Clear files" }).click();
+  await page.getByLabel("Selected file preview").getByRole("button", { name: "Clear files" }).click();
   await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.png", mimeType: "image/png", buffer: tinyPng }]);
   if ((await page.getByLabel("Selected file preview").getByText("qa-photo.png").count()) < 1) failures.push("upload file preview: selected file missing");
-  await page.getByRole("button", { name: "Clear files" }).click();
-  await page.getByLabel("Title").fill("Browser QA intake");
-  await page.getByLabel("Event name").fill("Sabbath media QA");
-  await page.getByLabel("Event date").fill("2026-06-06");
-  await page.getByLabel("Ministry/team").fill("Internet Ministry");
-  await page.getByLabel("Source / photographer").fill("QA reviewer");
-  await page.getByLabel("People visible").selectOption("No");
-  await page.getByLabel("Children/youth visible").selectOption("No");
-  await page.getByLabel("Usage rights").selectOption("TJC-owned / permission confirmed");
-  await page.getByLabel("Suggested approval direction").selectOption("Likely internal ministry use only");
-  await page.getByLabel("Consent/restrictions").fill("No consent restrictions; no people visible.");
+  await page.getByLabel("Selected file preview").getByRole("button", { name: "Clear files" }).click();
   await page.getByLabel("Existing Drive or media link").fill("https://drive.google.com/example");
   if ((await page.getByLabel("Suggested tags suggestions", { exact: true }).getByRole("button", { name: "Bible" }).count()) < 1) failures.push("upload tag input: taxonomy suggestions missing");
   await page.getByLabel("Suggested tags", { exact: true }).fill("qa");
@@ -354,8 +401,10 @@ for (const width of qaViewports) {
   await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
   await page.keyboard.press("Enter");
   if ((await page.getByRole("button", { name: "Remove Bible" }).count()) < 1) failures.push("upload tag input: canonical typed tag chip missing");
-  await page.getByLabel("Intake notes").fill("Browser QA no-file intake with source link only.");
-  await page.getByRole("button", { name: "Submit intake" }).click();
+  await page.getByLabel("Reviewer notes").fill("Browser QA no-file intake with source link only.");
+  await page.getByRole("button", { name: "Next" }).click();
+  if ((await page.getByText("Reviewer packet").count()) < 1) failures.push("upload contributor packet: review packet step missing");
+  await page.getByRole("button", { name: "Submit for DAM review" }).click();
   await page.waitForSelector("text=Intake received");
   if ((await page.getByText("Needs Review / Do Not Publish").count()) < 1) failures.push("upload contributor receipt: default review state missing");
   await context.close();
@@ -364,6 +413,7 @@ for (const width of qaViewports) {
 {
   const { page, context } = await newRolePage("Contributor", 320, 900);
   await gotoAndSettle(page, `${base}/upload`);
+  await advanceUploadToFiles(page, "Mobile file preview QA");
   await page.getByLabel("Files").setInputFiles([{ name: "qa-mobile-photo-with-a-long-name.png", mimeType: "image/png", buffer: tinyPng }]);
   if ((await page.getByLabel("Selected file preview").getByText("qa-mobile-photo-with-a-long-name.png").count()) < 1) failures.push("upload mobile file preview: selected file missing");
   const mobileUploadOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
@@ -375,53 +425,42 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Contributor", 1440, 1000);
   await gotoAndSettle(page, `${base}/upload`);
   if ((await page.getByText("What are you sending?").count()) < 1) failures.push("upload desktop wizard: template-first prompt missing");
-  if ((await page.getByText("Never publishes directly").count()) < 1) failures.push("upload desktop wizard: never-publishes safety copy missing");
+  if ((await page.getByText(/Send never publishes/).count()) < 1) failures.push("upload desktop wizard: never-publishes safety copy missing");
   if ((await page.locator('[data-component="UploadBottomActionBar"]').count()) > 0) failures.push("upload desktop rail: detached bottom submit bar still present");
-  const rail = page.getByTestId("upload-desktop-submission-rail");
-  const actions = page.getByTestId("upload-desktop-actions-rail");
-  if ((await actions.getByText("Submit for DAM review").count()) < 1) failures.push("upload desktop rail: submit action missing from right rail");
-  const submitButton = rail.getByRole("button", { name: "Submit intake" });
-  if ((await submitButton.isDisabled()) !== true) failures.push("upload desktop rail: submit should be disabled without file/source, tags, and notes");
-  await actions.getByRole("button", { name: "Save draft" }).click();
-  if ((await rail.getByTestId("upload-draft-local-state").getByText("Draft saved locally").count()) < 1) failures.push("upload desktop rail: save draft state missing");
+  if ((await page.getByText("Step 1 of 5").count()) < 1) failures.push("upload desktop wizard: step indicator missing");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  if ((await page.getByText("Draft saved locally").count()) < 1) failures.push("upload desktop wizard: save draft state missing");
   await context.close();
 }
 
 {
   const { page, context } = await newRolePage("Contributor", 320, 900);
   await gotoAndSettle(page, `${base}/upload`);
-  if ((await page.getByTestId("upload-stepper-current-step").getByText("Step 1 of 4").count()) < 1) failures.push("contributor-upload-stepper: step 1 indicator missing");
-  const firstStepBox = await page.locator('[data-upload-step="0"]:visible').boundingBox();
-  const mobileActionBox = await page.getByTestId("upload-mobile-action-bar").boundingBox();
-  if (firstStepBox && mobileActionBox && mobileActionBox.y < firstStepBox.y + firstStepBox.height - 2) {
+  if ((await page.getByText("Step 1 of 5").count()) < 1) failures.push("contributor-upload-stepper: step 1 indicator missing");
+  await page.getByRole("button", { name: "Next" }).click();
+  const contextStepBox = await page.locator('[data-send-step="1"]:visible').boundingBox();
+  const actionBox = await page.getByLabel("Send actions").boundingBox();
+  if (contextStepBox && actionBox && actionBox.y < contextStepBox.y + contextStepBox.height - 2) {
     failures.push("contributor-upload-stepper: mobile action controls appear before required step fields");
   }
   await page.getByRole("button", { name: "Next" }).click();
-  if ((await page.getByText("Complete Context before continuing.").count()) < 1) failures.push("contributor-upload-stepper: context validation missing");
-  await page.getByLabel("Title").fill("Mobile stepper QA");
-  await page.getByLabel("Event name").fill("Sabbath media QA");
-  await page.getByLabel("Event date").fill("2026-06-06");
-  await page.getByLabel("Ministry/team").fill("Internet Ministry");
-  await page.getByLabel("Source / photographer").fill("QA reviewer");
+  if ((await page.getByText("Complete Where is this from? before continuing.").count()) < 1) failures.push("contributor-upload-stepper: context validation missing");
+  await fillUploadContextStep(page, "Mobile stepper QA");
   await page.getByRole("button", { name: "Next" }).click();
-  if ((await page.getByText("People and rights").count()) < 1) failures.push("contributor-upload-stepper: step 2 did not appear");
-  await page.getByLabel("People visible").selectOption("No");
-  await page.getByLabel("Children/youth visible").selectOption("No");
-  await page.getByLabel("Usage rights").selectOption("TJC-owned / permission confirmed");
-  await page.getByLabel("Suggested approval direction").selectOption("Likely internal ministry use only");
-  await page.getByLabel("Consent/restrictions").fill("No restrictions known.");
+  if ((await page.getByText("Who appears and what permission is known?").count()) < 1) failures.push("contributor-upload-stepper: step 2 did not appear");
+  await fillUploadRightsStep(page);
   await page.getByRole("button", { name: "Next" }).click();
-  if ((await page.getByText("Files or source").count()) < 1) failures.push("contributor-upload-stepper: step 3 did not appear");
+  if ((await page.getByText("Files, link, and reviewer notes").count()) < 1) failures.push("contributor-upload-stepper: step 3 did not appear");
   await page.getByRole("button", { name: "Next" }).click();
-  if ((await page.getByText("Complete Files or source before continuing.").count()) < 1) failures.push("contributor-upload-stepper: file/source validation missing");
+  if ((await page.getByText("Add a file or source link before continuing.").count()) < 1) failures.push("contributor-upload-stepper: file/source validation missing");
   await page.getByLabel("Existing Drive or media link").fill("https://drive.google.com/mobile-stepper-qa");
   await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
   await page.keyboard.press("Enter");
-  await page.getByLabel("Intake notes").fill("Mobile QA source-link intake ready for reviewer packet.");
+  await page.getByLabel("Reviewer notes").fill("Mobile QA source-link intake ready for reviewer packet.");
   await page.getByRole("button", { name: "Next" }).click();
-  if ((await page.getByText("Review and submit").count()) < 1) failures.push("contributor-upload-stepper: review step did not appear");
+  if ((await page.getByText("Reviewer packet").count()) < 1) failures.push("contributor-upload-stepper: review step did not appear");
   await page.getByRole("button", { name: "Save draft" }).click();
-  if ((await page.getByTestId("upload-draft-local-state").getByText("Draft saved locally").count()) < 1) failures.push("contributor-upload-stepper: draft local state missing");
+  if ((await page.getByText("Draft saved locally").count()) < 1) failures.push("contributor-upload-stepper: draft local state missing");
   await context.close();
 }
 
@@ -492,9 +531,9 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Reviewer", 390, 900);
   await gotoAndSettle(page, `${base}/review`);
   const currentWorkspace = page.getByTestId("review-current-workspace");
-  const loadedQueueList = page.getByTestId("review-primary-queue");
+  const loadedQueueList = page.getByTestId("review-mobile-collapsed-queue");
   if ((await currentWorkspace.getByText("Currently reviewing").count()) < 1) failures.push("reviewer-decision-workflow: currently reviewing panel missing on mobile");
-  if ((await loadedQueueList.getByText("Review queue").count()) < 1) failures.push("reviewer-decision-workflow: loaded queue list missing on mobile");
+  if ((await loadedQueueList.getByText("Queue below").count()) < 1) failures.push("reviewer-decision-workflow: collapsed queue missing on mobile");
   const currentBox = await currentWorkspace.boundingBox();
   const queueBox = await loadedQueueList.boundingBox();
   if (currentBox && queueBox && currentBox.y > queueBox.y) failures.push("reviewer-decision-workflow: current asset appears after loaded queue list on mobile");
@@ -505,7 +544,8 @@ for (const width of qaViewports) {
   if ((await page.getByText(/Approve for church-wide use disabled because/).count()) > 0) failures.push("reviewer-decision-workflow: repeated disabled reason copy returned");
   if ((await page.getByText("ResourceSpace API write mapping is not configured yet").count()) < 1) failures.push("reviewer-decision-workflow: pending-write warning missing");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("reviewer-decision-workflow: fake ResourceSpace success visible");
-  await page.getByRole("button", { name: "Review", exact: true }).first().click();
+  await loadedQueueList.locator("summary").click();
+  await loadedQueueList.locator("button").nth(1).click();
   await page.waitForTimeout(250);
   const mobileWorkspaceAfterSelect = await currentWorkspace.boundingBox();
   const mobileWorkspaceScrollTop = await currentWorkspace.evaluate((node) => node.scrollTop);
@@ -543,14 +583,11 @@ for (const width of qaViewports) {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/guide`);
   if ((await page.getByText("What are you trying to do?").count()) < 1) failures.push("guide-task-cards: task prompt missing");
-  await page.getByLabel("Search guide").fill("children");
-  const childrenTask = page.getByTestId("guide-task-card-check-children-youth");
-  if ((await childrenTask.getByText("Check children/youth").count()) < 1) failures.push("guide-task-cards: search did not match children task");
-  await childrenTask.getByText("Check children/youth").click();
+  await page.getByLabel("Search help").fill("children");
+  const childrenTask = page.getByLabel("Help topics").getByRole("button", { name: /Check people\/youth/ });
+  if ((await childrenTask.count()) < 1) failures.push("guide-task-cards: search did not match children task");
+  await childrenTask.click();
   if ((await page.getByText("Do", { exact: true }).count()) < 1 || (await page.getByText("Avoid", { exact: true }).count()) < 1) failures.push("guide-task-cards: do/avoid guidance missing after open");
-  await childrenTask.getByText("Check children/youth").click();
-  const openGuideDetails = await page.locator("details[open]").count();
-  if (openGuideDetails > 0) failures.push("guide-task-cards: task did not close");
   await context.close();
 }
 
@@ -559,10 +596,15 @@ for (const width of qaViewports) {
   await gotoAndSettle(page, `${base}/assets/368`);
   if ((await page.getByTestId("asset-primary-verdict").count()) !== 1) failures.push("asset detail one-verdict: expected exactly one primary verdict card");
   if ((await page.getByRole("heading", { name: "Download and requests" }).count()) > 0) failures.push("asset detail one-verdict: viewer sees duplicate download panel");
+  if ((await page.getByRole("heading", { name: "Use guidance" }).count()) < 1) failures.push("asset detail: use guidance missing");
+  if ((await page.getByRole("heading", { name: "Credit" }).count()) < 1) failures.push("asset detail: credit guidance missing");
+  if ((await page.getByRole("heading", { name: "People/youth note" }).count()) < 1) failures.push("asset detail: people/youth note missing");
+  const viewerDetailText = await page.locator("body").innerText();
+  if (/Reviewer\/Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status/i.test(viewerDetailText)) failures.push("asset detail: viewer sees operations truth");
   const viewerActionsButton = page.getByRole("button", { name: "Record actions" });
   await viewerActionsButton.click();
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "true") failures.push("asset actions menu: aria-expanded not true after open");
-  if ((await page.getByRole("menuitem", { name: /Copy media record ID/ }).count()) < 1) failures.push("asset actions menu: copy media record ID missing");
+  if ((await page.getByRole("menuitem", { name: /Copy reference code/ }).count()) < 1) failures.push("asset actions menu: copy reference code missing");
   if ((await page.getByRole("menuitem", { name: /Copy portal link/ }).count()) < 1) failures.push("asset actions menu: copy portal link missing");
   if ((await page.getByRole("menuitem", { name: /Open in ResourceSpace/ }).count()) > 0) failures.push("asset actions menu: Viewer can see ResourceSpace admin action");
   await page.keyboard.press("ArrowDown");
@@ -572,18 +614,14 @@ for (const width of qaViewports) {
   if ((await viewerActionsButton.getAttribute("aria-expanded")) !== "false") failures.push("asset actions menu: Escape did not close menu");
   const focusedAfterEscape = await page.evaluate(() => document.activeElement?.textContent || "");
   if (!focusedAfterEscape.includes("Record actions")) failures.push("asset actions menu: focus did not return after Escape");
-  await page.getByRole("tab", { name: "Files", exact: true }).click();
-  if ((await page.getByText("Source filename").count()) < 1) failures.push("asset detail tabs: Files panel missing source filename row");
-  await page.getByRole("tab", { name: "Files", exact: true }).press("ArrowRight");
-  if ((await page.getByRole("heading", { name: "Related", exact: true }).count()) < 1) failures.push("asset detail tabs: ArrowRight did not open Related panel");
-  await page.getByRole("button", { name: "Request original access", exact: true }).click();
-  if ((await page.getByRole("dialog", { name: "Request original access" }).count()) < 1) failures.push("request original dialog: dialog did not open");
-  if ((await page.getByText("This request asks the media team for access and does not grant access automatically.").count()) < 1) failures.push("request original dialog: safety copy missing");
-  if ((await page.getByText("Download access and review status do not change here.").count()) < 1) failures.push("request original dialog: no-fake-persistence copy missing");
-  const originalRequestHref = await page.getByRole("link", { name: "Open email request" }).getAttribute("href");
-  const decodedOriginalRequestHref = decodeURIComponent(originalRequestHref || "");
-  if (/ResourceSpace|Raw status/i.test(decodedOriginalRequestHref)) failures.push("request original dialog: viewer mailto exposes operations truth");
-  await page.getByRole("button", { name: "Close request dialog" }).click();
+  const requestLinks = page.getByRole("link", { name: /Request DAM review|Request source-file access/ });
+  if ((await requestLinks.count()) < 1) {
+    failures.push("asset detail request link: request action missing");
+  } else {
+    const requestHref = await requestLinks.first().getAttribute("href");
+    const decodedRequestHref = decodeURIComponent(requestHref || "");
+    if (/ResourceSpace|Raw status|source path/i.test(decodedRequestHref)) failures.push("asset detail request link: viewer mailto exposes operations truth");
+  }
   await context.close();
 }
 
@@ -623,7 +661,7 @@ for (const shot of requiredShots) {
   const { page, context } = await newRolePage(shot.role, shot.width, shot.height);
   await gotoAndSettle(page, `${base}${shot.path}`);
   if (shot.selector) await page.locator(shot.selector).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: path.join(outDir, shot.name), fullPage: true });
+  await saveFullPageScreenshot(page, path.join(outDir, shot.name));
   await context.close();
 }
 
@@ -649,7 +687,7 @@ await captureProof("command-palette-open.png", "Reviewer", 1440, 900, "/", async
 });
 
 await captureProof("library-badges-pagination-filterpills.png", "Viewer", 1440, 1000, "/?view=website-hero", async (page) => {
-  await page.getByLabel("Asset results").scrollIntoViewIfNeeded();
+  await page.getByLabel("Find results").scrollIntoViewIfNeeded();
 });
 
 await captureProof("admin-datatable.png", "DAM Admin", 1440, 1000, "/admin", async (page) => {
@@ -662,18 +700,15 @@ await captureProof("review-datatable-inspector.png", "Reviewer", 1440, 1000, "/r
 });
 
 await captureProof("media-preview-panel-image.png", "DAM Admin", 1440, 1000, "/assets/1556", async (page) => {
-  await page.getByLabel("image media preview").first().scrollIntoViewIfNeeded();
+  await page.getByLabel("Media record decision").first().scrollIntoViewIfNeeded();
 });
 
 await captureProof("media-preview-panel-restricted.png", "Viewer", 1440, 1000, "/assets/368", async (page) => {
-  await page.getByLabel("Restricted media preview").first().scrollIntoViewIfNeeded();
+  await page.getByText("Preview protected").first().scrollIntoViewIfNeeded();
 });
 
 await captureProof("media-preview-panel-document.png", "Viewer", 1440, 1000, "/guide", async (page) => {
-  await page.locator("#media-preview-modes").evaluate((node) => {
-    if (node instanceof HTMLDetailsElement) node.open = true;
-  });
-  await page.locator("#media-preview-modes").scrollIntoViewIfNeeded();
+  await page.locator(".help-assistant-rail").getByText("Quick decision").scrollIntoViewIfNeeded();
 });
 
 await captureProof("asset-actions-menu-open.png", "Viewer", 1440, 900, "/assets/368", async (page) => {
@@ -681,6 +716,7 @@ await captureProof("asset-actions-menu-open.png", "Viewer", 1440, 900, "/assets/
 });
 
 await captureProof("upload-dropzone-tags.png", "Contributor", 1440, 1000, "/upload", async (page) => {
+  await advanceUploadToFiles(page, "Primitive proof");
   await page.getByLabel("Files").setInputFiles([{ name: "primitive-proof-photo.png", mimeType: "image/png", buffer: tinyPng }]);
   await page.waitForFunction(() => {
     const img = document.querySelector('[aria-label="Selected file preview"] img');
@@ -705,7 +741,7 @@ await captureProof("review-hold-confirm-dialog.png", "Reviewer", 1440, 1000, "/r
 });
 
 await captureProof("state-system-empty-error-loading.png", "Viewer", 1440, 900, "/?q=zzzzzz-no-visible-media-proof", async (page) => {
-  await page.getByText("No matching approved assets").scrollIntoViewIfNeeded();
+  await page.getByText("No approved media matches this search").scrollIntoViewIfNeeded();
 });
 
 await browser.close();
