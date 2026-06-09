@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const found = records.filter((item) => item.asset).map((item) => item.asset!);
   const missing = assetIds.filter((id) => !found.some((asset) => asset.id === id));
   if (missing.length) {
-    return NextResponse.json({ error: "One or more selected assets were not found.", missing }, { status: 404 });
+    return NextResponse.json({ error: "One or more selected assets were not found.", missingCount: missing.length }, { status: 404 });
   }
 
   const timestamp = new Date().toISOString();

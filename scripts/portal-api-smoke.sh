@@ -266,7 +266,18 @@ expect_code 400 batch-malformed-asset \
   -d '{"role":"Reviewer","action":"request-review","assetIds":["../644"]}' \
   "$BASE_URL/api/batch"
 
-expect_code 404 batch-missing-asset \
+expect_json_status 404 batch-missing-asset-payload-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (Object.prototype.hasOwnProperty.call(data, "missing") || text.includes("999999") || text.includes("../")) {
+  console.error("FAIL: batch missing response echoed selected asset IDs");
+  process.exit(1);
+}
+if (data.missingCount !== 1) {
+  console.error(`FAIL: batch missing response did not return safe count: ${JSON.stringify(data)}`);
+  process.exit(1);
+}
+' \
   -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","action":"request-review","assetIds":["999999"]}' \
   "$BASE_URL/api/batch"
@@ -296,7 +307,22 @@ expect_code 403 collection-hidden-asset-contributor \
   -d '{"role":"Contributor","assetIds":["644"],"title":"Unsafe collection"}' \
   "$BASE_URL/api/collections"
 
-expect_code 404 collection-missing-asset \
+expect_json_status 404 collection-missing-asset-payload-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (Object.prototype.hasOwnProperty.call(data, "missing") || text.includes("999999") || text.includes("../")) {
+  console.error("FAIL: collection missing response echoed selected asset IDs");
+  process.exit(1);
+}
+if (data.missingCount !== 1) {
+  console.error(`FAIL: collection missing response did not return safe count: ${JSON.stringify(data)}`);
+  process.exit(1);
+}
+if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|public gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|Persistence/i.test(text)) {
+  console.error("FAIL: collection missing response leaked operational copy");
+  process.exit(1);
+}
+' \
   -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Contributor","assetIds":["999999"],"title":"Missing collection"}' \
   "$BASE_URL/api/collections"
