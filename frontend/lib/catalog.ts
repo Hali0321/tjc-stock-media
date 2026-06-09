@@ -71,7 +71,7 @@ export const savedViewDefinitions: SavedViewDefinition[] = [
   {
     id: "batch-approved-blockers",
     label: "Needs review",
-    description: "ResourceSpace-approved assets that still have reuse blockers.",
+    description: "Approved-status media that still has reuse blockers.",
     reason: "Keeps batch approval separate from actual public-safe reuse.",
     match: (asset) => asset.status === "Approved Public" && !assetIsPortalReady(asset)
   },
@@ -146,7 +146,7 @@ export const savedViewDefinitions: SavedViewDefinition[] = [
     id: "needs-review",
     label: "Needs review",
     description: "Blocked until reviewer approval.",
-    reason: "Uses ResourceSpace publish status and people/minors risk.",
+    reason: "Uses review status and people/minors risk.",
     match: assetNeedsReview
   },
   {
@@ -521,7 +521,7 @@ function buildZeroResultInsights(assets: StockMediaAsset[]): ZeroResultInsight[]
     {
       query: "public safe",
       savedViewId: "portal-ready",
-      recommendation: "Translate public-safe intent to Portal Ready, not raw ResourceSpace approval."
+      recommendation: "Translate public-safe intent to Portal Ready, not raw approval status."
     }
   ];
 

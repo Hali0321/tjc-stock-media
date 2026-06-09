@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Copy, Download, FileLock2, History, Mail, PackagePlus, Search, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, FileLock2, History, Mail, PackagePlus, ScrollText, Search, ShieldCheck } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import { DamEmptyState as EmptyState } from "@/components/dam/DamWorkspace";
 import { DamProtectedPreview as ProtectedPreview, DamRecordMetadataRow as RecordMetadataRow, DamRecordMetadataSection as RecordMetadataSection } from "@/components/dam/DamRecord";
@@ -251,7 +251,7 @@ export function AssetDetailPage({ id }: { id: string }) {
           </div>
           <div className="dam-record-command-actions">
             <DamActionButton href="/" tone="secondary" icon={ArrowLeft}>Back to Find</DamActionButton>
-            <DamActionButton href="#credit" tone="quiet" icon={Copy}>Copy citation</DamActionButton>
+            <DamActionButton href="#credit" tone="quiet" icon={ScrollText}>View credit</DamActionButton>
             <AssetActionsMenu asset={asset} resourceSpaceUrl={data.resourceSpaceUrl ?? null} canOpenResourceSpace={canOpenResourceSpace} canExposeResourceSpaceId={adminOps} label={opsView ? "Asset actions" : "Record actions"} />
           </div>
         </div>
@@ -348,9 +348,9 @@ export function AssetDetailPage({ id }: { id: string }) {
         ) : (
           <DamActionButton href={requestHref} tone="primary" icon={Mail}>Request DAM review</DamActionButton>
         )}
-        <DamActionButton href="/" tone="secondary" icon={PackagePlus}>Add to package</DamActionButton>
+        <DamActionButton href="/collections" tone="secondary" icon={PackagePlus}>Browse packages</DamActionButton>
         <DamActionButton href={requestHref} tone="secondary" icon={FileLock2}>Source access</DamActionButton>
-        <DamActionButton href="#credit" tone="quiet" icon={Copy}>Copy citation</DamActionButton>
+        <DamActionButton href="#credit" tone="quiet" icon={ScrollText}>View credit</DamActionButton>
       </DamActionBar>
 
       {adminOps ? <OpsDetails asset={asset} role={role} resourceSpaceUrl={data.resourceSpaceUrl ?? null} /> : null}

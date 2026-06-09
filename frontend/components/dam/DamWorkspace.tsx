@@ -171,10 +171,12 @@ function HeroSearch({
       <span className="hidden h-13 w-13 place-items-center rounded-xl bg-[#eef7f1] text-tjc-evergreen md:grid" aria-hidden="true">
         <Search size={20} strokeWidth={2} />
       </span>
-      <label className="sr-only" htmlFor="find-media-search">{ops ? "Ops Search" : "Search approved media"}</label>
+      <label className="sr-only" htmlFor="find-media-search" id="find-media-search-label">{ops ? "Ops Search" : "Search approved media"}</label>
       <input
         id="find-media-search"
+        role="searchbox"
         aria-label={ops ? "Ops Search" : "Search approved media"}
+        aria-labelledby="find-media-search-label"
         className="min-h-13 min-w-0 rounded-xl border border-transparent bg-[#fbfcfb] px-4 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d] focus:border-[#9cb9ab] sm:text-base"
         value={value}
         onChange={(event) => onChange(event.target.value)}
