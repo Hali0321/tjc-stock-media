@@ -314,8 +314,8 @@ async function inspectPage(page, expected) {
       clippedControls,
       headerOverlaps: headerOverlaps.slice(0, 10),
       fixedMobileNavs,
-    hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review") || visibleText.includes("Review required before use") || visibleText.includes("Source file restricted") || visibleText.includes("Request DAM review"),
-      hasReviewBlocker: visibleText.includes("Sync setup is required"),
+    hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review") || visibleText.includes("Review required before use") || visibleText.includes("Source file restricted") || visibleText.includes("Request DAM review") || visibleText.includes("Request-only") || visibleText.includes("Preview protected"),
+      hasReviewBlocker: visibleText.includes("Decision locked") || visibleText.includes("Complete required evidence before approval"),
       hasViewerReviewBlock: visibleText.includes("Review inbox requires reviewer access"),
       hasViewerUploadBlock: visibleText.includes("Send media requires Contributor access"),
       hasAdminBlock: visibleText.includes("Governance requires DAM Admin role"),
@@ -576,14 +576,14 @@ for (const width of qaViewports) {
   if ((await page.getByLabel("Review queue data table").count()) > 0) failures.push("review console: full data table returned");
   const selectedQueueItem = page.getByTestId("review-selected-queue-item");
   if ((await selectedQueueItem.count()) < 1) failures.push("review console: selected queue item highlight missing");
-  if ((await selectedQueueItem.getByText("Selected for review").count()) < 1) failures.push("review console: selected queue item label missing");
+  if ((await selectedQueueItem.getByText("Selected", { exact: true }).count()) < 1) failures.push("review console: selected queue item label missing");
   const reviewWorkspaceBehavior = await page.getByTestId("review-current-workspace").evaluate((node) => {
     const style = window.getComputedStyle(node);
     return { position: style.position, overflowY: style.overflowY, maxHeight: style.maxHeight };
   });
   if (reviewWorkspaceBehavior.position !== "sticky" && !["auto", "scroll"].includes(reviewWorkspaceBehavior.overflowY)) failures.push("review console: right workspace is not sticky or internally scrollable");
   const reviewWorkspace = page.getByTestId("review-current-workspace");
-  await page.evaluate(() => window.scrollTo(0, 1300));
+  await page.evaluate(() => window.scrollTo(0, 520));
   await page.waitForTimeout(250);
   const stickyFollow = await reviewWorkspace.evaluate((node) => {
     const rect = node.getBoundingClientRect();
@@ -605,7 +605,7 @@ for (const width of qaViewports) {
   if (overviewSelected !== "true") failures.push("review console: selecting a new asset did not reset inspector to Overview");
   if ((await page.getByTestId("review-decision-requirements").count()) !== 1) failures.push("review console: decision lock panel should appear once");
   if ((await page.getByText(/disabled because/).count()) > 0) failures.push("review console: repeated verbose disabled reason copy returned");
-  if ((await page.getByText("Sync setup is required").count()) < 1) failures.push("review console: sync warning missing");
+  if ((await page.getByText("Sync setup is required").count()) > 0) failures.push("review console: production sync warning returned");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("review console: fake ResourceSpace success visible");
   if ((await page.getByRole("button", { name: "Show more review items" }).count()) < 1) failures.push("review queue load more: button missing");
   await page.getByRole("button", { name: "Asset actions" }).click();
@@ -626,7 +626,7 @@ for (const width of qaViewports) {
   await page.getByRole("button", { name: "Approve for church-wide use" }).click();
   await page.waitForSelector("text=Queue decision for sync");
   await page.getByRole("button", { name: "Queue decision for sync" }).click();
-  await page.waitForSelector("text=Sync setup is required");
+  await page.waitForSelector("text=Audit preview");
   if ((await page.getByText("Audit preview").count()) < 1) failures.push("review action: audit preview missing");
   await closeContext(context);
 }
@@ -646,7 +646,7 @@ for (const width of qaViewports) {
   if ((await page.getByTestId("review-decision-requirements").getByText(/Complete before approval/).count()) < 1) failures.push("reviewer-decision-workflow: requirements summary missing");
   if ((await page.getByTestId("review-disabled-decision-group").getByRole("button", { name: "Approve for church-wide use" }).isDisabled()) !== true) failures.push("reviewer-decision-workflow: approve should be disabled before evidence");
   if ((await page.getByText(/Approve for church-wide use disabled because/).count()) > 0) failures.push("reviewer-decision-workflow: repeated disabled reason copy returned");
-  if ((await page.getByText("Sync setup is required").count()) < 1) failures.push("reviewer-decision-workflow: sync warning missing");
+  if ((await page.getByText("Sync setup is required").count()) > 0) failures.push("reviewer-decision-workflow: production sync warning returned");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("reviewer-decision-workflow: fake ResourceSpace success visible");
   await loadedQueueList.locator("summary").click();
   await loadedQueueList.locator("button").nth(1).click();

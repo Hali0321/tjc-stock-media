@@ -95,25 +95,21 @@ export function DamReviewQueueRail({
 export function DamReviewQueueHeader({
   loaded,
   total,
-  selected,
   queueLabel
 }: {
   loaded: number;
   total?: number;
-  selected: boolean;
   queueLabel?: string;
 }) {
   return (
     <header className="review-queue-header-v2" data-component="DamReviewQueueHeader">
       <div>
-        <span>Queue register</span>
-        <h2>Review queue</h2>
-        <p>{typeof total === "number" ? `${total.toLocaleString()} total in ${queueLabel || "current queue"}` : "Loading queue"}</p>
+        <span>Current queue</span>
+        <h2>{queueLabel || "Review queue"}</h2>
       </div>
       <dl aria-label="Review queue status">
         <div><dt>Loaded</dt><dd>{loaded.toLocaleString()}</dd></div>
-        <div><dt>Selected</dt><dd>{selected ? "1" : "0"}</dd></div>
-        <div><dt>Lane</dt><dd>{queueLabel || "Queue"}</dd></div>
+        <div><dt>Total</dt><dd>{typeof total === "number" ? total.toLocaleString() : "-"}</dd></div>
       </dl>
     </header>
   );
@@ -147,7 +143,7 @@ export const DamReviewSelectedAsset = forwardRef<HTMLElement, { children: ReactN
   children
 }, ref) {
   return (
-    <aside ref={ref} className="review-selected-workbench order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-2xl border border-[#d4ded7] bg-white p-4 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:max-h-[calc(100vh-var(--app-header-height)-2rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="DamReviewSelectedAsset" data-testid="review-current-workspace">
+    <aside ref={ref} className="review-selected-workbench order-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 overflow-x-hidden self-start rounded-2xl border border-[#d4ded7] bg-white p-4 xl:order-none xl:sticky xl:top-[calc(var(--app-header-height)+1rem)] xl:h-[calc(100vh-var(--app-header-height)-5rem)] xl:overflow-y-auto xl:overscroll-contain" aria-label="Selected asset decision console" data-component="DamReviewSelectedAsset" data-testid="review-current-workspace">
       {children}
     </aside>
   );

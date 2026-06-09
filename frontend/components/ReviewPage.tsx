@@ -59,7 +59,7 @@ type AuditPreview = {
   assetId: string;
 };
 
-const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Sync status"] as const;
+const reviewInspectorTabs = ["Overview", "Metadata", "Usage", "AI Insights", "Queue status"] as const;
 type ReviewInspectorTab = (typeof reviewInspectorTabs)[number];
 const desktopReviewRowsPageSize = 12;
 const mobileReviewRowsPageSize = 6;
@@ -372,8 +372,8 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       setMessage(body.message || body.error || "Review route responded.");
       if (response.ok) {
         toastReviewQueued({ label: "Open review queue", onClick: () => router.push(`/review?queue=${activeQueue}`) });
-        toastPendingWriteQueued({ label: "View sync status", onClick: () => setActiveInspectorTab("Sync status") });
-        setActiveInspectorTab("Sync status");
+        toastPendingWriteQueued({ label: "View queue status", onClick: () => setActiveInspectorTab("Queue status") });
+        setActiveInspectorTab("Queue status");
         setReviewNote("");
         setChecklist(emptyChecklist);
         setPendingAction(null);
@@ -486,7 +486,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <section className="review-compact-header" aria-label="Review inbox">
         <div>
           <h1>Review Inbox</h1>
-          <p>Approval stays locked until required evidence is complete.</p>
+          <p>Evidence gates approval.</p>
         </div>
         <dl aria-label="Current review queue">
           <div>
@@ -529,13 +529,13 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         </p>
       </section>
 
-      <section className="mt-5 hidden gap-3 rounded-[12px] border border-[#e5e7eb] bg-white p-3 md:grid" aria-label="Review filters">
+      <section className="mt-5 hidden gap-2 rounded-[12px] border border-[#e1e8e2] bg-[#fbfcfa] p-2 md:grid" aria-label="Review filters">
         <div className="flex max-w-full min-w-0 flex-wrap gap-2">
           {keyReviewerQueues.map((queue) => (
             <button
               key={queue.id}
               type="button"
-              className={cn("inline-flex min-h-11 shrink-0 items-center gap-2 rounded-[10px] border px-4 text-sm font-black text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e8f4ed] text-tjc-evergreen" : "border-[#e0e8e2] bg-white")}
+              className={cn("inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[9px] border px-3 text-sm font-black text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e8f4ed] text-tjc-evergreen" : "border-[#e0e8e2] bg-white")}
               onClick={() => selectQueue(queue.id)}
               aria-pressed={activeQueue === queue.id}
             >
@@ -544,8 +544,8 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             </button>
           ))}
         </div>
-        <details className="rounded-lg border border-[#d6dfd8] bg-white p-3" aria-label="Advanced review filters">
-          <summary className="cursor-pointer text-sm font-black text-tjc-evergreen">Advanced filters</summary>
+        <details className="rounded-lg border border-[#d6dfd8] bg-white px-3 py-2" aria-label="More review filters">
+          <summary className="cursor-pointer text-sm font-black text-tjc-evergreen">More filters</summary>
           <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)]">
             <div className="flex flex-wrap gap-2">
               {advancedQueues.map((queue) => (
@@ -614,7 +614,6 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           <DamReviewQueueHeader
             loaded={Math.min(visibleReviewAssets.length, data?.assets.length || 0)}
             total={activeQueueSummary?.count}
-            selected={Boolean(selectedAsset)}
             queueLabel={activeQueueSummary?.label}
           />
           <div className="grid min-w-0 max-w-full">
@@ -656,11 +655,8 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 <strong className="block font-black">{reviewRiskFlags(selectedAsset)[0] || "Standard review"}</strong>
                 <span className="mt-1 block leading-snug">{reviewNextCheckLabel(selectedAsset)}</span>
               </div>
-              <div className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">
-                Sync setup is required before queued decisions update source records.
-              </div>
               <div className="grid gap-1 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
-                <span>Ref {selectedAsset.resourceSpaceId || selectedAsset.id}</span>
+                <span>{role === "DAM Admin" ? `ResourceSpace ${selectedAsset.resourceSpaceId || selectedAsset.id}` : `Ref ${selectedAsset.id}`}</span>
                 <span>Source access restricted</span>
               </div>
               <section className="grid gap-2 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Typed decision lanes">
@@ -735,17 +731,17 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <div className={factItemClass}><dt className={factTermClass}>Reviewed date</dt><dd className={factDescClass}>{selectedAsset.reviewedDate || "Pending"}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>AI enrichment signal</dt><dd className={factDescClass}>{missingReviewFields(selectedAsset).length ? "Suggested metadata needs reviewer confirmation before write." : "Exported fields look complete; reviewer evidence still required for action."}</dd></div>
                   <div className={factItemClass}><dt className={factTermClass}>Status history</dt><dd className={factDescClass}>{assetPresentation(selectedAsset, role).reviewFacts.statusHistory.join(" -> ")}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Last library state</dt><dd className={factDescClass}>Read from the current media-library export. Sync status is shown separately.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Last library state</dt><dd className={factDescClass}>Read from the current media-library export. Queue status is shown separately.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>
 
-            <section id={damTabPanelId("review-inspector", "Sync status")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Sync status")} hidden={activeInspectorTab !== "Sync status"}>
+            <section id={damTabPanelId("review-inspector", "Queue status")} role="tabpanel" aria-labelledby={damTabId("review-inspector", "Queue status")} hidden={activeInspectorTab !== "Queue status"}>
                 <dl className="grid gap-2">
                   <div className={factItemClass}><dt className={factTermClass}>Queued decision</dt><dd className={factDescClass}>{selectedPendingWrite ? `${selectedPendingWrite.requestedStatus} / ${selectedPendingWrite.syncState}` : "None queued"}</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Sync mode</dt><dd className={factDescClass}>Review decisions are queued for library sync; source records stay unchanged until sync completes.</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Current library state</dt><dd className={factDescClass}>Current status remains {selectedAsset.status}. Queued review decisions are not final until synced.</dd></div>
-                  <div className={factItemClass}><dt className={factTermClass}>Next system step</dt><dd className={factDescClass}>Sync setup is required before queued decisions update source records.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Queue mode</dt><dd className={factDescClass}>Review decisions are queued for media-team follow-up; source records stay unchanged here.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Current library state</dt><dd className={factDescClass}>Current status remains {selectedAsset.status}. Queued review decisions are not final until completed by the media team.</dd></div>
+                  <div className={factItemClass}><dt className={factTermClass}>Next team step</dt><dd className={factDescClass}>Media team completes the final source update outside this review page.</dd></div>
                 </dl>
                 {selectedAuditPreview ? <div className="mt-3"><AuditPreviewPanel auditPreview={selectedAuditPreview} /></div> : null}
             </section>

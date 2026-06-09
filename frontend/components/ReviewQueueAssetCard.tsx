@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink, ShieldAlert } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
 import { assetPresentation } from "@/lib/presentation";
 import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
@@ -34,9 +34,8 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
     .replace("People/minors unknown", "People/minors")
     .replace("Rights or consent unclear", "Rights");
   const nextCheck = nextCheckLabel(missing, risks);
-  const evidenceProgress = missing.length ? `${missing.length} gaps` : "Fields ready";
   const severity = risks.some((risk) => /children|rights|sensitive/i.test(risk)) ? "High" : missing.length >= 4 ? "Medium" : "Standard";
-  const sla = severity === "High" ? "SLA: review soon" : missing.length ? "SLA: open" : "SLA: ready";
+  const rowTone = severity === "High" ? "High" : missing.length ? "Open" : "Ready";
 
   return (
     <>
@@ -96,7 +95,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
             {missing.length ? `${missing.length} gaps` : "Fields ready"}
           </span>
           <span className="rounded-md border border-[#cfd9dd] bg-white px-2 py-1 text-[10px] font-black text-[#52677a]">
-            {evidenceProgress}
+            {missing.length ? `${missing.length} gaps` : "Fields ready"}
           </span>
         </div>
         <div className="mt-2 grid gap-2">
@@ -114,7 +113,7 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
 
     <article
       className={cn(
-        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid lg:grid-cols-[5.25rem_minmax(14rem,1.2fr)_minmax(12rem,.8fr)_8.75rem] 2xl:grid-cols-[5.5rem_minmax(16rem,1.2fr)_minmax(13rem,.8fr)_8.75rem]",
+        "review-queue-row-v2 group hidden gap-3 border-b border-tjc-line px-3 py-2.5 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid md:grid-cols-[4.75rem_minmax(0,1fr)_7rem_6.75rem]",
         selected && "bg-[#e5f3ea] ring-1 ring-inset ring-[#8fb2a5]"
       )}
       data-component="ExpandedReviewQueueCard"
@@ -128,48 +127,43 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         <MediaPreview src={display.image} alt={asset.thumbnailAlt} imgClassName="transition duration-300 group-hover:scale-[1.025]" className="px-2" loading="eager" />
       </Link>
 
-      <div className="review-row-record min-w-0">
-        {selected ? <span className="review-row-state">Selected</span> : null}
-        <h2 className="line-clamp-1 text-base font-black leading-tight text-tjc-ink max-sm:text-sm">{display.title}</h2>
-        <div className="review-row-focus" aria-label="Review focus">
-          <span>{nextCheck}</span>
-          <strong>{missing.length ? `${missing.length} gaps` : "Ready"}</strong>
+      <div className="review-row-record min-w-0 self-center">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="min-w-0 flex-1 truncate text-sm font-black leading-tight text-tjc-ink">{display.title}</h2>
+          {selected ? <span className="review-row-state shrink-0">Selected</span> : null}
+        </div>
+        <div className="mt-1 flex min-w-0 items-center gap-2 text-xs font-semibold text-tjc-muted">
+          <span className="shrink-0 text-tjc-evergreen">{nextCheck}</span>
+          <span aria-hidden="true">•</span>
+          <span className="truncate">{compactRisk}</span>
         </div>
       </div>
 
-      <div className="review-row-blockers grid content-start gap-2 max-sm:hidden">
-        <div className="review-row-blocker-card grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-lg border border-[#d7dfd8] bg-[#fbfcfa] p-2 text-sm">
-          <ShieldAlert size={16} strokeWidth={1.8} aria-hidden="true" className="text-[#725216]" />
-          <span className="min-w-0">
-            <strong className="block truncate font-black text-tjc-ink">{compactRisk}</strong>
-            <span className="block truncate text-xs font-semibold text-tjc-muted">{evidenceProgress}</span>
-          </span>
-          <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[11px] font-black text-[#725216]">{severity}</span>
-        </div>
+      <div className="hidden self-center md:block">
+        <span className={cn("inline-flex min-h-8 w-full items-center justify-center rounded-md border px-2 text-xs font-black tabular-nums", severity === "High" ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : missing.length ? "border-[#cfd9dd] bg-white text-[#52677a]" : "border-[#b8d9c6] bg-[#eef8f2] text-[#194f34]")}>
+          {missing.length ? `${missing.length} gaps` : "Ready"}
+        </span>
       </div>
 
-      <div className="review-row-actions grid content-start gap-2 max-sm:col-span-2">
-        <div className="review-row-next rounded-md border border-[#c9d8cf] bg-white p-3 max-sm:hidden">
-          <span className="block text-[11px] font-black uppercase tracking-[.06em] text-tjc-evergreen">SLA</span>
-          <strong className="mt-1 block text-sm text-tjc-ink">{sla.replace("SLA: ", "")}</strong>
-        </div>
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+      <div className="review-row-actions grid content-center gap-2">
+        <div className="grid gap-2">
           <button
             className={cn(
-              "inline-flex min-h-9 items-center justify-center rounded-md border px-2.5 text-sm font-black transition hover:bg-[#eef7f1] active:translate-y-px max-sm:col-span-2",
+              "inline-flex min-h-9 items-center justify-center rounded-md border px-2.5 text-sm font-black transition hover:bg-[#eef7f1] active:translate-y-px",
               selected ? "border-[#8fb2a5] bg-[#dff0e6] text-tjc-evergreen" : "border-tjc-line bg-white text-tjc-evergreen"
             )}
             type="button"
             onClick={() => onInspect(asset.id)}
             aria-pressed={selected}
           >
-            {selected ? "Selected for review" : "Review"}
+            {selected ? "Selected" : "Review"}
           </button>
-          <Link className="inline-flex min-h-9 items-center justify-center gap-1 rounded-md border border-tjc-line bg-white px-2.5 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] max-sm:hidden" href={`/assets/${asset.id}`}>
+          <Link className="sr-only" href={`/assets/${asset.id}`}>
             <ExternalLink size={14} strokeWidth={1.8} aria-hidden="true" />
-            Detail
+            Open detail for {display.title}
           </Link>
         </div>
+        <span className="sr-only">{rowTone}</span>
       </div>
     </article>
     </>

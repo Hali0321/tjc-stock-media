@@ -5126,7 +5126,7 @@ body,
 
 .review-queue-header-v2 {
   display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(22rem,.68fr);
+  grid-template-columns: minmax(0,1fr) minmax(12rem,.38fr);
   gap: .75rem;
   align-items: stretch;
   border-bottom: 1px solid var(--dam-v3-line);
@@ -5168,7 +5168,7 @@ body,
 
 .review-queue-header-v2 dl {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0,1fr));
   overflow: hidden;
   border: 1px solid #e1e6e3;
   border-radius: .3rem;
@@ -5197,9 +5197,9 @@ body,
 }
 
 .review-queue-row-v2 {
-  grid-template-columns: 5.2rem minmax(14rem,1.2fr) minmax(12rem,.82fr) minmax(8.5rem,.58fr) !important;
+  grid-template-columns: 4.75rem minmax(0,1fr) 7rem 6.75rem !important;
   gap: .65rem !important;
-  align-items: stretch;
+  align-items: center;
   border-color: #e7ece9 !important;
   padding: .62rem .72rem !important;
 }
@@ -5222,8 +5222,8 @@ body,
 
 .review-row-record {
   display: grid;
-  align-content: start;
-  gap: .3rem;
+  align-content: center;
+  gap: .16rem;
 }
 
 .review-row-record h2 {
@@ -5418,7 +5418,7 @@ body,
 
 @media (max-width: 1399px) {
   .review-queue-row-v2 {
-    grid-template-columns: 4.8rem minmax(12rem,1.15fr) minmax(11rem,.8fr) minmax(7.75rem,.55fr) !important;
+    grid-template-columns: 4.5rem minmax(0,1fr) 6.5rem 6.25rem !important;
   }
 }
 
