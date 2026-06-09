@@ -216,7 +216,7 @@ function PacketSummary({
         <span className="text-xs font-black uppercase tracking-[.08em] text-tjc-evergreen">Reviewer packet</span>
         <h2 className="mt-1 text-2xl font-black leading-tight text-tjc-ink">{ready ? "Ready to send for review" : "Context still needed"}</h2>
         <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">
-          New media remains Needs Review / Do Not Publish until a reviewer completes the record.
+          Reviewers get one packet with source, rights, people, use case, and notes.
         </p>
       </div>
       <dl className="grid grid-cols-2 gap-2">
@@ -236,7 +236,7 @@ function PacketSummary({
         {[
           ["Intake", "Submitted media enters review."],
           ["Decision", "Reviewer evidence controls reuse."],
-          ["Publish", "Never automatic from Send."]
+          ["Publish", "No automatic publishing."]
         ].map(([label, value]) => (
           <div className="grid grid-cols-[5.5rem_1fr] gap-3 border-t border-[#e7ece8] pt-2 first:border-t-0 first:pt-0" key={label}>
             <strong className="text-xs font-black text-tjc-evergreen">{label}</strong>

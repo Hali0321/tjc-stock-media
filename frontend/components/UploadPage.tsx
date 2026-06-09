@@ -31,7 +31,7 @@ const intakeTypes = [
   { id: "sermon", label: "Sermon/teaching", detail: "Speaker, context, and usage scope.", icon: FileText },
   { id: "graphics", label: "Graphics/flyers", detail: "Design rights, fonts, and channel fit.", icon: FileCheck2 },
   { id: "music", label: "Hymn/music", detail: "Recording and copyright basis.", icon: ShieldCheck },
-  { id: "source-link", label: "Source link only", detail: "Drive folder or media link for reviewer intake.", icon: LinkIcon }
+  { id: "source-link", label: "Source link only", detail: "Media-team link or shared source for reviewer intake.", icon: LinkIcon }
 ] as const;
 
 const steps = [
@@ -331,7 +331,7 @@ export function UploadPage() {
           </div>
           <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Source / photographer {requiredHint}</span>
-            <input className={inputClass} name="source" placeholder="Volunteer name, media team, Drive folder owner..." required />
+            <input className={inputClass} name="source" placeholder="Volunteer name, media team, source owner..." required />
           </label>
         </section>
 
@@ -385,8 +385,8 @@ export function UploadPage() {
         <section data-send-step="3" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 3 && "hidden")}>
           <UploadDropzone inputRef={fileInputRef} selectedFiles={selectedFiles} onInputFiles={checkFiles} onDropFiles={addDroppedFiles} onRemove={removeFile} onClear={clearFiles} />
           <label className={labelClass}>
-            Existing Drive or media link
-            <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder="https://drive.google.com/..." value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
+            Existing media-team link
+            <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder="https://..." value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
             {sourceLink.trim() && !hasValidSourceLink ? <span className="text-xs font-black text-[#7a5a19]">Use a full http or https source link.</span> : null}
           </label>
           <TagInput
@@ -434,7 +434,7 @@ export function UploadPage() {
             )}
           </div>
           <p className="text-xs font-semibold leading-relaxed text-tjc-muted">
-            {draftSaved ? "Draft saved locally. " : ""}Send never publishes. New media remains {uploadDefaultState.status}.
+            {draftSaved ? "Draft saved locally. " : ""}Submit creates a review packet. Nothing publishes from this page.
           </p>
         </PacketSubmitBar>
 
@@ -472,7 +472,7 @@ export function UploadPage() {
       >
         <EvidenceChecklist items={packetItems} />
         <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-relaxed text-[#71500f]">
-          Send never publishes. New media remains Needs Review / Do Not Publish.
+          New media remains Needs Review / Do Not Publish.
         </div>
       </PacketSummary>
       </div>

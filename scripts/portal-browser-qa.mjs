@@ -499,7 +499,7 @@ for (const width of qaViewports) {
   await page.getByLabel("Files").setInputFiles([{ name: "qa-photo.png", mimeType: "image/png", buffer: tinyPng }]);
   if ((await page.getByLabel("Selected file preview").getByText("qa-photo.png").count()) < 1) failures.push("upload file preview: selected file missing");
   await page.getByLabel("Selected file preview").getByRole("button", { name: "Clear files" }).click();
-  await page.getByLabel("Existing Drive or media link").fill("https://drive.google.com/example");
+  await page.getByLabel("Existing media-team link").fill("https://media.tjc.example/review-source");
   if ((await page.getByLabel("Suggested tags suggestions", { exact: true }).getByRole("button", { name: "Bible" }).count()) < 1) failures.push("upload tag input: taxonomy suggestions missing");
   await page.getByLabel("Suggested tags", { exact: true }).fill("qa");
   await page.keyboard.press("Enter");
@@ -560,7 +560,7 @@ for (const width of qaViewports) {
   if ((await page.getByText("Files, link, and reviewer notes").count()) < 1) failures.push("contributor-upload-stepper: step 3 did not appear");
   await page.getByRole("button", { name: "Next" }).click();
   if ((await page.getByText("Add a file or source link before continuing.").count()) < 1) failures.push("contributor-upload-stepper: file/source validation missing");
-  await page.getByLabel("Existing Drive or media link").fill("https://drive.google.com/mobile-stepper-qa");
+  await page.getByLabel("Existing media-team link").fill("https://media.tjc.example/mobile-stepper-qa");
   await page.getByLabel("Suggested tags", { exact: true }).fill("Bible, worship");
   await page.keyboard.press("Enter");
   await page.getByLabel("Reviewer notes").fill("Mobile QA source-link intake ready for reviewer packet.");
