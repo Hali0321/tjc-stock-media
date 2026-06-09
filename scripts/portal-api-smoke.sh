@@ -261,7 +261,18 @@ if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnost
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"
 
-expect_code 403 batch-viewer \
+expect_json_status 403 batch-viewer-payload-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (/governance|ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|field refs?|source[- ]of[- ]truth/i.test(text)) {
+  console.error(`FAIL: batch viewer denial leaked operational copy: ${text}`);
+  process.exit(1);
+}
+if (!/reviewer access/i.test(data.error || "")) {
+  console.error(`FAIL: batch viewer denial did not use safe reviewer-access copy: ${text}`);
+  process.exit(1);
+}
+' \
   -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Viewer","action":"request-review","assetIds":["644"]}' \
   "$BASE_URL/api/batch"

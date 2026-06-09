@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       summary: "Batch governance action denied for role.",
       details: { action: body.action || null, assetCount: assetIds.length }
     });
-    return NextResponse.json({ error: "Bulk governance actions require Reviewer or DAM Admin role." }, { status: 403 });
+    return NextResponse.json({ error: "Bulk review actions require reviewer access." }, { status: 403 });
   }
   if (!body.action || !supportedActions.has(body.action)) {
     return NextResponse.json({ error: "Unsupported batch action." }, { status: 400 });
