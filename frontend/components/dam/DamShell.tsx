@@ -142,12 +142,8 @@ export function DamShell({ children }: { children: ReactNode }) {
       </header>
 
       <aside className="dam-desktop-rail hidden border-r border-[#d7dde2] bg-white lg:block" aria-label="Desktop workspace navigation">
-        <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] grid-rows-[1fr_auto] gap-4 p-3">
+        <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] content-start p-3">
           <AppNav role={role} variant="menu" />
-          <div className="grid gap-2 border-t border-[#e5e7eb] pt-3 text-[11px] font-black uppercase tracking-[.06em] text-[#68756d]">
-            <span>{opsShell ? "Ops" : "DAM"}</span>
-            <span className="h-1.5 rounded-full bg-tjc-evergreen" aria-hidden="true" />
-          </div>
         </div>
       </aside>
 
