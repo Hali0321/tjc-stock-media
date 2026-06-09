@@ -4585,28 +4585,8 @@ body,
   background: rgba(255,255,255,.92) !important;
 }
 
-.generated-package-spine {
-  position: absolute;
-  inset: 0 auto 0 0;
-  z-index: 1;
-  display: grid;
-  width: 1.25rem;
-  place-items: end center;
-  border-right: 1px solid #cfd9d4;
-  background: #e0e8e3;
-  padding-block: .5rem;
-}
-
-.generated-package-spine span {
-  writing-mode: vertical-rl;
-  color: #40534a;
-  font-size: .6rem;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
 .generated-package-contact-sheet {
-  inset: .55rem .55rem .55rem 1.75rem !important;
+  inset: .55rem .55rem 2.8rem .55rem !important;
   gap: .25rem !important;
 }
 
@@ -4626,9 +4606,8 @@ body,
 }
 
 .package-cover-code,
-.package-cover-kind,
 .package-cover-caption {
-  margin-left: 1.2rem;
+  margin-left: 0;
 }
 
 .package-row-main {

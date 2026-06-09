@@ -108,20 +108,14 @@ function PackageCover({
   }
   return (
     <div className={cn("package-cover generated-package-cover relative grid aspect-[4/3] overflow-hidden p-3 text-tjc-ink", large && "aspect-[16/10]")}>
-      <div className="generated-package-spine" aria-hidden="true">
-        <span>{packageInitials(collection.name)}</span>
-      </div>
       <div className="generated-package-contact-sheet absolute grid grid-cols-3 gap-1.5 opacity-95" aria-hidden="true">
         {Array.from({ length: large ? 12 : 9 }).map((_, index) => (
           <span className={cn(index % 4 === 0 && "is-paper", index % 5 === 0 && "is-ready")} key={index} />
         ))}
       </div>
-      <div className="relative z-[1] grid h-full content-between">
-        <div className="flex items-start justify-between gap-2">
-          <span className="package-cover-code bg-white/90 px-2.5 py-1 text-xs font-black text-tjc-evergreen shadow-sm">{packageReference(collection)}</span>
-          <span className="package-cover-kind text-right text-[11px] font-black uppercase tracking-[.08em] text-[#617168]">Contact sheet</span>
-        </div>
+      <div className="relative z-[1] grid h-full content-end">
         <div className="package-cover-caption bg-white/92 p-2 text-tjc-ink shadow-sm">
+          <span className="package-cover-code text-xs font-black text-tjc-evergreen">{packageReference(collection)}</span>
           <strong className="line-clamp-2 text-lg font-black leading-tight">{collection.name}</strong>
           <span className="mt-1 block text-xs font-black text-[#52625a]">{readyCount.toLocaleString()} ready / {reviewNeeded.toLocaleString()} review</span>
         </div>
