@@ -64,10 +64,10 @@ export async function GET(request: NextRequest) {
   const limit = normalizeLimit(params.get("limit"));
   const offset = normalizeOffset(params.get("offset"));
   if (view && !isKnownSavedViewId(view)) {
-    return NextResponse.json({ error: "Unknown saved view.", view }, { status: 400 });
+    return NextResponse.json({ error: "Unknown saved view." }, { status: 400 });
   }
   if (collection && !isKnownCollectionId(collection)) {
-    return NextResponse.json({ error: "Unknown collection.", collection }, { status: 400 });
+    return NextResponse.json({ error: "Unknown collection." }, { status: 400 });
   }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
   return NextResponse.json(searchResultForRole(role, result));

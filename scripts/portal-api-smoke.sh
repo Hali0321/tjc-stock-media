@@ -154,8 +154,20 @@ expect_code 400 malformed-asset-detail "$BASE_URL/api/assets/%2E%2E644?role=Revi
 expect_code 400 malformed-thumbnail "$BASE_URL/api/assets/thumbnail/%2E%2E644?variant=detail&role=Reviewer"
 expect_code 400 malformed-download "$BASE_URL/api/download/%2E%2E368?role=Viewer"
 expect_json_status 404 missing-thumbnail-viewer-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/thumbnail/999999?variant=detail&role=Viewer"
-expect_code 400 unknown-saved-view "$BASE_URL/api/assets/search?role=Viewer&view=../../admin"
-expect_code 400 unknown-collection "$BASE_URL/api/assets/search?role=Viewer&collection=../../admin"
+expect_json_status 400 unknown-saved-view-payload-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (Object.prototype.hasOwnProperty.call(data, "view") || JSON.stringify(data).includes("../")) {
+  console.error("FAIL: unknown saved-view response echoed rejected input");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&view=../../admin"
+expect_json_status 400 unknown-collection-payload-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (Object.prototype.hasOwnProperty.call(data, "collection") || JSON.stringify(data).includes("../")) {
+  console.error("FAIL: unknown collection response echoed rejected input");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&collection=../../admin"
 
 expect_code 400 bad-review-action \
   -X POST -H 'Content-Type: application/json' \
