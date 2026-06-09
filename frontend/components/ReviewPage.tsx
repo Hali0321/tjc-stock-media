@@ -474,7 +474,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
           <div>
             <h2 className="text-xl font-semibold">What reviewers check</h2>
             <p className="mt-1 text-tjc-muted">Approval status, source/provenance, people visibility, children/youth risk, rights notes, usage guidance, and download eligibility.</p>
-            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Reviewer or DAM Admin to inspect the operations workbench.</span>
+            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Ask a DAM admin for reviewer access if you need to clear reuse decisions.</span>
           </div>
         </section>
       </div>
