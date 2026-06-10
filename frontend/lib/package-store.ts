@@ -41,6 +41,19 @@ function safeResourceSpaceRef(value: unknown) {
   return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
 }
 
+function safeIso(value: unknown) {
+  const text = safeText(value, 40);
+  return Number.isNaN(Date.parse(text)) ? "" : text;
+}
+
+function safeBoolean(value: unknown) {
+  return value === true;
+}
+
+function safeCount(value: unknown) {
+  return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
+}
+
 export function sanitizePackageDraft(input: unknown): DamPackage {
   const raw = (input || {}) as Partial<DamPackage>;
   const sections = Array.isArray(raw.sections) ? raw.sections : [];
@@ -61,11 +74,40 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
   };
 }
 
+function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null {
+  const raw = (input || {}) as Partial<StoredPackageDraft>;
+  const draft = sanitizePackageDraft(raw);
+  if (!draft.id) return null;
+  const updatedAt = safeIso(raw.updatedAt) || safeIso(raw.createdAt) || new Date(0).toISOString();
+  const governance = (raw.governance || {}) as Partial<StoredPackageDraft["governance"]>;
+  return {
+    id: draft.id,
+    title: draft.title,
+    status: draft.status,
+    sections: draft.sections,
+    createdAt: safeIso(raw.createdAt) || updatedAt,
+    updatedAt,
+    createdBy: safeText(raw.createdBy, 120) || "local-beta:unknown",
+    role: raw.role === "Contributor" || raw.role === "Reviewer" || raw.role === "DAM Admin" ? raw.role : "Contributor",
+    governance: {
+      canPreview: safeBoolean(governance.canPreview),
+      canShare: safeBoolean(governance.canShare),
+      canPublish: safeBoolean(governance.canPublish),
+      totalRefs: safeCount(governance.totalRefs),
+      portalReadyRefs: safeCount(governance.portalReadyRefs),
+      blockedRefs: safeCount(governance.blockedRefs),
+      missingRefs: safeCount(governance.missingRefs),
+      reason: safeText(governance.reason, 240)
+    },
+    storageMode: "local-json"
+  };
+}
+
 async function readLocalPackages() {
   try {
     const raw = await readFile(packageStorePath(), "utf8");
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter(Boolean) as StoredPackageDraft[] : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeStoredPackageDraft).filter(Boolean) as StoredPackageDraft[] : [];
   } catch {
     return [];
   }
@@ -92,7 +134,7 @@ export function packageDraftDiagnostics() {
   const filePath = packageStorePath();
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
-    const records = Array.isArray(parsed) ? parsed.filter(Boolean) as StoredPackageDraft[] : [];
+    const records = Array.isArray(parsed) ? parsed.map(normalizeStoredPackageDraft).filter(Boolean) as StoredPackageDraft[] : [];
     const openDrafts = records.filter((record) => record.status !== "archived");
     const blockedRefs = records.reduce((sum, record) => sum + (record.governance?.blockedRefs || 0), 0);
     return {

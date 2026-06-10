@@ -30,6 +30,11 @@ expect_json_status() {
 }
 
 package_id="pkg-$MARKER"
+stale_package_id="pkg-stale-$MARKER"
+local_runtime_probe=0
+case "$BASE_URL" in
+  http://localhost:*|http://127.0.0.1:*) local_runtime_probe=1 ;;
+esac
 
 expect_json_status 403 package-viewer-list-denied '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
@@ -74,9 +79,51 @@ if (!data.package.governance || typeof data.package.governance.totalRefs !== "nu
   -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"368\"]}]}" \
   "$BASE_URL/api/packages?role=Contributor"
 
-PACKAGE_ID="$package_id" expect_json_status 200 package-reviewer-list-visible '
+if [ "$local_runtime_probe" = "1" ]; then
+  STALE_PACKAGE_ID="$stale_package_id" node <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const filePath = path.join(process.cwd(), "data", "runtime", "package-drafts.json");
+fs.mkdirSync(path.dirname(filePath), { recursive: true });
+const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
+existing.unshift({
+  id: process.env.STALE_PACKAGE_ID,
+  title: "Stale unsafe package",
+  status: "unsafe",
+  sections: [{
+    id: "hero",
+    title: "Hero",
+    resourceSpaceAssetIds: ["367", "../private", "367"]
+  }],
+  createdAt: "not-a-date",
+  updatedAt: "not-a-date",
+  createdBy: "",
+  role: "Viewer",
+  governance: {
+    canPreview: "yes",
+    canShare: "yes",
+    canPublish: "yes",
+    totalRefs: -10,
+    portalReadyRefs: "bad",
+    blockedRefs: -5,
+    missingRefs: -2,
+    reason: "../private"
+  },
+  storageMode: "local-json"
+});
+fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
+NODE
+fi
+
+stale_package_probe_id=""
+if [ "$local_runtime_probe" = "1" ]; then
+  stale_package_probe_id="$stale_package_id"
+fi
+
+PACKAGE_ID="$package_id" STALE_PACKAGE_ID="$stale_package_probe_id" expect_json_status 200 package-reviewer-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.PACKAGE_ID;
+const staleId = process.env.STALE_PACKAGE_ID;
 if (!Array.isArray(data.packages) || data.storageMode !== "local-json") {
   console.error(`FAIL: package list shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
@@ -85,6 +132,14 @@ const record = data.packages.find((item) => item.id === id);
 if (!record || record.storageMode !== "local-json" || !record.governance) {
   console.error(`FAIL: saved package not visible to Reviewer: ${JSON.stringify({ id, count: data.count, record }).slice(0, 500)}`);
   process.exit(1);
+}
+if (staleId) {
+  const stale = data.packages.find((item) => item.id === staleId);
+  const refs = (stale?.sections || []).flatMap((section) => section.resourceSpaceAssetIds || []);
+  if (!stale || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0) {
+    console.error(`FAIL: persisted unsafe package was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
+    process.exit(1);
+  }
 }
 ' "$BASE_URL/api/packages?role=Reviewer"
 

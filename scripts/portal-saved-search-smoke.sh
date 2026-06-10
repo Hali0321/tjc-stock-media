@@ -30,6 +30,11 @@ expect_json_status() {
 }
 
 search_id="search-$MARKER"
+stale_search_id="stale-search-$MARKER"
+local_runtime_probe=0
+case "$BASE_URL" in
+  http://localhost:*|http://127.0.0.1:*) local_runtime_probe=1 ;;
+esac
 
 expect_json_status 403 saved-search-viewer-list-denied '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
@@ -78,9 +83,40 @@ if (data.search.view || data.search.filters.includes("../private") || data.searc
   -d "{\"id\":\"$search_id\",\"title\":\"$MARKER Bible search\",\"query\":\"Bible\",\"view\":\"../private\",\"filters\":[\"portal ready\",\"portal ready\",\"../private\"],\"sort\":\"A-Z\"}" \
   "$BASE_URL/api/saved-searches?role=Contributor"
 
-SEARCH_ID="$search_id" expect_json_status 200 saved-search-reviewer-list-visible '
+if [ "$local_runtime_probe" = "1" ]; then
+  STALE_SEARCH_ID="$stale_search_id" node <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const filePath = path.join(process.cwd(), "data", "runtime", "saved-searches.json");
+fs.mkdirSync(path.dirname(filePath), { recursive: true });
+const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
+existing.unshift({
+  id: process.env.STALE_SEARCH_ID,
+  title: "Stale unsafe saved search",
+  query: "Bible",
+  view: "../private",
+  collection: "../source",
+  filters: ["portal ready", "../private", "portal ready"],
+  sort: "unsafe-sort",
+  createdAt: "not-a-date",
+  updatedAt: "not-a-date",
+  createdBy: "",
+  role: "Viewer",
+  storageMode: "local-json"
+});
+fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
+NODE
+fi
+
+stale_search_probe_id=""
+if [ "$local_runtime_probe" = "1" ]; then
+  stale_search_probe_id="$stale_search_id"
+fi
+
+SEARCH_ID="$search_id" STALE_SEARCH_ID="$stale_search_probe_id" expect_json_status 200 saved-search-reviewer-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.SEARCH_ID;
+const staleId = process.env.STALE_SEARCH_ID;
 if (!Array.isArray(data.searches) || data.storageMode !== "local-json") {
   console.error(`FAIL: saved search list shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
@@ -89,6 +125,13 @@ const record = data.searches.find((item) => item.id === id);
 if (!record || record.storageMode !== "local-json" || record.query !== "Bible") {
   console.error(`FAIL: saved search not visible to Reviewer: ${JSON.stringify({ id, count: data.count, record }).slice(0, 500)}`);
   process.exit(1);
+}
+if (staleId) {
+  const stale = data.searches.find((item) => item.id === staleId);
+  if (!stale || stale.view || stale.collection || stale.filters.includes("../private") || stale.filters.length !== new Set(stale.filters).size || stale.sort !== "Approved first" || stale.role === "Viewer") {
+    console.error(`FAIL: persisted unsafe saved search was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
+    process.exit(1);
+  }
 }
 ' "$BASE_URL/api/saved-searches?role=Reviewer"
 

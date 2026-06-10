@@ -54,6 +54,11 @@ function safeSort(value: unknown): CatalogSort {
   return sortOptions.includes(value as CatalogSort) ? value as CatalogSort : "Approved first";
 }
 
+function safeIso(value: unknown) {
+  const text = safeText(value, 40);
+  return Number.isNaN(Date.parse(text)) ? "" : text;
+}
+
 export function sanitizeSavedSearch(input: unknown) {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const filters = Array.isArray(raw.filters) ? raw.filters : [];
@@ -71,11 +76,26 @@ export function sanitizeSavedSearch(input: unknown) {
   };
 }
 
+function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
+  const raw = (input || {}) as Partial<SavedSearchRecord>;
+  const draft = sanitizeSavedSearch(raw);
+  if (!draft.id) return null;
+  const updatedAt = safeIso(raw.updatedAt) || safeIso(raw.createdAt) || new Date(0).toISOString();
+  return {
+    ...draft,
+    createdAt: safeIso(raw.createdAt) || updatedAt,
+    updatedAt,
+    createdBy: safeText(raw.createdBy, 120) || "local-beta:unknown",
+    role: raw.role === "Contributor" || raw.role === "Reviewer" || raw.role === "DAM Admin" ? raw.role : "Contributor",
+    storageMode: "local-json"
+  };
+}
+
 async function readLocalSavedSearches() {
   try {
     const raw = await readFile(savedSearchStorePath(), "utf8");
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter(Boolean) as SavedSearchRecord[] : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeStoredSavedSearch).filter(Boolean) as SavedSearchRecord[] : [];
   } catch {
     return [];
   }
@@ -102,7 +122,7 @@ export function savedSearchDiagnostics() {
   const filePath = savedSearchStorePath();
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
-    const records = Array.isArray(parsed) ? parsed.filter(Boolean) as SavedSearchRecord[] : [];
+    const records = Array.isArray(parsed) ? parsed.map(normalizeStoredSavedSearch).filter(Boolean) as SavedSearchRecord[] : [];
     return {
       storageMode: "local-json" as const,
       durableStorageConfigured: false,
