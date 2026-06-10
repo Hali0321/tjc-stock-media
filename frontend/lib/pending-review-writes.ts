@@ -25,7 +25,9 @@ function safeText(value: unknown, maxLength: number) {
 
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  return text.includes("..") || /[\\/]/.test(text) ? "" : text;
+  if (text.includes("..") || /[\\/]/.test(text)) return "";
+  if (/source path|master drive|checksum/i.test(text)) return "";
+  return text;
 }
 
 function safeIso(value: unknown) {
@@ -158,15 +160,15 @@ export function createPendingReviewWrite({
   const record: ReviewWriteRecord = {
     id,
     resourceId: asset.resourceSpaceId || asset.id,
-    oldStatus: asset.status,
-    requestedStatus,
+    oldStatus: safeDisplayText(asset.status, 120) || "Unknown",
+    requestedStatus: safeDisplayText(requestedStatus, 120) || "Needs Review",
     reviewerRole,
-    reviewerName,
+    reviewerName: reviewerName === undefined ? undefined : safeDisplayText(reviewerName, 120),
     createdAt: now,
     updatedAt: now,
-    note,
+    note: safeDisplayText(note, 1200),
     checklist,
-    blockers,
+    blockers: blockers.map((item) => safeDisplayText(item, 120)).filter(Boolean).slice(0, 24),
     syncState: "queued",
     retryCount: 0
   };

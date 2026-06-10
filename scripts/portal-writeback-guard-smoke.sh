@@ -124,8 +124,12 @@ if (!data.auditRecord.actor || data.auditRecord.reviewerRole !== "Reviewer") {
   console.error(`FAIL: queued review audit proof missing actor/reviewer role: ${JSON.stringify(data.auditRecord)}`);
   process.exit(1);
 }
+if (data.label !== "Request More Info" || /source path|master drive|checksum|\.\.\/private/i.test(text)) {
+  console.error(`FAIL: queued review response echoed unsafe display fields: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"role\":\"Reviewer\",\"id\":\"$REVIEW_ASSET_ID\",\"action\":\"Request More Info\",\"notes\":\"$MARKER complete evidence should queue without live ResourceSpace writeback.\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"Writeback Guard Smoke\"}" \
+  -d "{\"role\":\"Reviewer\",\"id\":\"$REVIEW_ASSET_ID\",\"action\":\"Request More Info\",\"label\":\"../private source path\",\"notes\":\"$MARKER complete evidence should queue without live ResourceSpace writeback.\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"../private master drive checksum\"}" \
   "$BASE_URL/api/review"
 
 if [ "$local_runtime_probe" = "1" ]; then
