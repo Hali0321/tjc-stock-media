@@ -182,7 +182,7 @@ export function DamShell({ children }: { children: ReactNode }) {
         <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] content-start gap-3 p-3">
           <Link href="/" className="dam-rail-brand" aria-label="True Jesus Church Media Library home">
             <img src="/brand/tjc-logo-english-white.png" alt="True Jesus Church" />
-            <span>Media Library</span>
+            <span>MEDIA LIBRARY</span>
           </Link>
           <DamRailSummary role={role} opsShell={opsShell} />
           <AppNav role={role} variant="menu" />
