@@ -2,17 +2,17 @@
 
 Last updated: 2026-06-10
 
-Use this draft for small internal testing only after private access, safe seed data, and feedback triage ownership are confirmed. Share the approved stable hosted beta URL, not a deployment-specific Vercel preview URL.
+Use this for small internal testing only. Share the stable hosted beta URL, not a deployment-specific Vercel preview URL:
 
-Candidate host: `https://tjc-stock-media.vercel.app`
+`https://tjc-stock-media.vercel.app`
 
 ## Role Links
 
-- Viewer: `[approved-private-host]/?role=Viewer&taskMode=1`
-- Contributor: `[approved-private-host]/upload?role=Contributor&taskMode=1`
-- Reviewer: `[approved-private-host]/review?role=Reviewer&taskMode=1`
-- DAM Admin: `[approved-private-host]/admin?role=DAM%20Admin&taskMode=1`
-- Guide: `[approved-private-host]/guide?role=Viewer&taskMode=1`
+- Viewer: `https://tjc-stock-media.vercel.app/?role=Viewer&taskMode=1`
+- Contributor: `https://tjc-stock-media.vercel.app/upload?role=Contributor&taskMode=1`
+- Reviewer: `https://tjc-stock-media.vercel.app/review?role=Reviewer&taskMode=1`
+- DAM Admin: `https://tjc-stock-media.vercel.app/admin?role=DAM%20Admin&taskMode=1`
+- Guide: `https://tjc-stock-media.vercel.app/guide?role=Viewer&taskMode=1`
 
 ## Missions
 
@@ -25,7 +25,6 @@ Candidate host: `https://tjc-stock-media.vercel.app`
 
 - Beta only.
 - No sensitive uploads.
-- Use only an approved private/stable URL.
 - Role switch is simulated for QA.
 - ResourceSpace writeback is disabled unless explicitly approved.
 - Queued review decisions are portal evidence, not ResourceSpace success.
