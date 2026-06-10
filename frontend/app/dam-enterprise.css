@@ -1731,6 +1731,70 @@ body,
   stroke-width: 3;
 }
 
+.ed-metric-rows {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ed-metric-rows article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.ed-metric-rows article > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ed-metric-rows strong {
+  font-size: 20px;
+}
+
+.ed-metric-rows span,
+.ed-metric-rows small {
+  color: var(--tjc-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ed-metric-rows meter,
+.ed-health-grid meter {
+  width: 100%;
+  height: 10px;
+}
+
+.ed-metric-rows meter::-webkit-meter-bar,
+.ed-health-grid meter::-webkit-meter-bar {
+  border: 0;
+  border-radius: 999px;
+  background: #e5edf3;
+}
+
+.ed-metric-rows meter::-webkit-meter-optimum-value,
+.ed-health-grid meter::-webkit-meter-optimum-value {
+  border-radius: 999px;
+  background: var(--ed-info);
+}
+
+.ed-metric-rows meter.is-green::-webkit-meter-optimum-value,
+.ed-health-grid meter.is-green::-webkit-meter-optimum-value {
+  background: var(--ed-success);
+}
+
+.ed-metric-rows meter.is-orange::-webkit-meter-optimum-value,
+.ed-health-grid meter.is-orange::-webkit-meter-optimum-value {
+  background: #f97316;
+}
+
+.ed-metric-rows meter.is-red::-webkit-meter-optimum-value,
+.ed-health-grid meter.is-red::-webkit-meter-optimum-value {
+  background: var(--ed-danger);
+}
+
 .ed-table-mini {
   display: grid;
   gap: 9px;

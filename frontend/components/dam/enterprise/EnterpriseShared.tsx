@@ -197,12 +197,12 @@ export function MiniLine({ tone = "indigo" }: { tone?: "indigo" | "green" | "ora
   return <svg className={cn("ed-spark", `is-${tone}`)} viewBox="0 0 140 44" aria-hidden="true"><polyline points={values.map((v, i) => `${i * 10},${44 - v * .55}`).join(" ")} /></svg>;
 }
 
-export function KpiCard({ label, value, delta, icon: Icon, danger = false }: { label: string; value: string; delta: string; icon: LucideIcon; danger?: boolean }) {
+export function KpiCard({ label, value, delta, icon: Icon, danger = false, showTrend = true }: { label: string; value: string; delta: string; icon: LucideIcon; danger?: boolean; showTrend?: boolean }) {
   return (
     <article className="ed-card ed-kpi">
       <div><span>{label}</span><strong>{value}</strong><small className={danger ? "is-down" : ""}>{delta}</small><small>ResourceSpace / portal period</small></div>
       <i><Icon size={18} /></i>
-      <MiniLine tone={danger ? "red" : "indigo"} />
+      {showTrend ? <MiniLine tone={danger ? "red" : "indigo"} /> : null}
     </article>
   );
 }
@@ -212,7 +212,7 @@ export function ChartCard({ title, large = false, sample = false, children }: { 
     <section className={cn("ed-card ed-chart", large && "is-large")}>
       <header><h3>{title}</h3><button type="button">View all</button></header>
       {sample ? <p className="ed-sample-label">Sample until portal usage logging is connected</p> : null}
-      {children || <MiniLine />}
+      {children}
     </section>
   );
 }
