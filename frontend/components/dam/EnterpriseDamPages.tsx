@@ -36,29 +36,14 @@ import {
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { useDemoRole } from "@/components/RoleProvider";
 import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
+import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
 import { addPackageAssetRef, availableAssetsForSection, createPackageDraft, packagePublishReadiness, removePackageAssetRef, resolvePackageSections, seedPackageDraft, updatePackageTitle } from "@/lib/package-drafts";
 import { cn } from "@/lib/ui";
 import { useAdminReadiness, useAssetDetail, useAssetsSearch, useBrandKit, useDownloadGate, useReviewQueue } from "@/components/dam/useDamApi";
 
-type UiStatus = "Approved" | "Needs Review" | "Restricted" | "Missing Consent" | "Expiring Soon" | "Active" | "Compliant" | "Operational" | "Read-only" | "Not configured" | "Degraded" | "Pending setup" | "Blocked" | "Draft" | "Approved only";
-
-function uiStatus(asset?: StockMediaAsset): UiStatus {
-  if (!asset) return "Not configured";
-  if (asset.status === "Approved Public" || asset.status === "Approved Internal") return "Approved";
-  if (asset.status === "Possible Minors") return "Missing Consent";
-  if (asset.status === "Do Not Use" || asset.status === "Searchable Archive") return "Restricted";
-  return "Needs Review";
-}
-
-function StatusBadge({ status }: { status: UiStatus }) {
-  const tone =
-    status === "Approved" || status === "Active" || status === "Compliant" || status === "Operational" || status === "Approved only"
-      ? "is-success"
-      : status === "Restricted" || status === "Missing Consent" || status === "Not configured"
-        ? "is-danger"
-        : "is-warning";
-  return <span className={cn("ed-badge", tone)}>{status}</span>;
+function StatusBadge({ status }: { status: EnterpriseStatus }) {
+  return <span className={cn("ed-badge", statusToneClass(status))}>{status}</span>;
 }
 
 function IconButton({ label, children, onClick }: { label: string; children: ReactNode; onClick?: () => void }) {
@@ -125,7 +110,7 @@ function AssetCard({ asset, selected = false, onSelect }: { asset: StockMediaAss
       </button>
       <strong title={displayTitle(asset)}>{displayTitle(asset)}</strong>
       <small>{recordIdLabel()} {asset.resourceSpaceId || asset.id} · {assetDate(asset)} · {formatBytes(asset.fileSizeBytes)}</small>
-      <div className="ed-card-footer"><StatusBadge status={uiStatus(asset)} /><span className="ed-quality-chip">{metadataQualityLabel(asset)}</span><Link href={`/assets/${asset.id}`}>Open record</Link></div>
+      <div className="ed-card-footer"><StatusBadge status={assetEnterpriseStatus(asset)} /><span className="ed-quality-chip">{metadataQualityLabel(asset)}</span><Link href={`/assets/${asset.id}`}>Open record</Link></div>
     </article>
   );
 }
@@ -158,7 +143,7 @@ function SavedViewPanel({ savedViews = [], collections = [], source }: { savedVi
 }
 
 function RightsVerdictCard({ asset, source }: { asset?: StockMediaAsset; source?: MediaSourceStatus | null }) {
-  const approved = asset?.reuseDecision?.downloadable || uiStatus(asset) === "Approved";
+  const approved = asset?.reuseDecision?.downloadable || assetEnterpriseStatus(asset) === "Approved";
   const blocked = asset?.reuseDecision && !asset.reuseDecision.downloadable;
   const noun = sourceNoun(source);
   return (
@@ -196,7 +181,7 @@ function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAsset; sou
       <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {asset.resourceSpaceId || asset.id}</strong><span>›</span><button type="button">×</button></div>
       <AssetThumb asset={asset} className="ed-inspector-preview" fit="contain" />
       <h2 title={displayTitle(asset)}>{displayTitle(asset)}</h2>
-      <div className="ed-meta-line"><StatusBadge status={uiStatus(asset)} /><span>{assetDate(asset)}</span><span>{formatBytes(asset.fileSizeBytes)}</span></div>
+      <div className="ed-meta-line"><StatusBadge status={assetEnterpriseStatus(asset)} /><span>{assetDate(asset)}</span><span>{formatBytes(asset.fileSizeBytes)}</span></div>
       <SourcePill source={source} live={live} />
       <RightsVerdictCard asset={asset} source={source} />
       <nav className="ed-tabs" aria-label="Asset inspector tabs">{tabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
@@ -239,7 +224,7 @@ function ChartCard({ title, large = false, sample = false, children }: { title: 
 
 function CustodyMapPanel({ readiness }: { readiness?: DamReadinessResult | null }) {
   const integration = new Map((readiness?.integrationReadiness || []).map((item) => [item.id, item]));
-  const statusFor = (id: string): UiStatus => {
+  const statusFor = (id: string): EnterpriseStatus => {
     const item = integration.get(id);
     if (item?.state) return item.state;
     const ready = item?.ready;
@@ -322,7 +307,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const [downloadMessage, setDownloadMessage] = useState("");
   const asset = detail.data?.asset;
   const related = detail.data?.related || [];
-  const approved = asset?.reuseDecision?.downloadable || uiStatus(asset) === "Approved";
+  const approved = asset?.reuseDecision?.downloadable || assetEnterpriseStatus(asset) === "Approved";
   const detailTabs = ["Metadata", "Keywords", "AI Insights", "Comments", "Activity", "Usage History"];
   if (detail.loading) return <div className="enterprise-page"><LoadingCard label="Loading media asset record..." /></div>;
   if (detail.error || !asset) return <div className="enterprise-page"><ErrorCard message={detail.error || "Asset not found."} source={detail.source} /></div>;
@@ -391,7 +376,7 @@ export function EnterpriseReviewPage() {
   const review = useReviewQueue(role);
   const queue = review.data?.assets || [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [pendingDecisionById, setPendingDecisionById] = useState<Record<string, { status: UiStatus; message: string; action: string }>>({});
+  const [pendingDecisionById, setPendingDecisionById] = useState<Record<string, { status: EnterpriseStatus; message: string; action: string }>>({});
   const [comment, setComment] = useState("");
   const [decisionMessage, setDecisionMessage] = useState("");
   useEffect(() => {
@@ -402,9 +387,9 @@ export function EnterpriseReviewPage() {
   if (review.loading) return <div className="enterprise-page"><LoadingCard label="Loading ResourceSpace review queue..." /></div>;
   if (review.error) return <div className="enterprise-page"><ErrorCard message={review.error} source={review.source} /></div>;
   const selectedAsset = queue.find((asset) => asset.id === selectedId) || queue[0];
-  const selectedStatus = uiStatus(selectedAsset);
+  const selectedStatus = assetEnterpriseStatus(selectedAsset);
   const selectedPending = pendingDecisionById[selectedAsset?.id || ""];
-  const decide = async (nextStatus: UiStatus, action: "Approve Public" | "Request More Info" | "Do Not Use") => {
+  const decide = async (nextStatus: EnterpriseStatus, action: "Approve Public" | "Request More Info" | "Do Not Use") => {
     if (!selectedAsset) return;
     const checklist = { sourceConfirmed: true, rightsConfirmed: true, attributionConfirmed: true, peopleVisibilityConfirmed: true, childrenYouthChecked: true, usageScopeSelected: true, derivativeAvailable: true, sensitiveContextChecked: true, creditRequirementChecked: true, expirationRereviewSet: true, proofLinkAttached: true };
     const response = await fetch("/api/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role, id: selectedAsset.id, action, notes: comment || `Beta decision for ${displayTitle(selectedAsset)}. Pending ResourceSpace sync required.`, checklist, reviewerName: "Alex Kim" }) });
@@ -421,7 +406,7 @@ export function EnterpriseReviewPage() {
           <SourcePill source={review.source} live={review.live} />
           <nav className="ed-tabs wrap">{(review.data?.queues || []).slice(0, 6).map((tab, i) => <span className={i === 0 ? "is-active" : ""} key={tab.id}>{tab.label} {tab.count}</span>)}</nav>
           <button className="ed-sort" type="button">Sort by: Oldest First <ChevronDown size={14} /></button>
-          {queue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={uiStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
+          {queue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={assetEnterpriseStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
         </aside>
         {selectedAsset ? (
           <>
@@ -504,11 +489,11 @@ export function EnterprisePackageBuilderPage() {
   const assets = search.data?.assets || [];
   useEffect(() => {
     if (!assets.length) return;
-    setDraft((current) => seedPackageDraft(current, assets, uiStatus));
+    setDraft((current) => seedPackageDraft(current, assets, assetEnterpriseStatus));
   }, [assets]);
   const sections = useMemo(() => resolvePackageSections(draft, assets), [assets, draft]);
-  const activeAvailableAssets = availableAssetsForSection({ draft, sectionId: activeSection, assets, approvedOnly, statusOf: uiStatus });
-  const readiness = packagePublishReadiness(draft, sections, uiStatus);
+  const activeAvailableAssets = availableAssetsForSection({ draft, sectionId: activeSection, assets, approvedOnly, statusOf: assetEnterpriseStatus });
+  const readiness = packagePublishReadiness(draft, sections, assetEnterpriseStatus);
   const publishBlocked = !readiness.canPublish;
   const cover = sections[0]?.assets[0] || assets[0];
   return (
@@ -517,7 +502,7 @@ export function EnterprisePackageBuilderPage() {
       {search.loading ? <LoadingCard /> : search.error ? <ErrorCard message={search.error} source={search.source} /> : (
         <div className="ed-builder-grid">
           <aside className="ed-panel ed-package-outline"><div className="ed-panel-title"><h3>Package outline</h3><button><Plus size={15} /></button></div>{sections.map((section) => <button className={activeSection === section.id ? "is-active" : ""} type="button" key={section.id} onClick={() => setActiveSection(section.id)}>{section.assets[0] ? <AssetThumb asset={section.assets[0]} /> : <FileText size={28} />}<span><strong>{section.title}</strong><small>{section.resourceSpaceAssetIds.length} ResourceSpace refs</small></span><MoreHorizontal size={15} /></button>)}<div className="ed-dropzone"><UploadCloud size={38} /><span>Use Library search to add ResourceSpace records</span><ActionButton disabled={!activeAvailableAssets[0]} onClick={() => activeAvailableAssets[0] && setDraft((current) => addPackageAssetRef(current, activeSection, activeAvailableAssets[0]))}>Browse assets</ActionButton></div></aside>
-          <main className="ed-package-canvas"><section className="ed-card ed-cover-section"><header><h2>Cover</h2><a>Replace cover</a></header>{cover ? <div><AssetThumb asset={cover} fit="contain" /><div><h3 title={displayTitle(cover)}>{displayTitle(cover)}</h3><p>{assetType(cover)} · {formatBytes(cover.fileSizeBytes)} · ResourceSpace {cover.resourceSpaceId || cover.id}</p><StatusBadge status={uiStatus(cover)} /><ActionButton>View asset details</ActionButton></div></div> : <p>No approved ResourceSpace asset selected.</p>}</section>{sections.slice(1).map((section) => <section className={cn("ed-card ed-builder-section", activeSection === section.id && "is-active")} key={section.id}><header><h2>{section.title}</h2><div><button type="button" onClick={() => activeAvailableAssets[0] && setDraft((current) => addPackageAssetRef(current, section.id, activeAvailableAssets[0]))}>Add assets</button><MoreHorizontal size={16} /></div></header><p>Portal package stores ResourceSpace IDs only. Asset records stay canonical in ResourceSpace.</p><div className="ed-builder-assets">{section.assets.length ? section.assets.map((asset) => <div className="ed-package-ref" key={asset.id}><AssetCard asset={asset} /><button type="button" onClick={() => setDraft((current) => removePackageAssetRef(current, section.id, asset))}>Remove ref</button></div>) : <p>No matching ResourceSpace assets for this section.</p>}</div><footer><span>{section.resourceSpaceAssetIds.length} references · {section.assets.filter((asset) => uiStatus(asset) !== "Approved").length + section.missingResourceSpaceAssetIds.length} blocked</span><button type="button" onClick={() => setActiveSection(section.id)}>Select section</button></footer></section>)}
+          <main className="ed-package-canvas"><section className="ed-card ed-cover-section"><header><h2>Cover</h2><a>Replace cover</a></header>{cover ? <div><AssetThumb asset={cover} fit="contain" /><div><h3 title={displayTitle(cover)}>{displayTitle(cover)}</h3><p>{assetType(cover)} · {formatBytes(cover.fileSizeBytes)} · ResourceSpace {cover.resourceSpaceId || cover.id}</p><StatusBadge status={assetEnterpriseStatus(cover)} /><ActionButton>View asset details</ActionButton></div></div> : <p>No approved ResourceSpace asset selected.</p>}</section>{sections.slice(1).map((section) => <section className={cn("ed-card ed-builder-section", activeSection === section.id && "is-active")} key={section.id}><header><h2>{section.title}</h2><div><button type="button" onClick={() => activeAvailableAssets[0] && setDraft((current) => addPackageAssetRef(current, section.id, activeAvailableAssets[0]))}>Add assets</button><MoreHorizontal size={16} /></div></header><p>Portal package stores ResourceSpace IDs only. Asset records stay canonical in ResourceSpace.</p><div className="ed-builder-assets">{section.assets.length ? section.assets.map((asset) => <div className="ed-package-ref" key={asset.id}><AssetCard asset={asset} /><button type="button" onClick={() => setDraft((current) => removePackageAssetRef(current, section.id, asset))}>Remove ref</button></div>) : <p>No matching ResourceSpace assets for this section.</p>}</div><footer><span>{section.resourceSpaceAssetIds.length} references · {section.assets.filter((asset) => assetEnterpriseStatus(asset) !== "Approved").length + section.missingResourceSpaceAssetIds.length} blocked</span><button type="button" onClick={() => setActiveSection(section.id)}>Select section</button></footer></section>)}
             <section className="ed-card"><header className="ed-card-head"><h3>Browse ResourceSpace assets</h3><SourcePill source={search.source} live={search.live} /></header><div className="ed-table-mini">{activeAvailableAssets.length ? activeAvailableAssets.map((asset) => <p key={asset.id}><strong>{displayTitle(asset)}</strong><span>ResourceSpace {asset.resourceSpaceId || asset.id}</span><button type="button" onClick={() => setDraft((current) => addPackageAssetRef(current, activeSection, asset))}>Add to {sections.find((section) => section.id === activeSection)?.title || "section"}</button></p>) : <p>No additional approved assets available for this section.</p>}</div></section>
           </main>
           <aside className="ed-panel ed-package-details"><h3>Package details</h3><label>Package name<input className="ed-input" value={draft.title} onChange={(event) => setDraft((current) => updatePackageTitle(current, event.target.value))} /></label><label>Description<input className="ed-input" defaultValue="A portal-local package draft referencing ResourceSpace assets." /></label><h3>Sharing & access</h3><label>Visibility<select className="ed-input" defaultValue="Shared"><option>Shared with specific people</option></select></label><label>Message<input className="ed-input" placeholder="Add a message to recipients..." /></label><h3>Governance</h3><p className="ed-checkline"><CheckCircle2 size={16} />ResourceSpace IDs retained</p><p className="ed-checkline"><CheckCircle2 size={16} />Backend download gate required</p><p className={cn("ed-checkline", publishBlocked && "is-warn")}><ShieldCheck size={16} />{readiness.reason}</p><label className="ed-toggle">Approved only <input type="checkbox" checked={approvedOnly} onChange={(event) => setApprovedOnly(event.target.checked)} /></label><h3>Package summary</h3><div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(readiness.totalRefs), "Refs"], ["0", "Copied assets"], [sourceLabel(search.source), "Source"]].map(([v,l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div></aside>

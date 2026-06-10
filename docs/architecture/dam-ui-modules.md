@@ -104,6 +104,10 @@ Owns ResourceSpace field coverage and vocabulary drift summaries for Admin readi
 
 Owns small but repeated display rules for enterprise DAM pages: asset title fallback, ResourceSpace/reference labels, source nouns, metadata quality labels, dates, file type labels, and byte formatting. Page modules render these decisions instead of redefining them inline.
 
+### `EnterpriseStatus`
+
+Owns enterprise UI status vocabulary and badge tone mapping for ResourceSpace-backed pages. Page modules ask for an asset's enterprise status instead of each surface translating raw ResourceSpace states differently.
+
 ## Current Implementation Shape
 
 The first system pass keeps existing stable components in place and introduces `frontend/components/dam/*` as import boundaries. This lets route files depend on named DAM responsibilities while preserving behavior and reducing risk during continued polish.

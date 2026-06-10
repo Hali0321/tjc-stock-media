@@ -1,6 +1,7 @@
+import type { EnterpriseStatus } from "@/lib/enterprise-status";
 import type { DamPackage, DamPackageSection, StockMediaAsset } from "@/lib/types";
 
-export type PackageAssetStatus = string;
+export type PackageAssetStatus = EnterpriseStatus;
 
 export type ResolvedPackageSection = DamPackageSection & {
   assets: StockMediaAsset[];
