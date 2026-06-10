@@ -66,7 +66,6 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
       </Link>
       <Link href="/review" className="dam-header-icon dam-bell-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open notifications">
         <Bell size={18} strokeWidth={1.9} aria-hidden="true" />
-        <span>3</span>
       </Link>
       <div className="dam-user-menu">
         <span className="dam-avatar">AK</span>
@@ -93,7 +92,7 @@ function DamTopSearch() {
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search assets, collections, folders, people, or campaigns..."
+        placeholder="Search library..."
         autoComplete="off"
       />
       <kbd>⌘ K</kbd>

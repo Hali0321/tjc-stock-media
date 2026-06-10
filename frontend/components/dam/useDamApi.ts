@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchDamJson, sourceFromPayload, type DamApiPayload } from "@/lib/dam-api-client";
 import { mediaSourceIsLive, mediaSourceKind, type MediaSourceKind } from "@/lib/media-source/truth";
+import { canReview } from "@/lib/permissions";
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, SearchResult, StockMediaAsset } from "@/lib/types";
 
 type ApiSourceKind = MediaSourceKind;
@@ -89,6 +90,9 @@ function useJsonApi<T extends DamApiPayload>(url: string | null, role?: DemoRole
 
   useEffect(() => {
     if (!url) {
+      setData(null);
+      setSource(null);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -168,7 +172,8 @@ export function useAssetDetail(id: string, role: DemoRole) {
 }
 
 export function useReviewQueue(role: DemoRole, queue = "pending") {
-  return useJsonApi<ReviewQueueResponse>(`/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(queue)}`, role);
+  const url = canReview(role) ? `/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(queue)}` : null;
+  return useJsonApi<ReviewQueueResponse>(url, role);
 }
 
 export function useInsights(role: DemoRole) {
