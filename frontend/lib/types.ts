@@ -434,6 +434,7 @@ export type AuditEventSummary = {
   type: string;
   createdAt: string;
   role: DemoRole;
+  actor: string;
   status: "allowed" | "denied" | "blocked" | "queued" | "preview";
   assetId?: string;
   resourceSpaceId?: string;

@@ -180,8 +180,25 @@
         "Browser QA and targeted trusted-header route checks pass."
       ],
       "priority": 11,
-      "passes": false,
-      "notes": "In progress: converted upload, batch, and collection routes to requestIdentity with audit actor capture. Awaiting full frontend-check, API smoke, browser QA, targeted trusted-header checks, launch-readiness, and diff check."
+      "passes": true,
+      "notes": "Converted upload, batch, and collection routes to requestIdentity with audit actor capture. Verified local beta fallback still ignores trusted headers when SSO_TRUSTED_HEADERS is disabled, trusted headers override body/form role when enabled, frontend-check passes, API smoke passes, and browser QA passes with 0 failures, 0 console errors, 0 network failures, and 0 warnings."
+    },
+    {
+      "id": "US-012",
+      "title": "Add actor parity to download audits",
+      "description": "As a DAM operator, I want approved-copy downloads and download-gate decisions to include the same resolved actor identity as review, upload, batch, package, and admin events so that SSO-backed audit trails remain coherent.",
+      "acceptanceCriteria": [
+        "Download route audit events include resolved actor identity.",
+        "Download gate audit events include resolved actor identity.",
+        "Admin readiness recent audit summaries include actor identity.",
+        "Trusted SSO identity still resolves through the shared route session.",
+        "Typecheck passes.",
+        "Build passes.",
+        "API smoke passes."
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "Added resolved actor capture to approved download, denied download, and download-gate audit events, and preserved actor identity in Admin readiness recent audit summaries. Verified trusted SSO header actor persisted as sso:reviewer-download@example.test on a download-gate denial, frontend-check passes, and API smoke passes on a clean post-build dev server."
     }
   ]
 }

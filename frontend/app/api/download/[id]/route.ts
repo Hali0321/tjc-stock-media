@@ -5,7 +5,7 @@ import { decideAccess } from "@/lib/access-decisions";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
-import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
+import { canDownloadApprovedCopy } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     appendAuditEvent({
       type: "denied_download",
       role,
+      actor: session.identity.id,
       assetId: asset.id,
       resourceSpaceId: asset.resourceSpaceId || asset.id,
       status: "denied",
@@ -61,6 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     appendAuditEvent({
       type: "approved_download",
       role,
+      actor: session.identity.id,
       assetId: asset.id,
       resourceSpaceId: asset.resourceSpaceId || asset.id,
       status: "allowed",
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     appendAuditEvent({
       type: "download_gate_checked",
       role,
+      actor: session.identity.id,
       assetId: asset.id,
       resourceSpaceId: asset.resourceSpaceId || asset.id,
       status: "blocked",
@@ -136,6 +139,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     appendAuditEvent({
       type: "denied_download",
       role,
+      actor: session.identity.id,
       assetId: asset.id,
       resourceSpaceId: asset.resourceSpaceId || asset.id,
       status: "denied",
@@ -165,6 +169,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     appendAuditEvent({
       type: "download_gate_checked",
       role,
+      actor: session.identity.id,
       assetId: asset.id,
       resourceSpaceId: asset.resourceSpaceId || asset.id,
       status: "blocked",
@@ -189,6 +194,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const audit = appendAuditEvent({
     type: "download_gate_checked",
     role,
+    actor: session.identity.id,
     assetId: asset.id,
     resourceSpaceId: asset.resourceSpaceId || asset.id,
     status: "allowed",

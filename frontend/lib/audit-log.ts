@@ -110,6 +110,7 @@ export function auditLogDiagnostics() {
       type: event.type,
       createdAt: event.createdAt,
       role: event.role,
+      actor: event.actor,
       status: event.status,
       assetId: event.assetId,
       resourceSpaceId: event.resourceSpaceId,

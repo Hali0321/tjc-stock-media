@@ -6,11 +6,19 @@ import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, Demo
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
 const feedbackRecordPrefix = "tjc-stock-media:beta-feedback:record:";
 const localFeedbackPath = () => path.join(repoRoot(), "data", "runtime", "beta-feedback.json");
+const localFileFeedbackEnabled = () => process.env.VERCEL !== "1";
 
 export const betaFeedbackSeverities: BetaFeedbackSeverity[] = ["low", "medium", "high", "critical"];
 export const betaFeedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "agent-ready", "fixed", "wont-fix"];
 
 type FeedbackPatch = Partial<Pick<BetaFeedbackRecord, "severity" | "status" | "notes">>;
+type FeedbackGlobal = typeof globalThis & { __tjcStockMediaBetaFeedback?: BetaFeedbackRecord[] };
+
+function memoryFeedback() {
+  const store = globalThis as FeedbackGlobal;
+  store.__tjcStockMediaBetaFeedback ||= [];
+  return store.__tjcStockMediaBetaFeedback;
+}
 
 function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
@@ -25,6 +33,7 @@ function newestFirst(records: BetaFeedbackRecord[]) {
 }
 
 async function readLocalFeedback() {
+  if (!localFileFeedbackEnabled()) return newestFirst(memoryFeedback());
   try {
     const raw = await readFile(localFeedbackPath(), "utf8");
     const parsed = JSON.parse(raw) as unknown;
@@ -35,9 +44,19 @@ async function readLocalFeedback() {
 }
 
 async function writeLocalFeedback(records: BetaFeedbackRecord[]) {
+  if (!localFileFeedbackEnabled()) {
+    const store = memoryFeedback();
+    store.splice(0, store.length, ...newestFirst(records));
+    return;
+  }
   const filePath = localFeedbackPath();
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(newestFirst(records), null, 2)}\n`);
+  try {
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, `${JSON.stringify(newestFirst(records), null, 2)}\n`);
+  } catch {
+    const store = memoryFeedback();
+    store.splice(0, store.length, ...newestFirst(records));
+  }
 }
 
 async function getKvClient() {

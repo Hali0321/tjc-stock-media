@@ -130,14 +130,26 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 **Description:** As a DAM admin, I want upload, batch, and collection mutation previews to resolve role/actor through the same request identity seam as package, review, and admin routes so that trusted SSO headers can govern unsafe actions when enabled.
 
 **Acceptance Criteria:**
-- [ ] Upload intake uses `requestIdentity` instead of trusting only form role.
-- [ ] Batch action preview uses `requestIdentity` instead of trusting only body role.
-- [ ] Collection draft preview uses `requestIdentity` instead of trusting only body role.
-- [ ] Audit events include resolved actor identity.
-- [ ] Local beta role fallback still works when trusted SSO headers are disabled.
-- [ ] Typecheck passes.
-- [ ] Build passes.
-- [ ] Browser QA and targeted trusted-header route checks pass.
+- [x] Upload intake uses `requestIdentity` instead of trusting only form role.
+- [x] Batch action preview uses `requestIdentity` instead of trusting only body role.
+- [x] Collection draft preview uses `requestIdentity` instead of trusting only body role.
+- [x] Audit events include resolved actor identity.
+- [x] Local beta role fallback still works when trusted SSO headers are disabled.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Browser QA and targeted trusted-header route checks pass.
+
+### US-012: Add actor parity to download audits
+**Description:** As a DAM operator, I want approved-copy downloads and download-gate decisions to include the same resolved actor identity as review, upload, batch, package, and admin events so that SSO-backed audit trails remain coherent.
+
+**Acceptance Criteria:**
+- [x] Download route audit events include resolved actor identity.
+- [x] Download gate audit events include resolved actor identity.
+- [x] Admin readiness recent audit summaries include actor identity.
+- [x] Trusted SSO identity still resolves through the shared route session.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] API smoke passes.
 
 ## Functional Requirements
 
@@ -153,6 +165,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-10: Brand kits must keep editorial guidance separate from ResourceSpace-backed downloadable media readiness.
 - FR-11: Package persistence must never store source binaries, copied assets, master paths, or final rights truth.
 - FR-12: Mutating or mutation-preview routes must resolve role through one identity seam so production SSO can override beta query/body role safely.
+- FR-13: Enterprise audit events for download and mutation gates must include resolved actor identity when the route has access to request identity.
 
 ## Non-Goals
 
