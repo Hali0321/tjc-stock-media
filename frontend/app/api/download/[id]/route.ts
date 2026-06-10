@@ -6,7 +6,7 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
-import { normalizeAssetId } from "@/lib/request-validation";
+import { normalizeAssetId, normalizeDisplayTextField } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +17,10 @@ type DownloadGateBody = {
   reason?: string;
   termsAccepted?: boolean;
 };
+
+function normalizeDownloadVariant(value: unknown) {
+  return value === "download" ? "download" : "download";
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
@@ -92,6 +96,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { asset, source } = await getAssetRecordById(id);
   const envelope = session.sourceEnvelope(source);
+  const variant = normalizeDownloadVariant(body.variant);
+  const usageChannel = normalizeDisplayTextField(body.usageChannel, "", 80) || null;
+  const reason = normalizeDisplayTextField(body.reason, "", 240) || null;
 
   if (!asset) {
     return NextResponse.json({ allowed: false, reason: "Asset not found", ...envelope }, { status: 404 });
@@ -103,7 +110,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     assetId: asset.id,
     resourceSpaceId: asset.resourceSpaceId || asset.id,
     route: `/api/download/${asset.id}`,
-    metadata: { termsAccepted: body.termsAccepted === true, variant: body.variant || "download" }
+    metadata: { termsAccepted: body.termsAccepted === true, variant }
   });
   const termsAccepted = body.termsAccepted === true;
   const derivativeAvailable = Boolean(findFilestoreDerivative(id, "download"));
@@ -120,8 +127,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       details: {
         source: source.label,
         assetStatus: asset.status,
-        usageChannel: body.usageChannel || null,
-        reason: body.reason || null
+        usageChannel,
+        reason
       }
     });
     return NextResponse.json(
@@ -149,7 +156,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         assetStatus: asset.status,
         reasonCodes: access.reasonCodes || [],
         accessReason: access.reason || null,
-        usageChannel: body.usageChannel || null
+        usageChannel
       }
     });
     return NextResponse.json(
@@ -177,7 +184,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       details: {
         source: source.label,
         assetStatus: asset.status,
-        usageChannel: body.usageChannel || null
+        usageChannel
       }
     });
     return NextResponse.json(
@@ -202,15 +209,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     details: {
       source: source.label,
       assetStatus: asset.status,
-      variant: body.variant || "download",
-      usageChannel: body.usageChannel || null,
-      reason: body.reason || null
+      variant,
+      usageChannel,
+      reason
     }
   });
 
   return NextResponse.json({
     allowed: true,
-    downloadUrl: `/api/download/${encodeURIComponent(asset.id)}?role=${encodeURIComponent(role)}&variant=${encodeURIComponent(body.variant || "download")}`,
+    downloadUrl: `/api/download/${encodeURIComponent(asset.id)}?role=${encodeURIComponent(role)}&variant=${encodeURIComponent(variant)}`,
     auditId: audit.id,
     ...envelope,
     message: "Approved copy is available through backend gate. Private originals and S3 paths are not exposed."

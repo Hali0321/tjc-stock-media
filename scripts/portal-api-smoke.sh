@@ -617,6 +617,16 @@ expect_json viewer-asset-detail-scaffold-safe "$normal_user_payload_guard" "$BAS
 expect_json contributor-asset-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/367?role=Contributor"
 expect_json_status 403 viewer-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Viewer"
 expect_json_status 403 contributor-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Contributor"
+expect_json_status 403 download-gate-metadata-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.downloadUrl || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  console.error(`FAIL: blocked download gate echoed unsafe metadata: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Viewer","termsAccepted":true,"variant":"../private-source-path","usageChannel":"../private master drive","reason":"../private checksum"}' \
+  "$BASE_URL/api/download/368"
 
 expect_json rights-status-not-publish-status '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
