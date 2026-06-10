@@ -114,13 +114,13 @@ export const savedViewDefinitions: SavedViewDefinition[] = [
     terms: ["social", "square", "event", "fellowship", "flower", "bible", "welcome"],
     match: (asset) => asset.status === "Approved Public" && includesAny(asset, ["social", "square", "event", "fellowship", "flower", "bible", "welcome", "plant"])
   },
-	  {
-	    id: "no-people",
-	    label: "No people",
-	    description: "Lower-risk details, textures, and object photos.",
-	    reason: "Uses exported people visibility metadata.",
-	    match: (asset) => asset.peopleRisk === "No people" && (asset.status === "Approved Public" || asset.status === "Approved Internal")
-	  },
+  {
+    id: "no-people",
+    label: "No people",
+    description: "Lower-risk details, textures, and object photos.",
+    reason: "Uses exported people visibility metadata.",
+    match: (asset) => asset.peopleRisk === "No people" && (asset.status === "Approved Public" || asset.status === "Approved Internal")
+  },
   {
     id: "people-unknown",
     label: "People unknown",
@@ -562,10 +562,10 @@ function buildOperationalInsights(assets: StockMediaAsset[]): OperationalInsight
       id: "people-unknown",
       label: "People unknown",
       value: peopleUnknown,
-	      detail: "People/minors visibility is not confirmed. Reviewer should verify before public use.",
-	      tone: peopleUnknown ? "warn" : "ok",
-	      savedViewId: "people-unknown"
-	    },
+      detail: "People/minors visibility is not confirmed. Reviewer should verify before public use.",
+      tone: peopleUnknown ? "warn" : "ok",
+      savedViewId: "people-unknown"
+    },
     {
       id: "ai-enrichment",
       label: "Needs enrichment",
