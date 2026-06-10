@@ -56,6 +56,25 @@ expect_json_status() {
   node -e "$script" < "$output"
 }
 
+expect_json_any_status() {
+  local allowed="$1"
+  local label="$2"
+  local script="$3"
+  local output="$TMP_DIR/${label//[^a-zA-Z0-9_-]/_}.json"
+  shift 3
+  local code
+  code="$(http_code "$output" "$@")"
+  case " $allowed " in
+    *" $code "*) ;;
+    *)
+      echo "FAIL: $label expected one of [$allowed] got $code"
+      cat "$output"
+      exit 1
+      ;;
+  esac
+  STATUS_CODE="$code" node -e "$script" < "$output"
+}
+
 normal_user_payload_guard='
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const forbiddenKeys = new Set([
@@ -187,6 +206,63 @@ expect_code 400 malformed-review-asset \
 expect_code 404 missing-review-asset \
   -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","id":"999999","action":"Approve Public"}' \
+  "$BASE_URL/api/review"
+
+expect_json_status 403 review-action-viewer-denied-payload-safe "$normal_user_payload_guard" \
+  -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Viewer","id":"644","action":"Request More Info","notes":"Viewer should not review."}' \
+  "$BASE_URL/api/review"
+
+expect_json_status 400 review-action-missing-evidence '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const missing = data.missingEvidence || [];
+if (!Array.isArray(missing) || !missing.includes("sourceConfirmed") || !missing.includes("reviewNote")) {
+  console.error(`FAIL: missing evidence did not list checklist/note blockers: ${JSON.stringify(data)}`);
+  process.exit(1);
+}
+if (/updated through the live API|synced_to_resourcespace/i.test(JSON.stringify(data))) {
+  console.error("FAIL: incomplete review action claimed ResourceSpace sync");
+  process.exit(1);
+}
+' \
+  -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Reviewer","id":"644","action":"Approve Public","notes":"short","checklist":{}}' \
+  "$BASE_URL/api/review"
+
+expect_json_any_status "200 202" review-action-sync-truth '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const code = process.env.STATUS_CODE;
+if (data.ok !== true || !data.pendingWriteId || !data.auditRecord) {
+  console.error(`FAIL: review action did not return pending write/audit proof: ${JSON.stringify(data)}`);
+  process.exit(1);
+}
+if (data.auditRecord.reviewerRole !== "Reviewer" || data.auditRecord.requestedStatus !== "Needs Review") {
+  console.error(`FAIL: review action audit proof has wrong role/status: ${JSON.stringify(data.auditRecord)}`);
+  process.exit(1);
+}
+if (!data.auditRecord.actor || data.auditRecord.actor !== data.usageRecord?.actor) {
+  console.error(`FAIL: review audit/usage actor mismatch: ${JSON.stringify({ audit: data.auditRecord, usage: data.usageRecord })}`);
+  process.exit(1);
+}
+if (code === "200") {
+  if (data.sync?.ok !== true || data.mode !== "resourcespace-live-writeback" || data.syncState !== "synced_to_resourcespace") {
+    console.error(`FAIL: 200 review response did not prove live ResourceSpace writeback: ${JSON.stringify(data)}`);
+    process.exit(1);
+  }
+} else {
+  const text = JSON.stringify(data);
+  if (data.sync?.ok !== false || data.mode === "resourcespace-live-writeback" || /updated through the live API|synced_to_resourcespace/i.test(text)) {
+    console.error(`FAIL: queued review response claimed ResourceSpace success: ${text}`);
+    process.exit(1);
+  }
+  if (!["queued", "ready_to_sync", "sync_failed"].includes(data.syncState)) {
+    console.error(`FAIL: queued review response had unexpected sync state: ${data.syncState}`);
+    process.exit(1);
+  }
+}
+' \
+  -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Reviewer","id":"644","action":"Request More Info","notes":"QA review workflow decision with complete minimum evidence.","checklist":{"sourceConfirmed":true,"rightsConfirmed":true,"peopleVisibilityConfirmed":true,"childrenYouthChecked":true,"usageScopeSelected":true},"reviewerName":"API Smoke Reviewer"}' \
   "$BASE_URL/api/review"
 
 expect_json_status 400 empty-upload-contributor-payload-safe "$normal_user_payload_guard" \

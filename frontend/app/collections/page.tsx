@@ -1,5 +1,5 @@
-import { EnterpriseBrandHubPage } from "@/components/dam/EnterpriseDamPages";
+import { EnterpriseCollectionsPage } from "@/components/dam/EnterpriseDamPages";
 
 export default function Page() {
-  return <EnterpriseBrandHubPage />;
+  return <EnterpriseCollectionsPage />;
 }

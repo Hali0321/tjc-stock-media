@@ -102,18 +102,34 @@ export function AssetCard({ asset, selected = false, onSelect }: { asset: StockM
   );
 }
 
-export function SavedViewPanel({ savedViews = [], collections = [], source }: { savedViews?: Array<{ id: string; label: string; count: number }>; collections?: Array<{ id: string; name: string; count: number }>; source?: MediaSourceStatus | null }) {
+export function SavedViewPanel({
+  savedViews = [],
+  collections = [],
+  source,
+  activeView,
+  activeCollection,
+  onViewSelect,
+  onCollectionSelect
+}: {
+  savedViews?: Array<{ id: string; label: string; count: number }>;
+  collections?: Array<{ id: string; name: string; count: number }>;
+  source?: MediaSourceStatus | null;
+  activeView?: string;
+  activeCollection?: string;
+  onViewSelect?: (id: string) => void;
+  onCollectionSelect?: (id: string) => void;
+}) {
   const firstViews = savedViews.slice(0, 5);
   return (
     <aside className="ed-panel ed-facet-panel">
       <section>
         <div className="ed-panel-title"><h3>Saved views</h3><button type="button"><Plus size={14} /></button></div>
-        {firstViews.map((view, index) => <button className={cn(index === 0 && "is-active")} type="button" key={view.id}><span>{view.label}</span><em>{view.count.toLocaleString()}</em></button>)}
+        {firstViews.map((view, index) => <button className={cn((activeView ? activeView === view.id : index === 0) && "is-active")} type="button" key={view.id} onClick={() => onViewSelect?.(view.id)}><span>{view.label}</span><em>{view.count.toLocaleString()}</em></button>)}
         {!firstViews.length ? <p>No saved views mapped yet.</p> : <a>Show all saved views</a>}
       </section>
       <section>
         <div className="ed-panel-title"><h3>{sourceNoun(source)} collections</h3><ChevronDown size={14} /></div>
-        {collections.slice(0, 7).map((collection) => <label className="ed-check-row" key={collection.id}><input type="checkbox" /><span>{collection.name}</span><em>{collection.count.toLocaleString()}</em></label>)}
+        {collections.slice(0, 7).map((collection) => <label className="ed-check-row" key={collection.id}><input type="checkbox" checked={activeCollection === collection.id} onChange={() => onCollectionSelect?.(collection.id)} /><span>{collection.name}</span><em>{collection.count.toLocaleString()}</em></label>)}
       </section>
       {[
         ["File type", ["photo", "video", "document", "audio", "graphic"]],
