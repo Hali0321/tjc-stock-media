@@ -43,6 +43,7 @@ const qaPaths = [
   { path: "/", role: "Reviewer", label: "library-reviewer" },
   { path: "/?view=website-hero", role: "Viewer", label: "library-website-hero" },
   { path: "/collections", role: "Viewer", label: "collections-viewer" },
+  { path: "/packages", role: "Viewer", label: "packages-viewer" },
   { path: "/packages", role: "Reviewer", label: "packages-reviewer" },
   { path: "/?view=needs-review", role: "Viewer", label: "viewer-needs-review-hidden" },
   { path: "/assets/368", role: "Viewer", label: "detail-approved-viewer" },

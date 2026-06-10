@@ -61,6 +61,10 @@ function roleCanShareInternal(role: DemoRole) {
   return role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
 }
 
+function opsView(role: DemoRole) {
+  return role === "Reviewer" || role === "DAM Admin";
+}
+
 function assetReason(asset: StockMediaAsset, blockers: ReuseBlocker[]) {
   if (!blockers.length) return asset.usageGuidance || "Portal reuse checks pass.";
   return blockers.map((blocker) => blocker.label).join(", ");
@@ -98,6 +102,7 @@ function command(label: string, ready: boolean, detail: string, review = false):
 }
 
 export function buildPackageGovernance(draft: DamPackage, resolvedSections: ResolvedPackageSection[], role: DemoRole): PackageGovernancePacket {
+  const canSeeOpsCopy = opsView(role);
   const sections = resolvedSections.map((section): PackageGovernanceSection => {
     const assets = section.assets.map((asset) => classifyAsset(section.id, section.title, asset, role));
     const portalReadyRefs = assets.filter((item) => item.reuseState === "portal-ready").length;
@@ -105,7 +110,7 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
     const reviewRequiredRefs = assets.filter((item) => item.reuseState !== "portal-ready" && item.reuseState !== "internal-ready").length;
     const blockedRefs = section.missingResourceSpaceAssetIds.length + internalOnlyRefs + reviewRequiredRefs;
     const blockers = uniqueStrings([
-      ...section.missingResourceSpaceAssetIds.map((ref) => `Missing ResourceSpace ref ${ref}`),
+      ...section.missingResourceSpaceAssetIds.map((ref) => canSeeOpsCopy ? `Missing ResourceSpace ref ${ref}` : `Missing media reference ${ref}`),
       ...assets.flatMap((item) => item.publishReady ? [] : [`${item.ref}: ${item.reason}`])
     ]);
 
@@ -133,13 +138,14 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
   const reviewRequiredRefs = allAssets.filter((item) => item.reuseState !== "portal-ready" && item.reuseState !== "internal-ready").length;
   const blockedRefs = missingRefs + internalOnlyRefs + reviewRequiredRefs;
   const hasRefs = totalRefs > 0;
+  const refNoun = canSeeOpsCopy ? "refs" : "references";
   const canPreview = hasRefs && missingRefs === 0 && allAssets.every((item) => item.canPreview);
   const canShare = canPreview && allAssets.every((item) => item.shareReady);
   const canPublish = hasRefs && missingRefs === 0 && allAssets.every((item) => item.publishReady);
   const reason = !hasRefs
-    ? "Package needs ResourceSpace refs before preview, share, or publish."
+    ? `Package needs media ${refNoun} before preview, share, or publish.`
     : missingRefs
-      ? "Package has ResourceSpace refs that no longer resolve."
+      ? `Package has media ${refNoun} that no longer resolve.`
       : internalOnlyRefs
         ? "Publish blocked because some refs are Internal ready only."
         : reviewRequiredRefs
@@ -161,9 +167,9 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
     reason,
     auditMessage: `Package governance: ${portalReadyRefs}/${totalRefs} Portal Ready, ${internalOnlyRefs} internal-only, ${reviewRequiredRefs} review-required, ${missingRefs} missing.`,
     commandCenter: [
-      command("Preview", canPreview, canPreview ? "All refs can render a role-safe preview." : "Preview waits for resolvable refs and role-safe previews.", !canPreview && hasRefs),
-      command("Share", canShare, canShare ? "Share packet can stay within current role policy." : "Share waits for Portal Ready refs or internal-ready refs allowed for this role.", !canShare && hasRefs),
-      command("Publish", canPublish, canPublish ? "All refs are Portal Ready; ResourceSpace originals stay canonical." : reason, !canPublish && hasRefs)
+      command("Preview", canPreview, canPreview ? `All ${refNoun} can render a role-safe preview.` : `Preview waits for resolvable ${refNoun} and role-safe previews.`, !canPreview && hasRefs),
+      command("Share", canShare, canShare ? "Share packet can stay within current role policy." : `Share waits for Portal Ready ${refNoun} or internal-ready ${refNoun} allowed for this role.`, !canShare && hasRefs),
+      command("Publish", canPublish, canPublish ? (canSeeOpsCopy ? "All refs are Portal Ready; ResourceSpace originals stay canonical." : "All references are Portal Ready; original files stay protected.") : reason, !canPublish && hasRefs)
     ],
     sections
   };
