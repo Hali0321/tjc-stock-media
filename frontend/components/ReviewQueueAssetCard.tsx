@@ -106,13 +106,10 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2 py-1 text-[10px] font-black text-[#725216]">
-            {reviewFocus}
+            {compactFocus}
           </span>
           <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2 py-1 text-[10px] font-black text-[#536057]">
             {evidenceLabel}
-          </span>
-          <span className="rounded-md border border-[#cfd9dd] bg-white px-2 py-1 text-[10px] font-black text-[#52677a]">
-            {nextCheck}
           </span>
         </div>
         <div className="mt-2 grid gap-2">
@@ -153,7 +150,6 @@ export function ReviewQueueAssetCard({ asset, role, selected, onInspect }: Revie
       >
         <h2 className="min-w-0 truncate text-sm font-black leading-tight text-tjc-ink">{rowTitle}</h2>
         <div className="review-row-subline">
-          <span>Focus</span>
           <strong>{compactFocus}</strong>
         </div>
       </button>

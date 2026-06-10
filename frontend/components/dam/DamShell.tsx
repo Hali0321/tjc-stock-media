@@ -86,7 +86,7 @@ function DamMobileMenu({
 }) {
   if (!open) return null;
   return (
-    <div id="mobile-app-menu" className="workbench-mobile-menu absolute inset-x-3 top-[calc(100%+.55rem)] z-50 grid gap-3 rounded-2xl border border-[#d6e0d9] bg-white p-3 shadow-[0_20px_56px_rgba(17,24,39,.16)] 2xl:hidden">
+    <div id="mobile-app-menu" className="workbench-mobile-menu absolute inset-x-3 top-[calc(100%+.55rem)] z-50 grid gap-3 rounded-2xl border border-[#d6e0d9] bg-white p-3 shadow-[0_20px_56px_rgba(17,24,39,.16)] lg:hidden">
       <div className="rounded-xl bg-[#0f3d2e] p-3 text-white">
         <span className="block text-xs font-black uppercase tracking-[.08em] text-white/70">{opsShell ? "Operations" : "Media workbench"}</span>
         <strong className="mt-1 block text-base font-black">{opsShell ? "Review, governance, and audit" : "Find, package, and send safely"}</strong>
@@ -138,7 +138,7 @@ export function DamShell({ children }: { children: ReactNode }) {
 
           <button
             type="button"
-            className="dam-header-icon grid h-12 w-12 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px 2xl:hidden"
+            className="dam-header-icon grid h-12 w-12 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px lg:hidden"
             onClick={() => setMobileMenuOpen((open) => !open)}
             aria-label={mobileMenuOpen ? "Close app menu" : "Open app menu"}
             aria-expanded={mobileMenuOpen}

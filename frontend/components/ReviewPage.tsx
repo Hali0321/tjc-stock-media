@@ -130,7 +130,7 @@ function reviewDecisionLanes(asset: StockMediaAsset) {
   return [
     lane("Rights", missing.includes("consent") || risks.includes("Rights unclear") || !asset.rightsStatus, asset.rightsStatus || "Rights evidence needed"),
     lane("People/minors", missing.includes("people/minors") || /child|youth|minor/i.test(asset.peopleRisk || ""), asset.peopleRisk || "Visibility unknown"),
-    lane("Source", missing.includes("source"), sourceSummary(asset)),
+    lane("Source", missing.includes("source"), missing.includes("source") ? "Source evidence needed" : "Source noted"),
     lane("Derivative", missing.includes("derivative"), asset.imageUrls?.download || asset.downloadPolicy.includes("approved-copy") ? "Approved copy available" : "Approved rendition missing"),
     lane("Usage", missing.includes("usage guidance"), asset.usageGuidance || asset.usageScope)
   ];
@@ -649,7 +649,10 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               <div>
                 <span className="text-sm font-semibold text-tjc-evergreen">Currently reviewing</span>
                 <h2 className="mt-1 text-xl font-black leading-tight">{assetPresentation(selectedAsset, role).title}</h2>
-                <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{sourceSummary(selectedAsset)}</p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
+                  <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2.5 py-1 text-[#725216]">{reviewNextCheckLabel(selectedAsset)}</span>
+                  <span className="rounded-md border border-[#d7dfd8] bg-[#f1f4ef] px-2.5 py-1 text-[#536057]">{missingReviewFields(selectedAsset).length || "No"} evidence gaps</span>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <StatusBadge status={selectedAsset.status} />
