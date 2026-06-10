@@ -81,14 +81,88 @@ else
 fi
 
 if [ -f docs/screenshots/qa/browser-qa-report.json ]; then
-  if node -e 'const fs=require("fs"); const report=JSON.parse(fs.readFileSync("docs/screenshots/qa/browser-qa-report.json","utf8")); const failures=[...(report.failures||[]), ...(report.consoleErrors||[]), ...(report.networkFailures||[])]; if (failures.length) { console.error(`browser QA failure signals: ${failures.length}`); process.exit(1); }' >/tmp/tjc-browser-qa-check.txt 2>&1; then
-    pass "browser QA report has no failure signals"
+  if node -e '
+const fs = require("fs");
+const report = JSON.parse(fs.readFileSync("docs/screenshots/qa/browser-qa-report.json", "utf8"));
+const failures = [
+  ...(report.failures || []),
+  ...(report.consoleErrors || []),
+  ...(report.networkFailures || [])
+];
+if (failures.length) {
+  console.error(`browser QA failure signals: ${failures.length}`);
+  process.exit(1);
+}
+const widths = new Set(report.viewports || []);
+const requiredWidths = [1440, 1280, 1024, 768, 390, 320];
+const missingWidths = requiredWidths.filter((width) => !widths.has(width));
+if (missingWidths.length) {
+  console.error(`browser QA missing required widths: ${missingWidths.join(", ")}`);
+  process.exit(1);
+}
+if ((report.pages || 0) < 16) {
+  console.error(`browser QA page coverage too low: ${report.pages || 0}`);
+  process.exit(1);
+}
+const screenshots = new Set(report.screenshots || []);
+const requiredScreenshots = [
+  "library-desktop.png",
+  "library-mobile-320.png",
+  "packages-desktop.png",
+  "review-desktop.png",
+  "admin-desktop.png",
+  "guide-mobile-320.png"
+];
+const missingScreenshots = requiredScreenshots.filter((name) => !screenshots.has(name));
+if (missingScreenshots.length) {
+  console.error(`browser QA missing proof screenshots: ${missingScreenshots.join(", ")}`);
+  process.exit(1);
+}
+' >/tmp/tjc-browser-qa-check.txt 2>&1; then
+    pass "browser QA report has full beta viewport/page coverage"
   else
-    fail "browser QA report has failure signals"
+    fail "browser QA report coverage check failed"
     cat /tmp/tjc-browser-qa-check.txt
   fi
 else
   warn "browser QA report missing; run make portal-browser-qa before inviting teammates"
+fi
+
+if [ -d .runtime/audit-log ]; then
+  if node -e '
+const fs = require("fs");
+const path = require("path");
+const dir = ".runtime/audit-log";
+const events = fs.readdirSync(dir)
+  .filter((file) => file.endsWith(".jsonl"))
+  .flatMap((file) => fs.readFileSync(path.join(dir, file), "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line)));
+const actorEvents = events.filter((event) => typeof event.actor === "string" && event.actor.length > 0);
+if (!actorEvents.length) {
+  console.error("no actor-backed audit events found");
+  process.exit(1);
+}
+const roles = new Set(actorEvents.map((event) => event.role));
+const requiredRoles = ["Viewer", "Reviewer", "DAM Admin"];
+const missingRoles = requiredRoles.filter((role) => !roles.has(role));
+if (missingRoles.length) {
+  console.error(`actor-backed audit missing roles: ${missingRoles.join(", ")}`);
+  process.exit(1);
+}
+const types = new Set(actorEvents.map((event) => event.type));
+const requiredTypes = ["denied_download", "review_pending_write_queued", "admin_readiness_viewed"];
+const missingTypes = requiredTypes.filter((type) => !types.has(type));
+if (missingTypes.length) {
+  console.error(`actor-backed audit missing event types: ${missingTypes.join(", ")}`);
+  process.exit(1);
+}
+' >/tmp/tjc-audit-evidence-check.txt 2>&1; then
+    pass "actor-backed Viewer/Reviewer/Admin audit rehearsal evidence exists"
+  else
+    warn "actor-backed beta audit rehearsal incomplete"
+    cat /tmp/tjc-audit-evidence-check.txt
+  fi
+else
+  warn ".runtime/audit-log missing; run API smoke before inviting teammates"
 fi
 
 if [ -d .runtime/backups ]; then

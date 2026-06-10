@@ -199,6 +199,22 @@
       "priority": 12,
       "passes": true,
       "notes": "Added resolved actor capture to approved download, denied download, and download-gate audit events, and preserved actor identity in Admin readiness recent audit summaries. Verified trusted SSO header actor persisted as sso:reviewer-download@example.test on a download-gate denial, frontend-check passes, and API smoke passes on a clean post-build dev server."
+    },
+    {
+      "id": "US-013",
+      "title": "Harden beta readiness coverage gates",
+      "description": "As a beta operator, I want launch readiness and Admin beta readiness to require concrete browser QA coverage and actor-backed audit rehearsal evidence so teammate invite decisions are based on mechanical proof, not stale checklist copy.",
+      "acceptanceCriteria": [
+        "Launch readiness verifies browser QA has required page, viewport, and proof screenshot coverage.",
+        "Launch readiness checks actor-backed Viewer, Reviewer, and DAM Admin audit rehearsal evidence.",
+        "Admin beta readiness audit fact reports actor-backed audit evidence and covered roles.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Launch readiness passes with only explicit environment warnings."
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "Tightened launch-readiness browser QA coverage checks for required pages, widths, and proof screenshots, added actor-backed Viewer/Reviewer/DAM Admin audit rehearsal checks, and expanded Admin beta readiness audit evidence to report actor-backed role coverage from recent audit rows. Verified by frontend-check, launch-readiness, post-build API smoke, targeted Admin beta audit fact check, JSON parse, and diff check."
     }
   ]
 }

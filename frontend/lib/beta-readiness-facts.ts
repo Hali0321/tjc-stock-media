@@ -148,6 +148,8 @@ export function buildBetaReadiness({
   portalReady: number;
   auditRecent: AuditEventSummary[];
 }): BetaReadinessResult {
+  const actorBackedAudit = auditRecent.filter((event) => Boolean(event.actor));
+  const auditRoles = Array.from(new Set(actorBackedAudit.map((event) => event.role))).sort();
   const facts = [
     integrationFact(integrations, "auth", { label: "SSO / role identity", warnWhenReady: true }),
     integrationFact(integrations, "review-writes", { label: "ResourceSpace review writeback" }),
@@ -160,10 +162,10 @@ export function buildBetaReadiness({
     fact({
       id: "audit-evidence",
       label: "Audit evidence",
-      ready: auditRecent.length > 0,
-      state: auditRecent.length > 0 ? "pass" : "warn",
-      detail: auditRecent.length
-        ? `${auditRecent.length.toLocaleString()} recent audit event${auditRecent.length === 1 ? "" : "s"} available for beta rehearsal.`
+      ready: actorBackedAudit.length > 0,
+      state: actorBackedAudit.length > 0 ? "pass" : "warn",
+      detail: actorBackedAudit.length
+        ? `${actorBackedAudit.length.toLocaleString()} recent actor-backed audit event${actorBackedAudit.length === 1 ? "" : "s"} available for beta rehearsal across ${auditRoles.join(", ") || "unknown roles"}.`
         : "No recent audit events are visible yet.",
       source: "catalog"
     })

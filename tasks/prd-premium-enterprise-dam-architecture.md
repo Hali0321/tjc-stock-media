@@ -151,6 +151,17 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [x] Build passes.
 - [x] API smoke passes.
 
+### US-013: Harden beta readiness coverage gates
+**Description:** As a beta operator, I want launch readiness and Admin beta readiness to require concrete browser QA coverage and actor-backed audit rehearsal evidence so teammate invite decisions are based on mechanical proof, not stale checklist copy.
+
+**Acceptance Criteria:**
+- [x] Launch readiness verifies browser QA has required page, viewport, and proof screenshot coverage.
+- [x] Launch readiness checks actor-backed Viewer, Reviewer, and DAM Admin audit rehearsal evidence.
+- [x] Admin beta readiness audit fact reports actor-backed audit evidence and covered roles.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Launch readiness passes with only explicit environment warnings.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -166,6 +177,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-11: Package persistence must never store source binaries, copied assets, master paths, or final rights truth.
 - FR-12: Mutating or mutation-preview routes must resolve role through one identity seam so production SSO can override beta query/body role safely.
 - FR-13: Enterprise audit events for download and mutation gates must include resolved actor identity when the route has access to request identity.
+- FR-14: Beta readiness must use mechanical browser QA coverage and actor-backed audit evidence before teammate invite recommendations can be treated as rehearsal-ready.
 
 ## Non-Goals
 

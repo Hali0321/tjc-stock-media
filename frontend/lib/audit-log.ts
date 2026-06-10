@@ -105,7 +105,7 @@ export function auditLogDiagnostics() {
     latestAt: latest?.createdAt,
     denied,
     queued,
-    recent: events.slice(0, 10).map((event) => ({
+    recent: events.slice(0, 25).map((event) => ({
       id: event.id,
       type: event.type,
       createdAt: event.createdAt,
