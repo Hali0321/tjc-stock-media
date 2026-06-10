@@ -75,6 +75,8 @@ function safeRoute(value: unknown) {
 
 function safeUrl(value: unknown) {
   const url = safeText(value, 500);
+  if (url.includes("..") || /[\\]/.test(url)) return "";
+  if (/source path|master drive|checksum/i.test(url)) return "";
   return /^https?:\/\//i.test(url) ? url : "";
 }
 

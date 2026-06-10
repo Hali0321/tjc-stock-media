@@ -73,6 +73,18 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit-unsafe-screenshot-link"
 
+unsafe_private_link_feedback_id="$(select_json_status 200 feedback-submit-unsafe-private-screenshot-link '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.ok !== true || !data.id || !data.createdAt) {
+  console.error(`FAIL: private-label screenshot feedback submit shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+console.log(data.id);
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"Feedback unsafe private screenshot link smoke\",\"severity\":\"low\",\"expected\":\"Private-label screenshot links should be dropped before persistence.\",\"actual\":\"$MARKER unsafe private screenshot link submitted.\",\"screenshotLink\":\"https://example.test/source path/master drive/checksum.png\"}" \
+  "$BASE_URL/api/beta-feedback")"
+echo "PASS: feedback-submit-unsafe-private-screenshot-link"
+
 unsafe_route_feedback_id="$(select_json_status 200 feedback-submit-unsafe-route '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.ok !== true || !data.id || !data.createdAt) {
@@ -166,10 +178,11 @@ if [ "$local_runtime_probe" = "1" ]; then
   stale_feedback_probe_id="$stale_feedback_id"
 fi
 
-FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" UNSAFE_ROUTE_FEEDBACK_ID="$unsafe_route_feedback_id" UNSAFE_TEXT_FEEDBACK_ID="$unsafe_text_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
+FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" UNSAFE_PRIVATE_LINK_FEEDBACK_ID="$unsafe_private_link_feedback_id" UNSAFE_ROUTE_FEEDBACK_ID="$unsafe_route_feedback_id" UNSAFE_TEXT_FEEDBACK_ID="$unsafe_text_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.FEEDBACK_ID;
 const unsafeLinkId = process.env.UNSAFE_LINK_FEEDBACK_ID;
+const unsafePrivateLinkId = process.env.UNSAFE_PRIVATE_LINK_FEEDBACK_ID;
 const unsafeRouteId = process.env.UNSAFE_ROUTE_FEEDBACK_ID;
 const unsafeTextId = process.env.UNSAFE_TEXT_FEEDBACK_ID;
 const staleId = process.env.STALE_FEEDBACK_ID;
@@ -193,6 +206,11 @@ if (!record.actor) {
 const unsafeLinkRecord = data.feedback.find((item) => item.id === unsafeLinkId);
 if (!unsafeLinkRecord || unsafeLinkRecord.attachmentUrl) {
   console.error(`FAIL: unsafe screenshot link persisted: ${JSON.stringify({ unsafeLinkId, unsafeLinkRecord }).slice(0, 500)}`);
+  process.exit(1);
+}
+const unsafePrivateLinkRecord = data.feedback.find((item) => item.id === unsafePrivateLinkId);
+if (!unsafePrivateLinkRecord || unsafePrivateLinkRecord.attachmentUrl) {
+  console.error(`FAIL: private-label screenshot link persisted: ${JSON.stringify({ unsafePrivateLinkId, unsafePrivateLinkRecord }).slice(0, 500)}`);
   process.exit(1);
 }
 const unsafeRouteRecord = data.feedback.find((item) => item.id === unsafeRouteId);
