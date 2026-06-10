@@ -6,7 +6,7 @@ Use this page before inviting teammates. The goal is a controlled beta test, not
 
 ## Go / No-Go
 
-Current recommendation: **Local dry run passed. Hold external teammate invites until a private URL, seed-data choice, and feedback triager are confirmed.**
+Current recommendation: **Local and hosted smoke are ready for small internal teammate testing on the stable unlisted Vercel URL. Hold wider rollout until KV/Blob storage, SSO, and seed-data ownership are confirmed.**
 
 Local dry run may continue when these pass:
 
@@ -15,39 +15,43 @@ Local dry run may continue when these pass:
 - [x] `BASE_URL=http://localhost:4868 make portal-api-smoke`
 - [x] `BASE_URL=http://localhost:4876 make portal-sso-smoke` against `SSO_TRUSTED_HEADERS=1` local server
 - [x] `BASE_URL=http://localhost:4878 make portal-usage-smoke` against `PORTAL_USAGE_LOGGING=1` local server
+- [x] `BASE_URL=http://localhost:4880 make portal-delivery-smoke`
+- [x] `BASE_URL=http://localhost:4880 make portal-beta-rehearsal`
+- [x] `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`
 - [x] `BASE_URL=http://localhost:4868 make portal-browser-qa`
 - [x] Viewer unsafe download stays blocked.
 - [x] Reviewer approval without evidence stays blocked.
 - [x] Reviewer approval with evidence returns honest queued/pending-write state.
 
-Invite teammates only when these are also true:
+Invite a small internal teammate batch only when these are also true:
 
-- [ ] Private beta URL exists behind approved access.
-- [ ] Test data source is chosen: ResourceSpace export, ResourceSpace live API, or safe fallback.
+- [x] Stable unlisted beta URL exists: `https://tjc-stock-media.vercel.app`.
+- [x] Hosted post-deploy smoke passes: `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`.
+- [x] Test data source is safe fallback/export data, not live writeback.
 - [ ] No sensitive, private, unreleased, youth-identifiable, or copyrighted media is visible in beta.
 - [ ] Role switch is clearly labeled beta-only.
 - [ ] ResourceSpace writeback is disabled unless explicitly approved.
-- [ ] Feedback triager is assigned.
+- [x] Feedback triager is assigned: Hali until delegated.
 - [ ] P0 stop-test rule is accepted by testers.
 
 ## Beta Surface
 
 | Area | Beta expectation | Owner | Status |
 |---|---|---|---|
-| URL | Private Next.js deployment with API routes; not static S3-only | TBD | Blocked |
+| URL | Stable unlisted Vercel Next.js deployment with API routes; not static S3-only | Hali | Ready for internal beta |
 | Access | Beta access only; production SSO not live | TBD | Blocked |
-| Data | Current safe ResourceSpace export or explicit fallback | Hali | Needs decision |
+| Data | Safe fallback/export data; no live writeback | Hali | Ready for internal beta |
 | Viewer | Can search, open records, request review, and see blocked unsafe downloads | Hali | Ready for dry run |
 | Contributor | Can test harmless intake only; uploads never publish | Hali | Ready for dry run |
 | Reviewer | Can test evidence lock and pending-write truth | Hali | Ready for dry run |
 | DAM Admin | Can inspect launch blockers and integration readiness | Hali | Ready for dry run |
-| Feedback | In-app Report issue plus DAM Admin Feedback Inbox; single triage owner still needed | TBD | Tooling ready, owner needed |
+| Feedback | In-app Report issue plus DAM Admin Feedback Inbox; Hali triages first batch | Hali | Ready; KV/Blob connection still preferred |
 
 ## Latest Local Rehearsal
 
 Date: 2026-06-10
 
-Result: **Pass for local beta dry run. Not approved for teammate invites until hosted private access, seed data, and triage ownership are set.**
+Result: **Pass for local beta dry run. Stable hosted alias is ready for small internal beta after hosted smoke passes.**
 
 Checks:
 
@@ -56,6 +60,9 @@ Checks:
 - `BASE_URL=http://localhost:4868 make portal-api-smoke`: pass.
 - `BASE_URL=http://localhost:4876 make portal-sso-smoke`: pass against local trusted-header server.
 - `BASE_URL=http://localhost:4878 make portal-usage-smoke`: pass against local usage-logging server.
+- `BASE_URL=http://localhost:4880 make portal-delivery-smoke`: pass for delivery privacy and honest S3 readiness copy.
+- `BASE_URL=http://localhost:4880 make portal-beta-rehearsal`: pass; evidence JSON written under `.runtime/beta-rehearsals/`.
+- `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`: pass against stable Vercel alias.
 - `BASE_URL=http://localhost:4868 make portal-browser-qa`: pass; 16 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, zero network failures.
 - Explicit Viewer probe: `Bible` search returned assets, Viewer source payload stayed redacted as `media-library`, asset `368` opened, blocked download returned `403`, Viewer review action returned `403`.
 - Explicit Reviewer probe: incomplete evidence returned `400` with evidence blockers; complete evidence returned `202` queued pending-write truth.
@@ -86,6 +93,8 @@ In another terminal:
 BASE_URL=http://localhost:4868 make portal-api-smoke
 BASE_URL=http://localhost:4868 make portal-sso-smoke
 BASE_URL=http://localhost:4868 make portal-usage-smoke
+BASE_URL=http://localhost:4868 make portal-delivery-smoke
+BASE_URL=http://localhost:4868 make portal-beta-rehearsal
 BASE_URL=http://localhost:4868 make portal-browser-qa
 ```
 
@@ -93,11 +102,23 @@ For SSO rehearsal, start the server with `SSO_TRUSTED_HEADERS=1` or `SSO_PROVIDE
 
 For usage analytics rehearsal, start the server with `PORTAL_USAGE_LOGGING=1`; otherwise `portal-usage-smoke` should fail because no SQLite events should be recorded when analytics is disabled.
 
+For delivery privacy rehearsal, no S3 credentials are required. The smoke proves private storage and source custody details stay out of browser-facing payloads and that Admin readiness does not overclaim signed S3 delivery.
+
+For private beta rehearsal, `portal-beta-rehearsal` writes a JSON evidence packet to `.runtime/beta-rehearsals/<run-id>/summary.json`. Keep that artifact for local decision evidence; do not treat it as teammate invite approval unless the blocked invite prerequisites above are complete.
+
+For hosted URL rehearsal, run:
+
+```bash
+BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke
+```
+
+This verifies the hosted routes, feedback POST, non-admin feedback denial, DAM Admin feedback inbox, and Viewer unsafe download block.
+
 Manual Viewer dry run:
 
 1. Open `/` as Viewer.
 2. Search `Bible`.
-3. Open asset `368`.
+3. Open one result.
 4. Confirm the page says whether it can be used.
 5. Try unsafe download path and confirm it blocks.
 6. Open Guide and confirm download rules are understandable.

@@ -252,6 +252,62 @@
       "priority": 15,
       "passes": true,
       "notes": "Added scripts/portal-usage-smoke.sh, Make target, launch-readiness file check, and beta/analytics docs. The smoke records search, asset view, download gate, review action, and Brand Hub events, then verifies SQLite contains those event types with actor identity and a unique search marker. Verified by bash syntax check, frontend-check, launch-readiness, post-build API smoke, post-build usage smoke with PORTAL_USAGE_LOGGING=1, targeted Admin usage readiness check, JSON parse, and diff check."
+    },
+    {
+      "id": "US-016",
+      "title": "Add delivery privacy smoke rehearsal",
+      "description": "As a DAM operator, I want one repeatable command that proves Viewer/Contributor payloads and blocked download gates do not leak private storage, source custody, or unfinished S3 delivery details before teammate beta.",
+      "acceptanceCriteria": [
+        "Add a portal-delivery-smoke command that can run against any local beta server without S3 credentials.",
+        "Delivery smoke verifies Viewer/Contributor search and asset payloads do not expose S3 paths, private URLs, source paths, master-drive paths, checksums, or original filenames.",
+        "Delivery smoke verifies blocked Viewer and Reviewer download-gate responses do not expose download, signed, original, or private storage URLs.",
+        "Admin readiness keeps S3 delivery honest and does not claim production signed delivery.",
+        "Launch readiness validates the delivery smoke script exists.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Launch readiness and delivery smoke pass."
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "Added scripts/portal-delivery-smoke.sh, Make target, launch-readiness file check, honest S3 readiness copy, and beta/integration docs. The smoke proves Viewer/Contributor delivery payloads and blocked download gates do not leak private storage/source custody details while Admin readiness avoids claiming production signed delivery. Verified by bash syntax check, frontend-check, launch-readiness, post-build API smoke, post-build delivery smoke, JSON parse, and diff check."
+    },
+    {
+      "id": "US-017",
+      "title": "Add private beta rehearsal evidence",
+      "description": "As a beta operator, I want one repeatable dry-run command that records Viewer, Reviewer, and DAM Admin proof before teammate invites so the decision uses evidence instead of memory.",
+      "acceptanceCriteria": [
+        "Add a portal-beta-rehearsal command that runs against a local beta server.",
+        "Rehearsal proves Viewer search/detail works, unsafe download blocks, and Viewer cannot review.",
+        "Rehearsal proves Reviewer queue loads, incomplete approval blocks, and complete evidence returns honest pending-write/writeback state.",
+        "Rehearsal proves DAM Admin readiness opens and S3 readiness stays honest.",
+        "Rehearsal writes a JSON summary under .runtime/beta-rehearsals/.",
+        "Launch readiness validates the rehearsal script exists.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Launch readiness and beta rehearsal pass."
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "Added scripts/portal-beta-rehearsal.sh, Make target, launch-readiness file check, and beta command-center docs. The rehearsal proves Viewer, Reviewer, and DAM Admin dry-run paths and writes machine-readable evidence under .runtime/beta-rehearsals/. Verified by bash syntax check, frontend-check, launch-readiness, post-build API smoke, delivery smoke, beta rehearsal, JSON parse, and diff check."
+    },
+    {
+      "id": "US-018",
+      "title": "Add hosted private beta smoke",
+      "description": "As a beta operator, I want one post-deploy smoke command for the stable Vercel beta URL so route availability, feedback triage, and blocked downloads can be tested after each deployment.",
+      "acceptanceCriteria": [
+        "Add a portal-hosted-smoke command that defaults to the stable hosted URL and allows BASE_URL override.",
+        "Hosted smoke checks Viewer, Contributor, Reviewer, DAM Admin, and Guide pages.",
+        "Hosted smoke checks feedback submission, Viewer feedback inbox denial, and DAM Admin feedback inbox visibility.",
+        "Hosted smoke selects a currently blocked asset before proving Viewer download remains blocked without private URLs.",
+        "Add teammate invite docs with role links, missions, safety copy, and feedback expectations.",
+        "Launch readiness validates the hosted smoke script exists.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Launch readiness and hosted smoke pass against the stable Vercel beta URL."
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "Added scripts/portal-hosted-smoke.sh, Make/launch-readiness coverage, and docs/teammate-beta-invite-pack.md. The hosted smoke checks stable Vercel routes, feedback POST, Viewer feedback denial, DAM Admin feedback inbox, and dynamic blocked download safety. Verified by bash syntax check, frontend-check, launch-readiness, hosted Vercel smoke, JSON parse, and diff check."
     }
   ]
 }

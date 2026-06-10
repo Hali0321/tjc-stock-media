@@ -4,13 +4,14 @@ Last updated: 2026-06-10
 
 ## Test URL
 
-- Hosted beta URL: TBD after private deployment is approved and configured.
+- Hosted beta URL candidate: `https://tjc-stock-media.vercel.app`
+- Draft invite pack: `docs/teammate-beta-invite-pack.md`
 - Local QA URL used for this readiness pass: `http://localhost:4868`
 - Beta readiness command center: `docs/beta-readiness-command-center.md`
 
 This is a beta test deployment, not a production launch. ResourceSpace remains the source of truth. Review decisions may queue as portal pending-write evidence unless live writeback is explicitly enabled. Do not upload sensitive, private, unreleased, youth-identifiable, or copyrighted media for this test round.
 
-Before inviting teammates, clear the Go / No-Go checklist in `docs/beta-readiness-command-center.md`. A local dry run can proceed before the hosted URL exists, but external teammate invites should wait for private access, safe seed data, and an assigned feedback triager.
+Before inviting teammates, clear the Go / No-Go checklist in `docs/beta-readiness-command-center.md`. A local dry run can proceed before hosted smoke passes. External teammate invites should use the stable URL only after private access, safe seed data, and feedback triage ownership are confirmed.
 
 ## Roles
 
@@ -23,19 +24,18 @@ Use the account menu role switch for beta QA only. Production access will use tr
 
 ## Role Invite Links
 
-Replace the host with the Vercel beta URL:
-
-- Viewer: `/?role=Viewer&taskMode=1`
-- Contributor: `/upload?role=Contributor&taskMode=1`
-- Reviewer: `/review?role=Reviewer&taskMode=1`
-- DAM Admin: `/admin?role=DAM%20Admin&taskMode=1`
+- Viewer: `[approved-private-host]/?role=Viewer&taskMode=1`
+- Contributor: `[approved-private-host]/upload?role=Contributor&taskMode=1`
+- Reviewer: `[approved-private-host]/review?role=Reviewer&taskMode=1`
+- DAM Admin: `[approved-private-host]/admin?role=DAM%20Admin&taskMode=1`
+- Guide: `[approved-private-host]/guide?role=Viewer&taskMode=1`
 
 Task Mode opens an in-app checklist, quick links, beta limits, and a Report issue button. Reports are stored through `/api/beta-feedback` and visible to DAM Admins in Admin → Feedback Inbox.
 
 ## Test Tasks
 
 1. Viewer: search for `Bible`, open an asset, and decide whether the page clearly says if you can use it.
-2. Viewer: open asset `368` and try an unsafe download path; confirm the app blocks or explains the download gate.
+2. Viewer: open a Needs Review or blocked asset and try an unsafe download path; confirm the app blocks or explains the download gate.
 3. Viewer: open Insights and click common use-case cards. Confirm they route to useful library searches.
 4. Contributor: open Upload and step through the packet using only harmless sample files.
 5. Contributor: inspect Collections and Package Builder. Confirm ResourceSpace references are clear and originals are not copied.
@@ -47,7 +47,7 @@ Task Mode opens an in-app checklist, quick links, beta limits, and a Report issu
 
 ## Known Limits
 
-- Hosted beta URL is not configured yet.
+- Deployment-specific Vercel preview URLs may require Vercel login. Share only an approved private/stable URL for teammate testing.
 - ResourceSpace writeback should remain disabled unless explicitly approved.
 - Vercel env should include `BETA_FEEDBACK_ENABLED=1`, `BETA_TASK_MODE_ENABLED=1`, `RESOURCESPACE_ENABLE_WRITEBACK=0`, and `RESOURCESPACE_WRITEBACK_MODE=queued`.
 - Vercel KV/Blob env comes from Vercel storage integrations; local development falls back to `data/runtime/beta-feedback.json`.
@@ -57,7 +57,7 @@ Task Mode opens an in-app checklist, quick links, beta limits, and a Report issu
 
 ## Feedback Format
 
-Use `docs/teammate-feedback-template.md` for each issue. Include role, route, device, expected behavior, actual behavior, screenshot, and severity.
+Use the in-app Report issue button during Task Mode. Use `docs/teammate-feedback-template.md` only if the app is unavailable. Include role, route, device, expected behavior, actual behavior, screenshot, and severity.
 
 Severity labels:
 

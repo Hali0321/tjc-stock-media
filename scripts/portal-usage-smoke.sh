@@ -47,6 +47,64 @@ expect_any_code() {
   esac
 }
 
+select_json_value() {
+  local label="$1"
+  local script="$2"
+  local output="$TMP_DIR/${label//[^a-zA-Z0-9_-]/_}.json"
+  shift 2
+  local code
+  code="$(http_code "$output" "$@")"
+  if [ "$code" != "200" ]; then
+    echo "FAIL: $label expected 200 got $code" >&2
+    cat "$output" >&2
+    return 1
+  fi
+  local value
+  if ! value="$(node -e "$script" < "$output")"; then
+    cat "$output" >&2
+    return 1
+  fi
+  if [ -z "$value" ]; then
+    echo "FAIL: $label returned an empty value" >&2
+    cat "$output" >&2
+    return 1
+  fi
+  echo "PASS: selected $label=$value" >&2
+  printf '%s\n' "$value"
+}
+
+first_asset_id_script='
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const asset = (Array.isArray(data.assets) ? data.assets : []).find((item) => item && item.id);
+if (!asset) {
+  console.error("FAIL: no asset id found in API response");
+  process.exit(1);
+}
+console.log(asset.id);
+'
+
+blocked_asset_id_script='
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const asset = (Array.isArray(data.assets) ? data.assets : []).find((item) => item && item.id && (!item.reuseDecision || item.reuseDecision.downloadable !== true));
+if (!asset) {
+  console.error("FAIL: no blocked/non-downloadable asset id found in API response");
+  process.exit(1);
+}
+console.log(asset.id);
+'
+
+ASSET_VIEW_ID="$(select_json_value usage-asset-view-id "$first_asset_id_script" \
+  "$BASE_URL/api/assets/search?role=Reviewer&q=Bible&limit=5")"
+
+if ! BLOCKED_DOWNLOAD_ID="$(select_json_value usage-blocked-download-id "$blocked_asset_id_script" \
+  "$BASE_URL/api/assets/search?role=Reviewer&view=needs-review&limit=25")"; then
+  BLOCKED_DOWNLOAD_ID="$(select_json_value usage-blocked-download-fallback-id "$blocked_asset_id_script" \
+    "$BASE_URL/api/assets/search?role=Reviewer&limit=50")"
+fi
+
+REVIEW_ASSET_ID="$(select_json_value usage-review-asset-id "$first_asset_id_script" \
+  "$BASE_URL/api/review?role=Reviewer&queue=pending")"
+
 node <<'NODE'
 const fs = require("fs");
 const path = require("path");
@@ -76,16 +134,16 @@ expect_code 200 usage-search \
   "$BASE_URL/api/assets/search?role=Reviewer&q=$MARKER&limit=1"
 
 expect_code 200 usage-asset-view \
-  "$BASE_URL/api/assets/367?role=Reviewer"
+  "$BASE_URL/api/assets/$ASSET_VIEW_ID?role=Reviewer"
 
 expect_any_code "403 404" usage-download-gate \
   -X POST -H 'Content-Type: application/json' \
   -d "{\"role\":\"Reviewer\",\"termsAccepted\":true,\"usageChannel\":\"Usage smoke\",\"reason\":\"$MARKER\"}" \
-  "$BASE_URL/api/download/368"
+  "$BASE_URL/api/download/$BLOCKED_DOWNLOAD_ID"
 
 expect_any_code "200 202" usage-review-action \
   -X POST -H 'Content-Type: application/json' \
-  -d "{\"role\":\"Reviewer\",\"id\":\"644\",\"action\":\"Request More Info\",\"notes\":\"Usage smoke review action $MARKER\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"Usage Smoke Reviewer\"}" \
+  -d "{\"role\":\"Reviewer\",\"id\":\"$REVIEW_ASSET_ID\",\"action\":\"Request More Info\",\"notes\":\"Usage smoke review action $MARKER\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"Usage Smoke Reviewer\"}" \
   "$BASE_URL/api/review"
 
 expect_code 200 usage-brand-kit \

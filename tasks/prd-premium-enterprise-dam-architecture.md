@@ -189,6 +189,47 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [x] Build passes.
 - [x] Launch readiness and usage smoke pass.
 
+### US-016: Add delivery privacy smoke rehearsal
+**Description:** As a DAM operator, I want one repeatable command that proves Viewer/Contributor payloads and blocked download gates do not leak private storage, source custody, or unfinished S3 delivery details before teammate beta.
+
+**Acceptance Criteria:**
+- [x] Add a `portal-delivery-smoke` command that can run against any local beta server without S3 credentials.
+- [x] Delivery smoke verifies Viewer/Contributor search and asset payloads do not expose S3 paths, private URLs, source paths, master-drive paths, checksums, or original filenames.
+- [x] Delivery smoke verifies blocked Viewer and Reviewer download-gate responses do not expose download, signed, original, or private storage URLs.
+- [x] Admin readiness keeps S3 delivery honest and does not claim production signed delivery.
+- [x] Launch readiness validates the delivery smoke script exists.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Launch readiness and delivery smoke pass.
+
+### US-017: Add private beta rehearsal evidence
+**Description:** As a beta operator, I want one repeatable dry-run command that records Viewer, Reviewer, and DAM Admin proof before teammate invites so the decision uses evidence instead of memory.
+
+**Acceptance Criteria:**
+- [x] Add a `portal-beta-rehearsal` command that runs against a local beta server.
+- [x] Rehearsal proves Viewer search/detail works, unsafe download blocks, and Viewer cannot review.
+- [x] Rehearsal proves Reviewer queue loads, incomplete approval blocks, and complete evidence returns honest pending-write/writeback state.
+- [x] Rehearsal proves DAM Admin readiness opens and S3 readiness stays honest.
+- [x] Rehearsal writes a JSON summary under `.runtime/beta-rehearsals/`.
+- [x] Launch readiness validates the rehearsal script exists.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Launch readiness and beta rehearsal pass.
+
+### US-018: Add hosted private beta smoke
+**Description:** As a beta operator, I want one post-deploy smoke command for the stable Vercel beta URL so route availability, feedback triage, and blocked downloads can be tested after each deployment.
+
+**Acceptance Criteria:**
+- [x] Add a `portal-hosted-smoke` command that defaults to the stable hosted URL and allows `BASE_URL` override.
+- [x] Hosted smoke checks Viewer, Contributor, Reviewer, DAM Admin, and Guide pages.
+- [x] Hosted smoke checks feedback submission, Viewer feedback inbox denial, and DAM Admin feedback inbox visibility.
+- [x] Hosted smoke selects a currently blocked asset before proving Viewer download remains blocked without private URLs.
+- [x] Add teammate invite docs with role links, missions, safety copy, and feedback expectations.
+- [x] Launch readiness validates the hosted smoke script exists.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Launch readiness and hosted smoke pass against the stable Vercel beta URL.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -207,6 +248,10 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-14: Beta readiness must use mechanical browser QA coverage and actor-backed audit evidence before teammate invite recommendations can be treated as rehearsal-ready.
 - FR-15: Production-style trusted-header identity must have a repeatable local smoke path before teammate beta access is treated as identity-ready.
 - FR-16: Usage analytics must have a repeatable local smoke path before Insights can be treated as event-backed rather than sample-only.
+- FR-17: Delivery privacy must have a repeatable local smoke path before teammate beta payloads can be treated as storage-safe.
+- FR-18: Hosted beta launches must have a repeatable post-deploy smoke path and share-ready teammate invite packet before internal testers receive the URL.
+- FR-18: Private beta dry-runs must produce machine-readable evidence for Viewer, Reviewer, and DAM Admin before teammate invite decisions.
+- FR-19: Hosted beta smoke must require an explicit URL to prevent accidental writes against public or production-like targets.
 
 ## Non-Goals
 

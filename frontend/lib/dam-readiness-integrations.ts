@@ -143,8 +143,8 @@ export function buildIntegrationReadiness({
       owner: "Amazon S3",
       state: s3Configured ? "Degraded" : "Not configured",
       detail: s3Configured
-        ? "S3 env is present. Signed delivery and derivative generation still need smoke coverage."
-        : "Approved derivative delivery is local/export-backed now. Configure S3 bucket, region, and access role for production."
+        ? "S3 env is present. Delivery privacy smoke protects browser payloads; signed URL generation still needs staging smoke before production."
+        : "Approved derivative delivery is local/export-backed now. Delivery privacy smoke protects browser payloads; configure S3 bucket, region, and access role for production signed URLs."
     },
     {
       id: "approved-copy-delivery",

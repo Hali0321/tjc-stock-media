@@ -175,12 +175,42 @@ Then run:
 BASE_URL=http://localhost:4878 make portal-usage-smoke
 ```
 
-The smoke records search, asset view, download gate, review action, and Brand Hub usage events, then verifies the SQLite database contains those event types with actor identity and a unique search marker.
+The smoke records search, dynamically selected asset view, dynamically selected blocked download gate, dynamically selected review action, and Brand Hub usage events, then verifies the SQLite database contains those event types with actor identity and a unique search marker.
+
+## Delivery Privacy Smoke
+
+S3 signed delivery is not production-ready until staging credentials, derivative generation, and signed URL expiry behavior are verified. Current beta proof is narrower and intentional: browser-facing Viewer/Contributor payloads and blocked download gates must not expose S3 paths, private bucket URLs, env names, source paths, master-drive paths, checksums, or original filenames.
+
+Rehearse delivery privacy before inviting teammates:
+
+```bash
+cd frontend
+TJC_STOCK_MEDIA_ROOT=/Users/halim4pro/Desktop/MVP/tjc-stock-media npm exec next dev -- --port 4880
+```
+
+Then run:
+
+```bash
+BASE_URL=http://localhost:4880 make portal-delivery-smoke
+```
+
+The smoke checks Viewer/Contributor search and asset payloads, blocked Viewer download, blocked Reviewer download-gate POST, and DAM Admin S3 readiness copy. Admin readiness may report Amazon S3 setup status, but it must not claim production signed delivery until a real staging S3 smoke exists.
+
+## Hosted Beta Smoke
+
+After a Vercel deployment, run:
+
+```bash
+BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke
+```
+
+The smoke checks `/`, `/upload`, `/review`, `/admin`, and `/guide`, verifies feedback POST plus DAM Admin feedback inbox access, proves Viewer feedback inbox access is denied, and selects a current blocked asset before verifying Viewer download still returns `403` without private URLs.
 
 ## Next Integration Work
 
 1. Confirm ResourceSpace API signing and collection endpoints.
 2. Replace export collection matching with live ResourceSpace collection reads.
 3. Verify review status writeback on a staging ResourceSpace field.
-4. Add S3 signed derivative delivery smoke test.
+4. Add real staging S3 signed derivative delivery smoke test.
 5. Wire SSO role claims to existing backend permission decisions.
+6. Connect Vercel KV/Blob or Upstash Redis/Blob storage for durable teammate feedback before larger testing.
