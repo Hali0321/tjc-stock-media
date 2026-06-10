@@ -2218,6 +2218,61 @@ body,
   bottom: 16px;
 }
 
+.ed-admin-module {
+  overflow: hidden;
+}
+
+.ed-admin-stat-grid,
+.ed-admin-owner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.ed-admin-stat-grid article,
+.ed-admin-owner-grid article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid var(--ed-border);
+  border-radius: 10px;
+  background: var(--tjc-sky-50);
+  padding: 13px;
+}
+
+.ed-admin-stat-grid strong {
+  min-width: 0;
+  color: var(--ed-text);
+  font-size: 22px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.ed-admin-stat-grid span,
+.ed-admin-owner-grid span {
+  color: var(--tjc-blue-800);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ed-admin-stat-grid small,
+.ed-admin-owner-grid p {
+  margin: 0;
+  color: var(--ed-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ed-admin-owner-grid article svg {
+  color: var(--ed-accent);
+}
+
+.ed-admin-owner-grid strong {
+  color: var(--ed-text);
+}
+
 .ed-admin-rail {
   display: grid;
   align-content: start;

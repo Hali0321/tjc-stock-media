@@ -27,18 +27,18 @@ export type CustodyMapRow = {
 
 export const adminNavItems: AdminNavItem[] = [
   { id: "overview", label: "Overview" },
-  { id: "users-roles", label: "Users & Roles" },
-  { id: "roles-permissions", label: "Roles & Permissions" },
-  { id: "teams", label: "Teams" },
+  { id: "users-roles", label: "Users & Access" },
+  { id: "roles-permissions", label: "Permission Matrix" },
+  { id: "teams", label: "Teams & Owners" },
   { id: "taxonomy", label: "Taxonomy" },
-  { id: "metadata-schemas", label: "Metadata Schemas" },
-  { id: "rights-policies", label: "Rights & Policies" },
-  { id: "review-workflows", label: "Review Workflows" },
-  { id: "storage-retention", label: "Storage & Retention" },
-  { id: "ai-moderation", label: "AI Moderation" },
+  { id: "metadata-schemas", label: "Metadata Fields" },
+  { id: "rights-policies", label: "Rights Policies" },
+  { id: "review-workflows", label: "Review Sync" },
+  { id: "storage-retention", label: "Storage" },
+  { id: "ai-moderation", label: "AI Assist" },
   { id: "integrations", label: "Integrations" },
   { id: "audit-logs", label: "Audit Logs" },
-  { id: "system-settings", label: "System Settings" }
+  { id: "system-settings", label: "System Status" }
 ];
 
 export const integrationReadinessColumns = ["Module", "Owner", "Status", "Detail"];

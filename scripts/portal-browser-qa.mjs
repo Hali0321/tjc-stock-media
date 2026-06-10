@@ -610,7 +610,7 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("DAM Admin", 390, 900);
   await gotoAndSettle(page, `${base}/admin`);
-  for (const text of ["DAM Control Center", "Roles & Permissions", "Policy Summary", "System Health"]) {
+  for (const text of ["DAM Control Center", "Permission Matrix", "Policy Summary", "System Health"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`admin control center: missing ${text}`);
   }
   await closeContext(context);
