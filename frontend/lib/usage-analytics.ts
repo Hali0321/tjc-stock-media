@@ -33,6 +33,8 @@ type DailyUsageMetricRow = {
   value: number;
 };
 
+const usageEventTypes: UsageEventType[] = ["search", "asset_view", "download_gate", "review_action", "brand_kit_view", "package_action"];
+
 let db: DatabaseSync | null = null;
 
 function dbFile() {
@@ -63,6 +65,44 @@ function database() {
   return db;
 }
 
+function safeText(value: unknown, maxLength: number) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function safeDisplayText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  return text.includes("..") || /[\\/]/.test(text) ? "" : text;
+}
+
+function safeRoute(value: unknown) {
+  const text = safeText(value, 240);
+  if (!text.startsWith("/") || text.includes("..") || /[\\]/.test(text)) return "";
+  return text;
+}
+
+function safeRole(value: unknown): DemoRole {
+  return value === "Contributor" || value === "Reviewer" || value === "DAM Admin" ? value : "Viewer";
+}
+
+function safeType(value: unknown): UsageEventType {
+  return usageEventTypes.includes(value as UsageEventType) ? value as UsageEventType : "search";
+}
+
+function safeMetadata(value: UsageEventInput["metadata"]) {
+  if (!value) return null;
+  const entries = Object.entries(value)
+    .slice(0, 24)
+    .map(([key, item]) => {
+      const safeKey = safeDisplayText(key, 80);
+      if (!safeKey || item === undefined) return null;
+      if (typeof item === "number") return [safeKey, Number.isFinite(item) ? item : 0] as const;
+      if (typeof item === "boolean" || item === null) return [safeKey, item] as const;
+      return [safeKey, safeDisplayText(item, 240)] as const;
+    })
+    .filter((entry): entry is readonly [string, string | number | boolean | null] => Boolean(entry));
+  return entries.length ? JSON.stringify(Object.fromEntries(entries)) : null;
+}
+
 export function recordUsageEvent(event: UsageEventInput) {
   if (!usageAnalyticsEnabled()) return { recorded: false, reason: "usage-analytics-disabled" };
   try {
@@ -72,14 +112,14 @@ export function recordUsageEvent(event: UsageEventInput) {
     `);
     stmt.run(
       new Date().toISOString(),
-      event.type,
-      event.role,
-      event.actor || event.role,
-      event.assetId || null,
-      event.resourceSpaceId || null,
-      event.route || null,
-      event.query || null,
-      event.metadata ? JSON.stringify(event.metadata) : null
+      safeType(event.type),
+      safeRole(event.role),
+      safeDisplayText(event.actor || event.role, 160) || safeRole(event.role),
+      event.assetId ? safeDisplayText(event.assetId, 120) || null : null,
+      event.resourceSpaceId ? safeDisplayText(event.resourceSpaceId, 120) || null : null,
+      event.route ? safeRoute(event.route) || null : null,
+      event.query ? safeDisplayText(event.query, 200) || null : null,
+      safeMetadata(event.metadata)
     );
     return { recorded: true };
   } catch (error) {
@@ -102,7 +142,8 @@ function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 
       .all(type, limit) as Array<{ label?: string; value?: number }>;
     return rows
       .filter((row): row is { label: string; value: number } => Boolean(row.label))
-      .map((row) => ({ label: row.label, value: Number(row.value || 0) }));
+      .map((row) => ({ label: safeDisplayText(row.label, 200), value: Math.max(0, Number(row.value || 0)) }))
+      .filter((row) => Boolean(row.label));
   } catch {
     return [];
   }
@@ -122,7 +163,7 @@ function dailyEventRows(limit = 14): DailyUsageMetricRow[] {
       .all(limit) as Array<{ label?: string; value?: number }>;
     return rows
       .filter((row): row is { label: string; value: number } => Boolean(row.label))
-      .map((row) => ({ date: row.label, value: Number(row.value || 0) }))
+      .map((row) => ({ date: /^\d{4}-\d{2}-\d{2}$/.test(row.label) ? row.label : "1970-01-01", value: Math.max(0, Number(row.value || 0)) }))
       .reverse();
   } catch {
     return [];

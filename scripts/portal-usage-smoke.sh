@@ -127,6 +127,34 @@ db.exec(`
     metadata_json TEXT
   );
 `);
+db.prepare(`
+  INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).run(
+  new Date().toISOString(),
+  "search",
+  "Root",
+  "",
+  "../private-asset",
+  "../private-resource",
+  "javascript:alert(1)",
+  "../private-query",
+  JSON.stringify({ "../private": "../private" })
+);
+db.prepare(`
+  INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).run(
+  new Date().toISOString(),
+  "asset_view",
+  "Root",
+  "",
+  "../private-asset",
+  "../private-resource",
+  "javascript:alert(1)",
+  "ignored",
+  JSON.stringify({ "../private": "../private" })
+);
 db.close();
 NODE
 
@@ -177,6 +205,7 @@ if (!search) {
 }
 const badActor = rows
   .filter((row) => requiredTypes.includes(row.type))
+  .filter((row) => row.role !== "Root")
   .find((row) => typeof row.actor !== "string" || !row.actor.length);
 if (badActor) {
   console.error(`FAIL: usage analytics event missing actor: ${JSON.stringify(badActor)}`);
@@ -184,5 +213,35 @@ if (badActor) {
 }
 console.log(`PASS: usage analytics recorded ${requiredTypes.join(", ")} at ${file}`);
 NODE
+
+expect_json_status() {
+  local expected="$1"
+  local label="$2"
+  local script="$3"
+  local output="$TMP_DIR/${label//[^a-zA-Z0-9_-]/_}.json"
+  shift 3
+  local code
+  code="$(http_code "$output" "$@")"
+  if [ "$code" != "$expected" ]; then
+    echo "FAIL: $label expected $expected got $code"
+    cat "$output"
+    exit 1
+  fi
+  node -e "$script" < "$output"
+  echo "PASS: $label"
+}
+
+expect_json_status 200 usage-analytics-payload-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data.usageAnalytics || {});
+if (/private|Root|javascript:/.test(text)) {
+  console.error(`FAIL: unsafe usage analytics labels leaked to Reviewer payload: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+if (!Array.isArray(data.usageAnalytics?.topSearches) || !Array.isArray(data.usageAnalytics?.topAssets) || !Array.isArray(data.usageAnalytics?.dailyEvents)) {
+  console.error(`FAIL: usage analytics payload missing metric arrays: ${JSON.stringify(data.usageAnalytics).slice(0, 500)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Reviewer&q=$MARKER&limit=1"
 
 echo "Portal usage analytics smoke complete."
