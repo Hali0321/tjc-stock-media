@@ -15,3 +15,9 @@ export function normalizeTextField(value: unknown, fallback: string, max = 100) 
   const text = typeof value === "string" ? value.trim() : "";
   return (text || fallback).slice(0, max);
 }
+
+export function normalizeDisplayTextField(value: unknown, fallback: string, max = 100) {
+  const text = normalizeTextField(value, fallback, max).replace(/\s+/g, " ").trim();
+  if (text.includes("..") || /[\\/]/.test(text)) return fallback.slice(0, max);
+  return text;
+}

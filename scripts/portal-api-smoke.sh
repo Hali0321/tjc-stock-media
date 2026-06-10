@@ -434,6 +434,17 @@ if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|public g
   -d '{"role":"Contributor","assetIds":["368"],"title":"Approved collection","audience":"Internal ministry"}' \
   "$BASE_URL/api/collections"
 
+expect_json collection-display-fields-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.title !== "Untitled ministry collection" || data.owner !== "Ministry media" || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  console.error(`FAIL: collection display fields were not sanitized: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Contributor","assetIds":["368"],"title":"../private source path","owner":"../private master drive","audience":"Internal ministry"}' \
+  "$BASE_URL/api/collections"
+
 expect_json public-portal-collection-gate '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.ok !== false || data.sharingBlocked !== true || !data.reuseReadiness?.blockedReferences?.includes("368")) {
