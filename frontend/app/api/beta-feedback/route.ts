@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackEnabled } from "@/lib/env";
-import { createBetaFeedback, listBetaFeedback, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
+import { createBetaFeedback, listBetaFeedback, normalizeFeedbackRoute, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
 import { normalizeRole, roles } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity } from "@/lib/types";
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   }
   const identity = requestIdentity(request, rawRole);
   const role = identity.role;
-  const route = normalizeFeedbackText(fields.route, 240);
+  const route = normalizeFeedbackRoute(fields.route);
   const severity = normalizeFeedbackText(fields.severity, 20);
   const expected = normalizeFeedbackText(fields.expected, 1200);
   const actual = normalizeFeedbackText(fields.actual, 1200);

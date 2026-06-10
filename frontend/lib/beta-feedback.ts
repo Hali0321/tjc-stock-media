@@ -59,7 +59,9 @@ function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
 
 function safeRoute(value: unknown) {
   const route = safeText(value, 240);
-  return route.startsWith("/") ? route : "/";
+  if (!route.startsWith("/") || route.includes("..") || /[\\]/.test(route)) return "/";
+  if (/source path|master drive|checksum/i.test(route)) return "/";
+  return route;
 }
 
 function safeUrl(value: unknown) {
@@ -301,6 +303,10 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
 
 export function normalizeFeedbackText(value: unknown, maxLength = 1200) {
   return safeText(value, maxLength);
+}
+
+export function normalizeFeedbackRoute(value: unknown) {
+  return safeRoute(value);
 }
 
 export function normalizeFeedbackUrl(value: unknown) {
