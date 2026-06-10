@@ -5,6 +5,10 @@ BASE_URL="${BASE_URL:-http://localhost:4868}"
 MARKER="writeback-guard-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
+local_runtime_probe=0
+case "$BASE_URL" in
+  http://localhost:*|http://127.0.0.1:*) local_runtime_probe=1 ;;
+esac
 
 http_code() {
   local output="$1"
@@ -123,6 +127,49 @@ if (!data.auditRecord.actor || data.auditRecord.reviewerRole !== "Reviewer") {
   -d "{\"role\":\"Reviewer\",\"id\":\"$REVIEW_ASSET_ID\",\"action\":\"Request More Info\",\"notes\":\"$MARKER complete evidence should queue without live ResourceSpace writeback.\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"Writeback Guard Smoke\"}" \
   "$BASE_URL/api/review"
 
+if [ "$local_runtime_probe" = "1" ]; then
+  MARKER="$MARKER" node <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const now = new Date().toISOString();
+const pendingDir = path.join(process.cwd(), ".runtime", "pending-review-writes");
+fs.mkdirSync(pendingDir, { recursive: true });
+fs.writeFileSync(path.join(pendingDir, `unsafe-${process.env.MARKER}.json`), `${JSON.stringify({
+  id: `unsafe-${process.env.MARKER}`,
+  resourceId: "../private",
+  oldStatus: "../private old",
+  requestedStatus: "../private requested",
+  reviewerRole: "Root",
+  reviewerName: "../private reviewer",
+  createdAt: "not-a-date",
+  updatedAt: now,
+  note: "../private note",
+  checklist: { sourceConfirmed: "yes" },
+  blockers: ["../private"],
+  syncState: "synced_as_admin",
+  retryCount: -7,
+  lastError: "../private pending error"
+}, null, 2)}\n`);
+
+const auditDir = path.join(process.cwd(), ".runtime", "audit-log");
+fs.mkdirSync(auditDir, { recursive: true });
+const month = now.slice(0, 7);
+fs.appendFileSync(path.join(auditDir, `${month}.jsonl`), `${JSON.stringify({
+  id: `unsafe-${process.env.MARKER}`,
+  type: "root_shell",
+  createdAt: now,
+  role: "Root",
+  actor: "",
+  assetId: "../private",
+  resourceSpaceId: "../private",
+  packageId: "../private",
+  status: "rooted",
+  summary: "../private audit summary",
+  details: { "../private": "../private detail", unsafeNumber: Number.NaN }
+})}\n`);
+NODE
+fi
+
 expect_json_status 200 writeback-pending-queue-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const item = (data.integrationReadiness || []).find((entry) => entry.id === "pending-review-writes");
@@ -132,6 +179,17 @@ if (!item) {
 }
 if (!/pending review write/i.test(item.label || "") || !/pending writes?/i.test(item.detail || "")) {
   console.error(`FAIL: pending write readiness row is weak: ${JSON.stringify(item)}`);
+  process.exit(1);
+}
+const text = JSON.stringify(data);
+if (/synced_as_admin|root_shell|Root/.test(text)) {
+  console.error(`FAIL: unsafe persisted audit/pending fields leaked into readiness: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+const recent = data.auditLog?.recent || [];
+const normalizedAudit = recent.find((entry) => entry.id && entry.id.includes("unsafe-writeback-guard"));
+if (normalizedAudit && (normalizedAudit.role !== "Viewer" || normalizedAudit.status !== "preview" || normalizedAudit.type !== "admin_denied" || !normalizedAudit.actor)) {
+  console.error(`FAIL: unsafe audit line was not normalized: ${JSON.stringify(normalizedAudit)}`);
   process.exit(1);
 }
 ' "$BASE_URL/api/admin/readiness?role=DAM%20Admin"

@@ -54,10 +54,106 @@ function auditFile(createdAt = new Date()) {
 
 function readJsonLine(line: string): AuditEventRecord | null {
   try {
-    return JSON.parse(line) as AuditEventRecord;
+    return normalizeAuditEvent(JSON.parse(line));
   } catch {
     return null;
   }
+}
+
+function safeText(value: unknown, maxLength: number) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function safeDisplayText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  return text.includes("..") || /[\\/]/.test(text) ? "" : text;
+}
+
+function safeId(value: unknown) {
+  return safeText(value, 120).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+}
+
+function safeIso(value: unknown) {
+  const text = safeText(value, 40);
+  return Number.isNaN(Date.parse(text)) ? "" : text;
+}
+
+function safeRole(value: unknown): DemoRole {
+  return value === "Contributor" || value === "Reviewer" || value === "DAM Admin" ? value : "Viewer";
+}
+
+function safeStatus(value: unknown): AuditEventRecord["status"] {
+  return value === "allowed" || value === "denied" || value === "blocked" || value === "queued" || value === "preview"
+    ? value
+    : "preview";
+}
+
+function safeType(value: unknown): AuditEventType {
+  const allowed: AuditEventType[] = [
+    "admin_readiness_denied",
+    "admin_readiness_viewed",
+    "download_gate_checked",
+    "approved_download",
+    "denied_download",
+    "upload_denied",
+    "upload_submitted",
+    "review_denied",
+    "review_evidence_incomplete",
+    "review_pending_write_queued",
+    "collection_draft_denied",
+    "collection_draft_previewed",
+    "saved_search_denied",
+    "saved_search_saved",
+    "saved_search_listed",
+    "package_draft_denied",
+    "package_draft_saved",
+    "package_draft_listed",
+    "batch_action_denied",
+    "batch_action_previewed",
+    "admin_denied",
+    "beta_feedback_submitted",
+    "beta_feedback_triaged"
+  ];
+  return allowed.includes(value as AuditEventType) ? value as AuditEventType : "admin_denied";
+}
+
+function safeDetails(value: unknown): AuditEventRecord["details"] {
+  if (!value || Array.isArray(value) || typeof value !== "object") return undefined;
+  const entries: Array<[string, string | number | boolean | string[] | null]> = [];
+  for (const [key, item] of Object.entries(value as Record<string, unknown>).slice(0, 24)) {
+    const safeKey = safeId(key).slice(0, 80);
+    if (!safeKey) continue;
+    if (Array.isArray(item)) {
+      entries.push([safeKey, item.map((entry) => safeDisplayText(entry, 120)).filter(Boolean).slice(0, 24)]);
+    } else if (typeof item === "number") {
+      entries.push([safeKey, Number.isFinite(item) ? item : 0]);
+    } else if (typeof item === "boolean" || item === null) {
+      entries.push([safeKey, item]);
+    } else {
+      entries.push([safeKey, safeDisplayText(item, 240)]);
+    }
+  }
+  return Object.fromEntries(entries);
+}
+
+function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
+  const raw = (input || {}) as Partial<AuditEventRecord>;
+  const id = safeId(raw.id);
+  if (!id) return null;
+  const createdAt = safeIso(raw.createdAt) || new Date(0).toISOString();
+  return {
+    id,
+    type: safeType(raw.type),
+    createdAt,
+    role: safeRole(raw.role),
+    actor: safeText(raw.actor, 160) || "local-beta:unknown",
+    assetId: raw.assetId === undefined ? undefined : safeId(raw.assetId),
+    resourceSpaceId: raw.resourceSpaceId === undefined ? undefined : safeId(raw.resourceSpaceId),
+    packageId: raw.packageId === undefined ? undefined : safeId(raw.packageId),
+    status: safeStatus(raw.status),
+    summary: safeDisplayText(raw.summary, 240) || "Audit event",
+    details: safeDetails(raw.details)
+  };
 }
 
 export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string }) {

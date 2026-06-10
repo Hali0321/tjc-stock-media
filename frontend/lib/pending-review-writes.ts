@@ -18,9 +18,78 @@ function safeFilePart(value: string) {
   return value.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 80) || "review-write";
 }
 
+function safeText(value: unknown, maxLength: number) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function safeDisplayText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  return text.includes("..") || /[\\/]/.test(text) ? "" : text;
+}
+
+function safeIso(value: unknown) {
+  const text = safeText(value, 40);
+  return Number.isNaN(Date.parse(text)) ? "" : text;
+}
+
+function safeRole(value: unknown): ReviewWriteRecord["reviewerRole"] {
+  return value === "DAM Admin" ? "DAM Admin" : "Reviewer";
+}
+
+function safeSyncState(value: unknown): ReviewWriteRecord["syncState"] {
+  return value === "ready_to_sync" || value === "sync_failed" || value === "synced_to_resourcespace" || value === "cancelled" || value === "superseded"
+    ? value
+    : "queued";
+}
+
+function safeCount(value: unknown) {
+  return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
+}
+
+function safeChecklist(value: unknown): ReviewEvidenceChecklist {
+  const raw = (value || {}) as Partial<ReviewEvidenceChecklist>;
+  return {
+    sourceConfirmed: raw.sourceConfirmed === true,
+    rightsConfirmed: raw.rightsConfirmed === true,
+    attributionConfirmed: raw.attributionConfirmed === true,
+    peopleVisibilityConfirmed: raw.peopleVisibilityConfirmed === true,
+    childrenYouthChecked: raw.childrenYouthChecked === true,
+    usageScopeSelected: raw.usageScopeSelected === true,
+    derivativeAvailable: raw.derivativeAvailable === true,
+    sensitiveContextChecked: raw.sensitiveContextChecked === true,
+    creditRequirementChecked: raw.creditRequirementChecked === true,
+    expirationRereviewSet: raw.expirationRereviewSet === true,
+    proofLinkAttached: raw.proofLinkAttached === true
+  };
+}
+
+function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
+  const raw = (input || {}) as Partial<ReviewWriteRecord>;
+  const id = safeFilePart(safeText(raw.id, 120));
+  const resourceId = safeFilePart(safeText(raw.resourceId, 120));
+  if (!id || !resourceId) return null;
+  const updatedAt = safeIso(raw.updatedAt) || safeIso(raw.createdAt) || new Date(0).toISOString();
+  return {
+    id,
+    resourceId,
+    oldStatus: safeDisplayText(raw.oldStatus, 120) || "Unknown",
+    requestedStatus: safeDisplayText(raw.requestedStatus, 120) || "Needs Review",
+    reviewerRole: safeRole(raw.reviewerRole),
+    reviewerName: raw.reviewerName === undefined ? undefined : safeDisplayText(raw.reviewerName, 120),
+    createdAt: safeIso(raw.createdAt) || updatedAt,
+    updatedAt,
+    note: safeDisplayText(raw.note, 1200),
+    checklist: safeChecklist(raw.checklist),
+    blockers: Array.isArray(raw.blockers) ? raw.blockers.map((item) => safeDisplayText(item, 120)).filter(Boolean).slice(0, 24) : [],
+    syncState: safeSyncState(raw.syncState),
+    retryCount: safeCount(raw.retryCount),
+    lastError: raw.lastError === undefined ? undefined : safeDisplayText(raw.lastError, 240)
+  };
+}
+
 function readRecord(filePath: string): ReviewWriteRecord | null {
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8")) as ReviewWriteRecord;
+    return normalizePendingReviewWrite(JSON.parse(fs.readFileSync(filePath, "utf8")));
   } catch {
     return null;
   }
