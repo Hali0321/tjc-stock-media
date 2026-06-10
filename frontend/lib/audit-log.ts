@@ -158,12 +158,13 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
 
 export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string }) {
   const createdAt = new Date();
-  const record: AuditEventRecord = {
+  const draft: AuditEventRecord = {
     id: `${createdAt.toISOString().replace(/[:.]/g, "-")}-${crypto.randomUUID().slice(0, 8)}`,
     createdAt: createdAt.toISOString(),
     actor: event.actor || event.role,
     ...event
   };
+  const record = normalizeAuditEvent(draft) || draft;
   try {
     fs.mkdirSync(auditDir(), { recursive: true });
     fs.appendFileSync(auditFile(createdAt), `${JSON.stringify(record)}\n`, "utf8");

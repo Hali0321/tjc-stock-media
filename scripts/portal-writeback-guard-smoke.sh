@@ -3,6 +3,7 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:4868}"
 MARKER="writeback-guard-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+SMOKE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 local_runtime_probe=0
@@ -193,5 +194,37 @@ if (normalizedAudit && (normalizedAudit.role !== "Viewer" || normalizedAudit.sta
   process.exit(1);
 }
 ' "$BASE_URL/api/admin/readiness?role=DAM%20Admin"
+
+if [ "$local_runtime_probe" = "1" ]; then
+  SMOKE_STARTED_AT="$SMOKE_STARTED_AT" node <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const auditDir = path.join(process.cwd(), ".runtime", "audit-log");
+const files = fs.existsSync(auditDir)
+  ? fs.readdirSync(auditDir).filter((file) => file.endsWith(".jsonl")).sort().reverse()
+  : [];
+const lines = files.flatMap((file) => fs.readFileSync(path.join(auditDir, file), "utf8").split("\n").filter(Boolean));
+const startedAt = Date.parse(process.env.SMOKE_STARTED_AT || "");
+const smokeLines = lines.filter((line) => {
+  if (/"id":"unsafe-/.test(line)) return false;
+  try {
+    const event = JSON.parse(line);
+    return Date.parse(event.createdAt || "") >= startedAt;
+  } catch {
+    return false;
+  }
+});
+if (!smokeLines.length) {
+  console.error("FAIL: no persisted audit lines found for writeback guard smoke marker");
+  process.exit(1);
+}
+const unsafe = smokeLines.find((line) => /\.\.\/private|synced_as_admin|root_shell|Root/.test(line));
+if (unsafe) {
+  console.error(`FAIL: appendAuditEvent persisted unsafe audit material: ${unsafe.slice(0, 900)}`);
+  process.exit(1);
+}
+console.log("PASS: persisted audit lines sanitized");
+NODE
+fi
 
 echo "Portal ResourceSpace writeback guard smoke complete."
