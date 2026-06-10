@@ -104,6 +104,10 @@ Owns Admin readiness rows for ResourceSpace export/API, preview, writeback, pend
 
 Owns ResourceSpace field coverage and vocabulary drift summaries for Admin readiness. Field-map and taxonomy terminology stay local to this module instead of leaking through score assembly.
 
+### `AdminControlRegistry`
+
+Owns control-center navigation, integration table labels, policy summary rows, readiness state normalization, and system-health rail rows. Admin pages render this registry so governance language stays consistent with the ResourceSpace/Drive/S3 custody model.
+
 ### `EnterpriseDisplay`
 
 Owns small but repeated display rules for enterprise DAM pages: asset title fallback, ResourceSpace/reference labels, source nouns, metadata quality labels, dates, file type labels, and byte formatting. Page modules render these decisions instead of redefining them inline.
