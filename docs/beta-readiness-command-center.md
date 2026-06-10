@@ -142,6 +142,8 @@ Manual Reviewer dry run:
 
 Preferred path: use the in-app Report issue button during Task Mode. DAM Admin reviews reports in Admin → Feedback Inbox, sets status, and exports JSON for agents. Use `docs/teammate-feedback-template.md` only when the app is unavailable.
 
+Agent handoff export: DAM Admin uses Feedback Inbox → Export JSON or `/api/beta-feedback/export?role=DAM%20Admin&status=agent-ready`. The export packet includes schema, filters, counts, and matching records so agents can distinguish all feedback from agent-ready work.
+
 | Severity | Action |
 |---|---|
 | P0 | Stop testing. Fix before inviting more teammates. |

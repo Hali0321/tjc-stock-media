@@ -138,6 +138,36 @@ if (!record || record.status !== "agent-ready" || record.severity !== "high") {
 }
 ' "$BASE_URL/api/beta-feedback?role=DAM%20Admin"
 
+expect_json_status 403 feedback-viewer-export-denied '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!/DAM Admin/i.test(data.error || "")) {
+  console.error(`FAIL: viewer export denial copy invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/beta-feedback/export?role=Viewer"
+
+FEEDBACK_ID="$feedback_id" expect_json_status 200 feedback-admin-export-agent-ready '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const id = process.env.FEEDBACK_ID;
+if (data.schema !== "tjc-beta-feedback-export.v1" || !data.exportedAt || !data.counts || !Array.isArray(data.records)) {
+  console.error(`FAIL: feedback export packet shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+if (data.filters?.status !== "agent-ready" || data.filters?.severity !== "high") {
+  console.error(`FAIL: feedback export filters missing: ${JSON.stringify(data.filters)}`);
+  process.exit(1);
+}
+const record = data.records.find((item) => item.id === id);
+if (!record || record.status !== "agent-ready" || record.severity !== "high" || !record.actor) {
+  console.error(`FAIL: agent-ready export missing patched record: ${JSON.stringify({ id, counts: data.counts, record }).slice(0, 500)}`);
+  process.exit(1);
+}
+if (data.counts.exportedRecords < 1 || data.counts.agentReady < 1 || data.counts.high < 1) {
+  console.error(`FAIL: feedback export counts weak: ${JSON.stringify(data.counts)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/beta-feedback/export?role=DAM%20Admin&status=agent-ready&severity=high&feedbackRole=Viewer"
+
 expect_json_status 200 feedback-readiness-reports-storage '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const item = (data.integrationReadiness || []).find((entry) => entry.id === "beta-feedback-storage");

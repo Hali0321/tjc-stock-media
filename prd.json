@@ -364,6 +364,26 @@
       "priority": 21,
       "passes": true,
       "notes": "Added beta-role-switch-copy and beta-stop-test-policy readiness facts, launch-readiness grep gates, clearer Task Mode/account copy, and teammate docs updates. Verified by typecheck, frontend-check, launch-readiness, targeted Admin readiness fact check, JSON parse, and diff check."
+    },
+    {
+      "id": "US-022",
+      "title": "Add beta feedback export packet",
+      "description": "As a DAM Admin, I want a server-generated feedback export packet with filters and counts so agent-ready teammate feedback can be handed to implementation agents without relying on browser-local state.",
+      "acceptanceCriteria": [
+        "Add a DAM Admin-only beta feedback export API.",
+        "Export packet includes schema, exportedAt, filters, counts, and records.",
+        "Export supports status, severity, feedback role, and route filters.",
+        "Viewer cannot export feedback.",
+        "Admin Feedback Inbox Export JSON uses the server export packet.",
+        "Feedback smoke verifies Viewer export denial and agent-ready export contents.",
+        "Launch readiness validates the export route exists.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Feedback smoke passes against a local server."
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": "Added /api/beta-feedback/export with DAM Admin gate, filter/count packet builder, Admin export wiring, launch-readiness file check, docs, and feedback smoke coverage for Viewer denial plus agent-ready export contents. Verified by typecheck, frontend-check, launch-readiness, API smoke, feedback smoke, JSON parse, and diff check."
     }
   ]
 }

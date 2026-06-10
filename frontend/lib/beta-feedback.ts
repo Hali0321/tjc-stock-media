@@ -14,6 +14,12 @@ export const betaFeedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "ag
 
 type FeedbackPatch = Partial<Pick<BetaFeedbackRecord, "severity" | "status" | "notes">>;
 type FeedbackGlobal = typeof globalThis & { __tjcStockMediaBetaFeedback?: BetaFeedbackRecord[] };
+export type BetaFeedbackExportFilters = {
+  status?: BetaFeedbackStatus | "all";
+  severity?: BetaFeedbackSeverity | "all";
+  role?: DemoRole | "all";
+  route?: string;
+};
 
 function memoryFeedback() {
   const store = globalThis as FeedbackGlobal;
@@ -170,6 +176,40 @@ export async function listBetaFeedback() {
   const kvRecords = await readKvFeedback().catch(() => null);
   if (kvRecords) return kvRecords;
   return newestFirst(await readLocalFeedback());
+}
+
+export function filterBetaFeedback(records: BetaFeedbackRecord[], filters: BetaFeedbackExportFilters) {
+  const route = safeText(filters.route || "all", 240);
+  return newestFirst(records).filter((record) => (
+    (!filters.status || filters.status === "all" || record.status === filters.status)
+    && (!filters.severity || filters.severity === "all" || record.severity === filters.severity)
+    && (!filters.role || filters.role === "all" || record.role === filters.role)
+    && (!route || route === "all" || record.route.startsWith(route))
+  ));
+}
+
+export function buildBetaFeedbackExport(records: BetaFeedbackRecord[], filters: BetaFeedbackExportFilters) {
+  const exportedAt = new Date().toISOString();
+  const filtered = filterBetaFeedback(records, filters);
+  return {
+    schema: "tjc-beta-feedback-export.v1",
+    exportedAt,
+    filters: {
+      status: filters.status || "all",
+      severity: filters.severity || "all",
+      role: filters.role || "all",
+      route: filters.route || "all"
+    },
+    counts: {
+      totalRecords: records.length,
+      exportedRecords: filtered.length,
+      critical: filtered.filter((record) => record.severity === "critical").length,
+      high: filtered.filter((record) => record.severity === "high").length,
+      agentReady: filtered.filter((record) => record.status === "agent-ready").length,
+      open: filtered.filter((record) => !["fixed", "wont-fix"].includes(record.status)).length
+    },
+    records: filtered
+  };
 }
 
 export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {

@@ -93,8 +93,21 @@ function FeedbackInboxModule() {
     setFeedback((current) => current.map((item) => (item.id === id ? payload.feedback : item)));
   }
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: "application/json" });
+  async function exportJson() {
+    const params = new URLSearchParams({
+      role: "DAM Admin",
+      status: statusFilter,
+      severity: severityFilter,
+      feedbackRole: roleFilter,
+      route: routeFilter
+    });
+    const response = await fetch(`/api/beta-feedback/export?${params.toString()}`, { headers: { Accept: "application/json" } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload) {
+      setMessage(payload?.error || "Feedback export failed.");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const href = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = href;
@@ -109,7 +122,7 @@ function FeedbackInboxModule() {
         <div><h3>Feedback Inbox</h3><p>Teammate reports from internal beta task mode. Use agent-ready for implementation backlog.</p></div>
         <div className="beta-feedback-actions">
           <button className="ed-link-button" type="button" onClick={() => void loadFeedback()}><RefreshCw size={14} />Refresh</button>
-          <button className="ed-link-button" type="button" onClick={exportJson}><Download size={14} />Export JSON</button>
+          <button className="ed-link-button" type="button" onClick={() => void exportJson()}><Download size={14} />Export JSON</button>
         </div>
       </header>
       <div className="ed-admin-stat-grid">
