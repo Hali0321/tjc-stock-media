@@ -61,6 +61,18 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit"
 
+unsafe_link_feedback_id="$(select_json_status 200 feedback-submit-unsafe-screenshot-link '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.ok !== true || !data.id || !data.createdAt) {
+  console.error(`FAIL: unsafe screenshot feedback submit shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+console.log(data.id);
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"Feedback unsafe screenshot link smoke\",\"severity\":\"low\",\"expected\":\"Unsafe screenshot links should be dropped before persistence.\",\"actual\":\"$MARKER unsafe screenshot link submitted.\",\"screenshotLink\":\"javascript:alert(1)\"}" \
+  "$BASE_URL/api/beta-feedback")"
+echo "PASS: feedback-submit-unsafe-screenshot-link"
+
 stale_feedback_id="stale-feedback-$MARKER"
 if [ "$local_runtime_probe" = "1" ]; then
   STALE_FEEDBACK_ID="$stale_feedback_id" node <<'NODE'
@@ -130,9 +142,10 @@ if [ "$local_runtime_probe" = "1" ]; then
   stale_feedback_probe_id="$stale_feedback_id"
 fi
 
-FEEDBACK_ID="$feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
+FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.FEEDBACK_ID;
+const unsafeLinkId = process.env.UNSAFE_LINK_FEEDBACK_ID;
 const staleId = process.env.STALE_FEEDBACK_ID;
 if (!Array.isArray(data.feedback) || typeof data.count !== "number") {
   console.error(`FAIL: feedback inbox shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
@@ -149,6 +162,11 @@ if (!record || record.status !== "new" || !["local-json", "vercel-kv"].includes(
 }
 if (!record.actor) {
   console.error(`FAIL: submitted feedback missing actor identity: ${JSON.stringify(record).slice(0, 500)}`);
+  process.exit(1);
+}
+const unsafeLinkRecord = data.feedback.find((item) => item.id === unsafeLinkId);
+if (!unsafeLinkRecord || unsafeLinkRecord.attachmentUrl) {
+  console.error(`FAIL: unsafe screenshot link persisted: ${JSON.stringify({ unsafeLinkId, unsafeLinkRecord }).slice(0, 500)}`);
   process.exit(1);
 }
 if (staleId) {

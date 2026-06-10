@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackEnabled } from "@/lib/env";
-import { createBetaFeedback, listBetaFeedback, normalizeFeedbackText, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
+import { createBetaFeedback, listBetaFeedback, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
 import { normalizeRole, roles } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity } from "@/lib/types";
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     browser: normalizeFeedbackText(fields.browser, 280) || request.headers.get("user-agent") || undefined,
     device: normalizeFeedbackText(fields.device, 180) || undefined,
     viewport: normalizeFeedbackText(fields.viewport, 60) || undefined,
-    attachmentUrl: attachmentUrl || normalizeFeedbackText(fields.screenshotLink, 500) || undefined,
+    attachmentUrl: attachmentUrl || normalizeFeedbackUrl(fields.screenshotLink) || undefined,
     actor: identity.id
   });
 

@@ -302,3 +302,7 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
 export function normalizeFeedbackText(value: unknown, maxLength = 1200) {
   return safeText(value, maxLength);
 }
+
+export function normalizeFeedbackUrl(value: unknown) {
+  return safeUrl(value);
+}
