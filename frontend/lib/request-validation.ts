@@ -23,6 +23,14 @@ export function normalizeDisplayTextField(value: unknown, fallback: string, max 
   return text;
 }
 
+export function normalizeUrlField(value: unknown, fallback = "", max = 500) {
+  const text = normalizeTextField(value, fallback, max);
+  if (!text) return fallback.slice(0, max);
+  if (text.includes("..") || /[\\]/.test(text)) return fallback.slice(0, max);
+  if (/source path|master drive|checksum/i.test(text)) return fallback.slice(0, max);
+  return /^https?:\/\//i.test(text) ? text : fallback.slice(0, max);
+}
+
 export function normalizeDateField(value: unknown) {
   const text = normalizeTextField(value, "", 40);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return "";

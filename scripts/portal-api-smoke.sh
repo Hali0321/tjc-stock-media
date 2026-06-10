@@ -345,6 +345,34 @@ if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnost
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"
 
+expect_json_status 400 unsafe-source-link-upload-blocked '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (!/file|media link/i.test(data.error || "")) {
+  console.error(`FAIL: unsafe source link did not behave like missing intake evidence: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+if (/javascript:|source path|master drive|checksum|\.\.\/private/i.test(text)) {
+  console.error(`FAIL: unsafe source link response echoed unsafe material: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST \
+  -F 'role=Contributor' \
+  -F 'title=Unsafe source link test' \
+  -F 'eventName=Unsafe source link test' \
+  -F 'eventDate=2026-06-06' \
+  -F 'ministry=Internet Ministry' \
+  -F 'source=QA Reviewer' \
+  -F 'peopleVisible=No' \
+  -F 'minorsVisible=No' \
+  -F 'usageRights=TJC-owned / permission confirmed' \
+  -F 'approvalSuggestion=Internal ministry' \
+  -F 'notes=No consent restrictions; no people visible.' \
+  -F 'tags=Bible, worship' \
+  -F 'intakeNotes=QA unsafe source link intake.' \
+  -F 'sourceLink=javascript:alert(1)' \
+  "$BASE_URL/api/upload"
+
 expect_json_status 400 upload-display-fields-sanitized '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);
