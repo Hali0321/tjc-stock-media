@@ -250,8 +250,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-16: Usage analytics must have a repeatable local smoke path before Insights can be treated as event-backed rather than sample-only.
 - FR-17: Delivery privacy must have a repeatable local smoke path before teammate beta payloads can be treated as storage-safe.
 - FR-18: Hosted beta launches must have a repeatable post-deploy smoke path and share-ready teammate invite packet before internal testers receive the URL.
-- FR-18: Private beta dry-runs must produce machine-readable evidence for Viewer, Reviewer, and DAM Admin before teammate invite decisions.
-- FR-19: Hosted beta smoke must require an explicit URL to prevent accidental writes against public or production-like targets.
+- FR-19: Private beta dry-runs must produce machine-readable evidence for Viewer, Reviewer, and DAM Admin before teammate invite decisions.
 
 ## Non-Goals
 

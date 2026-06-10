@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-}"
+BASE_URL="${BASE_URL:-https://tjc-stock-media.vercel.app}"
 MARKER="hosted-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
-
-if [ -z "$BASE_URL" ]; then
-  echo "FAIL: BASE_URL is required. Use a local server or approved private beta URL, for example BASE_URL=http://localhost:4881 make portal-hosted-smoke."
-  exit 1
-fi
 
 http_code() {
   local output="$1"
