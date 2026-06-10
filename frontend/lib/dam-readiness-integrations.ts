@@ -33,7 +33,7 @@ export function buildIntegrationReadiness({
   const analytics = usageAnalyticsDiagnostics();
   const writebackFieldMap = resourceSpaceWritebackFieldMapDiagnostics();
   const liveWritebackReady = apiConfigured && resourceSpaceWritebackEnabled() && writebackFieldMap.valid;
-  const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_EASTER_2024_COLLECTION_ID"));
+  const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_MVP_2024_COLLECTION_ID"));
   const sourceIsResourceSpace = status.adapter === "resourcespace-api" || status.adapter === "exported-metadata";
   return [
     {
@@ -183,8 +183,8 @@ export function buildIntegrationReadiness({
       owner: "DAM Admin",
       state: brandHubConfigured ? "Degraded" : "Pending setup",
       detail: brandHubConfigured
-        ? "BRAND_KIT_EASTER_2024_COLLECTION_ID is configured. Verify ResourceSpace collection assets and download gates."
-        : "Set BRAND_KIT_EASTER_2024_COLLECTION_ID before Brand Hub downloads appear."
+        ? "BRAND_KIT_MVP_2024_COLLECTION_ID is configured. Verify ResourceSpace collection assets and download gates."
+        : "Set BRAND_KIT_MVP_2024_COLLECTION_ID before Brand Hub downloads appear."
     },
     {
       id: "package-publishing",

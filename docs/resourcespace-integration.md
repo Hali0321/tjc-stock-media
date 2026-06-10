@@ -81,7 +81,7 @@ PORTAL_USAGE_LOGGING=0
 USAGE_ANALYTICS_DSN=
 USAGE_ANALYTICS_DB_PATH=
 
-BRAND_KIT_EASTER_2024_COLLECTION_ID=
+BRAND_KIT_MVP_2024_COLLECTION_ID=
 BRAND_KIT_LOGO_COLLECTION_ID=
 BRAND_KIT_SOCIAL_TEMPLATES_COLLECTION_ID=
 ```
@@ -120,10 +120,10 @@ Minimum required mapping keys:
 
 Brand Hub editorial content can exist in the portal. Downloadable assets must come from ResourceSpace collection/source mappings.
 
-Current route: `/api/brand-kits/easter-2024`
+Current route: `/api/brand-kits/mvp-2024`
 Current registry: `frontend/lib/brand-kits.ts`
 
-If `BRAND_KIT_EASTER_2024_COLLECTION_ID` is missing, the UI shows setup state and disables downloads. If it is configured but no export records match collection/source membership, the UI reports that mismatch instead of inventing files.
+If `BRAND_KIT_MVP_2024_COLLECTION_ID` is missing, the UI shows setup state and disables downloads. If it is configured but no export records match collection/source membership, the UI reports that mismatch instead of inventing files.
 
 When ResourceSpace API credentials are configured, Brand Hub uses the ResourceSpace collection endpoint through backend routes and resolves collection resource IDs against ResourceSpace metadata records. If the collection endpoint fails, responses include `collectionStatus` and keep downloads blocked or clearly setup-gated instead of showing fake kit files.
 

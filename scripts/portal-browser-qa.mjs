@@ -448,7 +448,7 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/brand-hub`);
-  for (const text of ["Easter at TJC 2024", "Worship God", "Follow Christ", "Love People", "Bring Hope", "Logo usage", "Allowed channels"]) {
+  for (const text of ["MVP 2024", "Worship God", "Follow Christ", "Love People", "Bring Hope", "Logo usage", "Allowed channels"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`brand hub ResourceSpace shell: missing ${text}`);
   }
   if ((await page.locator(".ed-logo-grid img").count()) < 4) failures.push("brand hub ResourceSpace shell: TJC logo assets missing");

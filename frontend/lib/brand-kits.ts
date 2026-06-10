@@ -42,12 +42,12 @@ export type BrandKitSectionMapping = BrandKitSectionConfig & {
 };
 
 export const brandKitConfigs = {
-  "easter-2024": {
-    id: "easter-2024",
-    title: "Easter at TJC 2024",
+  "mvp-2024": {
+    id: "mvp-2024",
+    title: "MVP 2024",
     owner: "Brand Team",
     reviewDate: "2025-03-01",
-    collectionEnvKey: "BRAND_KIT_EASTER_2024_COLLECTION_ID",
+    collectionEnvKey: "BRAND_KIT_MVP_2024_COLLECTION_ID",
     navItems: ["How to use these assets", "Key messages", "Logo usage", "Color & typography", "Photography style", "Example applications", "Downloads", "Allowed channels", "FAQs"],
     principles: [
       { title: "Worship God", description: "Keep communication reverent, accurate, and centered on faith." },
@@ -56,10 +56,10 @@ export const brandKitConfigs = {
       { title: "Bring Hope", description: "Choose images and messages that feel welcoming and truthful." }
     ],
     keyMessages: [
-      "Easter changes everything.",
-      "Everyone is welcome.",
-      "Hope is here.",
-      "Celebrate the resurrection."
+      "Use approved media first.",
+      "Keep guidance clear and faithful.",
+      "Protect people, privacy, and consent.",
+      "Route unclear reuse through DAM review."
     ],
     logoUsage: [
       { title: "Primary logo", guidance: "Preferred", variant: "color" },
@@ -70,7 +70,7 @@ export const brandKitConfigs = {
     sections: [
       { id: "logos", title: "Logo usage", envKey: "BRAND_KIT_LOGO_COLLECTION_ID" },
       { id: "social", title: "Social templates", envKey: "BRAND_KIT_SOCIAL_TEMPLATES_COLLECTION_ID" },
-      { id: "downloads", title: "Approved downloads", envKey: "BRAND_KIT_EASTER_2024_COLLECTION_ID" }
+      { id: "downloads", title: "Approved downloads", envKey: "BRAND_KIT_MVP_2024_COLLECTION_ID" }
     ]
   }
 } satisfies Record<string, BrandKitConfig>;
