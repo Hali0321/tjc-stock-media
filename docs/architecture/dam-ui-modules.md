@@ -106,7 +106,7 @@ Owns ResourceSpace field coverage and vocabulary drift summaries for Admin readi
 
 ### `AdminControlRegistry`
 
-Owns control-center navigation, integration table labels, policy summary rows, readiness state normalization, and system-health rail rows. Admin pages render this registry so governance language stays consistent with the ResourceSpace/Drive/S3 custody model.
+Owns control-center navigation, custody map rows, integration table labels, policy summary rows, readiness state normalization, and system-health rail rows. Admin pages render this registry so governance language stays consistent with the ResourceSpace/Drive/S3 custody model.
 
 ### `InsightsDashboardModel`
 

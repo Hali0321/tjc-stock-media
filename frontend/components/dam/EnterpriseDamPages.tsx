@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { useDemoRole } from "@/components/RoleProvider";
-import { adminNavItems, adminNavLabel, integrationReadinessColumns, integrationState, policySummaryRows, systemHealthRows } from "@/lib/admin-control";
+import { adminNavItems, adminNavLabel, custodyMapRows, custodyMapStatus, integrationReadinessColumns, integrationState, policySummaryRows, systemHealthRows } from "@/lib/admin-control";
 import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
 import { assetDetailMetadataRows, assetKeywordText, inspectorMetadataRows, reviewEvidenceRows, reviewMetadataRows, rightsRestrictionRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
@@ -221,34 +221,27 @@ function ChartCard({ title, large = false, sample = false, children }: { title: 
 }
 
 function CustodyMapPanel({ readiness }: { readiness?: DamReadinessResult | null }) {
-  const integration = new Map((readiness?.integrationReadiness || []).map((item) => [item.id, item]));
-  const statusFor = (id: string): EnterpriseStatus => {
-    const item = integration.get(id);
-    if (item?.state) return item.state;
-    const ready = item?.ready;
-    if (ready === true) return "Operational";
-    if (id === "review-writes" && readiness?.source?.readOnly) return "Read-only";
-    return ready === false ? "Not configured" : "Degraded";
+  const iconById = {
+    drive: HardDrive,
+    resourcespace: Database,
+    s3: Cloud,
+    portal: ShieldCheck
   };
-  const systems = [
-    ["Google Shared Drive", "Master-original custody", integration.get("master-originals")?.detail || "Source intake and original custody must be confirmed.", HardDrive, statusFor("master-originals")],
-    ["ResourceSpace", "Metadata and review truth", readiness?.source?.detail || "ResourceSpace connection not checked yet.", Database, statusFor("metadata-source")],
-    ["Amazon S3", "Approved derivative delivery", integration.get("approved-copy-delivery")?.detail || "Approved derivative delivery status not configured.", Cloud, statusFor("approved-copy-delivery")],
-    ["Media Library UI", "Role-aware access layer", integration.get("audit-log")?.detail || "Portal gates route all access through backend APIs.", ShieldCheck, statusFor("audit-log")]
-  ] as const;
+  const systems = custodyMapRows(readiness);
   return (
     <section className="ed-card ed-custody-map">
-      <header className="ed-card-head"><div><h3>DAM custody map</h3><p>Backend truth stays layered: Drive, ResourceSpace, S3, then this UI.</p></div><StatusBadge status={statusFor("metadata-source")} /></header>
+      <header className="ed-card-head"><div><h3>DAM custody map</h3><p>Backend truth stays layered: Drive, ResourceSpace, S3, then this UI.</p></div><StatusBadge status={custodyMapStatus(readiness, "metadata-source")} /></header>
       <div className="ed-custody-grid">
-        {systems.map(([name, role, detail, Icon, status]) => (
-          <article key={name}>
+        {systems.map(({ id, name, role, detail, status }) => {
+          const Icon = iconById[id];
+          return <article key={id}>
             <Icon size={20} aria-hidden="true" />
             <strong>{name}</strong>
             <span>{role}</span>
             <p>{detail}</p>
             <StatusBadge status={status} />
-          </article>
-        ))}
+          </article>;
+        })}
       </div>
     </section>
   );

@@ -17,6 +17,14 @@ export type AdminHealthRow = {
   state: EnterpriseStatus;
 };
 
+export type CustodyMapRow = {
+  id: "drive" | "resourcespace" | "s3" | "portal";
+  name: string;
+  role: string;
+  detail: string;
+  status: EnterpriseStatus;
+};
+
 export const adminNavItems: AdminNavItem[] = [
   { id: "overview", label: "Overview" },
   { id: "users-roles", label: "Users & Roles" },
@@ -59,4 +67,46 @@ export function systemHealthRows(readiness?: DamReadinessResult | null): AdminHe
     label: item.label,
     state: integrationState(item)
   }));
+}
+
+export function custodyMapStatus(readiness: DamReadinessResult | null | undefined, integrationId: string): EnterpriseStatus {
+  const item = (readiness?.integrationReadiness || []).find((row) => row.id === integrationId);
+  if (item?.state) return item.state;
+  if (item?.ready === true) return "Operational";
+  if (integrationId === "review-writes" && readiness?.source?.readOnly) return "Read-only";
+  return item?.ready === false ? "Not configured" : "Degraded";
+}
+
+export function custodyMapRows(readiness?: DamReadinessResult | null): CustodyMapRow[] {
+  const integration = new Map((readiness?.integrationReadiness || []).map((item) => [item.id, item]));
+  return [
+    {
+      id: "drive",
+      name: "Google Shared Drive",
+      role: "Master-original custody",
+      detail: integration.get("master-originals")?.detail || "Source intake and original custody must be confirmed.",
+      status: custodyMapStatus(readiness, "master-originals")
+    },
+    {
+      id: "resourcespace",
+      name: "ResourceSpace",
+      role: "Metadata and review truth",
+      detail: readiness?.source?.detail || "ResourceSpace connection not checked yet.",
+      status: custodyMapStatus(readiness, "metadata-source")
+    },
+    {
+      id: "s3",
+      name: "Amazon S3",
+      role: "Approved derivative delivery",
+      detail: integration.get("approved-copy-delivery")?.detail || "Approved derivative delivery status not configured.",
+      status: custodyMapStatus(readiness, "approved-copy-delivery")
+    },
+    {
+      id: "portal",
+      name: "Media Library UI",
+      role: "Role-aware access layer",
+      detail: integration.get("audit-log")?.detail || "Portal gates route all access through backend APIs.",
+      status: custodyMapStatus(readiness, "audit-log")
+    }
+  ];
 }
