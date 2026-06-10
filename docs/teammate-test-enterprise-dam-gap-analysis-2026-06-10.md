@@ -14,7 +14,7 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
 
 ## Evidence Checked
 
-- `git status --short --branch`: on `goal/dam-workbench-v2-redesign`, clean.
+- `git status --short --branch`: on `goal/dam-workbench-v2-redesign`, clean before this memo.
 - Latest commits include `ac75bff fix: prepare DAM beta for teammate testing`.
 - `make frontend-check`: passed typecheck and production Next build.
 - `make launch-readiness`: failed with one failure and one warning:
