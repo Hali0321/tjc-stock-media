@@ -108,6 +108,10 @@ Owns ResourceSpace field coverage and vocabulary drift summaries for Admin readi
 
 Owns control-center navigation, integration table labels, policy summary rows, readiness state normalization, and system-health rail rows. Admin pages render this registry so governance language stays consistent with the ResourceSpace/Drive/S3 custody model.
 
+### `InsightsDashboardModel`
+
+Owns executive dashboard KPI rows, explicit sample-chart declarations, and asset health rows. Insights pages render this model so real ResourceSpace counts and sample portal analytics cannot silently blend together.
+
 ### `EnterpriseDisplay`
 
 Owns small but repeated display rules for enterprise DAM pages: asset title fallback, ResourceSpace/reference labels, source nouns, metadata quality labels, dates, file type labels, and byte formatting. Page modules render these decisions instead of redefining them inline.
