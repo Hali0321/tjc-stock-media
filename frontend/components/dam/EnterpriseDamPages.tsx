@@ -40,6 +40,7 @@ import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, 
 import { assetDetailMetadataRows, assetKeywordText, inspectorMetadataRows, reviewEvidenceRows, reviewMetadataRows, rightsRestrictionRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
 import { insightCharts, insightHealthRows, insightKpis } from "@/lib/insights-dashboard";
+import { mediaPreviewState, mediaPreviewUnavailableReason } from "@/lib/media-preview-state";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
 import { addPackageAssetRef, availableAssetsForSection, createPackageDraft, packagePublishReadiness, removePackageAssetRef, resolvePackageSections, seedPackageDraft, updatePackageTitle } from "@/lib/package-drafts";
 import { cn } from "@/lib/ui";
@@ -89,12 +90,13 @@ function ErrorCard({ message, source }: { message: string; source?: MediaSourceS
 function AssetThumb({ asset, className, fit = "cover" }: { asset?: StockMediaAsset; className?: string; fit?: "cover" | "contain" }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [asset?.thumbnail]);
-  if (!asset || failed || !asset.thumbnail) {
-    const state = !asset ? "Preview loading" : failed ? "Preview failed" : asset.mediaType === "audio" ? "Unsupported file type" : "Preview unavailable";
+  const state = mediaPreviewState(asset, failed);
+  if (!asset || state !== "Preview available") {
     return (
       <div className={cn("ed-doc-thumb", className)}>
         <strong>{asset ? assetType(asset) : "DAM"}</strong>
         <span>{state}</span>
+        <small>{mediaPreviewUnavailableReason(state)}</small>
         {asset ? <small>{recordIdLabel()} {asset.resourceSpaceId || asset.id}</small> : null}
       </div>
     );

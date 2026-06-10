@@ -124,6 +124,10 @@ Owns enterprise UI status vocabulary and badge tone mapping for ResourceSpace-ba
 
 Owns metadata row shaping for enterprise DAM surfaces: inspector tabs, asset detail, rights/restrictions, review metadata, and review evidence. Page modules render rows instead of repeating `Not provided` and ResourceSpace field fallback rules.
 
+### `MediaPreviewState`
+
+Owns preview-state labels and missing-preview explanations for ResourceSpace thumbnails, failed derivatives, restricted previews, loading states, and unsupported file types. Visual components should render this state instead of inventing placeholder imagery.
+
 ## Current Implementation Shape
 
 The first system pass keeps existing stable components in place and introduces `frontend/components/dam/*` as import boundaries. This lets route files depend on named DAM responsibilities while preserving behavior and reducing risk during continued polish.
