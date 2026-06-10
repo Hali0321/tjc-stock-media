@@ -36,6 +36,7 @@ import {
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { useDemoRole } from "@/components/RoleProvider";
 import { adminNavItems, adminNavLabel, custodyMapRows, custodyMapStatus, integrationReadinessColumns, integrationState, policySummaryRows, systemHealthRows } from "@/lib/admin-control";
+import { assetDetailTabs, inspectorDrawerTabs, isActivityTab } from "@/lib/asset-record-workbench";
 import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
 import { assetDetailMetadataRows, assetKeywordText, inspectorMetadataRows, reviewEvidenceRows, reviewMetadataRows, rightsRestrictionRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
@@ -171,8 +172,7 @@ function RightsVerdictCard({ asset, source }: { asset?: StockMediaAsset; source?
 }
 
 function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAsset; source?: MediaSourceStatus | null; live?: boolean }) {
-  const [tab, setTab] = useState("Details");
-  const tabs = ["Details", "Rights & restrictions", "Versions", "Activity"];
+  const [tab, setTab] = useState(inspectorDrawerTabs[0]);
   if (!asset) return <aside className="ed-inspector ed-panel"><h2>Select an asset</h2><p>{sourceNoun(source)} search returned no visible assets.</p></aside>;
   const tabRows = inspectorMetadataRows({ asset, tab, source });
   return (
@@ -183,7 +183,7 @@ function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAsset; sou
       <div className="ed-meta-line"><StatusBadge status={assetEnterpriseStatus(asset)} /><span>{assetDate(asset)}</span><span>{formatBytes(asset.fileSizeBytes)}</span></div>
       <SourcePill source={source} live={live} />
       <RightsVerdictCard asset={asset} source={source} />
-      <nav className="ed-tabs" aria-label="Asset inspector tabs">{tabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
+      <nav className="ed-tabs" aria-label="Asset inspector tabs">{inspectorDrawerTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
       <dl className="ed-metadata">
         {tabRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
@@ -295,12 +295,11 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const { role } = useDemoRole();
   const detail = useAssetDetail(id, role);
   const downloadGate = useDownloadGate(id, role);
-  const [tab, setTab] = useState("Metadata");
+  const [tab, setTab] = useState(assetDetailTabs[0]);
   const [downloadMessage, setDownloadMessage] = useState("");
   const asset = detail.data?.asset;
   const related = detail.data?.related || [];
   const approved = asset?.reuseDecision?.downloadable || assetEnterpriseStatus(asset) === "Approved";
-  const detailTabs = ["Metadata", "Keywords", "AI Insights", "Comments", "Activity", "Usage History"];
   if (detail.loading) return <div className="enterprise-page"><LoadingCard label="Loading media asset record..." /></div>;
   if (detail.error || !asset) return <div className="enterprise-page"><ErrorCard message={detail.error || "Asset not found."} source={detail.source} /></div>;
   const metadataRows = assetDetailMetadataRows(asset, role);
@@ -315,13 +314,13 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
             <div className="ed-detail-actions"><IconButton label="Favorite"><Star size={18} /></IconButton><IconButton label="Download"><Download size={18} /></IconButton><IconButton label="Versions"><FileText size={18} /></IconButton><IconButton label="Share"><Share2 size={18} /></IconButton><IconButton label="Fullscreen"><Grid3X3 size={18} /></IconButton></div>
           </header>
           <div className="ed-hero-preview"><AssetThumb asset={asset} fit="contain" /><span>{asset.imageDimensions || "Preview unavailable or not provided"}</span><button><Search size={18} /></button></div>
-          <nav className="ed-tabs is-large" aria-label="Asset record tabs">{detailTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
+          <nav className="ed-tabs is-large" aria-label="Asset record tabs">{assetDetailTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
           <section className="ed-card ed-metadata-card">
             {tab === "Metadata" ? <dl className="ed-metadata is-two">{metadataRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
             {tab === "Keywords" ? <div className="ed-chip-row">{assetKeywordText(asset) !== "Not provided" ? [...(asset.tags || []), ...(asset.tjcTerms || [])].map((keyword) => <span key={keyword}>{keyword}</span>) : <p>Not provided in the current data source.</p>}</div> : null}
             {tab === "AI Insights" ? <div className="ed-two-col"><p>AI suggestions are not live. Approved metadata remains review truth.</p><p>Human review controls usage, people visibility, rights, and reuse scope.</p></div> : null}
             {tab === "Comments" ? <div className="ed-comment-stack"><p className="ed-comment"><strong>Review note</strong> {asset.rightsNotes || "No reviewer note exported."}</p><input className="ed-input" aria-label="Add asset comment" placeholder="Add a local follow-up note..." /></div> : null}
-            {tab === "Activity" || tab === "Usage History" ? <div className="ed-table-mini">{[asset.reviewedDate ? `Reviewed ${asset.reviewedDate} by ${asset.reviewer || "review team"}` : "Review activity not provided", asset.pendingReviewWrite ? "Pending sync to ResourceSpace" : "No pending write", downloadMessage || "No download gate action this session"].map((item) => <p key={item}>{item}</p>)}</div> : null}
+            {isActivityTab(tab) ? <div className="ed-table-mini">{[asset.reviewedDate ? `Reviewed ${asset.reviewedDate} by ${asset.reviewer || "review team"}` : "Review activity not provided", asset.pendingReviewWrite ? "Pending sync to ResourceSpace" : "No pending write", downloadMessage || "No download gate action this session"].map((item) => <p key={item}>{item}</p>)}</div> : null}
           </section>
           <section className="ed-card"><header className="ed-card-head"><h3>Related Media</h3><span>{related.length} results</span></header><div className="ed-related-strip">{related.length ? related.slice(0, 5).map((item) => <AssetThumb asset={item} key={item.id} />) : <p>No related media records found.</p>}</div></section>
         </main>
