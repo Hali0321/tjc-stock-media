@@ -168,6 +168,7 @@ async function newRolePage(role, width, height) {
     const failure = request.failure()?.errorText || "request failed";
     if (!url.startsWith(base)) return;
     if (failure === "net::ERR_ABORTED" && url.includes("_rsc=")) return;
+    if (failure === "net::ERR_ABORTED" && url.includes("/_next/static/")) return;
     networkFailures.push({ role, width, url, error: failure });
   });
   return { page, context };
