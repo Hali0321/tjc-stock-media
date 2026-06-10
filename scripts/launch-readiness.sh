@@ -71,6 +71,7 @@ require_file "scripts/portal-saved-search-smoke.sh"
 require_file "scripts/portal-beta-rehearsal.sh"
 require_file "scripts/portal-hosted-smoke.sh"
 require_file "scripts/live-dam-surface-guard.mjs"
+require_file "scripts/api-identity-guard.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
 
@@ -79,6 +80,13 @@ if node scripts/live-dam-surface-guard.mjs >/tmp/tjc-live-dam-surface-guard.txt 
 else
   fail "live DAM surface guard failed"
   cat /tmp/tjc-live-dam-surface-guard.txt
+fi
+
+if node scripts/api-identity-guard.mjs >/tmp/tjc-api-identity-guard.txt 2>&1; then
+  pass "API routes resolve roles through identity seam"
+else
+  fail "API identity guard failed"
+  cat /tmp/tjc-api-identity-guard.txt
 fi
 
 if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-launch-media-tracked.txt; then

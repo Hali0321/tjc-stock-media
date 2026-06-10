@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { catalogSortOptions } from "@/lib/catalog-language";
 import { createDamRouteSession } from "@/lib/dam-route-session";

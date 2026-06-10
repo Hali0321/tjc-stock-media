@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildBrandKitResponse, getBrandKitConfig } from "@/lib/brand-kits";
-import { normalizeRole } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import { recordUsageEvent } from "@/lib/usage-analytics";
 

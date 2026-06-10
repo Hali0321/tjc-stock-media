@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackEnabled } from "@/lib/env";
 import { createBetaFeedback, listBetaFeedback, normalizeFeedbackRoute, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
-import { normalizeRole, roles } from "@/lib/permissions";
+import { roles } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity } from "@/lib/types";
 

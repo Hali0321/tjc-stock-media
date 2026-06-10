@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAssetById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
-import { canOpenResourceSpace, canReview, canSeeAsset, normalizeRole } from "@/lib/permissions";
+import { canOpenResourceSpace, canReview, canSeeAsset } from "@/lib/permissions";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { normalizeAssetId } from "@/lib/request-validation";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
