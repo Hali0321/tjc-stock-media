@@ -32,8 +32,17 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function safeFeedbackText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  if (text.includes("..") || /[\\/]/.test(text)) return "";
+  if (/source path|master drive|checksum/i.test(text)) return "";
+  return text;
+}
+
 function safeId(value: unknown) {
-  return safeText(value, 120).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+  const text = safeText(value, 120);
+  if (/source path|master drive|checksum/i.test(text)) return "";
+  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
 function safeIso(value: unknown) {
@@ -92,19 +101,19 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
     updatedAt: safeIso(raw.updatedAt) || createdAt,
     role: safeRole(raw.role),
     route: safeRoute(raw.route),
-    task: safeText(raw.task, 220) || "Free play",
+    task: safeFeedbackText(raw.task, 220) || "Free play",
     severity: safeSeverity(raw.severity),
-    expected: safeText(raw.expected, 1200),
-    actual: safeText(raw.actual, 1200),
+    expected: safeFeedbackText(raw.expected, 1200),
+    actual: safeFeedbackText(raw.actual, 1200),
     status: safeStatus(raw.status),
-    notes: raw.notes === undefined ? undefined : safeText(raw.notes, 1200),
-    reporterName: raw.reporterName === undefined ? undefined : safeText(raw.reporterName, 120),
-    browser: raw.browser === undefined ? undefined : safeText(raw.browser, 280),
-    device: raw.device === undefined ? undefined : safeText(raw.device, 180),
-    viewport: raw.viewport === undefined ? undefined : safeText(raw.viewport, 60),
+    notes: raw.notes === undefined ? undefined : safeFeedbackText(raw.notes, 1200),
+    reporterName: raw.reporterName === undefined ? undefined : safeFeedbackText(raw.reporterName, 120),
+    browser: raw.browser === undefined ? undefined : safeFeedbackText(raw.browser, 280),
+    device: raw.device === undefined ? undefined : safeFeedbackText(raw.device, 180),
+    viewport: raw.viewport === undefined ? undefined : safeFeedbackText(raw.viewport, 60),
     attachmentUrl: raw.attachmentUrl === undefined ? undefined : safeUrl(raw.attachmentUrl),
     storageMode: safeStorageMode(raw.storageMode),
-    actor: raw.actor === undefined ? undefined : safeText(raw.actor, 160)
+    actor: raw.actor === undefined ? undefined : safeFeedbackText(raw.actor, 160)
   };
 }
 
@@ -290,7 +299,7 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
     ...existing,
     severity: patch.severity && betaFeedbackSeverities.includes(patch.severity) ? patch.severity : existing.severity,
     status: patch.status && betaFeedbackStatuses.includes(patch.status) ? patch.status : existing.status,
-    notes: patch.notes === undefined ? existing.notes : safeText(patch.notes, 1200),
+    notes: patch.notes === undefined ? existing.notes : safeFeedbackText(patch.notes, 1200),
     updatedAt: new Date().toISOString()
   };
   const wroteKv = await writeKvFeedback(next).catch(() => false);
@@ -302,7 +311,7 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
 }
 
 export function normalizeFeedbackText(value: unknown, maxLength = 1200) {
-  return safeText(value, maxLength);
+  return safeFeedbackText(value, maxLength);
 }
 
 export function normalizeFeedbackRoute(value: unknown) {

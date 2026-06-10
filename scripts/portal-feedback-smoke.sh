@@ -85,6 +85,18 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit-unsafe-route"
 
+unsafe_text_feedback_id="$(select_json_status 200 feedback-submit-unsafe-text '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.ok !== true || !data.id || !data.createdAt) {
+  console.error(`FAIL: unsafe text feedback submit shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+console.log(data.id);
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"source path feedback\",\"severity\":\"low\",\"expected\":\"Feedback should keep safe fields only.\",\"actual\":\"$MARKER unsafe text submitted.\",\"reporterName\":\"master drive reporter\",\"browser\":\"checksum browser\",\"device\":\"source path device\",\"viewport\":\"master drive viewport\"}" \
+  "$BASE_URL/api/beta-feedback")"
+echo "PASS: feedback-submit-unsafe-text"
+
 stale_feedback_id="stale-feedback-$MARKER"
 if [ "$local_runtime_probe" = "1" ]; then
   STALE_FEEDBACK_ID="$stale_feedback_id" node <<'NODE'
@@ -113,19 +125,19 @@ existing.unshift({
   updatedAt: "not-a-date",
   role: "Root",
   route: "javascript:alert(1)",
-  task: "../private stale feedback",
+  task: "source path stale feedback",
   severity: "urgent",
-  expected: "../private expected",
-  actual: "../private actual",
+  expected: "master drive expected",
+  actual: "checksum actual",
   status: "done",
-  notes: "../private note",
-  reporterName: "../private reporter",
-  browser: "../private browser",
-  device: "../private device",
-  viewport: "../private viewport",
+  notes: "source path note",
+  reporterName: "master drive reporter",
+  browser: "checksum browser",
+  device: "source path device",
+  viewport: "master drive viewport",
   attachmentUrl: "javascript:alert(1)",
   storageMode: "filesystem",
-  actor: ""
+  actor: "checksum actor"
 }, ...filler);
 fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
 NODE
@@ -154,11 +166,12 @@ if [ "$local_runtime_probe" = "1" ]; then
   stale_feedback_probe_id="$stale_feedback_id"
 fi
 
-FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" UNSAFE_ROUTE_FEEDBACK_ID="$unsafe_route_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
+FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" UNSAFE_ROUTE_FEEDBACK_ID="$unsafe_route_feedback_id" UNSAFE_TEXT_FEEDBACK_ID="$unsafe_text_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.FEEDBACK_ID;
 const unsafeLinkId = process.env.UNSAFE_LINK_FEEDBACK_ID;
 const unsafeRouteId = process.env.UNSAFE_ROUTE_FEEDBACK_ID;
+const unsafeTextId = process.env.UNSAFE_TEXT_FEEDBACK_ID;
 const staleId = process.env.STALE_FEEDBACK_ID;
 if (!Array.isArray(data.feedback) || typeof data.count !== "number") {
   console.error(`FAIL: feedback inbox shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
@@ -187,12 +200,22 @@ if (!unsafeRouteRecord || unsafeRouteRecord.route !== "/") {
   console.error(`FAIL: unsafe feedback route persisted: ${JSON.stringify({ unsafeRouteId, unsafeRouteRecord }).slice(0, 500)}`);
   process.exit(1);
 }
+const unsafeTextRecord = data.feedback.find((item) => item.id === unsafeTextId);
+if (!unsafeTextRecord || unsafeTextRecord.task !== "Free play" || unsafeTextRecord.reporterName || unsafeTextRecord.browser || unsafeTextRecord.device || unsafeTextRecord.viewport) {
+  console.error(`FAIL: unsafe feedback text labels persisted: ${JSON.stringify({ unsafeTextId, unsafeTextRecord }).slice(0, 700)}`);
+  process.exit(1);
+}
 if (staleId) {
   const stale = data.feedback.find((item) => item.id === staleId);
-  if (!stale || stale.role !== "Viewer" || stale.route !== "/" || stale.severity !== "medium" || stale.status !== "new" || stale.storageMode !== "local-json" || stale.attachmentUrl) {
+  if (!stale || stale.role !== "Viewer" || stale.route !== "/" || stale.task !== "Free play" || stale.expected || stale.actual || stale.notes || stale.reporterName || stale.browser || stale.device || stale.viewport || stale.actor || stale.severity !== "medium" || stale.status !== "new" || stale.storageMode !== "local-json" || stale.attachmentUrl) {
     console.error(`FAIL: persisted unsafe feedback was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
     process.exit(1);
   }
+}
+const text = JSON.stringify(data.feedback);
+if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  console.error(`FAIL: feedback inbox leaked unsafe text labels: ${text.slice(0, 900)}`);
+  process.exit(1);
 }
 ' "$BASE_URL/api/beta-feedback?role=DAM%20Admin"
 
@@ -225,6 +248,10 @@ if (data.ok !== true || data.feedback?.id !== id || data.feedback?.status !== "a
 }
 if (!/smoke triage note/i.test(data.feedback.notes || "")) {
   console.error(`FAIL: feedback patch did not persist notes: ${JSON.stringify(data.feedback).slice(0, 500)}`);
+  process.exit(1);
+}
+if (/\.\.\/private|source path|master drive|checksum/i.test(JSON.stringify(data.feedback))) {
+  console.error(`FAIL: feedback patch echoed unsafe labels: ${JSON.stringify(data.feedback).slice(0, 700)}`);
   process.exit(1);
 }
 ' -X PATCH -H 'Content-Type: application/json' \
@@ -267,6 +294,10 @@ if (!record || record.status !== "agent-ready" || record.severity !== "high" || 
 }
 if (data.counts.exportedRecords < 1 || data.counts.agentReady < 1 || data.counts.high < 1) {
   console.error(`FAIL: feedback export counts weak: ${JSON.stringify(data.counts)}`);
+  process.exit(1);
+}
+if (JSON.stringify(data).includes("../private") || /source path|master drive|checksum/i.test(JSON.stringify(data))) {
+  console.error(`FAIL: feedback export leaked unsafe text labels: ${JSON.stringify(data).slice(0, 900)}`);
   process.exit(1);
 }
 ' "$BASE_URL/api/beta-feedback/export?role=DAM%20Admin&status=agent-ready&severity=high&feedbackRole=Viewer"
