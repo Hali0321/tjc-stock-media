@@ -90,6 +90,18 @@ const path = require("path");
 const filePath = path.join(process.cwd(), "data", "runtime", "saved-searches.json");
 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
+const filler = Array.from({ length: 260 }, (_, index) => ({
+  id: `${process.env.STALE_SEARCH_ID}-filler-${index}`,
+  title: `Oversized local-json filler ${index}`,
+  query: "Bible",
+  filters: ["portal ready"],
+  sort: "Newest",
+  createdAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+  updatedAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+  createdBy: "saved-search-smoke:filler",
+  role: "Reviewer",
+  storageMode: "local-json"
+}));
 existing.unshift({
   id: process.env.STALE_SEARCH_ID,
   title: "Stale unsafe saved search",
@@ -99,11 +111,11 @@ existing.unshift({
   filters: ["portal ready", "../private", "portal ready"],
   sort: "unsafe-sort",
   createdAt: "not-a-date",
-  updatedAt: "not-a-date",
+  updatedAt: "2030-01-01T00:00:00.000Z",
   createdBy: "",
   role: "Viewer",
   storageMode: "local-json"
-});
+}, ...filler);
 fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
 NODE
 fi
@@ -119,6 +131,10 @@ const id = process.env.SEARCH_ID;
 const staleId = process.env.STALE_SEARCH_ID;
 if (!Array.isArray(data.searches) || data.storageMode !== "local-json") {
   console.error(`FAIL: saved search list shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+if (data.count > 250 || data.searches.length > 250) {
+  console.error(`FAIL: saved search local-json list was not capped: ${JSON.stringify({ count: data.count, length: data.searches.length })}`);
   process.exit(1);
 }
 const record = data.searches.find((item) => item.id === id);

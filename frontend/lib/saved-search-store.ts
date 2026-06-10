@@ -20,6 +20,7 @@ export type SavedSearchRecord = {
 };
 
 const savedSearchStorePath = () => path.join(repoRoot(), "data", "runtime", "saved-searches.json");
+export const maxSavedSearches = 250;
 const sortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
 
 function newestFirst(records: SavedSearchRecord[]) {
@@ -104,11 +105,11 @@ async function readLocalSavedSearches() {
 async function writeLocalSavedSearches(records: SavedSearchRecord[]) {
   const filePath = savedSearchStorePath();
   await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(newestFirst(records).slice(0, 250), null, 2)}\n`);
+  await writeFile(filePath, `${JSON.stringify(newestFirst(records).slice(0, maxSavedSearches), null, 2)}\n`);
 }
 
 export async function listSavedSearches() {
-  return newestFirst(await readLocalSavedSearches());
+  return newestFirst(await readLocalSavedSearches()).slice(0, maxSavedSearches);
 }
 
 export async function saveSavedSearch(record: Omit<SavedSearchRecord, "storageMode">) {
@@ -122,7 +123,7 @@ export function savedSearchDiagnostics() {
   const filePath = savedSearchStorePath();
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
-    const records = Array.isArray(parsed) ? parsed.map(normalizeStoredSavedSearch).filter(Boolean) as SavedSearchRecord[] : [];
+    const records = Array.isArray(parsed) ? newestFirst(parsed.map(normalizeStoredSavedSearch).filter(Boolean) as SavedSearchRecord[]).slice(0, maxSavedSearches) : [];
     return {
       storageMode: "local-json" as const,
       durableStorageConfigured: false,
