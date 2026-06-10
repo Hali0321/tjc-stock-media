@@ -57,6 +57,16 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit"
 
+expect_json_status 400 feedback-submit-invalid-severity '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!Array.isArray(data.missing) || !data.missing.includes("severity")) {
+  console.error(`FAIL: invalid feedback severity did not report missing severity: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"Feedback smoke invalid\",\"severity\":\"urgent\",\"expected\":\"Invalid severity should be rejected.\",\"actual\":\"$MARKER invalid severity.\"}" \
+  "$BASE_URL/api/beta-feedback"
+
 expect_json_status 403 feedback-viewer-inbox-denied '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (!/DAM Admin/i.test(data.error || "")) {
@@ -82,6 +92,26 @@ if (!record.actor) {
   process.exit(1);
 }
 ' "$BASE_URL/api/beta-feedback?role=DAM%20Admin"
+
+expect_json_status 403 feedback-viewer-patch-denied '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!/DAM Admin/i.test(data.error || "")) {
+  console.error(`FAIL: viewer patch denial copy invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' -X PATCH -H 'Content-Type: application/json' \
+  -d '{"role":"Viewer","status":"fixed"}' \
+  "$BASE_URL/api/beta-feedback/$feedback_id?role=Viewer"
+
+expect_json_status 400 feedback-admin-patch-invalid-status '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!/status is invalid/i.test(data.error || "")) {
+  console.error(`FAIL: invalid patch status was not rejected: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' -X PATCH -H 'Content-Type: application/json' \
+  -d '{"role":"DAM Admin","status":"done"}' \
+  "$BASE_URL/api/beta-feedback/$feedback_id?role=DAM%20Admin"
 
 FEEDBACK_ID="$feedback_id" expect_json_status 200 feedback-admin-patch '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

@@ -116,6 +116,9 @@ export function betaFeedbackDiagnostics() {
   return {
     kvConfigured,
     blobConfigured,
+    hostedRuntime: process.env.VERCEL === "1",
+    durableStorageConfigured: kvConfigured,
+    attachmentStorageConfigured: blobConfigured,
     count: records.length,
     openCount: openRecords.length,
     criticalOpenCount: criticalOpen.length,

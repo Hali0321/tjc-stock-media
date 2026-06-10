@@ -186,7 +186,7 @@ export function buildIntegrationReadiness({
       state: feedback.kvConfigured ? (feedback.blobConfigured ? "Operational" : "Degraded") : feedback.count > 0 ? "Degraded" : "Pending setup",
       detail: feedback.kvConfigured
         ? `Vercel KV feedback storage is configured. Blob attachments: ${feedback.blobConfigured ? "configured" : "not configured"}. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}.`
-        : `Feedback is using ${feedback.primaryStorageMode}. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}. Configure Vercel KV/Blob before larger testing.`
+        : `Feedback is using ${feedback.primaryStorageMode}${feedback.hostedRuntime ? " in hosted runtime" : ""}; this is suitable for local/private beta rehearsal only, not wider rollout. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}. Configure Vercel KV for durable hosted feedback and Blob for attachments before larger testing.`
     },
     {
       id: "brand-kit-collections",
