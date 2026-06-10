@@ -253,17 +253,6 @@ body,
     box-shadow: none !important;
   }
 
-  .dam-desktop-rail .workbench-menu-nav a .nav-count-badge {
-    margin-left: auto;
-    min-width: 24px;
-    border-radius: 999px;
-    background: var(--tjc-teal-600);
-    color: white;
-    text-align: center;
-    font-size: 11px;
-    line-height: 20px;
-  }
-
   .dam-rail-summary {
     display: none !important;
   }

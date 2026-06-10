@@ -97,7 +97,6 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
             {isActive ? <span className="absolute inset-0 rounded-[inherit] bg-white shadow-[0_8px_24px_rgba(15,61,46,.10)]" aria-hidden="true" /> : null}
             <Icon className={cn("relative z-10 shrink-0", top ? "h-[16px] w-[16px]" : menu ? "h-[17px] w-[17px]" : "h-5 w-5")} aria-hidden="true" strokeWidth={1.9} />
             <span className={cn("nav-label relative z-10 truncate leading-none", top && "max-w-none")}>{label}</span>
-            {item.label === "Approvals" ? <span className="nav-count-badge relative z-10 ml-auto">28</span> : null}
           </Link>
         );
       })}
