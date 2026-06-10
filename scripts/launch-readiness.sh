@@ -72,6 +72,7 @@ require_file "scripts/portal-beta-rehearsal.sh"
 require_file "scripts/portal-hosted-smoke.sh"
 require_file "scripts/live-dam-surface-guard.mjs"
 require_file "scripts/api-identity-guard.mjs"
+require_file "scripts/public-env-guard.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
 
@@ -87,6 +88,13 @@ if node scripts/api-identity-guard.mjs >/tmp/tjc-api-identity-guard.txt 2>&1; th
 else
   fail "API identity guard failed"
   cat /tmp/tjc-api-identity-guard.txt
+fi
+
+if node scripts/public-env-guard.mjs >/tmp/tjc-public-env-guard.txt 2>&1; then
+  pass "public env stays free of server-side secrets"
+else
+  fail "public env guard failed"
+  cat /tmp/tjc-public-env-guard.txt
 fi
 
 if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-launch-media-tracked.txt; then
