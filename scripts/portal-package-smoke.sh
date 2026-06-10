@@ -71,6 +71,10 @@ if (refs.includes("../private") || refs.length !== new Set(refs).size || refs.le
   console.error(`FAIL: package refs were not sanitized/deduped: ${JSON.stringify(refs)}`);
   process.exit(1);
 }
+if (data.package.collectionId || sections.some((section) => /source path|master drive|checksum|private/i.test(section.id || ""))) {
+  console.error(`FAIL: package identifiers were not sanitized: ${JSON.stringify(data.package).slice(0, 700)}`);
+  process.exit(1);
+}
 if (!data.package.governance || typeof data.package.governance.totalRefs !== "number") {
   console.error(`FAIL: package governance missing: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
@@ -81,7 +85,7 @@ if (text.includes("../private") || /source path|master drive|checksum/i.test(tex
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"description\":\"../private source path\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"368\"]},{\"id\":\"private-section\",\"title\":\"../private master drive checksum\",\"resourceSpaceAssetIds\":[\"367\"]}]}" \
+  -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"description\":\"../private source path\",\"collectionId\":\"source path collection\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"368\"]},{\"id\":\"master drive section\",\"title\":\"../private master drive checksum\",\"resourceSpaceAssetIds\":[\"367\"]}]}" \
   "$BASE_URL/api/packages?role=Contributor"
 
 if [ "$local_runtime_probe" = "1" ]; then
@@ -122,13 +126,13 @@ existing.unshift({
   description: "../private master drive checksum",
   status: "unsafe",
   sections: [{
-    id: "hero",
+    id: "source path section",
     title: "../private master drive checksum",
     resourceSpaceAssetIds: ["367", "../private", "367"]
   }],
   createdAt: "not-a-date",
   updatedAt: "2030-01-01T00:00:00.000Z",
-  createdBy: "",
+  createdBy: "checksum actor",
   role: "Viewer",
   governance: {
     canPreview: "yes",
@@ -172,7 +176,7 @@ if (staleId) {
   const stale = data.packages.find((item) => item.id === staleId);
   const refs = (stale?.sections || []).flatMap((section) => section.resourceSpaceAssetIds || []);
   const text = JSON.stringify(stale || {});
-  if (!stale || stale.title !== "ResourceSpace Toolkit Draft" || stale.sections?.[0]?.title !== "Section 1" || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0 || stale.governance?.reason || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  if (!stale || stale.title !== "ResourceSpace Toolkit Draft" || stale.sections?.[0]?.id !== "section-1" || stale.sections?.[0]?.title !== "Section 1" || stale.createdBy !== "local-beta:unknown" || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0 || stale.governance?.reason || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
     console.error(`FAIL: persisted unsafe package was not normalized: ${JSON.stringify(stale || null).slice(0, 500)}`);
     process.exit(1);
   }

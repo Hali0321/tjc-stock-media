@@ -37,11 +37,21 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function containsPrivateSourceText(value: string) {
+  return /source path|master drive|checksum/i.test(value);
+}
+
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum/i.test(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
+}
+
+function safeIdentifierText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  if (text.includes("..") || /[\\/]/.test(text) || containsPrivateSourceText(text)) return "";
+  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
 function safeResourceSpaceRef(value: unknown) {
@@ -67,13 +77,13 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
   const sections = Array.isArray(raw.sections) ? raw.sections : [];
   const seenRefs = new Set<string>();
   return {
-    id: safeText(raw.id, 120) || "portal-local-draft",
+    id: safeIdentifierText(raw.id, 120) || "portal-local-draft",
     title: safeDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
     description: safeDisplayText(raw.description, 500) || undefined,
     status: raw.status === "pending-review" || raw.status === "approved" || raw.status === "archived" ? raw.status : "draft",
     collectionId: raw.collectionId ? safeDisplayText(raw.collectionId, 120) : undefined,
     sections: sections.slice(0, 12).map((section, index) => ({
-      id: safeText(section?.id, 80) || `section-${index + 1}`,
+      id: safeIdentifierText(section?.id, 80) || `section-${index + 1}`,
       title: safeDisplayText(section?.title, 120) || `Section ${index + 1}`,
       resourceSpaceAssetIds: Array.isArray(section?.resourceSpaceAssetIds)
         ? section.resourceSpaceAssetIds
@@ -103,7 +113,7 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
     sections: draft.sections,
     createdAt: safeIso(raw.createdAt) || updatedAt,
     updatedAt,
-    createdBy: safeText(raw.createdBy, 120) || "local-beta:unknown",
+    createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
     role: raw.role === "Contributor" || raw.role === "Reviewer" || raw.role === "DAM Admin" ? raw.role : "Contributor",
     governance: {
       canPreview: safeBoolean(governance.canPreview),
