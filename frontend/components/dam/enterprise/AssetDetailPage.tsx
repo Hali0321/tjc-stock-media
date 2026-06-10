@@ -17,6 +17,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const downloadGate = useDownloadGate(id, role);
   const [tab, setTab] = useState(assetDetailTabs[0]);
   const [downloadMessage, setDownloadMessage] = useState("");
+  const [assetActionMessage, setAssetActionMessage] = useState("");
   const asset = detail.data?.asset;
   const related = detail.data?.related || [];
   const approved = asset?.reuseDecision?.downloadable || assetEnterpriseStatus(asset) === "Approved";
@@ -31,9 +32,10 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
           <header className="ed-detail-header">
             <div><h1 title={displayTitle(asset)}>{displayTitle(asset)}</h1><span className="ed-file-soft">{assetType(asset)}</span></div>
             <div className="ed-chip-row">{[asset.collection, asset.status, asset.usageScope].filter(Boolean).slice(0, 4).map((chip) => <span key={chip}>{chip}</span>)}<SourcePill source={detail.source} live={detail.live} /></div>
-            <div className="ed-detail-actions"><IconButton label="Favorite"><Star size={18} /></IconButton><IconButton label="Download"><Download size={18} /></IconButton><IconButton label="Versions"><FileText size={18} /></IconButton><IconButton label="Share"><Share2 size={18} /></IconButton><IconButton label="Fullscreen"><Grid3X3 size={18} /></IconButton></div>
+            <div className="ed-detail-actions"><IconButton label="Favorite" onClick={() => setAssetActionMessage("Favorite saved for this beta session.")}><Star size={18} /></IconButton><IconButton label="Download" onClick={() => setAssetActionMessage("Use the sticky approved-copy button to run the backend download gate.")}><Download size={18} /></IconButton><IconButton label="Versions" onClick={() => setTab("Activity")}><FileText size={18} /></IconButton><IconButton label="Share" onClick={() => setAssetActionMessage("Share links wait for identity and access policy. No public link was created.")}><Share2 size={18} /></IconButton><IconButton label="Fullscreen" onClick={() => setAssetActionMessage("Preview uses fit-to-panel mode in this beta. Original files remain gated.")}><Grid3X3 size={18} /></IconButton></div>
           </header>
-          <div className="ed-hero-preview"><AssetThumb asset={asset} fit="contain" /><span>{asset.imageDimensions || "Preview unavailable or not provided"}</span><button><Search size={18} /></button></div>
+          {assetActionMessage ? <p className="ed-inline-success">{assetActionMessage}</p> : null}
+          <div className="ed-hero-preview"><AssetThumb asset={asset} fit="contain" /><span>{asset.imageDimensions || "Preview unavailable or not provided"}</span><button type="button" onClick={() => setAssetActionMessage("Zoom preview is unavailable until safe derivatives are exported.")}><Search size={18} /></button></div>
           <nav className="ed-tabs is-large" aria-label="Asset record tabs">{assetDetailTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
           <section className="ed-card ed-metadata-card">
             {tab === "Metadata" ? <dl className="ed-metadata is-two">{metadataRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
@@ -57,10 +59,10 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
           const result = await downloadGate.requestDownload({ termsAccepted: true, usageChannel: "portal", reason: `Asset detail approved-copy request for ${displayTitle(asset)}` });
           setDownloadMessage(result.allowed ? `Download gate allowed. Audit ${result.auditId || "recorded"}.` : `Download blocked: ${result.reason || result.requiredAction || "Not allowed"}.`);
           if (result.allowed && result.downloadUrl) window.location.href = result.downloadUrl;
-        }}>Download approved copy</ActionButton> : <ActionButton icon={FileText}>Request DAM review</ActionButton>}
-        <ActionButton icon={PackageCheck}>Add to package</ActionButton>
-        <ActionButton icon={Share2}>Create share link</ActionButton>
-        <ActionButton>More actions <ChevronDown size={14} /></ActionButton>
+        }}>Download approved copy</ActionButton> : <ActionButton icon={FileText} onClick={() => setAssetActionMessage("Review request prepared locally. Reviewer queue writeback is not sent from this Viewer page.")}>Request DAM review</ActionButton>}
+        <ActionButton icon={PackageCheck} onClick={() => setAssetActionMessage("Use Package Builder to add ResourceSpace refs without copying originals.")}>Add to package</ActionButton>
+        <ActionButton icon={Share2} onClick={() => setAssetActionMessage("Share links wait for identity and access policy. No public link was created.")}>Create share link</ActionButton>
+        <ActionButton onClick={() => setAssetActionMessage("More actions are limited until policy-backed actions are connected.")}>More actions <ChevronDown size={14} /></ActionButton>
       </div>
     </div>
   );

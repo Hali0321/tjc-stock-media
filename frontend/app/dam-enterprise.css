@@ -67,7 +67,7 @@ body,
 }
 
 .dam-header-inner {
-  grid-template-columns: minmax(520px, 760px) minmax(360px, 1fr) !important;
+  grid-template-columns: minmax(360px, 1fr) auto !important;
   min-height: var(--app-header-height) !important;
 }
 
@@ -99,6 +99,10 @@ body,
   border-radius: 10px !important;
   background: white !important;
   box-shadow: 0 4px 18px rgb(16 24 40 / .05) !important;
+}
+
+.dam-utility-actions .dam-top-search {
+  width: min(34vw, 30rem) !important;
 }
 
 .dam-top-search input {
@@ -554,6 +558,17 @@ body,
   font-weight: 800;
 }
 
+.ed-link-button {
+  border: 0;
+  background: transparent;
+  color: var(--ed-accent);
+  padding: 0;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
 .ed-action.is-primary {
   border-color: var(--ed-accent);
   background: var(--ed-accent);
@@ -675,6 +690,7 @@ body,
 .ed-filter-bar,
 .ed-bulk-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-bottom: 14px;
@@ -1430,7 +1446,7 @@ body,
   grid-template-columns: auto auto;
   align-items: center;
   gap: 6px;
-  min-height: 34px;
+  min-height: 40px;
   border: 1px solid var(--ed-border);
   border-radius: 7px;
   background: white;
@@ -1518,7 +1534,7 @@ body,
 }
 
 .ed-review-pager button {
-  min-height: 32px;
+  min-height: 38px;
   border: 1px solid var(--ed-border);
   border-radius: 7px;
   background: white;
@@ -1540,6 +1556,80 @@ body,
   font-size: 11px;
   font-weight: 850;
   text-align: center;
+}
+
+.ed-hero-preview.is-expanded {
+  min-height: clamp(420px, 56vh, 720px);
+}
+
+.ed-review-lock {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #f3d69a;
+  border-radius: 9px;
+  background: #fff8e7;
+  color: #7a520f;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.ed-review-lock.is-complete {
+  border-color: #bbf7d0;
+  background: var(--tjc-success-bg);
+  color: var(--tjc-success);
+}
+
+.ed-review-missing {
+  margin: 0;
+  border: 1px solid #f3d69a;
+  border-radius: 8px;
+  background: #fff8e7;
+  color: #7a520f !important;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.ed-evidence-checks {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.ed-evidence-checks label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  border: 1px solid var(--ed-border);
+  border-radius: 9px;
+  background: #fbfdff;
+  padding: 9px;
+  cursor: pointer;
+}
+
+.ed-evidence-checks input {
+  margin-top: 3px;
+  accent-color: var(--ed-accent);
+}
+
+.ed-evidence-checks strong,
+.ed-evidence-checks small {
+  display: block;
+}
+
+.ed-evidence-checks strong {
+  color: var(--ed-text);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ed-evidence-checks small {
+  color: var(--ed-muted);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .ed-review-cards,
@@ -1704,6 +1794,35 @@ body,
   border-color: rgb(24 180 212 / .22);
   background: var(--ed-accent-soft);
   color: var(--ed-accent);
+}
+
+.ed-brand-status {
+  margin: -6px 0 14px;
+}
+
+.ed-brand-more {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: min(19rem, calc(100vw - 2rem));
+}
+
+.ed-brand-more a {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--ed-border);
+  border-radius: 8px;
+  background: white;
+  padding: 10px;
+  color: var(--ed-text);
+  text-decoration: none;
+}
+
+.ed-brand-more a span {
+  color: var(--ed-muted);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .ed-help-card {
@@ -3333,7 +3452,15 @@ body,
 
   .ed-filter-bar,
   .ed-bulk-toolbar {
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .ed-filter-bar button,
+  .ed-bulk-toolbar button {
+    flex: 1 1 calc(50% - 8px);
+    justify-content: center;
+    min-width: 9rem;
   }
 
   .ed-approved-banner {
@@ -3362,6 +3489,22 @@ body,
     grid-template-columns: minmax(0,1fr);
     gap: 3px;
   }
+
+  .ed-review-list-tools,
+  .ed-review-pager {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ed-page-size,
+  .ed-page-size select,
+  .ed-review-pager button {
+    width: 100%;
+  }
+
+  .ed-brand-nav {
+    scroll-padding-inline: 8px;
+    margin-inline: -2px;
+  }
 }
 
 /* Header search polish: keep enterprise shell, stop legacy layers from over-stretching global search. */
@@ -3369,12 +3512,6 @@ body,
   .dam-header-inner {
     grid-template-columns: minmax(0, 1fr) auto !important;
     gap: 18px !important;
-  }
-
-  .dam-top-nav-slot {
-    display: flex !important;
-    min-width: 0 !important;
-    justify-content: flex-end !important;
   }
 
   .dam-top-search {

@@ -83,6 +83,7 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
         <ShieldCheck size={14} strokeWidth={1.9} aria-hidden="true" />
         {opsShell ? "Operations workbench" : "Approved-copy mode"}
       </span>
+      <DamTopSearch />
       <CommandPalette />
       <Link href="/guide" className="dam-header-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
         <HelpCircle size={18} strokeWidth={1.9} aria-hidden="true" />
@@ -130,7 +131,6 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
           </div>
         ) : null}
       </div>
-      <DamRoleSwitch />
     </div>
   );
 }
@@ -212,12 +212,8 @@ export function DamShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="grain-overlay" aria-hidden="true" />
       <header className="dam-app-header sticky top-0 z-40 px-3 py-3 md:px-5">
-        <div className="dam-header-inner mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 xl:grid-cols-[minmax(18rem,.45fr)_minmax(18rem,42rem)_auto]">
+        <div className="dam-header-inner mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <DamBrand opsShell={opsShell} />
-
-          <div className="dam-top-nav-slot hidden min-w-0 justify-center md:flex">
-            <DamTopSearch />
-          </div>
 
           <DamUtilityActions role={role} opsShell={opsShell} />
 
@@ -257,7 +253,7 @@ export function DamShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main id="main-content" className="relative z-10 min-w-0 pb-4 md:pb-10">{children}</main>
+      <div id="main-content" className="relative z-10 min-w-0 pb-4 md:pb-10">{children}</div>
 
       <Toaster
         position="bottom-center"

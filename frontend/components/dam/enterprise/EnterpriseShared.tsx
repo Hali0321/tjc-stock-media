@@ -109,7 +109,9 @@ export function SavedViewPanel({
   activeView,
   activeCollection,
   onViewSelect,
-  onCollectionSelect
+  onCollectionSelect,
+  onSavedViewsExpand,
+  onFacetSelect
 }: {
   savedViews?: Array<{ id: string; label: string; count: number }>;
   collections?: Array<{ id: string; name: string; count: number }>;
@@ -118,14 +120,16 @@ export function SavedViewPanel({
   activeCollection?: string;
   onViewSelect?: (id: string) => void;
   onCollectionSelect?: (id: string) => void;
+  onSavedViewsExpand?: () => void;
+  onFacetSelect?: (label: string) => void;
 }) {
   const firstViews = savedViews.slice(0, 5);
   return (
     <aside className="ed-panel ed-facet-panel">
       <section>
-        <div className="ed-panel-title"><h3>Saved views</h3><button type="button"><Plus size={14} /></button></div>
+        <div className="ed-panel-title"><h3>Saved views</h3><button type="button" onClick={onSavedViewsExpand} aria-label="Show saved view setup note"><Plus size={14} /></button></div>
         {firstViews.map((view, index) => <button className={cn((activeView ? activeView === view.id : index === 0) && "is-active")} type="button" key={view.id} onClick={() => onViewSelect?.(view.id)}><span>{view.label}</span><em>{view.count.toLocaleString()}</em></button>)}
-        {!firstViews.length ? <p>No saved views mapped yet.</p> : <a>Show all saved views</a>}
+        {!firstViews.length ? <p>No saved views mapped yet.</p> : <button className="ed-link-button" type="button" onClick={onSavedViewsExpand}>Show all saved views</button>}
       </section>
       <section>
         <div className="ed-panel-title"><h3>{sourceNoun(source)} collections</h3><ChevronDown size={14} /></div>
@@ -138,7 +142,7 @@ export function SavedViewPanel({
       ].map(([group, rows]) => (
         <section key={group as string}>
           <div className="ed-panel-title"><h3>{group as string}</h3><ChevronDown size={14} /></div>
-          {(rows as string[]).map((label) => <label className="ed-check-row" key={label}><input type="checkbox" /><span>{label}</span></label>)}
+          {(rows as string[]).map((label) => <label className="ed-check-row" key={label}><input type="checkbox" checked={false} onChange={() => onFacetSelect?.(label)} /><span>{label}</span></label>)}
         </section>
       ))}
     </aside>
@@ -162,18 +166,19 @@ export function RightsVerdictCard({ asset, source }: { asset?: StockMediaAsset; 
           <p>{asset?.reuseDecision?.summary || asset?.usageGuidance || `Usage rights are not fully provided in ${noun}.`}</p>
         </div>
       </div>
-      <ActionButton>View Usage Guidelines</ActionButton>
+      <Link className="ed-action" href="/guide">View Usage Guidelines</Link>
     </section>
   );
 }
 
 export function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAsset; source?: MediaSourceStatus | null; live?: boolean }) {
   const [tab, setTab] = useState(inspectorDrawerTabs[0]);
+  const [message, setMessage] = useState("");
   if (!asset) return <aside className="ed-inspector ed-panel"><h2>Select an asset</h2><p>{sourceNoun(source)} search returned no visible assets.</p></aside>;
   const tabRows = inspectorMetadataRows({ asset, tab, source });
   return (
     <aside className="ed-inspector ed-panel">
-      <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {asset.resourceSpaceId || asset.id}</strong><span>›</span><button type="button">×</button></div>
+      <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {asset.resourceSpaceId || asset.id}</strong><span>›</span><button type="button" onClick={() => setMessage("Inspector stays pinned on desktop. Select another record to change context.")}>×</button></div>
       <AssetThumb asset={asset} className="ed-inspector-preview" fit="contain" />
       <h2 title={displayTitle(asset)}>{displayTitle(asset)}</h2>
       <div className="ed-meta-line"><StatusBadge status={assetEnterpriseStatus(asset)} /><span>{assetDate(asset)}</span><span>{formatBytes(asset.fileSizeBytes)}</span></div>
@@ -183,10 +188,11 @@ export function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAss
       <dl className="ed-metadata">
         {tabRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
+      {message ? <p className="ed-inline-success">{message}</p> : null}
       <div className="ed-inspector-actions">
-        <ActionButton tone="dark" icon={Download} disabled={!asset.reuseDecision?.downloadable}>Download</ActionButton>
-        <ActionButton icon={Folder}>Add to package</ActionButton>
-        <ActionButton icon={Share2}>Share asset</ActionButton>
+        <ActionButton tone="dark" icon={Download} disabled={!asset.reuseDecision?.downloadable} onClick={() => setMessage("Open the asset record to run the backend download gate before downloading.")}>Download</ActionButton>
+        <ActionButton icon={Folder} onClick={() => setMessage("Use Package Builder to add ResourceSpace refs without copying originals.")}>Add to package</ActionButton>
+        <ActionButton icon={Share2} onClick={() => setMessage("Share links wait for identity and access policy. No public link was created.")}>Share asset</ActionButton>
       </div>
     </aside>
   );

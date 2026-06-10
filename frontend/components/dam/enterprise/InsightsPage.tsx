@@ -80,10 +80,10 @@ function InsightStatCard({ stat }: { stat: InsightStat }) {
   );
 }
 
-function InsightPanel({ title, action = "View all", className = "", children }: { title: string; action?: string; className?: string; children: ReactNode }) {
+function InsightPanel({ title, action, actionHref, className = "", children }: { title: string; action?: string; actionHref?: string; className?: string; children: ReactNode }) {
   return (
     <section className={`ed-card ed-insight-panel ${className}`}>
-      <header className="ed-card-head"><h3>{title}</h3><a>{action}</a></header>
+      <header className="ed-card-head"><h3>{title}</h3>{action && actionHref ? <a href={actionHref}>{action}</a> : null}</header>
       {children}
     </section>
   );
@@ -103,7 +103,7 @@ function PeriodMenu({
   const active = insightPeriods.find((period) => period.id === activePeriod) || insightPeriods[0];
   return (
     <div className="ed-action-menu-wrap">
-      <ActionButton icon={Calendar} onClick={onToggle}>{active.label}</ActionButton>
+      <ActionButton icon={Calendar} onClick={onToggle}>Period: {active.label}</ActionButton>
     </div>
   );
 }
@@ -312,12 +312,12 @@ function AdminInsights({
     <>
       <div className="ed-insight-stat-grid">{stats.map((stat) => <InsightStatCard key={stat.label} stat={stat} />)}</div>
       <div className="ed-insights-board is-admin">
-        {filters.review ? <InsightPanel title="Review Workload" action="Open review queue"><MetricRows rows={reviewRows} /></InsightPanel> : null}
-        {filters.review ? <InsightPanel title="Governance / Risk Summary" action="View details"><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel> : null}
+        {filters.review ? <InsightPanel title="Review Workload" action="Open review queue" actionHref="/review"><MetricRows rows={reviewRows} /></InsightPanel> : null}
+        {filters.review ? <InsightPanel title="Governance / Risk Summary" action="Open admin" actionHref="/admin"><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel> : null}
         {filters.usage ? <InsightPanel title="Top Searched Terms"><TopicsList usage={usage} savedViews={[]} />{!hasUsageRows ? <SampleLabel>Sample data until search logging is connected</SampleLabel> : null}</InsightPanel> : null}
         {filters.usage ? <InsightPanel title="Top Assets"><TopAssetsList assets={assets} usage={usage} />{!usage?.topAssets?.length ? <SampleLabel>Sample data until usage logging is connected</SampleLabel> : null}</InsightPanel> : null}
         {filters.source ? <InsightPanel title="Source Health / Integration Status"><SourceHealth total={rawTotal} usageTotal={usage?.totalEvents || 0} sourceLabelText={sourceText} /><p className="ed-footnote"><Info size={14} /> Operational diagnostics visible to reviewer/admin roles.</p></InsightPanel> : null}
-        {filters.usage ? <InsightPanel title="Trends" className="is-wide" action="View trends"><TrendPanel usage={usage} /></InsightPanel> : null}
+        {filters.usage ? <InsightPanel title="Trends" className="is-wide"><TrendPanel usage={usage} /></InsightPanel> : null}
         {filters.source ? <InsightPanel title="Content Snapshot"><ContentSnapshot assets={assets} /><p className="ed-footnote"><Info size={14} /> Based on current result page.</p></InsightPanel> : null}
       </div>
       {!Object.values(filters).some(Boolean) ? <section className="ed-card ed-analytics-empty"><Filter size={22} /><strong>No insight sections selected</strong><p>Turn on at least one filter to show operational panels.</p></section> : null}
@@ -351,11 +351,11 @@ function ViewerInsights({
     { label: "Recent Uploads", value: (counts?.approvedThisMonth || 0).toLocaleString(), detail: "last 30 days", meta: "visible library period", tone: "teal", icon: UploadCloud }
   ];
   const useCases = [
-    ["Find images for website or announcements", "Browse photos, banners, and graphics", ImageIcon],
-    ["Find sermon or slide backgrounds", "Widescreen and social sizes", FileText],
-    ["Find social media content", "Square, story, and post-ready assets", Share2],
-    ["Find newsletter assets", "Header images and content blocks", FileText],
-    ["Find videos for events or ministries", "Events, testimonies, and ministry highlights", Search]
+    ["Find images for website or announcements", "Browse photos, banners, and graphics", ImageIcon, "/?q=website%20announcement"],
+    ["Find sermon or slide backgrounds", "Widescreen and social sizes", FileText, "/?q=sermon%20slides"],
+    ["Find social media content", "Square, story, and post-ready assets", Share2, "/?q=social"],
+    ["Find newsletter assets", "Header images and content blocks", FileText, "/?q=newsletter"],
+    ["Find videos for events or ministries", "Events, testimonies, and ministry highlights", Search, "/?q=video%20events"]
   ] as const;
   const reuseGuide = [
     ["Use approved assets", "All media in this library is reviewed for accuracy and brand alignment."],
@@ -373,12 +373,12 @@ function ViewerInsights({
     <>
       <div className="ed-insight-stat-grid">{stats.map((stat) => <InsightStatCard key={stat.label} stat={stat} />)}</div>
       <div className="ed-viewer-board">
-        <InsightPanel title="My Common Use Cases" action="View all use cases">{useCases.map(([title, detail, Icon]) => <a className="ed-use-case" href="/" key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong><span>›</span></a>)}</InsightPanel>
-        <InsightPanel title="Frequently Used Topics" action="Browse all topics"><TopicsList usage={usage} savedViews={savedViews} /></InsightPanel>
+        <InsightPanel title="My Common Use Cases" action="View all use cases" actionHref="/guide">{useCases.map(([title, detail, Icon, href]) => <a className="ed-use-case" href={href} key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong><span>›</span></a>)}</InsightPanel>
+        <InsightPanel title="Frequently Used Topics" action="Browse all topics" actionHref="/?view=saved"><TopicsList usage={usage} savedViews={savedViews} /></InsightPanel>
         <InsightPanel title="Recently Viewed Assets"><div className="ed-recent-assets">{assets.slice(0, 5).map((asset) => <article key={asset.id}><AssetThumb asset={asset} /><strong>{displayTitle(asset)}<small>{assetType(asset)} · {formatBytes(asset.fileSizeBytes)}</small></strong><span>Visible</span></article>)}</div></InsightPanel>
-        <InsightPanel title="Top Categories" action="Explore all categories"><CategoryDonut assets={assets} visibleTotal={visible} /></InsightPanel>
-        <InsightPanel title="Approved Media Reuse Guide" action="View brand guidelines">{reuseGuide.map(([title, detail]) => <p className="ed-guide-row" key={title}><CheckCircle2 size={16} /><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
-        <InsightPanel title="Tips & Shortcuts" action="View help center">{tips.map(([title, detail, Icon]) => <p className="ed-tip-row" key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
+        <InsightPanel title="Top Categories" action="Explore all categories" actionHref="/collections"><CategoryDonut assets={assets} visibleTotal={visible} /></InsightPanel>
+        <InsightPanel title="Approved Media Reuse Guide" action="View brand guidelines" actionHref="/brand-hub">{reuseGuide.map(([title, detail]) => <p className="ed-guide-row" key={title}><CheckCircle2 size={16} /><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
+        <InsightPanel title="Tips & Shortcuts" action="View help center" actionHref="/guide">{tips.map(([title, detail, Icon]) => <p className="ed-tip-row" key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
       </div>
     </>
   );
