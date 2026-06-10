@@ -72,6 +72,9 @@ export function BetaPrototypeTools() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [route, setRoute] = useState("/");
+  const activeMissions = missions[role];
+  const completedMissionCount = activeMissions.filter((item) => checked[item.label]).length;
+  const missionProgress = activeMissions.length ? Math.round((completedMissionCount / activeMissions.length) * 100) : 0;
 
   useEffect(() => {
     if (!ready) return;
@@ -175,8 +178,15 @@ export function BetaPrototypeTools() {
                     <ShieldAlert size={18} />
                     <p>Beta only. No sensitive media. Role switch is simulated for QA only. No live ResourceSpace writeback. Queued review is not ResourceSpace success. Stop testing for Critical/P0 privacy, source-truth, or download-gate issues.</p>
                   </section>
+                  <section className="beta-progress-panel" aria-label="Mission progress">
+                    <div>
+                      <strong>{completedMissionCount}/{activeMissions.length}</strong>
+                      <span>{role} mission progress</span>
+                    </div>
+                    <progress value={completedMissionCount} max={activeMissions.length} aria-label={`${missionProgress}% complete`} />
+                  </section>
                   <div className="beta-mission-list">
-                    {missions[role].map((item) => (
+                    {activeMissions.map((item) => (
                       <label key={item.label} className={checked[item.label] ? "is-done" : ""}>
                         <input type="checkbox" checked={Boolean(checked[item.label])} onChange={() => toggleMission(item.label)} />
                         <span><strong>{item.label}</strong><small>{item.detail}</small></span>

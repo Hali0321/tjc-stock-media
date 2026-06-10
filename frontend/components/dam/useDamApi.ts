@@ -183,7 +183,8 @@ export function useInsights(role: DemoRole) {
 }
 
 export function useAdminReadiness(role: DemoRole) {
-  return useJsonApi<DamReadinessResult>(`/api/admin/readiness?role=${encodeURIComponent(role)}`, role);
+  const url = role === "DAM Admin" ? `/api/admin/readiness?role=${encodeURIComponent(role)}` : null;
+  return useJsonApi<DamReadinessResult>(url, role);
 }
 
 export function useBrandKit(id: string, role: DemoRole) {
