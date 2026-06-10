@@ -31,6 +31,13 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function safeDisplayText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  if (text.includes("..") || /[\\/]/.test(text)) return "";
+  if (/source path|master drive|checksum/i.test(text)) return "";
+  return text;
+}
+
 function safeId(value: unknown) {
   return safeText(value, 100).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
@@ -63,16 +70,17 @@ function safeIso(value: unknown) {
 export function sanitizeSavedSearch(input: unknown) {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const filters = Array.isArray(raw.filters) ? raw.filters : [];
-  const query = safeText(raw.query, 200);
+  const query = safeDisplayText(raw.query, 200);
   const view = safeRef(raw.view);
   const collection = safeRef(raw.collection);
+  const safeFilters = [...new Set(filters.map(safeFilter).filter(Boolean))].slice(0, 24);
   return {
     id: safeId(raw.id) || "",
-    title: safeText(raw.title, 120) || query || view || collection || "Saved search",
+    title: safeDisplayText(raw.title, 120) || query || view || collection || safeFilters[0] || "Saved search",
     query,
     view: view || undefined,
     collection: collection || undefined,
-    filters: [...new Set(filters.map(safeFilter).filter(Boolean))].slice(0, 24),
+    filters: safeFilters,
     sort: safeSort(raw.sort)
   };
 }
