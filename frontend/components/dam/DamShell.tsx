@@ -188,9 +188,9 @@ export function DamShell({ children }: { children: ReactNode }) {
           <AppNav role={role} variant="menu" />
           <section className="dam-quick-access" aria-label="Quick access">
             <h2>Quick access</h2>
-            <Link href="/"><Star size={15} />Favorites</Link>
-            <Link href="/"><Clock size={15} />Recent</Link>
-            <Link href="/upload"><UploadCloud size={15} />My uploads</Link>
+            <Link href="/?view=saved"><Star size={15} />Saved views</Link>
+            <Link href="/?view=recently-approved"><Clock size={15} />Recent approvals</Link>
+            <Link href="/upload"><UploadCloud size={15} />Send media</Link>
           </section>
           <section className="dam-storage-meter" aria-label="Storage used">
             <h2>Storage used</h2>

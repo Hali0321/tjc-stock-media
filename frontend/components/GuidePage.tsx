@@ -44,7 +44,7 @@ const commonTasks: HelpTask[] = [
   { id: "find", title: "Find approved media", summary: "Search by use case, event, ministry, topic, or package.", href: "/", icon: Search },
   { id: "status", title: "Check approval status", summary: "View approval, rights, usage scope, and expiration.", href: "/", icon: ShieldCheck },
   { id: "download", title: "Download approved copy", summary: "Open the record and download the approved derivative.", href: "/", icon: Download },
-  { id: "package", title: "Use a package", summary: "Start from a curated ministry kit and confirm each item.", href: "/collections", icon: FolderOpen },
+  { id: "collection", title: "Use a collection", summary: "Start from a curated ministry collection and confirm each item.", href: "/collections", icon: FolderOpen },
   { id: "source", title: "Request source-file access", summary: "Request access to source/original files when needed.", href: "/guide#request-review", icon: FileLock2 },
   { id: "send", title: "Send media for review", summary: "Submit files or links for review and approval.", href: "/upload", icon: UploadCloud },
   { id: "public", title: "Public / external use", summary: "Review rules for public, social, and external use.", href: "/guide#policies", icon: Globe2 },
@@ -59,7 +59,7 @@ const reviewReasons = [
 ];
 
 const quickLinks = [
-  { title: "Packages", detail: "Browse ministry packages and kits", href: "/collections", icon: FolderOpen },
+  { title: "Collections", detail: "Browse ministry collections and kits", href: "/collections", icon: FolderOpen },
   { title: "Recent uploads", detail: "View recently uploaded media", href: "/upload", icon: UploadCloud },
   { title: "Source-file access", detail: "Submit or check source-file requests", href: "/guide#request-review", icon: FileLock2 },
   { title: "Review requests", detail: "Track review and access requests", href: "/review", icon: FileText }

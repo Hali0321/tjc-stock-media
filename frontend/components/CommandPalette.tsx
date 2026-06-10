@@ -24,7 +24,8 @@ type Command = {
 
 const commands: Command[] = [
   { id: "go-library", group: "Go to", label: "Find", hint: "Open the role-safe DAM contact sheet", href: "/", keywords: "find library home assets contact sheet", icon: Search, shortcut: "G F" },
-  { id: "go-collections", group: "Go to", label: "Packages", hint: "Open curated ministry packages", href: "/collections", keywords: "deliver collections campaign ministry governed portals events packages", icon: FolderOpen, shortcut: "G P" },
+  { id: "go-collections", group: "Go to", label: "Collections", hint: "Open curated ministry collections", href: "/collections", keywords: "deliver collections campaign ministry governed portals events packages", icon: FolderOpen, shortcut: "G C" },
+  { id: "go-package-builder", group: "Go to", label: "Package Builder", hint: "Draft a governed ResourceSpace-backed package", href: "/packages", keywords: "package builder draft resourcespace toolkit sections share publish", icon: Archive, shortcut: "G P" },
   { id: "go-upload", group: "Go to", label: "Send media", hint: "Open contributor send-for-review flow", href: "/upload", keywords: "intake upload contributor submit files send media", icon: UploadCloud, shortcut: "G U" },
   { id: "go-review", group: "Go to", label: "Review inbox", hint: "Open reviewer operations workbench", href: "/review", keywords: "review governance queue evidence inbox", icon: ShieldAlert, shortcut: "G R", reviewerOnly: true, access: "Reviewer", tag: "Reviewer" },
   { id: "go-guide", group: "Go to", label: "Guide", hint: "Open use guidance and policy notes", href: "/guide", keywords: "guide help rules usage children credit", icon: HelpCircle, shortcut: "G ?" },
@@ -32,7 +33,7 @@ const commands: Command[] = [
 
   { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Find search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
   { id: "find-rs-id", group: "Find", label: "Search reference code", hint: "Type a numeric reference code to open media", href: "/", keywords: "resourcespace media record id reference ref search number", icon: KeyRound, shortcut: "ID" },
-  { id: "find-collection", group: "Find", label: "Search packages", hint: "Find curated packages by event, ministry, or campaign", href: "/collections", keywords: "deliver collection campaign event ministry stable id packages", icon: Tags, shortcut: "C" },
+  { id: "find-collection", group: "Find", label: "Search collections", hint: "Find curated collections by event, ministry, or campaign", href: "/collections", keywords: "deliver collection campaign event ministry stable id packages", icon: Tags, shortcut: "C" },
   { id: "find-blocked", group: "Find", label: "Search blocked downloads", hint: "Show assets blocked by reuse or download policy", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish needs review", icon: ShieldAlert, shortcut: "B" },
 
   { id: "portal-ready", group: "Saved views", label: "External ready", hint: "Assets approved for external ministry use", href: "/?view=approved-church-wide", keywords: "external ministry safe portal ready approved reusable", icon: ShieldCheck, shortcut: "1" },

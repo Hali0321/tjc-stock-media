@@ -3150,3 +3150,56 @@ body,
     gap: 12px;
   }
 }
+
+/* Sidebar IA polish: labels now match URLs and desktop rail reads as grouped DAM areas. */
+.dam-nav-group {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.dam-nav-group + .dam-nav-group {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgb(15 61 46 / .08);
+}
+
+.dam-nav-group-label {
+  padding: 0 10px 3px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.dam-desktop-rail .workbench-menu-nav {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 8px !important;
+}
+
+.dam-desktop-rail .dam-nav-group + .dam-nav-group {
+  border-top-color: rgb(255 255 255 / .13);
+}
+
+.dam-desktop-rail .dam-nav-group-label {
+  color: rgb(203 213 225 / .82);
+}
+
+.dam-desktop-rail .workbench-menu-nav a {
+  width: 100%;
+  justify-content: flex-start !important;
+}
+
+.dam-desktop-rail .workbench-menu-nav .nav-label {
+  min-width: 0;
+  line-height: 1.15 !important;
+}
+
+.workbench-mobile-menu .dam-nav-group + .dam-nav-group {
+  margin-top: 5px;
+  padding-top: 9px;
+}
