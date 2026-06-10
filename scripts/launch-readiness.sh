@@ -57,14 +57,17 @@ require_file "docs/user-guide.md"
 require_file "docs/reviewer-guide.md"
 require_file "docs/rights-workflow.md"
 require_file "docs/shared-drive-structure.md"
+require_file "docs/beta-readiness-command-center.md"
+require_file "frontend/lib/beta-readiness-facts.ts"
 require_file "scripts/backup.sh"
 require_file "scripts/restore-test.sh"
 require_file "scripts/video-manifest.sh"
 
-if git ls-files | grep -Eiq '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$'; then
+if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-launch-media-tracked.txt; then
   fail "media files are tracked by git"
+  cat /tmp/tjc-launch-media-tracked.txt
 else
-  pass "no media files tracked by git"
+  pass "no church media files tracked by git; app brand assets allowed"
 fi
 
 if [ -f .env ]; then
@@ -75,6 +78,17 @@ if [ -f .env ]; then
   fi
 else
   warn ".env missing; local runtime may not be configured"
+fi
+
+if [ -f docs/screenshots/qa/browser-qa-report.json ]; then
+  if node -e 'const fs=require("fs"); const report=JSON.parse(fs.readFileSync("docs/screenshots/qa/browser-qa-report.json","utf8")); const failures=[...(report.failures||[]), ...(report.consoleErrors||[]), ...(report.networkFailures||[])]; if (failures.length) { console.error(`browser QA failure signals: ${failures.length}`); process.exit(1); }' >/tmp/tjc-browser-qa-check.txt 2>&1; then
+    pass "browser QA report has no failure signals"
+  else
+    fail "browser QA report has failure signals"
+    cat /tmp/tjc-browser-qa-check.txt
+  fi
+else
+  warn "browser QA report missing; run make portal-browser-qa before inviting teammates"
 fi
 
 if [ -d .runtime/backups ]; then

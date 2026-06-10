@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
-import { roleSourceEnvelope } from "@/lib/media-source/session";
+import { createDamRouteSession } from "@/lib/dam-route-session";
 import { normalizeTextField } from "@/lib/request-validation";
-import { requestIdentity } from "@/lib/request-identity";
-import { assetForRolePayload, savedViewsForRolePayload } from "@/lib/source-redaction";
-import { recordUsageEvent } from "@/lib/usage-analytics";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { DemoRole, SearchResult } from "@/lib/types";
 
@@ -25,8 +22,9 @@ function canSeeOperationalSearch(role: DemoRole) {
   return role === "Reviewer" || role === "DAM Admin";
 }
 
-function searchResultForRole(role: DemoRole, result: SearchResult) {
-  const envelope = roleSourceEnvelope(role, result.source);
+function searchResultForRole(session: ReturnType<typeof createDamRouteSession>, result: SearchResult) {
+  const role = session.role;
+  const envelope = session.sourceEnvelope(result.source);
   if (canSeeOperationalSearch(role)) {
     return {
       ...result,
@@ -35,7 +33,7 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
   }
 
   return {
-    assets: result.assets.map((asset) => assetForRolePayload(role, asset)),
+    assets: session.assetsPayload(result.assets),
     total: result.total,
     pagination: result.pagination,
     ...envelope,
@@ -47,15 +45,15 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
       rendered: result.counts.rendered
     },
     appliedIntent: result.appliedIntent,
-    savedViews: savedViewsForRolePayload(role, result.savedViews),
+    savedViews: session.savedViewsPayload(result.savedViews),
     collections: result.collections
   };
 }
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const identity = requestIdentity(request, params.get("role"));
-  const role = identity.role;
+  const session = createDamRouteSession(request, params.get("role"));
+  const role = session.role;
   const query = normalizeTextField(params.get("q"), "", 200);
   const filters = params
     .getAll("filter")
@@ -85,13 +83,11 @@ export async function GET(request: NextRequest) {
       dailyEvents: usageAnalytics.dailyEvents
     };
   }
-  recordUsageEvent({
+  session.recordUsage({
     type: "search",
-    role,
-    actor: identity.id,
     route: "/api/assets/search",
     query: query || view || collection || "default",
     metadata: { rendered: result.pagination.rangeEnd - result.pagination.rangeStart + (result.pagination.rangeStart ? 1 : 0), total: result.total }
   });
-  return NextResponse.json(searchResultForRole(role, result));
+  return NextResponse.json(searchResultForRole(session, result));
 }

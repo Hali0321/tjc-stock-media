@@ -12,7 +12,6 @@ import {
   collectionDefinitions,
   includesAny,
   intentDefinitions,
-  matchesCatalogQuery,
   matchesCatalogFilter,
   savedViewDefinitions,
   viewAliases
@@ -24,6 +23,7 @@ import {
   buildSavedViews,
   buildZeroResultInsights
 } from "@/lib/catalog-summaries";
+import { buildCatalogDiscovery, discoveryScore, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { getActiveMediaSource } from "@/lib/media-source";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { assetMatchesReviewQueue, missingReviewFields, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
@@ -175,9 +175,11 @@ export async function searchAssets({
   const visible = roleVisible
     .filter((asset) => (selectedView ? selectedView.match(asset) : true))
     .filter((asset) => collectionMatches(asset, collection))
-    .filter((asset) => matchesCatalogQuery(asset, effectiveQuery))
+    .filter((asset) => matchesDiscoveryQuery(asset, effectiveQuery))
     .filter((asset) => matchesFilters(asset, filters));
-  const sorted = sortCatalogAssets(visible, sort);
+  const sorted = effectiveQuery.trim()
+    ? [...visible].sort((a, b) => discoveryScore(b, effectiveQuery) - discoveryScore(a, effectiveQuery) || statusWeight(a) - statusWeight(b) || a.title.localeCompare(b.title))
+    : sortCatalogAssets(visible, sort);
 
   const counts = countAssetGovernance(roleVisible);
   const pagedAssets = sorted.slice(safeOffset, safeOffset + safeLimit);
@@ -218,6 +220,13 @@ export async function searchAssets({
             confidence: intent?.confidence || (selectedCollection ? "exact" : "none")
           }
         : undefined,
+    discovery: buildCatalogDiscovery({
+      query: effectiveQuery,
+      view: selectedViewId,
+      collection,
+      matchedAssets: sorted,
+      totalVisible: roleVisible.length
+    }),
     zeroResultInsights: buildZeroResultInsights(roleVisible),
     operationalInsights: buildOperationalInsights(roleVisible),
     savedViews: buildSavedViews(roleVisible),

@@ -63,3 +63,19 @@ export function usageAnalyticsDbPath() {
 export function brandKitCollectionId(key: string) {
   return process.env[key] || "";
 }
+
+export function betaFeedbackEnabled() {
+  return process.env.BETA_FEEDBACK_ENABLED !== "0";
+}
+
+export function betaTaskModeEnabled() {
+  return process.env.BETA_TASK_MODE_ENABLED !== "0";
+}
+
+export function hasVercelKvConfig() {
+  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+}
+
+export function hasVercelBlobConfig() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}

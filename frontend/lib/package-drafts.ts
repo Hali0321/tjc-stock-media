@@ -1,5 +1,6 @@
 import type { EnterpriseStatus } from "@/lib/enterprise-status";
-import type { DamPackage, DamPackageSection, StockMediaAsset } from "@/lib/types";
+import type { DamPackage, DamPackageSection, DemoRole, StockMediaAsset } from "@/lib/types";
+import { buildPackageGovernance } from "@/lib/package-governance";
 
 export type PackageAssetStatus = EnterpriseStatus;
 
@@ -10,10 +11,16 @@ export type ResolvedPackageSection = DamPackageSection & {
 
 export type PackagePublishReadiness = {
   canPublish: boolean;
+  canPreview: boolean;
+  canShare: boolean;
   totalRefs: number;
+  portalReadyRefs: number;
+  internalOnlyRefs: number;
+  reviewRequiredRefs: number;
   blockedRefs: number;
   missingRefs: number;
   reason: string;
+  auditMessage: string;
 };
 
 export const defaultPackageSections: DamPackageSection[] = [
@@ -145,20 +152,24 @@ export function availableAssetsForSection({
     .slice(0, 6);
 }
 
-export function packagePublishReadiness(draft: DamPackage, resolvedSections: ResolvedPackageSection[], statusOf: (asset: StockMediaAsset) => PackageAssetStatus): PackagePublishReadiness {
-  const allAssets = resolvedSections.flatMap((section) => section.assets);
-  const totalRefs = draft.sections.reduce((sum, section) => sum + section.resourceSpaceAssetIds.length, 0);
-  const missingRefs = resolvedSections.reduce((sum, section) => sum + section.missingResourceSpaceAssetIds.length, 0);
-  const blockedRefs = allAssets.filter((asset) => statusOf(asset) !== "Approved").length;
-
-  if (!totalRefs) {
-    return { canPublish: false, totalRefs, blockedRefs, missingRefs, reason: "Publish blocked until this package has ResourceSpace refs." };
-  }
-  if (missingRefs) {
-    return { canPublish: false, totalRefs, blockedRefs, missingRefs, reason: "Publish blocked because some ResourceSpace refs no longer resolve." };
-  }
-  if (blockedRefs) {
-    return { canPublish: false, totalRefs, blockedRefs, missingRefs, reason: "Publish blocked until all refs are approved." };
-  }
-  return { canPublish: true, totalRefs, blockedRefs, missingRefs, reason: "All refs pass current approval check." };
+export function packagePublishReadiness(
+  draft: DamPackage,
+  resolvedSections: ResolvedPackageSection[],
+  _statusOf: (asset: StockMediaAsset) => PackageAssetStatus,
+  role: DemoRole = "DAM Admin"
+): PackagePublishReadiness {
+  const governance = buildPackageGovernance(draft, resolvedSections, role);
+  return {
+    canPublish: governance.canPublish,
+    canPreview: governance.canPreview,
+    canShare: governance.canShare,
+    totalRefs: governance.totalRefs,
+    portalReadyRefs: governance.portalReadyRefs,
+    internalOnlyRefs: governance.internalOnlyRefs,
+    reviewRequiredRefs: governance.reviewRequiredRefs,
+    blockedRefs: governance.blockedRefs,
+    missingRefs: governance.missingRefs,
+    reason: governance.reason,
+    auditMessage: governance.auditMessage
+  };
 }

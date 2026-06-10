@@ -12,6 +12,7 @@ import {
   buildDuplicateGroupCounts
 } from "@/lib/asset-governance";
 import { auditLogDiagnostics } from "@/lib/audit-log";
+import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildFieldMappings, buildVocabulary } from "@/lib/dam-readiness-metadata";
 import { getActiveMediaSource } from "@/lib/media-source";
 import { buildIntegrationReadiness } from "@/lib/dam-readiness-integrations";
@@ -168,6 +169,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
   const duplicateScore = 100 - ratio(duplicateCandidates, assetCount);
   const staleScore = 100 - ratio(staleApprovals, assetCount);
   const renditionScore = 100 - ratio(renditionGaps, assetCount);
+  const integrationReadiness = buildIntegrationReadiness({ status, approvedPublic, portalReady, auditEvents: auditLog });
 
   const readiness = [
     readinessItem({
@@ -298,7 +300,13 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
       staleApprovals,
       duplicateCandidates
     }),
-    integrationReadiness: buildIntegrationReadiness({ status, approvedPublic, portalReady, auditEvents: auditLog }),
+    integrationReadiness,
+    betaReadiness: buildBetaReadiness({
+      integrations: integrationReadiness,
+      assetCount,
+      portalReady,
+      auditRecent: auditLog.recent
+    }),
     auditLog
   };
 }

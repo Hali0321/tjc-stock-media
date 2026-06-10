@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, ChevronDown, Clock, HelpCircle, LogOut, Menu, Search, ShieldCheck, Star, UploadCloud, UserCircle, X } from "lucide-react";
 import { Toaster } from "sonner";
 import { AppNav } from "@/components/AppNav";
+import { BetaPrototypeTools } from "@/components/BetaPrototypeTools";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useDemoRole } from "@/components/RoleProvider";
 import { roles } from "@/lib/permissions";
@@ -254,6 +255,7 @@ export function DamShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div id="main-content" className="relative z-10 min-w-0 pb-4 md:pb-10">{children}</div>
+      <BetaPrototypeTools />
 
       <Toaster
         position="bottom-center"

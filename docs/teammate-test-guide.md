@@ -6,8 +6,11 @@ Last updated: 2026-06-10
 
 - Hosted beta URL: TBD after private deployment is approved and configured.
 - Local QA URL used for this readiness pass: `http://localhost:4868`
+- Beta readiness command center: `docs/beta-readiness-command-center.md`
 
 This is a beta test deployment, not a production launch. ResourceSpace remains the source of truth. Review decisions may queue as portal pending-write evidence unless live writeback is explicitly enabled. Do not upload sensitive, private, unreleased, youth-identifiable, or copyrighted media for this test round.
+
+Before inviting teammates, clear the Go / No-Go checklist in `docs/beta-readiness-command-center.md`. A local dry run can proceed before the hosted URL exists, but external teammate invites should wait for private access, safe seed data, and an assigned feedback triager.
 
 ## Roles
 
@@ -17,6 +20,17 @@ This is a beta test deployment, not a production launch. ResourceSpace remains t
 - DAM Admin: tests governance/admin setup clarity.
 
 Use the account menu role switch for beta QA only. Production access will use trusted identity/SSO.
+
+## Role Invite Links
+
+Replace the host with the Vercel beta URL:
+
+- Viewer: `/?role=Viewer&taskMode=1`
+- Contributor: `/upload?role=Contributor&taskMode=1`
+- Reviewer: `/review?role=Reviewer&taskMode=1`
+- DAM Admin: `/admin?role=DAM%20Admin&taskMode=1`
+
+Task Mode opens an in-app checklist, quick links, beta limits, and a Report issue button. Reports are stored through `/api/beta-feedback` and visible to DAM Admins in Admin → Feedback Inbox.
 
 ## Test Tasks
 
@@ -35,6 +49,8 @@ Use the account menu role switch for beta QA only. Production access will use tr
 
 - Hosted beta URL is not configured yet.
 - ResourceSpace writeback should remain disabled unless explicitly approved.
+- Vercel env should include `BETA_FEEDBACK_ENABLED=1`, `BETA_TASK_MODE_ENABLED=1`, `RESOURCESPACE_ENABLE_WRITEBACK=0`, and `RESOURCESPACE_WRITEBACK_MODE=queued`.
+- Vercel KV/Blob env comes from Vercel storage integrations; local development falls back to `data/runtime/beta-feedback.json`.
 - Package drafts, saved views, favorites, and invites are local beta affordances unless backend storage is connected.
 - SSO is not live; beta role switch simulates access.
 - Static S3-only hosting is not enough for this app because Next API routes are required.

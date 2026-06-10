@@ -4,11 +4,6 @@ import { AlertTriangle, CheckCircle2, Database, Gauge, ListChecks, Lock, type Lu
 import type { AdminActionItem } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
-export {
-  EvidenceChecklist as DamEvidenceChecklist,
-  GovernanceMetric as DamGovernanceMetric
-} from "@/components/DamExperience";
-
 export { HoldReleaseButton as DamHoldReleaseButton, HoldToConfirmButton as DamHoldToConfirmButton } from "@/components/HoldReleaseButton";
 export { ReviewActionDialog as DamReviewActionDialog } from "@/components/ReviewActionDialog";
 export { ReviewQueueAssetCard as DamReviewQueueAssetCard } from "@/components/ReviewQueueAssetCard";
@@ -21,6 +16,55 @@ function opsToneClass(tone: OpsTone) {
   if (tone === "danger") return "border-[#dfb9b5] bg-[#fff1ef] text-[#7b332f]";
   if (tone === "warn") return "border-[#ead6a8] bg-[#fff8e8] text-[#71500f]";
   return "border-[#c8d7e6] bg-[#f2f7fb] text-[#27435b]";
+}
+
+export function DamEvidenceChecklist({
+  items,
+  onToggle
+}: {
+  items: Array<{ id: string; label: string; complete: boolean }>;
+  onToggle?: (id: string) => void;
+}) {
+  return (
+    <div className="grid gap-2" aria-label="Evidence checklist">
+      {items.map((item) => (
+        <button
+          type="button"
+          className={cn("grid min-h-11 grid-cols-[auto_1fr] items-center gap-3 rounded-[10px] border px-3 text-left text-sm font-black transition", item.complete ? "border-[#b9d8c6] bg-[#eef8f2] text-[#194f34]" : "border-[#d8e1da] bg-white text-[#3f4a43] hover:bg-[#f8faf8]")}
+          onClick={() => onToggle?.(item.id)}
+          key={item.id}
+        >
+          {item.complete ? <CheckCircle2 size={17} strokeWidth={1.9} aria-hidden="true" /> : <span className="h-4 w-4 rounded-full border border-[#a7b5ac]" aria-hidden="true" />}
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function DamGovernanceMetric({
+  label,
+  value,
+  detail,
+  tone = "info",
+  href
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+  tone?: OpsTone;
+  href?: string;
+}) {
+  const classes = cn("governance-metric block rounded-lg border p-4 transition", opsToneClass(tone));
+  const content = (
+    <>
+      <span className="text-sm font-black">{label}</span>
+      <strong className="mt-2 block text-3xl font-black tabular-nums text-current">{typeof value === "number" ? value.toLocaleString() : value}</strong>
+      <span className="mt-2 block text-sm font-semibold leading-snug opacity-85">{detail}</span>
+    </>
+  );
+  if (href) return <Link className={classes} href={href}>{content}</Link>;
+  return <div className={classes}>{content}</div>;
 }
 
 function opsSeverityClass(severity: AdminActionItem["severity"]) {

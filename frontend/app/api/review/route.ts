@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { getReviewQueue } from "@/lib/catalog";
-import { sourceEnvelope } from "@/lib/media-source/session";
+import { createDamRouteSession } from "@/lib/dam-route-session";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview } from "@/lib/permissions";
-import { requestIdentity } from "@/lib/request-identity";
 import { runReviewActionWorkflow, type ReviewActionRequestBody } from "@/lib/review-action-workflow";
 import { reviewQueues, type ReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
@@ -17,13 +16,13 @@ function normalizeQueue(value: string | null): ReviewQueueId {
 }
 
 export async function GET(request: NextRequest) {
-  const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  const role = identity.role;
+  const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
+  const role = session.role;
   if (!canReview(role)) {
     appendAuditEvent({
       type: "review_denied",
       role,
-      actor: identity.id,
+      actor: session.identity.id,
       status: "denied",
       summary: "Review queue access denied for role.",
       details: { reason: "role-cannot-review" }
@@ -32,7 +31,7 @@ export async function GET(request: NextRequest) {
   }
   const queueId = normalizeQueue(request.nextUrl.searchParams.get("queue"));
   const queue = await getReviewQueue(role, queueId);
-  const envelope = sourceEnvelope(queue.source);
+  const envelope = session.rawSourceEnvelope(queue.source);
   return NextResponse.json({
     ...queue,
     ...envelope,

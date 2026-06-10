@@ -17,10 +17,9 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
 - `git status --short --branch`: on `goal/dam-workbench-v2-redesign`, clean before this memo.
 - Latest commits include `ac75bff fix: prepare DAM beta for teammate testing`.
 - `make frontend-check`: passed typecheck and production Next build.
-- `make launch-readiness`: failed with one failure and one warning:
-  - Failure: `media files are tracked by git`
-  - Warning: `.env still contains placeholder values`
-- Tracked media currently reported by `git ls-files`: `frontend/public/brand/tjc-logo-english-color.png` and `frontend/public/brand/tjc-logo-english-white.png`.
+- `make launch-readiness`: now passes after allowing app brand assets under `frontend/public/brand/`; remaining warning is `.env` placeholder values.
+- `BASE_URL=http://localhost:4868 make portal-api-smoke`: passed.
+- `BASE_URL=http://localhost:4868 make portal-browser-qa`: passed with 16 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, and zero network failures.
 
 ## Ready Enough For Teammate Test
 
@@ -44,7 +43,7 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
 - Many preview states depend on current ResourceSpace export derivative coverage.
 - Audit log is read-only/admin-signaling, not a full durable enterprise audit ledger.
 - Production host, access allowlist, backup schedule, restore owner, and church PC/NAS handoff remain external blockers.
-- Launch readiness currently fails because brand PNGs are tracked as media by the repo guardrail.
+- Launch readiness allows app brand PNGs but still blocks church media assets tracked by Git.
 
 ## Missing For Initial Teammate Test Round
 
@@ -72,7 +71,7 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
 
 7. Demo data hygiene
    - Confirm no private church media or sensitive youth-identifiable media is visible in beta.
-   - Confirm tracked brand PNGs are intentionally allowed or adjust launch readiness guardrail.
+   - Confirm tracked brand PNGs remain the only allowed media exception.
 
 ## Missing For Enterprise-Level DAM Target
 
@@ -189,8 +188,8 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
    - Assumption: ResourceSpace derivative/export path is accessible.
 
 5. Launch-readiness media allowlist
-   - Either allow tracked brand assets explicitly or move them out of the guardrail.
-   - Selected because current launch-readiness fails despite only brand logos being tracked.
+   - Keep tracked brand assets explicitly allowed while blocking church media.
+   - Selected because app logos are intentional frontend assets, while source media must stay out of Git.
    - Assumption: brand logos are intentional app assets, not church media archive files.
 
 ## Top Five Priorities
@@ -224,9 +223,8 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
 
 Do the teammate test prep slice first:
 
-1. Resolve the launch-readiness tracked-media failure or document an explicit brand-asset exception.
-2. Add a beta readiness checklist with owner/status for URL, seed data, roles, known limits, feedback intake, and stop-test rule.
-3. Deploy or rehearse the private beta path.
-4. Run one internal dry test as Viewer + Reviewer before inviting teammates.
+1. Assign owner/status for private URL, seed data, roles, known limits, feedback intake, and stop-test rule.
+2. Deploy or rehearse the private beta path behind access control.
+3. Run one more internal dry test as Viewer + Reviewer on hosted beta before inviting teammates.
 
 Do not start enterprise backend rebuild before the teammate round unless beta testing is blocked by auth or deployment.

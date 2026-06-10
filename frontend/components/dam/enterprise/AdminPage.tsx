@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bell, Box, Check, ClipboardCheck, Database, FileText, HardDrive, KeyRound, Lock, Plug, Settings, Shield, ShieldCheck, Sparkles, Tags, Users } from "lucide-react";
+import { Bell, Box, Check, ClipboardCheck, Database, Download, FileText, HardDrive, KeyRound, Lock, MessageSquareWarning, Plug, RefreshCw, Settings, Shield, ShieldCheck, Sparkles, Tags, Users } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAdminReadiness } from "@/components/dam/useDamApi";
 import { adminNavItems, adminNavLabel, integrationReadinessColumns, integrationState, policySummaryRows, systemHealthRows } from "@/lib/admin-control";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
-import type { DamReadinessResult, IntegrationReadinessItem } from "@/lib/types";
+import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DamReadinessResult, IntegrationReadinessItem } from "@/lib/types";
 import { ActionButton, CustodyMapPanel, ErrorCard, KpiCard, LoadingCard, PageHeader, SourcePill, StatusBadge } from "./EnterpriseShared";
 
 const roleRows = [
@@ -37,8 +37,118 @@ const moduleIcons = {
   "ai-moderation": Sparkles,
   integrations: Plug,
   "audit-logs": Bell,
+  "feedback-inbox": MessageSquareWarning,
   "system-settings": Settings
 } as const;
+
+const feedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "agent-ready", "fixed", "wont-fix"];
+const feedbackSeverities: Array<BetaFeedbackSeverity | "all"> = ["all", "critical", "high", "medium", "low"];
+
+function FeedbackInboxModule() {
+  const [feedback, setFeedback] = useState<BetaFeedbackRecord[]>([]);
+  const [statusFilter, setStatusFilter] = useState<BetaFeedbackStatus | "all">("all");
+  const [severityFilter, setSeverityFilter] = useState<BetaFeedbackSeverity | "all">("all");
+  const [routeFilter, setRouteFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  async function loadFeedback() {
+    setLoading(true);
+    setMessage("");
+    const response = await fetch("/api/beta-feedback?role=DAM%20Admin", { headers: { Accept: "application/json" } });
+    const payload = await response.json().catch(() => ({}));
+    setLoading(false);
+    if (!response.ok) {
+      setMessage(payload.error || "Feedback inbox failed to load.");
+      return;
+    }
+    setFeedback(payload.feedback || []);
+  }
+
+  useEffect(() => {
+    void loadFeedback();
+  }, []);
+
+  const routes = useMemo(() => ["all", ...Array.from(new Set(feedback.map((item) => item.route.split("?")[0]).filter(Boolean))).sort()], [feedback]);
+  const roles = useMemo(() => ["all", ...Array.from(new Set(feedback.map((item) => item.role))).sort()], [feedback]);
+  const filtered = useMemo(() => feedback.filter((item) => (
+    (statusFilter === "all" || item.status === statusFilter)
+    && (severityFilter === "all" || item.severity === severityFilter)
+    && (routeFilter === "all" || item.route.startsWith(routeFilter))
+    && (roleFilter === "all" || item.role === roleFilter)
+  )), [feedback, roleFilter, routeFilter, severityFilter, statusFilter]);
+
+  async function updateFeedback(id: string, patch: Partial<Pick<BetaFeedbackRecord, "status" | "severity" | "notes">>) {
+    const response = await fetch(`/api/beta-feedback/${encodeURIComponent(id)}?role=DAM%20Admin`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(patch)
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setMessage(payload.error || "Feedback update failed.");
+      return;
+    }
+    setFeedback((current) => current.map((item) => (item.id === id ? payload.feedback : item)));
+  }
+
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: "application/json" });
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = `tjc-beta-feedback-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(href);
+  }
+
+  return (
+    <section className="ed-card ed-admin-module beta-feedback-inbox">
+      <header className="ed-card-head">
+        <div><h3>Feedback Inbox</h3><p>Teammate reports from internal beta task mode. Use agent-ready for implementation backlog.</p></div>
+        <div className="beta-feedback-actions">
+          <button className="ed-link-button" type="button" onClick={() => void loadFeedback()}><RefreshCw size={14} />Refresh</button>
+          <button className="ed-link-button" type="button" onClick={exportJson}><Download size={14} />Export JSON</button>
+        </div>
+      </header>
+      <div className="ed-admin-stat-grid">
+        <article><strong>{feedback.length.toLocaleString()}</strong><span>reports</span><small>all beta feedback</small></article>
+        <article><strong>{feedback.filter((item) => item.severity === "critical" || item.severity === "high").length.toLocaleString()}</strong><span>high priority</span><small>critical + high</small></article>
+        <article><strong>{feedback.filter((item) => item.status === "agent-ready").length.toLocaleString()}</strong><span>agent-ready</span><small>ready for fix pass</small></article>
+      </div>
+      <div className="beta-feedback-filters">
+        <label>Status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as BetaFeedbackStatus | "all")}>{["all", ...feedbackStatuses].map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Severity<select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value as BetaFeedbackSeverity | "all")}>{feedbackSeverities.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Route<select value={routeFilter} onChange={(event) => setRouteFilter(event.target.value)}>{routes.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Role<select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>{roles.map((item) => <option key={item}>{item}</option>)}</select></label>
+      </div>
+      {loading ? <LoadingCard label="Loading beta feedback..." /> : message ? <ErrorCard message={message} /> : (
+        <div className="beta-feedback-list">
+          {filtered.length ? filtered.map((item) => (
+            <article className="beta-feedback-item" key={item.id}>
+              <header>
+                <div><strong>{item.task}</strong><small>{item.role} · {item.route} · {new Date(item.createdAt).toLocaleString()}</small></div>
+                <span className={`beta-severity is-${item.severity}`}>{item.severity}</span>
+              </header>
+              <dl>
+                <div><dt>Expected</dt><dd>{item.expected}</dd></div>
+                <div><dt>Actual</dt><dd>{item.actual}</dd></div>
+                <div><dt>Context</dt><dd>{[item.browser, item.device, item.viewport].filter(Boolean).join(" · ") || "No device context"}</dd></div>
+              </dl>
+              {item.attachmentUrl ? <a className="beta-feedback-attachment" href={item.attachmentUrl} target="_blank" rel="noreferrer">Open attachment</a> : null}
+              <footer>
+                <label>Status<select value={item.status} onChange={(event) => void updateFeedback(item.id, { status: event.target.value as BetaFeedbackStatus })}>{feedbackStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+                <label>Severity<select value={item.severity} onChange={(event) => void updateFeedback(item.id, { severity: event.target.value as BetaFeedbackSeverity })}>{feedbackSeverities.filter((value) => value !== "all").map((severity) => <option key={severity}>{severity}</option>)}</select></label>
+                <label>Admin notes<textarea value={item.notes || ""} onChange={(event) => setFeedback((current) => current.map((row) => row.id === item.id ? { ...row, notes: event.target.value } : row))} onBlur={(event) => void updateFeedback(item.id, { notes: event.target.value })} placeholder="Triage note for next agent..." /></label>
+              </footer>
+            </article>
+          )) : <section className="ed-empty-state"><MessageSquareWarning size={24} /><h2>No feedback in this filter</h2><p>Share role invite links with teammates, then reports appear here.</p></section>}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function IntegrationTable({ rows = [] }: { rows?: IntegrationReadinessItem[] }) {
   return (
@@ -77,6 +187,7 @@ function AdminModuleContent({ activeNav, readiness, onSelectModule }: { activeNa
   const metrics = readiness?.metrics;
   const integrations = readiness?.integrationReadiness || [];
   if (activeNav === "overview") return <OverviewModule readiness={readiness} onSelectModule={onSelectModule} />;
+  if (activeNav === "feedback-inbox") return <FeedbackInboxModule />;
   if (activeNav === "users-roles") return (
     <section className="ed-card ed-admin-module">
       <header className="ed-card-head"><div><h3>Users & Access</h3><p>Identity is SSO-ready, but live IdP headers are not verified in this beta.</p></div><StatusBadge status="Pending setup" /></header>

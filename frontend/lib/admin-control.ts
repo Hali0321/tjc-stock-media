@@ -27,6 +27,7 @@ export type CustodyMapRow = {
 
 export const adminNavItems: AdminNavItem[] = [
   { id: "overview", label: "Overview" },
+  { id: "feedback-inbox", label: "Feedback Inbox" },
   { id: "users-roles", label: "Users & Access" },
   { id: "roles-permissions", label: "Permission Matrix" },
   { id: "teams", label: "Teams & Owners" },

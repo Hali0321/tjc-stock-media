@@ -18,7 +18,10 @@ export type AuditEventType =
   | "collection_draft_denied"
   | "collection_draft_previewed"
   | "batch_action_denied"
-  | "batch_action_previewed";
+  | "batch_action_previewed"
+  | "admin_denied"
+  | "beta_feedback_submitted"
+  | "beta_feedback_triaged";
 
 export type AuditEventRecord = {
   id: string;

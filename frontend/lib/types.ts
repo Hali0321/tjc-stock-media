@@ -254,6 +254,30 @@ export type DamUser = {
   sourceSystem?: "sso" | "local-beta";
 };
 
+export type BetaFeedbackSeverity = "low" | "medium" | "high" | "critical";
+
+export type BetaFeedbackStatus = "new" | "triaged" | "agent-ready" | "fixed" | "wont-fix";
+
+export type BetaFeedbackRecord = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  role: DemoRole;
+  route: string;
+  task: string;
+  severity: BetaFeedbackSeverity;
+  expected: string;
+  actual: string;
+  status: BetaFeedbackStatus;
+  notes?: string;
+  reporterName?: string;
+  browser?: string;
+  device?: string;
+  viewport?: string;
+  attachmentUrl?: string;
+  storageMode: "vercel-kv" | "local-json";
+};
+
 export type DamPackageSection = {
   id: string;
   title: string;
@@ -389,6 +413,22 @@ export type IntegrationReadinessItem = {
   state?: "Operational" | "Degraded" | "Not configured" | "Read-only" | "Blocked" | "Pending setup";
 };
 
+export type BetaReadinessFact = {
+  id: string;
+  label: string;
+  ready: boolean;
+  state: "pass" | "warn" | "block";
+  detail: string;
+  source: "integration" | "qa-report" | "environment" | "launch-readiness" | "catalog";
+};
+
+export type BetaReadinessResult = {
+  ready: boolean;
+  score: number;
+  generatedAt: string;
+  facts: BetaReadinessFact[];
+};
+
 export type AuditEventSummary = {
   id: string;
   type: string;
@@ -449,6 +489,7 @@ export type DamReadinessResult = {
   portalPolicy: PortalPolicyCheck[];
   actionBacklog: AdminActionItem[];
   integrationReadiness: IntegrationReadinessItem[];
+  betaReadiness: BetaReadinessResult;
   auditLog: {
     count: number;
     latestAt?: string;
@@ -500,6 +541,18 @@ export type SearchResult = {
     matchedView?: string;
     matchedCollection?: string;
     confidence: "exact" | "synonym" | "none";
+  };
+  discovery: {
+    mode: "browse" | "smart-query" | "saved-view" | "collection";
+    summary: string;
+    expandedTerms: string[];
+    suggestedFilters: Array<{
+      label: string;
+      filter: string;
+      count: number;
+      kind: "policy" | "media" | "people" | "shape" | "workflow";
+    }>;
+    scoreHint: string;
   };
   zeroResultInsights: ZeroResultInsight[];
   operationalInsights: OperationalInsight[];

@@ -17,7 +17,11 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setRoleState(normalizeRole(window.localStorage.getItem("tjc-demo-role")));
+    const queryRole = new URLSearchParams(window.location.search).get("role");
+    const storedRole = window.localStorage.getItem("tjc-demo-role");
+    const nextRole = normalizeRole(queryRole || storedRole);
+    setRoleState(nextRole);
+    if (queryRole) window.localStorage.setItem("tjc-demo-role", nextRole);
     setReady(true);
   }, []);
 

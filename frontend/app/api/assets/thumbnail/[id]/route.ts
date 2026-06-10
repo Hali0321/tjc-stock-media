@@ -2,9 +2,8 @@ import fs from "node:fs";
 import { NextRequest, NextResponse } from "next/server";
 import { decideAccess, type AccessAction } from "@/lib/access-decisions";
 import { getAssetRecordById } from "@/lib/catalog";
+import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
-import { roleSourceEnvelope } from "@/lib/media-source/session";
-import { normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +36,8 @@ function supportedImageContentType(bytes: Buffer) {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
-  const role = normalizeRole(request.nextUrl.searchParams.get("role"));
+  const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
+  const role = session.role;
   if (!id) {
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             ? "card"
             : "small";
   const { asset, source } = await getAssetRecordById(id);
-  const envelope = roleSourceEnvelope(role, source);
+  const envelope = session.sourceEnvelope(source);
   if (!asset) {
     return NextResponse.json({ error: "Asset not found.", ...envelope }, { status: 404 });
   }

@@ -1,0 +1,170 @@
+import type { DemoRole, DamPackage, ReuseBlocker, ReuseState, StockMediaAsset } from "@/lib/types";
+import type { ResolvedPackageSection } from "@/lib/package-drafts";
+import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
+
+export type PackageGovernanceAsset = {
+  ref: string;
+  sectionId: string;
+  sectionTitle: string;
+  asset: StockMediaAsset;
+  reuseState: ReuseState;
+  reuseLabel: string;
+  canPreview: boolean;
+  canDownload: boolean;
+  publishReady: boolean;
+  shareReady: boolean;
+  blockers: ReuseBlocker[];
+  reason: string;
+};
+
+export type PackageGovernanceSection = {
+  id: string;
+  title: string;
+  totalRefs: number;
+  resolvedRefs: number;
+  missingRefs: Array<string | number>;
+  portalReadyRefs: number;
+  internalOnlyRefs: number;
+  reviewRequiredRefs: number;
+  blockedRefs: number;
+  blockers: string[];
+  assets: PackageGovernanceAsset[];
+};
+
+export type PackageGovernancePacket = {
+  role: DemoRole;
+  canPreview: boolean;
+  canShare: boolean;
+  canPublish: boolean;
+  totalRefs: number;
+  resolvedRefs: number;
+  missingRefs: number;
+  portalReadyRefs: number;
+  internalOnlyRefs: number;
+  reviewRequiredRefs: number;
+  blockedRefs: number;
+  reason: string;
+  auditMessage: string;
+  commandCenter: Array<{
+    label: string;
+    status: "ready" | "blocked" | "review";
+    detail: string;
+  }>;
+  sections: PackageGovernanceSection[];
+};
+
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function roleCanShareInternal(role: DemoRole) {
+  return role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
+}
+
+function assetReason(asset: StockMediaAsset, blockers: ReuseBlocker[]) {
+  if (!blockers.length) return asset.usageGuidance || "Portal reuse checks pass.";
+  return blockers.map((blocker) => blocker.label).join(", ");
+}
+
+function classifyAsset(sectionId: string, sectionTitle: string, asset: StockMediaAsset, role: DemoRole): PackageGovernanceAsset {
+  const packet = buildPortalReuseDecision(asset, role);
+  const ref = String(asset.resourceSpaceId || asset.id);
+  const portalReady = packet.reuse.state === "portal-ready";
+  const internalReady = packet.reuse.state === "internal-ready";
+  const canShare = portalReady || (internalReady && roleCanShareInternal(role));
+
+  return {
+    ref,
+    sectionId,
+    sectionTitle,
+    asset,
+    reuseState: packet.reuse.state,
+    reuseLabel: packet.reuse.label,
+    canPreview: packet.access.viewDetailPreview.allowed,
+    canDownload: packet.access.downloadApprovedCopy.allowed,
+    publishReady: portalReady,
+    shareReady: canShare,
+    blockers: packet.reuse.blockers,
+    reason: assetReason(asset, packet.reuse.blockers)
+  };
+}
+
+function command(label: string, ready: boolean, detail: string, review = false): PackageGovernancePacket["commandCenter"][number] {
+  return {
+    label,
+    status: ready ? "ready" : review ? "review" : "blocked",
+    detail
+  };
+}
+
+export function buildPackageGovernance(draft: DamPackage, resolvedSections: ResolvedPackageSection[], role: DemoRole): PackageGovernancePacket {
+  const sections = resolvedSections.map((section): PackageGovernanceSection => {
+    const assets = section.assets.map((asset) => classifyAsset(section.id, section.title, asset, role));
+    const portalReadyRefs = assets.filter((item) => item.reuseState === "portal-ready").length;
+    const internalOnlyRefs = assets.filter((item) => item.reuseState === "internal-ready").length;
+    const reviewRequiredRefs = assets.filter((item) => item.reuseState !== "portal-ready" && item.reuseState !== "internal-ready").length;
+    const blockedRefs = section.missingResourceSpaceAssetIds.length + internalOnlyRefs + reviewRequiredRefs;
+    const blockers = uniqueStrings([
+      ...section.missingResourceSpaceAssetIds.map((ref) => `Missing ResourceSpace ref ${ref}`),
+      ...assets.flatMap((item) => item.publishReady ? [] : [`${item.ref}: ${item.reason}`])
+    ]);
+
+    return {
+      id: section.id,
+      title: section.title,
+      totalRefs: section.resourceSpaceAssetIds.length,
+      resolvedRefs: section.assets.length,
+      missingRefs: section.missingResourceSpaceAssetIds,
+      portalReadyRefs,
+      internalOnlyRefs,
+      reviewRequiredRefs,
+      blockedRefs,
+      blockers,
+      assets
+    };
+  });
+
+  const totalRefs = draft.sections.reduce((sum, section) => sum + section.resourceSpaceAssetIds.length, 0);
+  const allAssets = sections.flatMap((section) => section.assets);
+  const resolvedRefs = allAssets.length;
+  const missingRefs = sections.reduce((sum, section) => sum + section.missingRefs.length, 0);
+  const portalReadyRefs = allAssets.filter((item) => item.reuseState === "portal-ready").length;
+  const internalOnlyRefs = allAssets.filter((item) => item.reuseState === "internal-ready").length;
+  const reviewRequiredRefs = allAssets.filter((item) => item.reuseState !== "portal-ready" && item.reuseState !== "internal-ready").length;
+  const blockedRefs = missingRefs + internalOnlyRefs + reviewRequiredRefs;
+  const hasRefs = totalRefs > 0;
+  const canPreview = hasRefs && missingRefs === 0 && allAssets.every((item) => item.canPreview);
+  const canShare = canPreview && allAssets.every((item) => item.shareReady);
+  const canPublish = hasRefs && missingRefs === 0 && allAssets.every((item) => item.publishReady);
+  const reason = !hasRefs
+    ? "Package needs ResourceSpace refs before preview, share, or publish."
+    : missingRefs
+      ? "Package has ResourceSpace refs that no longer resolve."
+      : internalOnlyRefs
+        ? "Publish blocked because some refs are Internal ready only."
+        : reviewRequiredRefs
+          ? "Publish blocked until every ref is Portal Ready."
+          : "Every ref is Portal Ready for package publishing.";
+
+  return {
+    role,
+    canPreview,
+    canShare,
+    canPublish,
+    totalRefs,
+    resolvedRefs,
+    missingRefs,
+    portalReadyRefs,
+    internalOnlyRefs,
+    reviewRequiredRefs,
+    blockedRefs,
+    reason,
+    auditMessage: `Package governance: ${portalReadyRefs}/${totalRefs} Portal Ready, ${internalOnlyRefs} internal-only, ${reviewRequiredRefs} review-required, ${missingRefs} missing.`,
+    commandCenter: [
+      command("Preview", canPreview, canPreview ? "All refs can render a role-safe preview." : "Preview waits for resolvable refs and role-safe previews.", !canPreview && hasRefs),
+      command("Share", canShare, canShare ? "Share packet can stay within current role policy." : "Share waits for Portal Ready refs or internal-ready refs allowed for this role.", !canShare && hasRefs),
+      command("Publish", canPublish, canPublish ? "All refs are Portal Ready; ResourceSpace originals stay canonical." : reason, !canPublish && hasRefs)
+    ],
+    sections
+  };
+}

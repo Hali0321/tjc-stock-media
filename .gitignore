@@ -1,6 +1,7 @@
 .env
 .DS_Store
 .runtime/
+data/runtime/
 imports/
 exports/
 backups/

@@ -3,12 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { decideAccess } from "@/lib/access-decisions";
 import { getAssetRecordById } from "@/lib/catalog";
+import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
-import { roleSourceEnvelope } from "@/lib/media-source/session";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
-import { requestIdentity } from "@/lib/request-identity";
-import { recordUsageEvent } from "@/lib/usage-analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +20,13 @@ type DownloadGateBody = {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
-  const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  const role = identity.role;
+  const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
+  const role = session.role;
   if (!id) {
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
   const { asset, source } = await getAssetRecordById(id);
-  const envelope = roleSourceEnvelope(role, source);
+  const envelope = session.sourceEnvelope(source);
 
   if (!asset) {
     return NextResponse.json({ error: "Asset not found", ...envelope }, { status: 404 });
@@ -84,24 +82,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
   const body = (await request.json().catch(() => ({}))) as DownloadGateBody;
-  const identity = requestIdentity(request, body.role);
-  const role = identity.role;
+  const session = createDamRouteSession(request, body.role);
+  const role = session.role;
   if (!id) {
     return NextResponse.json({ allowed: false, error: "Malformed asset id." }, { status: 400 });
   }
 
   const { asset, source } = await getAssetRecordById(id);
-  const envelope = roleSourceEnvelope(role, source);
+  const envelope = session.sourceEnvelope(source);
 
   if (!asset) {
     return NextResponse.json({ allowed: false, reason: "Asset not found", ...envelope }, { status: 404 });
   }
 
   const access = decideAccess(role, "downloadApprovedCopy", asset);
-  recordUsageEvent({
+  session.recordUsage({
     type: "download_gate",
-    role,
-    actor: identity.id,
     assetId: asset.id,
     resourceSpaceId: asset.resourceSpaceId || asset.id,
     route: `/api/download/${asset.id}`,
