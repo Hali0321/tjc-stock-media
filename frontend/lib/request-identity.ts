@@ -11,6 +11,7 @@ function roleFromTrustedValue(value?: string | null): DemoRole | null {
   const tokens = normalized.split(/\s+/).filter(Boolean);
   const has = (term: string) => tokens.includes(term);
   const phrase = (terms: string[]) => terms.every(has);
+  if (tokens.some((token) => ["not", "no", "non", "deny", "denied", "disabled", "false"].includes(token))) return null;
   if (phrase(["dam", "admin"]) || phrase(["media", "admin"]) || normalized === "admin") return "DAM Admin";
   if (has("reviewer") || has("approver") || has("rights")) return "Reviewer";
   if (has("contributor") || has("uploader") || has("submitter")) return "Contributor";
