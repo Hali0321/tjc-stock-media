@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, ChevronDown, Download, FileText, Filter, Grid3X3, Lock, Star } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -12,17 +12,39 @@ import { reviewDecisionActions, reviewWorkbenchTabs } from "@/lib/review-workben
 import { cn } from "@/lib/ui";
 import { ActionButton, AssetThumb, ErrorCard, IconButton, LoadingCard, PageHeader, SourcePill, StatusBadge } from "./EnterpriseShared";
 
+const reviewQueuePageSizeOptions = [8, 12, 20];
+
 export function EnterpriseReviewPage() {
   const { role, ready } = useDemoRole();
   const review = useReviewQueue(role);
   const queue = review.data?.assets || [];
+  const [pageSize, setPageSize] = useState(8);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pendingDecisionById, setPendingDecisionById] = useState<Record<string, { status: EnterpriseStatus; message: string; action: string }>>({});
   const [comment, setComment] = useState("");
   const [decisionMessage, setDecisionMessage] = useState("");
+  const pageCount = Math.max(1, Math.ceil(queue.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, pageCount);
+  const pageStart = (safeCurrentPage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, queue.length);
+  const pagedQueue = useMemo(() => queue.slice(pageStart, pageEnd), [queue, pageStart, pageEnd]);
+
   useEffect(() => {
-    if (!selectedId && queue[0]) setSelectedId(queue[0].id);
-  }, [queue, selectedId]);
+    setCurrentPage((page) => Math.min(page, pageCount));
+  }, [pageCount]);
+
+  useEffect(() => {
+    if (!pagedQueue.length) {
+      if (!selectedId && queue[0]) setSelectedId(queue[0].id);
+      return;
+    }
+
+    if (!selectedId || !pagedQueue.some((asset) => asset.id === selectedId)) {
+      setSelectedId(pagedQueue[0].id);
+    }
+  }, [pagedQueue, queue, selectedId]);
+
   if (!ready) return <div className="enterprise-page"><LoadingCard label="Loading role..." /></div>;
   if (role !== "Reviewer" && role !== "DAM Admin") return <div className="enterprise-page"><section className="ed-card ed-access-block"><Lock size={28} /><h1>Review inbox requires reviewer access</h1><p>Approvals, evidence review, assignment, and decision actions are available only to Reviewer and DAM Admin roles.</p><Link href="/">Return to Asset Library</Link></section></div>;
   if (review.loading) return <div className="enterprise-page"><LoadingCard label="Loading ResourceSpace review queue..." /></div>;
@@ -47,8 +69,29 @@ export function EnterpriseReviewPage() {
           <PageHeader title="Review Queue" count={`${queue.length.toLocaleString()} items`} actions={<IconButton label="Filter"><Filter size={16} /></IconButton>} />
           <SourcePill source={review.source} live={review.live} />
           <nav className="ed-tabs wrap">{(review.data?.queues || []).slice(0, 6).map((tab, i) => <span className={i === 0 ? "is-active" : ""} key={tab.id}>{tab.label} {tab.count}</span>)}</nav>
-          <button className="ed-sort" type="button">Sort by: Oldest First <ChevronDown size={14} /></button>
-          {queue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={assetEnterpriseStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
+          <div className="ed-review-list-tools" aria-label="Review queue paging controls">
+            <button className="ed-sort" type="button">Sort by: Oldest First <ChevronDown size={14} /></button>
+            <label className="ed-page-size">
+              <span>Rows</span>
+              <select
+                aria-label="Rows per review queue page"
+                value={pageSize}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                {reviewQueuePageSizeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+          </div>
+          <p className="ed-review-page-status">{queue.length ? `${(pageStart + 1).toLocaleString()}-${pageEnd.toLocaleString()} of ${queue.length.toLocaleString()}` : "No review records"}</p>
+          {pagedQueue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={assetEnterpriseStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
+          <nav className="ed-review-pager" aria-label="Review queue pages">
+            <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={safeCurrentPage === 1}>Previous</button>
+            <span>Page {safeCurrentPage} of {pageCount}</span>
+            <button type="button" onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))} disabled={safeCurrentPage === pageCount}>Next</button>
+          </nav>
         </aside>
         {selectedAsset ? (
           <>
