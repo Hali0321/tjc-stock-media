@@ -676,7 +676,7 @@ body,
 .ed-icon-button:focus-visible,
 .ed-tabs button:focus-visible,
 .ed-queue-item:focus-visible,
-.ed-brand-nav button:focus-visible,
+.ed-brand-nav a:focus-visible,
 .ed-admin-nav button:focus-visible,
 .ed-package-outline button:focus-visible,
 .ed-decision-card button:focus-visible,
@@ -1525,33 +1525,43 @@ body,
 
 .ed-brand-layout {
   display: grid;
-  grid-template-columns: 190px minmax(0,1fr) 260px;
+  grid-template-columns: minmax(0,1fr) 260px;
   gap: 14px;
 }
 
 .ed-brand-nav {
-  display: grid;
-  align-content: start;
+  position: sticky;
+  top: calc(var(--app-header-height) + 10px);
+  z-index: 4;
+  display: flex;
+  min-width: 0;
   gap: 8px;
-  padding: 14px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding: 8px;
+  scrollbar-width: thin;
 }
 
-.ed-brand-nav button {
-  min-height: 34px;
-  border: 0;
+.ed-brand-nav a {
+  display: inline-flex;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  border: 1px solid transparent;
   border-radius: 7px;
   background: transparent;
   color: var(--ed-text);
-  padding: 0 10px;
+  padding: 0 12px;
   text-align: left;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.ed-brand-nav button.is-active {
+.ed-brand-nav a:hover,
+.ed-brand-nav a.is-active {
+  border-color: rgb(24 180 212 / .22);
   background: var(--ed-accent-soft);
   color: var(--ed-accent);
-  box-shadow: inset 2px 0 0 var(--ed-accent);
 }
 
 .ed-help-card {
@@ -1561,6 +1571,20 @@ body,
   padding: 14px;
   color: var(--ed-text);
   font-size: 12px;
+  font-weight: 700;
+}
+
+.ed-brand-main {
+  min-width: 0;
+}
+
+.ed-brand-section {
+  scroll-margin-top: calc(var(--app-header-height) + 72px);
+}
+
+.ed-brand-section > p {
+  max-width: 840px;
+  color: var(--ed-muted);
   font-weight: 700;
 }
 
