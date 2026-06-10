@@ -17,7 +17,7 @@ Use this for small internal testing only. Share the stable hosted beta URL, not 
 ## Missions
 
 - Viewer: find `Bible` media, open one asset, and decide whether it is usable for your ministry channel.
-- Contributor: submit a harmless intake packet through Upload. Do not upload sensitive, unreleased, youth-identifiable, or copyrighted media.
+- Contributor: submit a harmless intake packet through Upload. Do not upload sensitive, private, unreleased, youth-identifiable, or copyrighted media.
 - Reviewer: try to approve a review item without evidence, confirm it blocks, then complete evidence and queue a valid decision.
 - DAM Admin: inspect Admin readiness, integration blockers, and Feedback Inbox. Export feedback JSON for agents after testing.
 
@@ -25,7 +25,7 @@ Use this for small internal testing only. Share the stable hosted beta URL, not 
 
 - Beta only.
 - No sensitive uploads.
-- Role switch is simulated for QA.
+- Role switch is simulated for QA only.
 - ResourceSpace writeback is disabled unless explicitly approved.
 - Queued review decisions are portal evidence, not ResourceSpace success.
 - Original/source media stays restricted; portal downloads must stay behind role and reuse gates.
@@ -41,4 +41,4 @@ Severity mapping:
 - Medium: confusing UX slowing the mission.
 - Low: visual polish, wording, or preference.
 
-Stop the test batch for Critical issues. Triage High issues before inviting a wider group.
+Stop the test batch for Critical/P0 issues. Triage High issues before inviting a wider group.

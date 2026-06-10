@@ -123,6 +123,49 @@ function allowlistFact(): BetaReadinessFact {
   });
 }
 
+function betaRoleSwitchFact(): BetaReadinessFact {
+  const shell = safeRead(path.join(repoRoot(), "frontend", "components", "dam", "DamShell.tsx"));
+  const tools = safeRead(path.join(repoRoot(), "frontend", "components", "BetaPrototypeTools.tsx"));
+  const docs = [
+    safeRead(path.join(repoRoot(), "docs", "teammate-test-guide.md")),
+    safeRead(path.join(repoRoot(), "docs", "teammate-beta-invite-pack.md"))
+  ].join("\n");
+  const appCopyReady = /Beta access role/i.test(shell) && /Role switch is simulated/i.test(tools);
+  const docsReady = /role switch (is )?simulated/i.test(docs) && /beta QA only|QA only/i.test(docs);
+  const ready = appCopyReady && docsReady;
+  return fact({
+    id: "beta-role-switch-copy",
+    label: "Beta-only role switch copy",
+    ready,
+    state: ready ? "pass" : "block",
+    detail: ready
+      ? "App and teammate docs label role switching as simulated beta QA, not production access."
+      : "Role switching needs explicit simulated beta-only copy in both app and teammate docs.",
+    source: "launch-readiness"
+  });
+}
+
+function stopTestPolicyFact(): BetaReadinessFact {
+  const docs = [
+    safeRead(path.join(repoRoot(), "docs", "teammate-test-guide.md")),
+    safeRead(path.join(repoRoot(), "docs", "teammate-beta-invite-pack.md")),
+    safeRead(path.join(repoRoot(), "docs", "beta-readiness-command-center.md"))
+  ].join("\n");
+  const hasP0Policy = /P0|Critical/i.test(docs) && /stop (the )?test batch|stop testing/i.test(docs);
+  const hasUnsafeCategories = /sensitive/i.test(docs) && /private/i.test(docs) && /youth-identifiable/i.test(docs) && /copyrighted/i.test(docs);
+  const ready = hasP0Policy && hasUnsafeCategories;
+  return fact({
+    id: "beta-stop-test-policy",
+    label: "P0 stop-test policy",
+    ready,
+    state: ready ? "pass" : "block",
+    detail: ready
+      ? "Teammate docs include stop-test rules and forbidden sensitive/private/youth/copyrighted media categories."
+      : "Teammate docs need explicit stop-test policy plus forbidden sensitive/private/youth/copyrighted media categories.",
+    source: "launch-readiness"
+  });
+}
+
 function seedDataFact(assetCount: number, portalReady: number): BetaReadinessFact {
   const ready = assetCount > 0;
   return fact({
@@ -158,6 +201,8 @@ export function buildBetaReadiness({
     seedDataFact(assetCount, portalReady),
     envFact(),
     allowlistFact(),
+    betaRoleSwitchFact(),
+    stopTestPolicyFact(),
     browserQaFact(),
     fact({
       id: "audit-evidence",

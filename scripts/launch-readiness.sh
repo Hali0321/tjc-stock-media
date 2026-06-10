@@ -226,6 +226,22 @@ else
   fail "batch approval confirmation guard missing"
 fi
 
+if grep -qi 'Beta access role' frontend/components/dam/DamShell.tsx \
+  && grep -qi 'Role switch is simulated for QA only' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Eqi 'role switch (is )?simulated|beta QA only|QA only' docs/teammate-test-guide.md docs/teammate-beta-invite-pack.md; then
+  pass "beta role switch is labeled as simulated QA access"
+else
+  fail "beta role switch simulated-QA copy missing"
+fi
+
+if grep -Eqi 'P0|Critical' docs/teammate-test-guide.md docs/teammate-beta-invite-pack.md docs/beta-readiness-command-center.md \
+  && grep -Eqi 'stop (the )?test batch|stop testing' docs/teammate-test-guide.md docs/teammate-beta-invite-pack.md docs/beta-readiness-command-center.md \
+  && grep -Eqi 'sensitive, private, unreleased, youth-identifiable, or copyrighted media' docs/teammate-test-guide.md docs/teammate-beta-invite-pack.md docs/beta-readiness-command-center.md; then
+  pass "beta stop-test policy and forbidden media categories documented"
+else
+  fail "beta stop-test policy or forbidden media categories missing"
+fi
+
 echo
 echo "Launch readiness summary: failures=$failures warnings=$warnings"
 if [ "$failures" -gt 0 ]; then

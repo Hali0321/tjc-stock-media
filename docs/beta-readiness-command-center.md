@@ -30,10 +30,10 @@ Invite a small internal teammate batch only when these are also true:
 - [x] Hosted post-deploy smoke passes: `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`.
 - [x] Test data source is safe fallback/export data, not live writeback.
 - [ ] No sensitive, private, unreleased, youth-identifiable, or copyrighted media is visible in beta.
-- [ ] Role switch is clearly labeled beta-only.
+- [x] Role switch is clearly labeled beta-only.
 - [ ] ResourceSpace writeback is disabled unless explicitly approved.
 - [x] Feedback triager is assigned: Hali until delegated.
-- [ ] P0 stop-test rule is accepted by testers.
+- [x] P0 stop-test rule is documented for testers.
 
 ## Beta Surface
 
@@ -78,6 +78,7 @@ Checks:
 - Package drafts, saved views, favorites, and invites are beta affordances unless backend storage is connected.
 - Original/master access is not granted by the portal.
 - Do not upload sensitive, private, unreleased, youth-identifiable, or copyrighted media.
+- Stop testing for P0/Critical privacy, source-truth, writeback honesty, or unsafe download issues.
 
 ## Dry-Run Script
 

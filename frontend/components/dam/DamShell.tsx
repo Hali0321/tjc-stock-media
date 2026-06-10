@@ -15,7 +15,7 @@ function DamRoleSwitch({ compact = false }: { compact?: boolean }) {
   const { role, setRole } = useDemoRole();
   return (
     <label className={compact ? "grid gap-1" : "hidden shrink-0 items-center gap-2 md:flex"}>
-      <span id={compact ? "mobile-access-role-label" : "access-role-label"} className={compact ? "text-xs font-black text-tjc-muted" : "sr-only"}>Access role</span>
+      <span id={compact ? "mobile-access-role-label" : "access-role-label"} className={compact ? "text-xs font-black text-tjc-muted" : "sr-only"}>Beta access role</span>
       <select
         aria-labelledby={compact ? "mobile-access-role-label" : "access-role-label"}
         value={role}
@@ -115,7 +115,7 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
                     type="button"
                     onClick={() => {
                       setRole(item);
-                      setAccountMessage(`${item} role selected for this local beta session.`);
+                      setAccountMessage(`${item} simulated role selected for this beta QA session.`);
                     }}
                   >
                     {item}
