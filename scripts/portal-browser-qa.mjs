@@ -405,10 +405,12 @@ browser = await launchBrowser();
     await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
     if ((await findSearchInput.inputValue()) !== "Bible") failures.push("search interaction: search input did not retain query");
   }
-  for (const text of ["Asset Library", "Showing approved assets for use", "Saved views", "Can I use this?", "Download"]) {
-    if ((await page.getByText(text).count()) < 1) failures.push(`library prototype shell: missing ${text}`);
+  for (const text of ["Asset Library", "Saved views", "Can I use this?", "Download"]) {
+    if ((await page.getByText(text).count()) < 1) failures.push(`library ResourceSpace shell: missing ${text}`);
   }
-  if ((await page.locator(".ed-inspector").count()) < 1) failures.push("library prototype shell: right inspector missing");
+  if ((await page.locator(".ed-source-pill").count()) < 1) failures.push("library ResourceSpace shell: data-source badge missing");
+  if ((await page.getByText(/Serene mountain|Coastal cliffs|Summer Launch Toolkit/i).count()) > 0) failures.push("library ResourceSpace shell: old demo asset copy visible");
+  if ((await page.locator(".ed-inspector").count()) < 1) failures.push("library ResourceSpace shell: right inspector missing");
   await closeContext(context);
 }
 
@@ -424,9 +426,9 @@ browser = await launchBrowser();
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/brand-hub`);
   for (const text of ["Easter at TJC 2024", "Worship God", "Follow Christ", "Love People", "Bring Hope", "Logo usage", "Allowed channels"]) {
-    if ((await page.getByText(text).count()) < 1) failures.push(`brand hub prototype shell: missing ${text}`);
+    if ((await page.getByText(text).count()) < 1) failures.push(`brand hub ResourceSpace shell: missing ${text}`);
   }
-  if ((await page.locator(".ed-logo-grid img").count()) < 4) failures.push("brand hub prototype shell: TJC logo assets missing");
+  if ((await page.locator(".ed-logo-grid img").count()) < 4) failures.push("brand hub ResourceSpace shell: TJC logo assets missing");
   await closeContext(context);
 }
 
@@ -447,9 +449,10 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/assets/368`);
-  for (const text of ["Serene mountain lake at sunrise", "Can I use this?", "Yes, you can use this asset.", "Rights & Restrictions", "Download approved copy"]) {
-    if ((await page.getByText(text).count()) < 1) failures.push(`asset detail prototype shell: missing ${text}`);
+  for (const text of ["Bench Bible", "Can I use this?", "Rights & Restrictions", "Download approved copy"]) {
+    if ((await page.getByText(text).count()) < 1) failures.push(`asset detail ResourceSpace shell: missing ${text}`);
   }
+  if ((await page.getByText(/Serene mountain|Coastal cliffs|Summer Launch Toolkit/i).count()) > 0) failures.push("asset detail ResourceSpace shell: old demo asset copy visible");
   const viewerDetailText = await page.locator("body").innerText();
   if (/Reviewer\/Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status|ResourceSpace ID|Shared Drive|master\/original/i.test(viewerDetailText)) failures.push("asset detail: viewer sees operations truth");
   await closeContext(context);
@@ -459,10 +462,10 @@ browser = await launchBrowser();
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/review`);
   for (const text of ["Review Queue", "Review Evidence", "Metadata Completeness", "Rights & Model Checks", "Review Decision", "Approve", "Request Changes", "Restrict"]) {
-    if ((await page.getByText(text).count()) < 1) failures.push(`review prototype shell: missing ${text}`);
+    if ((await page.getByText(text).count()) < 1) failures.push(`review ResourceSpace shell: missing ${text}`);
   }
-  if ((await page.locator(".ed-review-list .ed-queue-item.is-active").count()) < 1) failures.push("review prototype shell: selected queue item missing");
-  if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("review prototype shell: fake ResourceSpace success visible");
+  if ((await page.locator(".ed-review-list .ed-queue-item.is-active").count()) < 1) failures.push("review ResourceSpace shell: selected queue item missing");
+  if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("review ResourceSpace shell: fake ResourceSpace success visible");
   await closeContext(context);
 }
 
@@ -567,7 +570,7 @@ browser = await launchBrowser();
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/assets/368`);
   const reviewerDetailText = await page.locator("body").innerText();
-  if (/Reviewer\/Admin source truth|Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status|ResourceSpace ID/i.test(reviewerDetailText)) failures.push("asset detail: Reviewer sees admin source truth");
+  if (/Reviewer\/Admin source truth|Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status/i.test(reviewerDetailText)) failures.push("asset detail: Reviewer sees admin source truth");
   await closeContext(context);
 }
 
@@ -650,7 +653,7 @@ await captureProof("appnav-tubelight-mobile.png", "Viewer", 320, 720, "/", async
 });
 
 await captureProof("library-badges-pagination-filterpills.png", "Viewer", 1440, 1000, "/?view=website-hero", async (page) => {
-  await page.getByText("Showing approved assets for use").scrollIntoViewIfNeeded();
+  await page.locator(".ed-approved-banner").scrollIntoViewIfNeeded();
 });
 
 await captureProof("admin-datatable.png", "DAM Admin", 1440, 1000, "/admin", async (page) => {

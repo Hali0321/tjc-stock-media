@@ -3,6 +3,7 @@ import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { normalizeTextField } from "@/lib/request-validation";
 import { assetForRolePayload, savedViewsForRolePayload, sourceForRole } from "@/lib/source-redaction";
+import { sourceIsLive, sourceKind } from "@/lib/source-status";
 import type { DemoRole, SearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,10 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
   if (canSeeOperationalSearch(role)) {
     return {
       ...result,
-      source
+      source,
+      sourceStatus: source,
+      sourceKind: sourceKind(source),
+      live: sourceIsLive(source)
     };
   }
 
@@ -35,6 +39,9 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
     total: result.total,
     pagination: result.pagination,
     source,
+    sourceStatus: source,
+    sourceKind: sourceKind(source),
+    live: sourceIsLive(source),
     counts: {
       currentlyShown: result.counts.currentlyShown,
       totalMatching: result.counts.totalMatching,

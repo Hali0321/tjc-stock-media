@@ -7,6 +7,7 @@ import { normalizeAssetId } from "@/lib/request-validation";
 import { isReviewActionBackend, reviewActions, reviewQueues, type ReviewActionBackend, type ReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 import { buildReuseDecision } from "@/lib/reuse-policy";
+import { sourceIsLive, sourceKind } from "@/lib/source-status";
 import type { ReviewEvidenceChecklist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,9 @@ export async function GET(request: NextRequest) {
   const queue = await getReviewQueue(role, queueId);
   return NextResponse.json({
     ...queue,
+    sourceStatus: queue.source,
+    sourceKind: sourceKind(queue.source),
+    live: sourceIsLive(queue.source),
     pendingWrites: Object.fromEntries(
       queue.assets
         .map((asset) => {

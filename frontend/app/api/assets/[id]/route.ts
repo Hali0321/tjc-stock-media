@@ -6,6 +6,7 @@ import { normalizeAssetId } from "@/lib/request-validation";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { assetForRolePayload, sourceForRole } from "@/lib/source-redaction";
+import { sourceIsLive, sourceKind } from "@/lib/source-status";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       pendingReviewWrite: isReviewerOrAdmin && pending ? pendingReviewWriteSummary(pending) : undefined
     },
     source: safeSource,
+    sourceStatus: safeSource,
+    sourceKind: sourceKind(safeSource),
+    live: sourceIsLive(safeSource),
     related: related.filter((item) => canSeeAsset(role, item)).map((item) => assetForRolePayload(role, assetWithRoleImageUrls(item, role))),
     resourceSpaceUrl: isReviewerOrAdmin && asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : undefined
   });
