@@ -139,6 +139,14 @@ Reviewer decisions create a local pending write record first. Live ResourceSpace
 
 If any condition fails, the pending write stays queued or sync-failed and the UI/API must not claim ResourceSpace was updated.
 
+Rehearse the no-live-writeback guard before inviting testers:
+
+```bash
+BASE_URL=http://localhost:4868 make portal-writeback-guard-smoke
+```
+
+This smoke expects ResourceSpace live writeback to be unavailable. It verifies Admin readiness reports review writeback as non-operational, incomplete reviewer evidence is blocked, complete reviewer evidence returns `202` queued pending-write truth, and pending-write readiness remains visible. Do not run it against a staging server where live ResourceSpace writeback has intentionally been enabled.
+
 ## SSO-Ready Shim
 
 Production SSO is deferred, but the backend can map trusted headers to portal roles when `SSO_TRUSTED_HEADERS=1` or `SSO_PROVIDER=cloudflare-access`. Supported inputs include Cloudflare Access style email headers, generic auth request group headers, and optional `SSO_ROLE_MAP_JSON`. Local query/form roles remain beta fallback only.

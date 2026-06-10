@@ -65,6 +65,7 @@ require_file "scripts/video-manifest.sh"
 require_file "scripts/portal-sso-smoke.sh"
 require_file "scripts/portal-usage-smoke.sh"
 require_file "scripts/portal-delivery-smoke.sh"
+require_file "scripts/portal-writeback-guard-smoke.sh"
 require_file "scripts/portal-beta-rehearsal.sh"
 require_file "scripts/portal-hosted-smoke.sh"
 

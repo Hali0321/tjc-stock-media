@@ -327,6 +327,25 @@
       "priority": 19,
       "passes": true,
       "notes": "Added scripts/portal-feedback-smoke.sh, Make target, feedback storage diagnostics, actor-backed feedback records/audit, and Admin readiness beta-feedback-storage row. The smoke submits feedback, verifies Viewer denial, lists and patches via DAM Admin, and checks readiness storage detail. Verified by bash syntax check, frontend-check, local production API smoke, feedback smoke, JSON parse, and diff check."
+    },
+    {
+      "id": "US-020",
+      "title": "Add ResourceSpace writeback guard smoke",
+      "description": "As a DAM operator, I want one repeatable no-live-writeback smoke that proves reviewer decisions queue pending writes instead of faking ResourceSpace sync before a staging field map is approved.",
+      "acceptanceCriteria": [
+        "Add a portal-writeback-guard-smoke command for no-live-writeback local servers.",
+        "The smoke verifies Admin readiness reports ResourceSpace review writeback as non-operational.",
+        "The smoke verifies incomplete reviewer evidence is blocked without sync language.",
+        "The smoke verifies complete reviewer evidence returns 202 queued pending-write truth, not live ResourceSpace success.",
+        "Launch readiness validates the writeback guard smoke script exists.",
+        "Beta readiness docs include the writeback guard command.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Writeback guard smoke passes against a local no-live-writeback server."
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": "Added scripts/portal-writeback-guard-smoke.sh, Make target, launch-readiness file check, and beta/ResourceSpace docs. The smoke proves review writeback remains non-operational without approved live config, blocks incomplete evidence, and returns 202 queued pending-write truth for complete reviewer evidence. Verified by bash syntax check, frontend-check, launch-readiness, local API smoke, writeback guard smoke, JSON parse, and diff check."
     }
   ]
 }
