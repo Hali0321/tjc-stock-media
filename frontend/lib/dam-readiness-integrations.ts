@@ -10,6 +10,7 @@ import {
   trustedSsoHeadersEnabled
 } from "@/lib/env";
 import { pendingReviewWriteDiagnostics } from "@/lib/pending-review-writes";
+import { packageDraftDiagnostics } from "@/lib/package-store";
 import { resourceSpaceFieldMapDiagnostics, resourceSpaceWritebackFieldMapDiagnostics } from "@/lib/resourcespace-field-map";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { IntegrationReadinessItem, MediaSourceStatus } from "@/lib/types";
@@ -33,6 +34,7 @@ export function buildIntegrationReadiness({
   const ssoConfigured = hasSsoConfig();
   const analytics = usageAnalyticsDiagnostics();
   const feedback = betaFeedbackDiagnostics();
+  const packages = packageDraftDiagnostics();
   const writebackFieldMap = resourceSpaceWritebackFieldMapDiagnostics();
   const liveWritebackReady = apiConfigured && resourceSpaceWritebackEnabled() && writebackFieldMap.valid;
   const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_MVP_2024_COLLECTION_ID"));
@@ -187,6 +189,14 @@ export function buildIntegrationReadiness({
       detail: feedback.kvConfigured
         ? `Vercel KV feedback storage is configured. Blob attachments: ${feedback.blobConfigured ? "configured" : "not configured"}. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}.`
         : `Feedback is using ${feedback.primaryStorageMode}${feedback.hostedRuntime ? " in hosted runtime" : ""}; this is suitable for local/private beta rehearsal only, not wider rollout. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}. Configure Vercel KV for durable hosted feedback and Blob for attachments before larger testing.`
+    },
+    {
+      id: "package-draft-storage",
+      label: "Package draft storage",
+      ready: packages.count > 0,
+      owner: "Portal",
+      state: packages.count > 0 ? "Degraded" : "Pending setup",
+      detail: `Package drafts use ${packages.storageMode}; suitable for local/private beta only, not wider rollout. Drafts: ${packages.count.toLocaleString()}; open: ${packages.openCount.toLocaleString()}; blocked refs: ${packages.blockedRefs.toLocaleString()}. Connect durable backend storage before package sharing or invites.`
     },
     {
       id: "brand-kit-collections",

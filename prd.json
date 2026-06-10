@@ -384,6 +384,26 @@
       "priority": 22,
       "passes": true,
       "notes": "Added /api/beta-feedback/export with DAM Admin gate, filter/count packet builder, Admin export wiring, launch-readiness file check, docs, and feedback smoke coverage for Viewer denial plus agent-ready export contents. Verified by typecheck, frontend-check, launch-readiness, API smoke, feedback smoke, JSON parse, and diff check."
+    },
+    {
+      "id": "US-023",
+      "title": "Add package draft storage readiness smoke",
+      "description": "As a DAM operator, I want package draft persistence to have role-gate, sanitization, and readiness proof so ministry package work does not appear more durable or permissive than it is.",
+      "acceptanceCriteria": [
+        "Add package draft storage diagnostics to Admin integration readiness.",
+        "Readiness states package drafts are local-json/private beta only until durable backend storage exists.",
+        "Add a portal-package-smoke command.",
+        "Package smoke verifies Viewer cannot list or save package drafts.",
+        "Package smoke verifies Contributor save sanitizes and dedupes ResourceSpace refs.",
+        "Package smoke verifies Reviewer can list saved drafts.",
+        "Launch readiness validates the package smoke script exists.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Package smoke passes against a local server."
+      ],
+      "priority": 23,
+      "passes": true,
+      "notes": "Added packageDraftDiagnostics, Admin package-draft-storage readiness row, portal-package-smoke, Make/launch-readiness coverage, and beta command-center docs. The smoke proves package role gates, sanitized refs-only persistence, Reviewer listing, and local-json wider-rollout warning. Verified by typecheck, frontend-check, launch-readiness, API smoke, package smoke, JSON parse, and diff check."
     }
   ]
 }

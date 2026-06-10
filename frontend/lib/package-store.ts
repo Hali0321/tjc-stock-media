@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
@@ -35,6 +36,11 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function safeResourceSpaceRef(value: unknown) {
+  const ref = String(value || "").trim().slice(0, 80);
+  return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
+}
+
 export function sanitizePackageDraft(input: unknown): DamPackage {
   const raw = (input || {}) as Partial<DamPackage>;
   const sections = Array.isArray(raw.sections) ? raw.sections : [];
@@ -48,7 +54,7 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
       id: safeText(section?.id, 80) || `section-${index + 1}`,
       title: safeText(section?.title, 120) || `Section ${index + 1}`,
       resourceSpaceAssetIds: Array.isArray(section?.resourceSpaceAssetIds)
-        ? [...new Set(section.resourceSpaceAssetIds.map((ref) => safeText(ref, 80)).filter(Boolean))].slice(0, 80)
+        ? [...new Set(section.resourceSpaceAssetIds.map((ref) => safeResourceSpaceRef(ref)).filter(Boolean))].slice(0, 80)
         : []
     })),
     updatedAt: new Date().toISOString()
@@ -80,4 +86,33 @@ export async function savePackageDraft(record: Omit<StoredPackageDraft, "storage
   const next: StoredPackageDraft = { ...record, storageMode: "local-json" };
   await writeLocalPackages([next, ...records.filter((item) => item.id !== next.id)]);
   return next;
+}
+
+export function packageDraftDiagnostics() {
+  const filePath = packageStorePath();
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
+    const records = Array.isArray(parsed) ? parsed.filter(Boolean) as StoredPackageDraft[] : [];
+    const openDrafts = records.filter((record) => record.status !== "archived");
+    const blockedRefs = records.reduce((sum, record) => sum + (record.governance?.blockedRefs || 0), 0);
+    return {
+      storageMode: "local-json" as const,
+      durableStorageConfigured: false,
+      count: records.length,
+      openCount: openDrafts.length,
+      blockedRefs,
+      latestAt: records[0]?.updatedAt || "",
+      filePath
+    };
+  } catch {
+    return {
+      storageMode: "local-json" as const,
+      durableStorageConfigured: false,
+      count: 0,
+      openCount: 0,
+      blockedRefs: 0,
+      latestAt: "",
+      filePath
+    };
+  }
 }

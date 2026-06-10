@@ -17,6 +17,7 @@ Local dry run may continue when these pass:
 - [x] `BASE_URL=http://localhost:4878 make portal-usage-smoke` against `PORTAL_USAGE_LOGGING=1` local server
 - [x] `BASE_URL=http://localhost:4880 make portal-delivery-smoke`
 - [x] `BASE_URL=http://localhost:4868 make portal-writeback-guard-smoke` against no-live-writeback local server
+- [x] `BASE_URL=http://localhost:4868 make portal-package-smoke`
 - [x] `BASE_URL=http://localhost:4880 make portal-beta-rehearsal`
 - [x] `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`
 - [x] `BASE_URL=http://localhost:4868 make portal-browser-qa`
@@ -63,6 +64,7 @@ Checks:
 - `BASE_URL=http://localhost:4878 make portal-usage-smoke`: pass against local usage-logging server.
 - `BASE_URL=http://localhost:4880 make portal-delivery-smoke`: pass for delivery privacy and honest S3 readiness copy.
 - `BASE_URL=http://localhost:4868 make portal-writeback-guard-smoke`: pass for no-live ResourceSpace writeback guard.
+- `BASE_URL=http://localhost:4868 make portal-package-smoke`: pass for package draft role gates, sanitized ResourceSpace refs, and local-json readiness.
 - `BASE_URL=http://localhost:4880 make portal-beta-rehearsal`: pass; evidence JSON written under `.runtime/beta-rehearsals/`.
 - `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`: pass against stable Vercel alias.
 - `BASE_URL=http://localhost:4868 make portal-browser-qa`: pass; 16 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, zero network failures.
@@ -98,6 +100,7 @@ BASE_URL=http://localhost:4868 make portal-sso-smoke
 BASE_URL=http://localhost:4868 make portal-usage-smoke
 BASE_URL=http://localhost:4868 make portal-delivery-smoke
 BASE_URL=http://localhost:4868 make portal-writeback-guard-smoke
+BASE_URL=http://localhost:4868 make portal-package-smoke
 BASE_URL=http://localhost:4868 make portal-beta-rehearsal
 BASE_URL=http://localhost:4868 make portal-browser-qa
 ```
@@ -109,6 +112,8 @@ For usage analytics rehearsal, start the server with `PORTAL_USAGE_LOGGING=1`; o
 For delivery privacy rehearsal, no S3 credentials are required. The smoke proves private storage and source custody details stay out of browser-facing payloads and that Admin readiness does not overclaim signed S3 delivery.
 
 For writeback guard rehearsal, use a no-live-writeback local server. The smoke proves ResourceSpace review writes stay queued and visible instead of claiming live API success.
+
+For package draft rehearsal, `portal-package-smoke` proves Viewer cannot list/save drafts, Contributor saves only sanitized ResourceSpace refs, Reviewer can list drafts, and Admin readiness reports local-json storage as private beta only.
 
 For private beta rehearsal, `portal-beta-rehearsal` writes a JSON evidence packet to `.runtime/beta-rehearsals/<run-id>/summary.json`. Keep that artifact for local decision evidence; do not treat it as teammate invite approval unless the blocked invite prerequisites above are complete.
 
