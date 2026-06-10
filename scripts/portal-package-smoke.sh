@@ -75,8 +75,13 @@ if (!data.package.governance || typeof data.package.governance.totalRefs !== "nu
   console.error(`FAIL: package governance missing: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
 }
+const text = JSON.stringify(data.package);
+if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  console.error(`FAIL: package display fields echoed unsafe text: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"368\"]}]}" \
+  -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"description\":\"../private source path\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"368\"]},{\"id\":\"private-section\",\"title\":\"../private master drive checksum\",\"resourceSpaceAssetIds\":[\"367\"]}]}" \
   "$BASE_URL/api/packages?role=Contributor"
 
 if [ "$local_runtime_probe" = "1" ]; then
@@ -113,11 +118,12 @@ const filler = Array.from({ length: 210 }, (_, index) => ({
 }));
 existing.unshift({
   id: process.env.STALE_PACKAGE_ID,
-  title: "Stale unsafe package",
+  title: "../private source path",
+  description: "../private master drive checksum",
   status: "unsafe",
   sections: [{
     id: "hero",
-    title: "Hero",
+    title: "../private master drive checksum",
     resourceSpaceAssetIds: ["367", "../private", "367"]
   }],
   createdAt: "not-a-date",
@@ -165,7 +171,8 @@ if (!record || record.storageMode !== "local-json" || !record.governance) {
 if (staleId) {
   const stale = data.packages.find((item) => item.id === staleId);
   const refs = (stale?.sections || []).flatMap((section) => section.resourceSpaceAssetIds || []);
-  if (!stale || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0) {
+  const text = JSON.stringify(stale || {});
+  if (!stale || stale.title !== "ResourceSpace Toolkit Draft" || stale.sections?.[0]?.title !== "Section 1" || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0 || stale.governance?.reason || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
     console.error(`FAIL: persisted unsafe package was not normalized: ${JSON.stringify(stale || null).slice(0, 500)}`);
     process.exit(1);
   }

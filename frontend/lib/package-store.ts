@@ -37,6 +37,13 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function safeDisplayText(value: unknown, maxLength: number) {
+  const text = safeText(value, maxLength);
+  if (text.includes("..") || /[\\/]/.test(text)) return "";
+  if (/source path|master drive|checksum/i.test(text)) return "";
+  return text;
+}
+
 function safeResourceSpaceRef(value: unknown) {
   const ref = String(value || "").trim().slice(0, 80);
   return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
@@ -58,17 +65,25 @@ function safeCount(value: unknown) {
 export function sanitizePackageDraft(input: unknown): DamPackage {
   const raw = (input || {}) as Partial<DamPackage>;
   const sections = Array.isArray(raw.sections) ? raw.sections : [];
+  const seenRefs = new Set<string>();
   return {
     id: safeText(raw.id, 120) || "portal-local-draft",
-    title: safeText(raw.title, 160) || "ResourceSpace Toolkit Draft",
-    description: safeText(raw.description, 500) || undefined,
+    title: safeDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
+    description: safeDisplayText(raw.description, 500) || undefined,
     status: raw.status === "pending-review" || raw.status === "approved" || raw.status === "archived" ? raw.status : "draft",
-    collectionId: raw.collectionId ? safeText(raw.collectionId, 120) : undefined,
+    collectionId: raw.collectionId ? safeDisplayText(raw.collectionId, 120) : undefined,
     sections: sections.slice(0, 12).map((section, index) => ({
       id: safeText(section?.id, 80) || `section-${index + 1}`,
-      title: safeText(section?.title, 120) || `Section ${index + 1}`,
+      title: safeDisplayText(section?.title, 120) || `Section ${index + 1}`,
       resourceSpaceAssetIds: Array.isArray(section?.resourceSpaceAssetIds)
-        ? [...new Set(section.resourceSpaceAssetIds.map((ref) => safeResourceSpaceRef(ref)).filter(Boolean))].slice(0, 80)
+        ? section.resourceSpaceAssetIds
+            .map((ref) => safeResourceSpaceRef(ref))
+            .filter((ref) => {
+              if (!ref || seenRefs.has(ref)) return false;
+              seenRefs.add(ref);
+              return true;
+            })
+            .slice(0, 80)
         : []
     })),
     updatedAt: new Date().toISOString()
@@ -98,7 +113,7 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
       portalReadyRefs: safeCount(governance.portalReadyRefs),
       blockedRefs: safeCount(governance.blockedRefs),
       missingRefs: safeCount(governance.missingRefs),
-      reason: safeText(governance.reason, 240)
+      reason: safeDisplayText(governance.reason, 240)
     },
     storageMode: "local-json"
   };
