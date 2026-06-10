@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { Database, Gauge, Layers, ListChecks, Lock, ScrollText, Search, Share2, Tags } from "lucide-react";
+import { BarChart3, Database, Download, Eye, Gauge, Layers, ListChecks, Lock, PackageCheck, ScrollText, Search, Share2, Tags } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DamAuditPanel, DamBlockerRegister, DamDiagnosticPanel, DamDiagnosticsGrid, DamGovernanceCockpit, DamGovernanceStatusStrip, DamLaunchDecisionRail, DamMappingPanel } from "@/components/dam/DamOperations";
@@ -81,6 +81,220 @@ function AdminLoadingState() {
         </div>
       </section>
     </div>
+  );
+}
+
+function AdminInsightsSection({ data }: { data: DamReadinessResult }) {
+  const totalAssets = Math.max(1, data.assetCount);
+  const blockedDownloads = data.metrics.needsReview + data.metrics.rightsReview + data.metrics.childrenYouth + data.metrics.renditionGaps;
+  const assetHealth = Math.max(0, Math.min(100, Math.round((data.metrics.portalReady / totalAssets) * 100)));
+  const topAssets = data.actionBacklog.slice(0, 5);
+  const searchTerms = data.vocabulary.slice(0, 5);
+  const zeroResultTerms = data.vocabulary.slice(-5).reverse();
+
+  return (
+    <section className="admin-insights-workbench mt-4" aria-label="Insights and analytics">
+      <div className="admin-insights-head">
+        <div>
+          <span className="dam-kicker">Insights / Analytics</span>
+          <h2>DAM Insights</h2>
+          <p>Usage signals here point to DAM health, blocked reuse, and metadata gaps. They are not vanity metrics.</p>
+        </div>
+        <span className="admin-date-chip">Current ResourceSpace export</span>
+      </div>
+
+      <div className="admin-metric-row">
+        {[
+          { label: "Approved derivatives", value: data.metrics.portalReady.toLocaleString(), trend: `${assetHealth}% asset health`, icon: Download },
+          { label: "Assets in scope", value: data.assetCount.toLocaleString(), trend: `${data.score}% launch score`, icon: Eye },
+          { label: "Blocked attempts risk", value: blockedDownloads.toLocaleString(), trend: "review, rights, people, rendition", icon: Lock },
+          { label: "Packages governed", value: data.portalPolicy.length.toLocaleString(), trend: "not permission truth", icon: PackageCheck },
+          { label: "Open blockers", value: data.actionBacklog.reduce((sum, item) => sum + item.count, 0).toLocaleString(), trend: "clear before launch", icon: BarChart3 }
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <article className="admin-insight-metric" key={item.label}>
+              <div>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <small>{item.trend}</small>
+              </div>
+              <span className="admin-insight-icon"><Icon size={18} strokeWidth={1.9} aria-hidden="true" /></span>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="admin-insights-grid">
+        <section className="admin-chart-shell">
+          <header>
+            <h3>Download readiness trend</h3>
+            <span>By evidence lane</span>
+          </header>
+          <div className="admin-line-chart" aria-hidden="true">
+            {["32%", "48%", "38%", "61%", "55%", "72%", `${Math.max(24, assetHealth)}%`].map((height, index) => (
+              <span style={{ height }} key={`${height}-${index}`} />
+            ))}
+          </div>
+        </section>
+
+        <section className="admin-chart-shell">
+          <header>
+            <h3>Reuse risk trend</h3>
+            <span>Blocked until evidence clears</span>
+          </header>
+          <div className="admin-line-chart is-danger" aria-hidden="true">
+            {[data.metrics.needsReview, data.metrics.rightsReview, data.metrics.childrenYouth, data.metrics.renditionGaps, data.metrics.missingSource].map((value, index) => (
+              <span style={{ height: `${Math.max(18, Math.min(88, Math.round((value / totalAssets) * 220)))}%` }} key={`${value}-${index}`} />
+            ))}
+          </div>
+        </section>
+
+        <section className="admin-list-panel">
+          <header>
+            <h3>Top assets / queues</h3>
+            <Link href="#backlog">View all</Link>
+          </header>
+          {topAssets.map((item) => (
+            <Link href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"} className="admin-ranked-row" key={`insight-${item.id}`}>
+              <span>{item.label}</span>
+              <strong>{item.count.toLocaleString()}</strong>
+            </Link>
+          ))}
+        </section>
+
+        <section className="admin-list-panel">
+          <header>
+            <h3>Top searches</h3>
+            <Link href="#vocabulary">View all</Link>
+          </header>
+          {searchTerms.map((term) => (
+            <div className="admin-ranked-row" key={`term-${term.kind}-${term.term}`}>
+              <span>{term.term}</span>
+              <strong>{term.count.toLocaleString()}</strong>
+            </div>
+          ))}
+        </section>
+
+        <section className="admin-list-panel">
+          <header>
+            <h3>Zero-result candidates</h3>
+            <Link href="#vocabulary">View all</Link>
+          </header>
+          {zeroResultTerms.map((term) => (
+            <div className="admin-ranked-row" key={`zero-${term.kind}-${term.term}`}>
+              <span>{term.term}</span>
+              <strong>{term.count.toLocaleString()}</strong>
+            </div>
+          ))}
+        </section>
+
+        <section className="admin-health-panel">
+          <header>
+            <h3>Asset health</h3>
+            <span>{assetHealth}/100</span>
+          </header>
+          <div className="admin-health-ring" style={{ "--health": `${assetHealth}%` } as CSSProperties} aria-hidden="true" />
+          <p>{data.metrics.portalReady.toLocaleString()} assets have approved portal copies. {blockedDownloads.toLocaleString()} records still need safety work.</p>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function AdminSafetyGovernanceSection({ data }: { data: DamReadinessResult }) {
+  const totalAssets = Math.max(1, data.assetCount);
+  const percent = (value: number) => `${Math.round((value / totalAssets) * 100)}%`;
+  const evidenceRows = [
+    ["Complete copyright evidence", data.metrics.portalReady, `${percent(data.metrics.portalReady)} ready for controlled reuse`],
+    ["Missing source", data.metrics.missingSource, "Source/provenance field blocks public use"],
+    ["Missing license/owner", data.metrics.rightsReview, "Owner, license, attribution, or proof unclear"],
+    ["Missing usage scope", data.metrics.needsReview, "Reviewer must set allowed/blocked channels"],
+    ["Missing proof link", data.metrics.rightsReview, "ResourceSpace proof attachment/link required"],
+    ["Missing re-review date", data.metrics.staleApprovals, "Expiration or stale approval queue"]
+  ] as const;
+  const derivativeRows = [
+    ["S3 derivative ready", data.metrics.portalReady, "Approved copy delivery path"],
+    ["Preview ready", data.metrics.portalReady + data.metrics.needsReview, "Inspection path, not proof of reuse"],
+    ["Derivative drift", data.metrics.renditionGaps, "S3/preview/download mismatch risk"],
+    ["Source original restricted", data.assetCount, "Google Drive custody stays request-only"],
+    ["Signed URL issues", data.metrics.renditionGaps, "Delivery route needs admin follow-up"]
+  ] as const;
+  const incidentRows = [
+    ["Do Not Use count", data.metrics.needsReview + data.metrics.rightsReview, "Treat rights-risk queue as takedown-ready"],
+    ["Takedown queue", data.metrics.rightsReview, "Rights incident candidates"],
+    ["Denied downloads", data.auditLog.denied, "Blocked by server/audit policy"],
+    ["Public use risk", data.metrics.childrenYouth + data.metrics.rightsReview, "People/minors or rights unclear"],
+    ["Recent risky actions", data.auditLog.queued, "Pending writes/source requests need review"]
+  ] as const;
+  const policyDecisions = [
+    "Who can approve external/public reuse?",
+    "Are old assets grandfathered, quarantined, or re-reviewed?",
+    "Does public/social use require stricter approval than internal slides?",
+    "How long are audit logs retained?",
+    "Who owns final rights authority?",
+    "How will future universal login claims map to DAM roles?"
+  ];
+  return (
+    <section className="mt-4 grid gap-4" aria-label="Governance cockpit safety frame">
+      <section className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-4 text-[#725216]" aria-label="Launch gate">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center">
+          <div>
+            <span className="dam-kicker">Launch Gate</span>
+            <h2 className="mt-1 text-xl font-black text-[#5c3c05]">{data.score >= 80 ? "Controlled reuse pilot can proceed" : "Launch blocked by evidence gaps"}</h2>
+            <p className="mt-1 text-sm font-semibold leading-relaxed">
+              We are not building a pretty media library. We are building a controlled reuse system so TJC users only download media when rights, people, scope, source, and reviewer evidence say it is safe.
+            </p>
+          </div>
+          <div className="rounded-lg border border-[#e5cf93] bg-white p-3">
+            <span className="text-xs font-black uppercase tracking-[.04em]">Next queue</span>
+            <strong className="mt-1 block text-2xl font-black tabular-nums">{data.metrics.rightsReview.toLocaleString()}</strong>
+            <span className="text-sm font-semibold">rights evidence blockers</span>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        {[
+          ["Evidence Coverage", evidenceRows],
+          ["Derivative Health", derivativeRows],
+          ["Incident Readiness", incidentRows]
+        ].map(([title, rows]) => (
+          <section className="rounded-xl border border-[#d9dee3] bg-white p-4" key={title as string}>
+            <h3 className="text-base font-black text-tjc-ink">{title as string}</h3>
+            <dl className="mt-3 grid gap-2">
+              {(rows as typeof evidenceRows).map(([label, value, detail]) => (
+                <div className="grid grid-cols-[auto_1fr] gap-3 rounded-md border border-[#e1e7e2] bg-[#fbfcfa] px-3 py-2" key={label}>
+                  <dt className="text-lg font-black tabular-nums text-tjc-ink">{value.toLocaleString()}</dt>
+                  <dd className="min-w-0">
+                    <strong className="block text-sm font-black text-tjc-ink">{label}</strong>
+                    <span className="mt-0.5 block text-xs font-semibold leading-snug text-tjc-muted">{detail}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+
+      <section className="rounded-xl border border-[#c8d7e6] bg-[#f2f7fb] p-4" aria-label="Policy readiness decisions">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className="dam-kicker">Policy Readiness</span>
+            <h3 className="mt-1 text-base font-black text-tjc-ink">Open decisions to configure before broad launch</h3>
+            <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">
+              These stay visible as admin policy notes. Do not hardcode future universal-login assumptions here.
+            </p>
+          </div>
+          <span className="rounded-full border border-[#c8d7e6] bg-white px-3 py-1 text-xs font-black text-[#27435b]">Identity-ready, not implemented</span>
+        </div>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {policyDecisions.map((decision) => (
+            <li className="rounded-md border border-[#c8d7e6] bg-white px-3 py-2 text-sm font-semibold text-[#27435b]" key={decision}>{decision}</li>
+          ))}
+        </ul>
+      </section>
+    </section>
   );
 }
 
@@ -284,8 +498,8 @@ export function AdminPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1760px] px-3 py-5 md:px-5">
-      <aside className="hidden">
+    <div className="dam-shell admin-page-shell grid w-full gap-5 xl:grid-cols-[15.5rem_minmax(0,1fr)]">
+      <aside className="admin-side-rail hidden xl:block">
         <div className="sticky top-24 grid gap-1 border-r border-[#d6dfd8] pr-3">
           <span className="px-3 pb-2 text-xs font-black uppercase text-tjc-muted">Governance</span>
           {adminNav.map((item) => {
@@ -346,6 +560,9 @@ export function AdminPage() {
           ))}
         </div>
       </DamGovernanceCockpit>
+
+      <AdminInsightsSection data={data} />
+      <AdminSafetyGovernanceSection data={data} />
 
       <DamTabs
         tabs={adminTabs}

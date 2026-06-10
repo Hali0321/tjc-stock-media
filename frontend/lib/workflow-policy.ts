@@ -23,28 +23,28 @@ export const uploadDefaultState = {
 };
 
 export const reviewActions = [
-  { id: "approve-public", label: "Approve for church-wide use", backend: "Approve Public", targetStatus: "Approved Public" },
-  { id: "approve-internal", label: "Approve for internal ministry use", backend: "Approve Internal", targetStatus: "Approved Internal" },
+  { id: "approve-internal", label: "Approve internal use", backend: "Approve Internal", targetStatus: "Approved Internal" },
+  { id: "approve-public", label: "Approve public/external use", backend: "Approve Public", targetStatus: "Approved Public" },
   { id: "archive-only", label: "Archive only", backend: "Searchable Archive", targetStatus: "Searchable Archive" },
-  { id: "do-not-publish", label: "Do not publish externally", backend: "Do Not Use", targetStatus: "Do Not Use" },
-  { id: "request-info", label: "Request more info", backend: "Request More Info", targetStatus: "Needs Review" },
+  { id: "do-not-publish", label: "Mark Do Not Use", backend: "Do Not Use", targetStatus: "Do Not Use" },
+  { id: "request-info", label: "Request changes", backend: "Request More Info", targetStatus: "Needs Review" },
   { id: "usage-guidance", label: "Add usage guidance", backend: "Add Usage Guidance", targetStatus: "Needs Review" }
 ] as const;
 
 export type ReviewActionBackend = (typeof reviewActions)[number]["backend"];
 
 export const reviewQueues = [
-  { id: "pending", label: "Pending Review", description: "Needs a reviewer decision." },
-  { id: "children-youth", label: "Children/Youth", description: "Contains or may contain children/youth." },
-  { id: "missing-source", label: "Missing Source", description: "Source, album, or photographer missing." },
-  { id: "rights-review", label: "Rights Review", description: "Rights, consent, or source unclear." },
-  { id: "usage-guidance", label: "Needs Usage Guidance", description: "Approved/useful record lacks practical guidance." },
+  { id: "pending", label: "Missing copyright evidence", description: "Evidence packet incomplete or needs reviewer decision." },
+  { id: "children-youth", label: "People/minors unknown", description: "Contains, may contain, or has not ruled out people/youth." },
+  { id: "missing-source", label: "Source access restricted", description: "Source, album, photographer, or custody path missing." },
+  { id: "rights-review", label: "Rights review needed", description: "Owner, license, consent, attribution, or proof unclear." },
+  { id: "usage-guidance", label: "Usage scope needed", description: "Approved/useful record lacks safe channel guidance." },
   { id: "internal-only", label: "Internal Only", description: "Useful but not public." },
   { id: "archive-candidates", label: "Archive Candidates", description: "Traceable, searchable, not promoted." },
   { id: "duplicate-candidates", label: "Duplicate Candidates", description: "Possible duplicate group or repeated source." },
   { id: "ai-enrichment", label: "AI Enrichment", description: "Needs tags, dimensions, people check, or TJC terms." },
   { id: "taxonomy-drift", label: "Taxonomy Drift", description: "Generic title or sparse controlled vocabulary." },
-  { id: "stale-approvals", label: "Stale Approvals", description: "Approved assets that should be rechecked." },
+  { id: "stale-approvals", label: "Expiring/re-review due", description: "Approved assets that should be rechecked." },
   { id: "large-media", label: "Large Media", description: "Video/audio or large file intake." }
 ] as const;
 

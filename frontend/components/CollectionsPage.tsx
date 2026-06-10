@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderOpen, Search, ShieldCheck } from "lucide-react";
-import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamPrimaryAction as PrimaryAction, DamUseCaseCard as UseCaseCard } from "@/components/dam/DamWorkspace";
+import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamPrimaryAction as PrimaryAction, DamTrustSignalStrip as TrustSignalStrip, DamUseCaseCard as UseCaseCard } from "@/components/dam/DamWorkspace";
 import { DamPackageCard as PackageCard, DamPackageInspector as PackageInspector, PackageCabinetHeader, packageReadinessForRole } from "@/components/dam/DamPortal";
 import { useDemoRole } from "@/components/RoleProvider";
 import type { CatalogCollection, SearchResult } from "@/lib/types";
@@ -118,7 +118,7 @@ export function CollectionsPage() {
               Curated ministry kits for websites, slides, newsletters, and safe reuse.
             </p>
             <p className="mt-2 max-w-[64ch] text-sm font-semibold text-[#53615a]">
-              Open each media record to confirm item-level approval before reuse.
+              Package approval is not item approval. Package readiness helps planning, but every media record keeps its own final reuse decision.
             </p>
             <div className="mt-4">
               <HeroSearch value={query} onChange={setQuery} onSubmit={submit} placeholder="Search Sabbath, Bible study, fellowship, youth-safe..." />
@@ -126,7 +126,7 @@ export function CollectionsPage() {
           </div>
           <div className="asset-bank-rule rounded-[10px] border border-[#e5e7eb] bg-[#fbfcfb] p-3 text-sm font-semibold leading-relaxed text-tjc-muted">
             <strong className="block text-tjc-evergreen">Package approval is not item approval.</strong>
-            <span>Use package context to start faster, then open each media record for the final reuse decision.</span>
+            <span>Use package context to start faster, then check verdict, evidence, approved copy, and source restriction on every item.</span>
           </div>
         </div>
       </section>
@@ -143,11 +143,44 @@ export function CollectionsPage() {
         ))}
       </section>
 
+      <TrustSignalStrip
+        signals={[
+          { label: "Package purpose", value: "Curated ministry kit", tone: "info" },
+          { label: "Item approval", value: "Still checked per asset", tone: "blocked" },
+          { label: "Ready media", value: `${readyTotal?.toLocaleString?.() ?? readyTotal ?? "-"} approved copies`, tone: "approved" },
+          { label: "Needs review", value: `${reviewTotal?.toLocaleString?.() ?? reviewTotal ?? "-"} item warnings`, tone: "review" }
+        ]}
+      />
+
+      <section className="grid gap-3 rounded-[12px] border border-[#d9dee3] bg-white p-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.4fr)]" aria-label="Package reuse warning">
+        <div>
+          <span className="dam-kicker">Package Readiness</span>
+          <h2 className="mt-1 text-lg font-black text-tjc-ink">Packages organize media; they do not grant permission.</h2>
+          <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">
+            Every asset keeps its own verdict, evidence gate, approved derivative state, and source/original restriction. Open each media record to confirm final reuse decision.
+          </p>
+        </div>
+        <dl className="grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-2 text-[#22563a]">
+            <dt className="font-black">Approved copies</dt>
+            <dd className="mt-1 text-lg font-black tabular-nums">{readyTotal?.toLocaleString?.() ?? readyTotal ?? "-"}</dd>
+          </div>
+          <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-2 text-[#725216]">
+            <dt className="font-black">Review needed</dt>
+            <dd className="mt-1 text-lg font-black tabular-nums">{reviewTotal?.toLocaleString?.() ?? reviewTotal ?? "-"}</dd>
+          </div>
+          <div className="rounded-md border border-[#e5b7b5] bg-[#fff1ef] p-2 text-[#7d2d2a]">
+            <dt className="font-black">Unsafe items</dt>
+            <dd className="mt-1 text-lg font-black tabular-nums">{reviewTotal?.toLocaleString?.() ?? reviewTotal ?? "-"}</dd>
+          </div>
+        </dl>
+      </section>
+
       {error ? (
         <section className="rounded-[12px] border border-[#dfb9b5] bg-[#fff1ef] p-4 text-sm font-semibold text-[#7b332f]" role="alert">{error}</section>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]" aria-label="Ministry packages">
+      <section className="collections-workbench grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,32rem)]" aria-label="Ministry packages">
         <div className="grid gap-4">
           <PackageCabinetHeader
             collections={collections}

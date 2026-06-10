@@ -115,7 +115,7 @@ export function HeroSearch({
 }) {
   return (
     <form className="hero-search-shell grid gap-2 rounded-lg bg-white p-1 md:grid-cols-[1fr_auto]" onSubmit={onSubmit} aria-label={ops ? "Ops search" : "Find approved media"}>
-      <label className="sr-only" htmlFor="find-media-search">{ops ? "Ops Search" : "Search approved media"}</label>
+      <label className="sr-only" htmlFor="find-media-search">{ops ? "Asset library search" : "Search approved media"}</label>
       <input
         id="find-media-search"
         className="min-h-10 min-w-0 rounded-md border border-transparent bg-[#fbfcfb] px-3 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d] focus:border-[#9cb9ab] sm:text-base"

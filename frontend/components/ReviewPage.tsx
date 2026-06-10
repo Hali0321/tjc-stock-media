@@ -9,6 +9,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { DamTabs, damTabId, damTabPanelId } from "@/components/DamTabs";
 import { DamAssetActionsMenu as AssetActionsMenu, DamMediaPreviewPanel as MediaPreviewPanel } from "@/components/dam/DamRecord";
 import { DamDecisionActions, DamEvidenceMatrix, DamHoldToConfirmButton as HoldToConfirmButton, DamReviewActionDialog as ReviewActionDialog, DamReviewDecisionLockPanel, DamReviewQueueAssetCard as ReviewQueueAssetCard, DamReviewQueueHeader, DamReviewSelectedAsset } from "@/components/dam/DamOperations";
+import { DamTrustSignalStrip as TrustSignalStrip } from "@/components/dam/DamWorkspace";
 import { useDemoRole } from "@/components/RoleProvider";
 import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
@@ -81,25 +82,31 @@ const factTermClass = "text-xs font-semibold text-tjc-evergreen";
 const factDescClass = "mt-1 break-words text-sm leading-relaxed text-[#4d554d]";
 const checklistLabels: Array<[keyof ReviewEvidenceChecklist, string]> = [
   ["sourceConfirmed", "Source confirmed"],
-  ["rightsConfirmed", "Rights confirmed"],
+  ["rightsConfirmed", "Owner/license confirmed"],
+  ["attributionConfirmed", "Attribution confirmed"],
   ["peopleVisibilityConfirmed", "People visibility confirmed"],
   ["childrenYouthChecked", "Children/youth checked"],
   ["usageScopeSelected", "Usage scope selected"],
   ["derivativeAvailable", "Derivative available"],
   ["sensitiveContextChecked", "Sensitive context checked"],
-  ["creditRequirementChecked", "Credit requirement checked"]
+  ["creditRequirementChecked", "Credit requirement checked"],
+  ["expirationRereviewSet", "Expiration/re-review set"],
+  ["proofLinkAttached", "Proof link attached"]
 ];
 const checklistLabelByField = Object.fromEntries(checklistLabels) as Record<keyof ReviewEvidenceChecklist, string>;
 
 const emptyChecklist: ReviewEvidenceChecklist = {
   sourceConfirmed: false,
   rightsConfirmed: false,
+  attributionConfirmed: false,
   peopleVisibilityConfirmed: false,
   childrenYouthChecked: false,
   usageScopeSelected: false,
   derivativeAvailable: false,
   sensitiveContextChecked: false,
-  creditRequirementChecked: false
+  creditRequirementChecked: false,
+  expirationRereviewSet: false,
+  proofLinkAttached: false
 };
 
 type ReviewAction = (typeof reviewActions)[number];
@@ -287,7 +294,14 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       "usageScopeSelected"
     ];
     if (action.backend === "Approve Public") {
-      required.push("derivativeAvailable", "sensitiveContextChecked", "creditRequirementChecked");
+      required.push(
+        "derivativeAvailable",
+        "sensitiveContextChecked",
+        "creditRequirementChecked",
+        "attributionConfirmed",
+        "expirationRereviewSet",
+        "proofLinkAttached"
+      );
     }
     const missing = required.filter((field) => !checklist[field]).map((field) => String(field));
     if (reviewNote.trim().length <= 10) missing.push("reviewNote");
@@ -403,7 +417,14 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     .join(", ");
   const reviewEvidenceControls = (
     <div className="min-w-0 max-w-full" data-component="ReviewActionEvidencePanel">
-      <h3 className="text-sm font-semibold text-tjc-evergreen">Review evidence</h3>
+      <section className={cn("rounded-xl border p-3", completedRequirementCount === decisionRequirements.length ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff8e8] text-[#725216]")} aria-label="Approval lock state">
+        <span className="block text-xs font-black uppercase tracking-[.05em]">Approval lock</span>
+        <strong className="mt-1 block text-lg font-black leading-tight">{completedRequirementCount === decisionRequirements.length ? "Evidence complete" : "Approval locked"}</strong>
+        <p className="mt-1 text-sm font-semibold leading-relaxed">
+          {completedRequirementCount}/{decisionRequirements.length} required checks complete. {missingRequirementLabels.length ? `Still missing: ${missingRequirementLabels.slice(0, 3).join(", ")}${missingRequirementLabels.length > 3 ? "..." : ""}.` : "Decision can be queued for media-team follow-up."}
+        </p>
+      </section>
+      <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Review evidence</h3>
       <label className="mt-2 grid gap-1 text-sm font-semibold text-tjc-ink">
         Review note
         <textarea
@@ -421,6 +442,10 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         />
       </div>
       <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Decision</h3>
+      <section className="mt-3 rounded-lg border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold leading-relaxed text-[#725216]" aria-label="Public approval evidence rule">
+        <strong className="block text-[#5c3c05]">Public/external approval lock</strong>
+        <span>No evidence = no public/external download. Proof link, attribution, expiration/re-review, sensitive context, and approved derivative must be checked before public approval.</span>
+      </section>
       <DamReviewDecisionLockPanel missingLabels={missingRequirementLabels} completed={completedRequirementCount} total={decisionRequirements.length} />
       <DamDecisionActions>
         {reviewActions.map((action) => {
@@ -514,6 +539,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             <span className="dam-kicker">Review Inbox</span>
             <h1>{activeQueueSummary?.label || "Current queue"}</h1>
             <p>Approval remains locked until evidence is complete.</p>
+            <p className="mt-1 text-xs font-black uppercase tracking-[.04em] text-[#725216]">Pending ResourceSpace write is not final truth.</p>
           </div>
           <dl aria-label="Review queue summary">
             <div>
@@ -542,6 +568,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
               className={cn("inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[9px] border px-3 text-sm font-black text-[#3f4a43] transition hover:bg-[#eef7f1] active:translate-y-px", activeQueue === queue.id ? "border-[#8fb2a5] bg-[#e8f4ed] text-tjc-evergreen" : "border-[#e0e8e2] bg-white")}
               onClick={() => selectQueue(queue.id)}
               aria-pressed={activeQueue === queue.id}
+              data-testid={`review-queue-${queue.id}`}
             >
               <span>{queue.label}</span>
               <strong className="tabular-nums">{queue.count.toLocaleString()}</strong>
@@ -559,6 +586,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   className={cn("inline-flex min-h-8 items-center gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] px-2.5 text-xs font-semibold text-[#4d554d] transition hover:bg-[#eef7f1]", activeQueue === queue.id && "border-[#8fb2a5] bg-[#e5f3ea] text-tjc-evergreen")}
                   onClick={() => selectQueue(queue.id)}
                   aria-pressed={activeQueue === queue.id}
+                  data-testid={`review-queue-${queue.id}`}
                 >
                   <span>{queue.label}</span>
                   <strong className="tabular-nums">{queue.count.toLocaleString()}</strong>
@@ -579,8 +607,42 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
       {message ? <div className="mt-3 rounded-lg border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-semibold text-[#27435b]">{message}</div> : null}
 
-      <section ref={workbenchRef} className="mt-4 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)] 2xl:grid-cols-[minmax(0,1fr)_minmax(25rem,30rem)]" aria-label="Review workbench">
-        <div className="order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
+      <div className="mt-3">
+        <TrustSignalStrip
+          signals={[
+            { label: "Evidence lock", value: `${completedRequirementCount}/${decisionRequirements.length} checks`, tone: completedRequirementCount === decisionRequirements.length ? "approved" : "blocked" },
+            { label: "Active queue", value: activeQueueSummary?.label || "Loading queue", tone: "info" },
+            { label: "Source access", value: "Originals restricted", tone: "blocked" },
+            { label: "Pending write", value: "Not final ResourceSpace truth", tone: "review" }
+          ]}
+        />
+      </div>
+
+      <section className="mt-3 grid gap-3 rounded-[12px] border border-[#d9dee3] bg-white p-3 md:grid-cols-[minmax(0,1fr)_minmax(20rem,.42fr)]" aria-label="Evidence workbench rules">
+        <div>
+          <span className="dam-kicker">Evidence Workbench</span>
+          <h2 className="mt-1 text-lg font-black text-tjc-ink">Approve only when rights, people, scope, source, and reviewer evidence agree.</h2>
+          <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">
+            Missing copyright evidence, people/minors unknown, source access restrictions, pending ResourceSpace writes, and expiring approvals stay in review lanes until resolved.
+          </p>
+        </div>
+        <dl className="grid gap-2 text-xs sm:grid-cols-2 md:grid-cols-1">
+          {[
+            ["Church photographer", "Faster internal path, still requires people/youth and sensitive-context checks."],
+            ["Online/free source", "Blocked for public use until owner/license and proof link are reviewed."],
+            ["Approved derivative", "S3 copy is the safe download; original remains restricted."],
+            ["Incident ready", "Denied download, Do Not Use, takedown, and review actions remain auditable."]
+          ].map(([label, value]) => (
+            <div className="rounded-md border border-[#e1e7e2] bg-[#fbfcfa] px-3 py-2" key={label}>
+              <dt className="font-black text-tjc-ink">{label}</dt>
+              <dd className="mt-0.5 font-semibold leading-snug text-tjc-muted">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section ref={workbenchRef} className="review-workbench-layout mt-4 grid min-w-0 max-w-full gap-4 xl:grid-cols-[minmax(20rem,24rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(20rem,24rem)_minmax(0,1.05fr)_minmax(25rem,29rem)]" aria-label="Review workbench">
+        <div className="review-queue-column order-2 grid min-w-0 max-w-full gap-4 xl:order-none">
           <details className="review-mobile-queue rounded-xl border border-[#d7dde2] bg-white md:hidden" data-testid="review-mobile-collapsed-queue">
             <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-black text-[#111827]">
               <span>Queue below</span>
@@ -662,10 +724,15 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                 <strong className="block font-black">{reviewRiskFlags(selectedAsset)[0] || "Standard review"}</strong>
                 <span className="mt-1 block leading-snug">{reviewNextCheckLabel(selectedAsset)}</span>
               </div>
-              <div className="grid gap-1 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
+                <div className="grid gap-1 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 text-xs font-semibold text-tjc-muted sm:grid-cols-2">
                 <span>{role === "DAM Admin" ? `ResourceSpace ${selectedAsset.resourceSpaceId || selectedAsset.id}` : `Ref ${selectedAsset.id}`}</span>
                 <span>Source access restricted</span>
               </div>
+              {selectedPendingWrite ? (
+                <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold leading-relaxed text-[#725216]">
+                  Pending ResourceSpace write: {selectedPendingWrite.requestedStatus} / {selectedPendingWrite.syncState}. This is queued work, not final truth.
+                </div>
+              ) : null}
               <section className="grid gap-2 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3" aria-label="Typed decision lanes">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-black text-tjc-evergreen">Decision lanes</h3>
@@ -766,6 +833,16 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
             </div>
             </section>
           </DamReviewSelectedAsset>
+        ) : null}
+
+        {selectedAsset ? (
+          <aside className="review-evidence-rail hidden self-start rounded-2xl border border-[var(--dam-border)] bg-[var(--dam-panel)] p-4 shadow-[var(--dam-shadow-soft)] 2xl:sticky 2xl:top-[calc(var(--app-header-height)+1rem)] 2xl:block 2xl:max-h-[calc(100vh-var(--app-header-height)-5rem)] 2xl:overflow-y-auto" aria-label="Review evidence and decision rail">
+            <div className="mb-3 rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-semibold text-[#725216]">
+              <strong className="block text-base font-black">Decision evidence</strong>
+              <span className="mt-1 block leading-relaxed">Pending writes queue for ResourceSpace sync. They are not final truth until the source system confirms.</span>
+            </div>
+            {reviewEvidenceControls}
+          </aside>
         ) : null}
       </section>
       {selectedAsset && pendingAction ? (

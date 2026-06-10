@@ -1,5 +1,5 @@
-import { AdminPage } from "@/components/AdminPage";
+import { EnterpriseAdminPage } from "@/components/dam/EnterpriseDamPages";
 
 export default function Page() {
-  return <AdminPage />;
+  return <EnterpriseAdminPage />;
 }

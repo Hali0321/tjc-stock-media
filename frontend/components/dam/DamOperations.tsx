@@ -209,7 +209,7 @@ export function DamGovernanceCockpit({
       <div className="admin-cockpit-intro">
         <span className="inline-flex items-center gap-2 text-sm font-black text-tjc-evergreen">
           <Gauge size={18} strokeWidth={1.9} aria-hidden="true" />
-          Governance cockpit
+          Asset Health & Insights
         </span>
         <h1 className="mt-2 dam-page-title">{title}</h1>
         <p className="mt-3 max-w-[72ch] text-lg font-semibold leading-relaxed text-tjc-muted">See what is blocked, why it is blocked, who owns it, and the next queue to open.</p>

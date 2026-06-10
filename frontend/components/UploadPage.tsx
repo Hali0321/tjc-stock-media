@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileCheck2, FileText, Link as LinkIcon, RotateCcw, Save, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
 import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamPacketRequirementPanel as PacketRequirementPanel, DamPacketStepper as PacketStepper, DamPacketSubmitBar as PacketSubmitBar, DamPacketSummary as PacketSummary, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
+import { DamTrustSignalStrip as TrustSignalStrip } from "@/components/dam/DamWorkspace";
 import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
 import { canUpload } from "@/lib/permissions";
@@ -45,8 +46,9 @@ const steps = [
 const packetRequirementItems = [
   { label: "Origin", detail: "Where it came from and who can answer follow-up." },
   { label: "People/youth", detail: "Who appears and whether children or youth may be visible." },
-  { label: "Rights", detail: "Known permission, restrictions, or internal-only limits." },
-  { label: "Use case", detail: "How ministry teams expect to reuse it after review." }
+  { label: "Rights", detail: "Owner/license, attribution, proof link, restrictions, or internal-only limits." },
+  { label: "Use case", detail: "How ministry teams expect to reuse it after review." },
+  { label: "Review truth", detail: "Upload submits for review only. Final DAM approval still controls reuse." }
 ];
 
 export function UploadPage() {
@@ -87,6 +89,7 @@ export function UploadPage() {
     { id: "file", label: hasFileOrSource ? "File or source link included" : "File or source link needed", complete: hasFileOrSource },
     { id: "tags", label: tagCount ? `${tagCount} suggested tags` : "Suggested tags needed", complete: tagCount > 0 },
     { id: "notes", label: intakeNotes.trim() ? "Reviewer notes included" : "Reviewer notes needed", complete: intakeNotes.trim().length > 0 },
+    { id: "evidence", label: "Rights evidence requested for reviewer", complete: true },
     { id: "blocked", label: "Media stays blocked until review", complete: true }
   ];
 
@@ -267,14 +270,18 @@ export function UploadPage() {
           <p className="dam-kicker">Contributor intake</p>
           <h1 className="dam-page-title">Send media for review</h1>
           <p className="mt-3 max-w-[58ch] text-lg font-semibold leading-relaxed text-tjc-muted">
-            Build a reviewer packet. Send never publishes media.
+            Build a reviewer packet with source, rights, people, scope, and proof context. Send never publishes media.
+          </p>
+          <p className="mt-2 max-w-[64ch] text-sm font-black text-[#725216]">
+            Source class, owner/license, attribution, proof link, and requested usage scope are captured for reviewer evidence.
           </p>
         </div>
         <dl className="send-command-ledger" aria-label="Send media safety summary">
           {[
             ["Intake", "Review packet"],
             ["Default", uploadDefaultState.status],
-            ["Publish", "Never from Send"]
+            ["Publish", "Never from Send"],
+            ["Truth", "DAM review"]
           ].map(([label, value]) => (
             <div key={label}>
               <dt>{label}</dt>
@@ -283,6 +290,15 @@ export function UploadPage() {
           ))}
         </dl>
       </section>
+
+      <TrustSignalStrip
+        signals={[
+          { label: "Send behavior", value: "Never publishes", tone: "blocked" },
+          { label: "Reviewer packet", value: "Source, people, rights", tone: "info" },
+          { label: "Default state", value: uploadDefaultState.status, tone: "review" },
+          { label: "Safe outcome", value: "Approval creates usable copy", tone: "approved" }
+        ]}
+      />
 
       <PacketStepper steps={steps} current={step} />
 
@@ -333,6 +349,19 @@ export function UploadPage() {
             <span className="flex items-center justify-between gap-2">Source / photographer {requiredHint}</span>
             <input className={inputClass} name="source" placeholder="Volunteer name, media team, source owner..." required />
           </label>
+          <label className={labelClass}>
+            <span className="flex items-center justify-between gap-2">Source class {requiredHint}</span>
+            <select className={inputClass} name="sourceClass" defaultValue="" required>
+              <option value="" disabled>Choose one</option>
+              <option>Church photographer / TJC-created</option>
+              <option>Existing media archive master</option>
+              <option>Existing media library record</option>
+              <option>Online/free source</option>
+              <option>Third-party stock/license</option>
+              <option>Unknown - reviewer must verify</option>
+            </select>
+            <span className="text-xs font-semibold text-tjc-muted">Church-created media can move faster, but people/youth and sensitive context still require review. Online/free is not proof.</span>
+          </label>
         </section>
 
         <section data-send-step="2" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 2 && "hidden")}>
@@ -366,6 +395,26 @@ export function UploadPage() {
               <option>Unknown - needs review</option>
             </select>
           </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className={labelClass}>
+              Owner/license
+              <input className={inputClass} name="ownerLicense" placeholder="TJC, photographer, license owner, stock provider..." />
+            </label>
+            <label className={labelClass}>
+              Attribution text
+              <input className={inputClass} name="attributionText" placeholder="Credit line if required..." />
+            </label>
+          </div>
+          <label className={labelClass}>
+            Usage scope requested
+            <select className={inputClass} name="requestedUsageScope" defaultValue="Reviewer decides">
+              <option>Reviewer decides</option>
+              <option>Internal ministry only</option>
+              <option>Public web/social</option>
+              <option>Slides/newsletter</option>
+              <option>Archive only</option>
+            </select>
+          </label>
           <label className={labelClass}>
             Suggested approval direction
             <select className={inputClass} name="approvalSuggestion" defaultValue="Reviewer decides">
@@ -389,6 +438,11 @@ export function UploadPage() {
             <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder="https://..." value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
             {sourceLink.trim() && !hasValidSourceLink ? <span className="text-xs font-black text-[#7a5a19]">Use a full http or https source link.</span> : null}
           </label>
+          <label className={labelClass}>
+            Proof link / license receipt / consent attachment
+            <input className={inputClass} name="proofLink" placeholder="https://... or note where proof is attached" />
+            <span className="text-xs font-semibold text-tjc-muted">Required before public/external approval. Missing proof means public download remains blocked.</span>
+          </label>
           <TagInput
             name="tags"
             label="Suggested tags"
@@ -409,7 +463,7 @@ export function UploadPage() {
         <section data-send-step="4" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 4 && "hidden")}>
           <div>
             <h2 className="text-2xl font-black text-tjc-ink">Reviewer packet</h2>
-            <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">Reviewer receives source context, people/youth answers, rights notes, file/link, suggested tags, and notes. Media stays blocked.</p>
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">Reviewer receives source context, people/youth answers, rights notes, proof fields, file/link, suggested tags, and notes. Media stays blocked.</p>
           </div>
           <EvidenceChecklist items={packetItems} />
           <div className="grid gap-3 rounded-[16px] border border-[#d8e1da] bg-[#fbfcfa] p-3 text-sm font-semibold text-tjc-muted">
@@ -417,6 +471,7 @@ export function UploadPage() {
             <span><strong className="text-tjc-ink">Files:</strong> {selectedFiles.length}</span>
             <span><strong className="text-tjc-ink">Source link:</strong> {hasValidSourceLink ? "included" : "not included"}</span>
             <span><strong className="text-tjc-ink">Tags:</strong> {tagCount}</span>
+            <span><strong className="text-tjc-ink">Public use:</strong> blocked until evidence and DAM review clear</span>
           </div>
         </section>
 
@@ -472,7 +527,7 @@ export function UploadPage() {
       >
         <EvidenceChecklist items={packetItems} />
         <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-relaxed text-[#71500f]">
-          New media remains Needs Review / Do Not Publish.
+          New media remains Needs Review / Do Not Publish. Missing proof blocks public/external download.
         </div>
       </PacketSummary>
       </div>

@@ -2,17 +2,18 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Database, Filter, FolderOpen, Mail, Package, RotateCcw, Search, UploadCloud } from "lucide-react";
+import { CheckCircle2, Database, Filter, FolderOpen, LayoutGrid, List, Mail, Package, RotateCcw, Search, UploadCloud } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
-import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamMediaCard as MediaCard, DamPrimaryAction as PrimaryAction, DamUseCaseCard as UseCaseCard, findUseCases } from "@/components/dam/DamWorkspace";
+import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamMediaCard as MediaCard, DamPrimaryAction as PrimaryAction, DamTrustSignalStrip as TrustSignalStrip, DamUseCaseCard as UseCaseCard, findUseCases } from "@/components/dam/DamWorkspace";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { LibraryPagination } from "@/components/LibraryPagination";
 import { useDemoRole } from "@/components/RoleProvider";
 import { RawStatusBadge, UsageBadge } from "@/components/StatusBadge";
-import type { CatalogSort, SearchResult, StockMediaAsset } from "@/lib/types";
+import type { CatalogSort, DemoRole, SearchResult, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
 import { assetPresentation } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
+import { viewerVerdictForAsset } from "@/lib/viewer-verdict";
 
 const viewerDefaultView = "approved-church-wide";
 const sortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
@@ -20,7 +21,7 @@ const viewerFacetGroups = [
   { label: "Use", options: ["Website image", "Slide background", "Newsletter", "Youth-safe"] },
   { label: "Media type", options: ["Photo", "Video", "Graphic", "Document"] },
   { label: "People", options: ["No people", "Adults visible", "Youth review needed"] },
-  { label: "Availability", options: ["Approved copies", "Review required before use"] }
+  { label: "Availability", options: ["Approved copies", "Review required before use", "Source restricted"] }
 ] as const;
 
 function healthTone(score: number) {
@@ -52,6 +53,30 @@ function OpsAssetRow({ asset, selected }: { asset: StockMediaAsset; selected?: b
       <span className="text-xs font-semibold text-tjc-muted">{asset.peopleRisk || "Unknown"}</span>
       <span className="truncate text-xs font-semibold text-tjc-muted">RS {asset.resourceSpaceId || asset.id}</span>
       <span className={cn("h-fit rounded-[10px] border px-2 py-1 text-xs font-black tabular-nums", healthTone(health.score))}>{health.score}%</span>
+    </Link>
+  );
+}
+
+function ViewerAssetListRow({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
+  const display = assetPresentation(asset, role);
+  const verdict = viewerVerdictForAsset(asset, role);
+  return (
+    <Link
+      href={`/assets/${asset.id}`}
+      className="viewer-asset-list-row grid min-h-28 items-center gap-3 border-b border-[var(--dam-border)] bg-white px-3 py-3 text-sm transition last:border-b-0 hover:bg-[var(--dam-panel-muted)] md:grid-cols-[9rem_minmax(0,1fr)_10rem_9rem_8rem]"
+    >
+      <span className="block aspect-video overflow-hidden rounded-xl bg-[#e9e8f2]">
+        {display.image ? <img className="h-full w-full object-cover" src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : null}
+      </span>
+      <span className="min-w-0">
+        <strong className="line-clamp-2 text-base font-black leading-tight text-[var(--dam-ink)]">{display.title}</strong>
+        <span className="mt-1 block truncate text-sm font-semibold text-[var(--dam-muted)]">{display.cardSubtitle}</span>
+      </span>
+      <span className={cn("w-fit rounded-full border px-2.5 py-1 text-xs font-black", verdict.canDownload ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff7e5] text-[#725216]")}>
+        {verdict.label}
+      </span>
+      <span className="truncate text-xs font-semibold text-[var(--dam-muted)]">{asset.mediaType}</span>
+      <span className="truncate text-xs font-black text-[var(--dam-muted)]">Ref {asset.id}</span>
     </Link>
   );
 }
@@ -102,6 +127,7 @@ export function LibraryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [pageOffset, setPageOffset] = useState(0);
   const [pageLimit, setPageLimit] = useState(24);
   const opsView = role === "Reviewer" || role === "DAM Admin";
@@ -246,24 +272,28 @@ export function LibraryPage() {
   }
 
   const assets = result?.assets || [];
+  const selectedAsset = assets[0];
+  const inspectorAsset = selectedAsset || (!opsView ? reviewNeededPreview[0] : undefined);
+  const selectedAssetDisplay = inspectorAsset ? assetPresentation(inspectorAsset, role) : null;
+  const selectedAssetVerdict = inspectorAsset ? viewerVerdictForAsset(inspectorAsset, role) : null;
   const pagination = result?.pagination;
   const activeView = result?.savedViews.find((view) => view.id === selectedView);
   const activeCollection = result?.collections.find((collection) => collection.id === selectedCollection);
   const viewerSafeDefaultEmpty = role === "Viewer" && selectedView === viewerDefaultView && !submittedQuery && !filters.length && !activeCollection;
-  const title = opsView ? "Ops Search" : "Find approved media";
+  const title = opsView ? "Asset Library" : "Find approved media";
   const subtitle = opsView
-    ? "Search assets by title, source, review blocker, ID, package, or ministry queue."
+    ? "Search media, source records, rights signals, packages, and ministry queues from one workspace."
     : "Search by ministry use, event, topic, or package.";
   const currentWorkspaceLabel = activeCollection?.name || (selectedView === viewerDefaultView ? "Ready copies" : activeView?.label) || (submittedQuery ? `Search: ${submittedQuery}` : "Ready copies");
 
   return (
     <div className="dam-shell">
-      <section className="find-hero asset-bank-header p-3 sm:p-4" aria-label={opsView ? "Ops search front door" : "Find approved media"}>
+      <section className="find-hero asset-bank-header p-3 sm:p-4" aria-label={opsView ? "Asset library front door" : "Find approved media"}>
         <div className={cn("relative z-[1] grid gap-3", opsView ? "lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,.55fr)] lg:items-end" : "xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-end")}>
           <div className="min-w-0">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <span className="dam-kicker">{opsView ? "Search console" : "Asset library"}</span>
+                <span className="dam-kicker">{opsView ? "Asset library" : "Asset library"}</span>
                 <h1 className="dam-page-title mt-1">{title}</h1>
               </div>
               {!opsView ? (
@@ -273,13 +303,16 @@ export function LibraryPage() {
               ) : null}
             </div>
             <p className="mt-1.5 max-w-[58ch] text-sm font-semibold leading-relaxed text-tjc-muted">{subtitle}</p>
+            <p className="mt-1 max-w-[72ch] text-xs font-black uppercase tracking-[.04em] text-[#725216]">
+              Controlled reuse system: no evidence = no public/external download.
+            </p>
             <div className="mt-3">
               <HeroSearch
                 value={query}
                 onChange={setQuery}
                 onSubmit={submit}
                 ops={opsView}
-                placeholder={opsView ? `Search title, ${role === "DAM Admin" ? "ResourceSpace ID" : "record reference"}, source, blocker, package...` : "Search website, slides, youth-safe, newsletter..."}
+                placeholder={opsView ? "Search assets, collections, people, rights, source records..." : "Search assets, collections, people, rights, source records..."}
               />
             </div>
             {!opsView ? (
@@ -290,9 +323,14 @@ export function LibraryPage() {
                 <button className="inline-flex min-h-8 items-center rounded-md border border-[#d1d5db] bg-white px-2.5 text-xs font-black text-[#3f4a43]" type="button" onClick={() => setFiltersOpen(true)}>
                   Filters
                 </button>
-                <span className="inline-flex min-h-8 items-center rounded-md border border-[#d1d5db] bg-white px-2.5 text-xs font-black text-[#3f4a43]" aria-label="Grid view selected">
-                  Grid view
-                </span>
+                <button className={cn("inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-black", viewMode === "grid" ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#d1d5db] bg-white text-[#3f4a43]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
+                  <LayoutGrid size={14} strokeWidth={1.9} aria-hidden="true" />
+                  Grid
+                </button>
+                <button className={cn("inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-black", viewMode === "list" ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#d1d5db] bg-white text-[#3f4a43]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
+                  <List size={14} strokeWidth={1.9} aria-hidden="true" />
+                  List
+                </button>
                 <Link className="inline-flex min-h-8 items-center rounded-md border border-[#d1d5db] bg-white px-2.5 text-xs font-black text-tjc-evergreen" href="/collections">
                   Packages
                 </Link>
@@ -306,7 +344,7 @@ export function LibraryPage() {
                 Operations truth visible
               </div>
               <p className="text-sm font-semibold leading-relaxed text-tjc-muted">
-                Reviewer/Admin search includes source, mapping, audit, and blocked reuse state.
+                Reviewer/Admin search includes verdict, rights evidence, source, custody, package, audit, and blocked reuse state.
               </p>
             </div>
           ) : (
@@ -319,17 +357,29 @@ export function LibraryPage() {
       </section>
 
       {!opsView ? (
-        <section className="find-usecase-grid mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-7" aria-label="Common media tasks">
-          {findUseCases.map((task) => {
-            const props = {
-              label: task.label,
-              detail: task.detail,
-              icon: task.icon
-            };
-            if ("href" in task) return <UseCaseCard {...props} href={task.href} key={task.label} />;
-            return <UseCaseCard {...props} onClick={() => openSavedView(task.view)} key={task.label} />;
-          })}
-        </section>
+        <>
+          <div className="mt-3">
+            <TrustSignalStrip
+              signals={[
+                { label: "Default library", value: "Approved copies first", tone: "approved" },
+                { label: "Reuse decision", value: "Open record before download", tone: "info" },
+                { label: "Protected source", value: "Originals request-only", tone: "blocked" },
+                { label: "Unsure?", value: "Request DAM review", tone: "review" }
+              ]}
+            />
+          </div>
+          <section className="find-usecase-grid mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-7" aria-label="Common media tasks">
+            {findUseCases.map((task) => {
+              const props = {
+                label: task.label,
+                detail: task.detail,
+                icon: task.icon
+              };
+              if ("href" in task) return <UseCaseCard {...props} href={task.href} key={task.label} />;
+              return <UseCaseCard {...props} onClick={() => openSavedView(task.view)} key={task.label} />;
+            })}
+          </section>
+        </>
       ) : (
         <section className="ops-workbench mt-5 grid gap-3 p-4 xl:grid-cols-[1fr_.9fr]" aria-label="Operational search summary">
           <div className="grid gap-3 sm:grid-cols-4">
@@ -355,13 +405,38 @@ export function LibraryPage() {
         </section>
       )}
 
+      {opsView ? (
+        <section className="mt-3 grid gap-3 rounded-[12px] border border-[#d9dee3] bg-white p-3 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Rights and incident search">
+          <div>
+            <span className="dam-kicker">Rights Search</span>
+            <h2 className="mt-1 text-lg font-black text-tjc-ink">Find assets by source, license, person, event, package, download, or pending write.</h2>
+            <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">
+              This route is the incident desk: find all assets from a source, under a license, involving people/minors, expired, Do Not Use, downloaded by a user, used in a package, or waiting on ResourceSpace sync.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {[
+              ["Verdict", "Approved / Restricted / Do Not Use"],
+              ["Rights", "Owner/license, attribution, proof link"],
+              ["Custody", "ResourceSpace, Drive, S3 derivative"],
+              ["Audit", "Downloads, denials, share links, review actions"]
+            ].map(([label, value]) => (
+              <div className="rounded-md border border-[#e1e7e2] bg-[#fbfcfa] p-2" key={label}>
+                <strong className="block font-black text-tjc-ink">{label}</strong>
+                <span className="mt-1 block font-semibold leading-snug text-tjc-muted">{value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {error ? (
         <section className="mt-5 rounded-[12px] border border-[#dfb9b5] bg-[#fff1ef] p-4 text-sm font-semibold text-[#7b332f]" role="alert">
           {error}
         </section>
       ) : null}
 
-      <div className={cn("asset-bank-console mt-5 grid gap-3", !opsView && "lg:grid-cols-[15.5rem_minmax(0,1fr)]")} data-testid="asset-bank-console">
+      <div className={cn("asset-bank-console mt-5 grid gap-4", !opsView && "lg:grid-cols-[17rem_minmax(0,1fr)] xl:grid-cols-[17rem_minmax(0,1fr)_24rem]")} data-testid="asset-bank-console">
         {!opsView ? (
           <aside className="find-facet-rail order-2 grid gap-3 self-start rounded-lg border border-[#d9dee3] bg-white p-3 lg:order-none lg:sticky lg:top-[calc(var(--app-header-height)+1rem)]" aria-label="Asset bank navigation">
             <section className="grid gap-2">
@@ -370,7 +445,7 @@ export function LibraryPage() {
                 <p className="mt-1 truncate text-sm font-black text-tjc-ink">{currentWorkspaceLabel}</p>
               </div>
               <div className="rounded-md border border-[#d9dee3] bg-[#f8faf9] px-2.5 py-2 text-xs font-semibold leading-relaxed text-tjc-muted">
-                Downloads stay blocked until each media record clears reuse checks.
+                Downloads stay blocked until each media record clears reuse checks. Package approval never replaces item verdict.
               </div>
             </section>
             <section className="grid gap-1.5" aria-label="Saved views">
@@ -379,7 +454,8 @@ export function LibraryPage() {
                 ["Ready copies", viewerDefaultView],
                 ["Website image", "website-hero"],
                 ["Slide background", "sermon-slides"],
-                ["Youth-safe", "no-people"]
+                ["Youth-safe", "no-people"],
+                ["Review needed", "batch-approved-blockers"]
               ].map(([label, view]) => (
                 <button
                   className={cn(
@@ -504,11 +580,20 @@ export function LibraryPage() {
           </div>
         ) : null}
 
-        {!loading && assets.length && !opsView ? (
+        {!loading && assets.length && !opsView && viewMode === "grid" ? (
           <div className="media-results-grid">
             {assets.map((asset, index) => (
               <MediaCard asset={asset} role={role} priority={index === 0 || index === 7} key={asset.id} />
             ))}
+          </div>
+        ) : null}
+
+        {!loading && assets.length && !opsView && viewMode === "list" ? (
+          <div className="overflow-hidden rounded-xl border border-[var(--dam-border)] bg-white shadow-[var(--dam-shadow-soft)]">
+            <div className="hidden grid-cols-[9rem_minmax(0,1fr)_10rem_9rem_8rem] gap-3 border-b border-[var(--dam-border)] bg-[var(--dam-panel-muted)] px-3 py-2 text-xs font-black text-[var(--dam-muted)] md:grid">
+              <span>Preview</span><span>Asset</span><span>Verdict</span><span>Type</span><span>Reference</span>
+            </div>
+            {assets.map((asset) => <ViewerAssetListRow asset={asset} role={role} key={asset.id} />)}
           </div>
         ) : null}
 
@@ -536,6 +621,61 @@ export function LibraryPage() {
           />
         ) : null}
       </section>
+
+        {!opsView && inspectorAsset && selectedAssetDisplay && selectedAssetVerdict ? (
+          <aside className="library-inspector-rail order-3 hidden self-start xl:grid" aria-label="Selected asset inspector">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-black text-tjc-muted">1 of {result?.total?.toLocaleString() || assets.length.toLocaleString()}</span>
+              <Link className="text-xs font-black text-tjc-evergreen" href={`/assets/${inspectorAsset.id}`}>Open record</Link>
+            </div>
+            <div className="overflow-hidden rounded-[10px] border border-[#d9dee3] bg-[#eef0f7]">
+              {selectedAssetDisplay.image ? (
+                <img className="aspect-[4/3] w-full object-cover" src={selectedAssetDisplay.image} alt={inspectorAsset.thumbnailAlt} loading="lazy" />
+              ) : (
+                <div className="dam-unavailable-preview min-h-44">
+                  <strong>Preview unavailable</strong>
+                  <span>Open record for derivative and permission state.</span>
+                </div>
+              )}
+            </div>
+            <div>
+              <h2 className="line-clamp-2 text-lg font-black text-tjc-ink">{selectedAssetDisplay.title}</h2>
+              <p className="mt-1 text-sm font-semibold text-tjc-muted">{selectedAssetDisplay.cardSubtitle}</p>
+            </div>
+            <section className={cn("rounded-[10px] border p-3", selectedAssetVerdict.canDownload ? "border-[#b8d9c6] bg-[#edf8f1]" : "border-[#ead6a8] bg-[#fff8e8]")} aria-label="Selected asset use decision">
+              <span className="block text-xs font-black uppercase tracking-[.05em] text-[#536057]">Can I use this?</span>
+              <strong className={cn("mt-1 block text-lg font-black leading-tight", selectedAssetVerdict.canDownload ? "text-[#22563a]" : "text-[#725216]")}>{selectedAssetVerdict.label}</strong>
+              <p className="mt-1 text-sm font-semibold leading-relaxed text-[#4d5b52]">{selectedAssetVerdict.reason}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/80 bg-white px-2.5 py-1 text-xs font-black text-[#52606b]">{inspectorAsset.mediaType}</span>
+                <span className="rounded-full border border-white/80 bg-white px-2.5 py-1 text-xs font-black text-[#52606b]">Source/original restricted</span>
+              </div>
+            </section>
+            <dl className="library-inspector-ledger">
+              {[
+                ["Asset ID", inspectorAsset.id],
+                ["Usage", inspectorAsset.usageScope],
+                ["People", inspectorAsset.peopleRisk || "Unknown"],
+                ["Review", inspectorAsset.reviewedDate || "Pending"],
+                ["Source/original", "Restricted"],
+                ["Evidence gate", selectedAssetVerdict.canDownload ? "Cleared for approved copy" : "Public download blocked"]
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {selectedAssetVerdict.canDownload ? (
+              <a className="dam-action-button" href={selectedAssetVerdict.downloadHref}>Download Approved Copy</a>
+            ) : (
+              <Link className="dam-action-button" href={`/assets/${inspectorAsset.id}`}>View usage guidance</Link>
+            )}
+            <p className="text-xs font-semibold leading-relaxed text-tjc-muted">
+              Collections and saved views help discovery only. Item-level record verdict controls reuse. Master/original files stay restricted.
+            </p>
+          </aside>
+        ) : null}
       </div>
 
       <Dialog

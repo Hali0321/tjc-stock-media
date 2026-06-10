@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { HelpCircle, Menu, Settings2, Sparkles, X } from "lucide-react";
+import { Bell, ChevronDown, Clock, HelpCircle, Menu, Search, ShieldCheck, Star, UploadCloud, X } from "lucide-react";
 import { Toaster } from "sonner";
 import { AppNav } from "@/components/AppNav";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -31,11 +31,13 @@ function DamRoleSwitch({ compact = false }: { compact?: boolean }) {
 
 function DamBrand({ opsShell }: { opsShell: boolean }) {
   return (
-    <Link href={opsShell ? "/review" : "/"} className="dam-brand-lockup flex min-w-0 items-center gap-3" aria-label="TJC Stock Media home">
-      <span className="dam-brand-mark grid h-12 w-12 shrink-0 place-items-center rounded-xl text-[10px] font-black text-white">TJC</span>
+    <Link href={opsShell ? "/review" : "/"} className="dam-brand-lockup flex min-w-0 items-center gap-3" aria-label="True Jesus Church Media Library home">
+      <span className="dam-brand-mark grid h-12 w-32 shrink-0 place-items-center overflow-hidden rounded-xl text-[10px] font-black text-white">
+        <img src="/brand/tjc-logo-english-color.png" alt="" aria-hidden="true" />
+      </span>
       <span className="min-w-0">
-        <strong className="block truncate text-lg font-black tracking-[0] text-tjc-ink">TJC Stock Media</strong>
-        <small className="block truncate text-xs font-black text-tjc-muted">{opsShell ? "DAM operations" : "Find and Use"}</small>
+        <strong className="block truncate text-lg font-black tracking-[0] text-tjc-ink">True Jesus Church</strong>
+        <small className="block truncate text-xs font-black text-tjc-muted">Media Library</small>
       </span>
     </Link>
   );
@@ -52,24 +54,50 @@ function DamRailSummary({ role, opsShell }: { role: DemoRole; opsShell: boolean 
 }
 
 function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boolean }) {
-  const canOpenGovernance = role === "DAM Admin";
   return (
-    <div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
+    <div className="dam-utility-actions hidden min-w-0 items-center justify-end gap-3 md:flex">
       <span className="dam-shell-mode hidden min-h-10 items-center gap-2 rounded-xl border px-3 text-xs font-black 2xl:inline-flex">
-        <Sparkles size={14} strokeWidth={1.9} aria-hidden="true" />
+        <ShieldCheck size={14} strokeWidth={1.9} aria-hidden="true" />
         {opsShell ? "Operations workbench" : "Approved-copy mode"}
       </span>
       <CommandPalette />
       <Link href="/guide" className="dam-header-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
         <HelpCircle size={18} strokeWidth={1.9} aria-hidden="true" />
       </Link>
-      {canOpenGovernance ? (
-        <Link href="/admin" className="dam-header-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open governance">
-          <Settings2 size={18} strokeWidth={1.9} aria-hidden="true" />
-        </Link>
-      ) : null}
+      <Link href="/review" className="dam-header-icon dam-bell-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open notifications">
+        <Bell size={18} strokeWidth={1.9} aria-hidden="true" />
+        <span>3</span>
+      </Link>
+      <div className="dam-user-menu">
+        <span className="dam-avatar">AK</span>
+        <span><strong>Alex Kim</strong><small>Brand Team</small></span>
+        <ChevronDown size={14} aria-hidden="true" />
+      </div>
       <DamRoleSwitch />
     </div>
+  );
+}
+
+function DamTopSearch() {
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    setQuery(new URLSearchParams(window.location.search).get("q") || "");
+  }, []);
+  return (
+    <form className="dam-top-search" action="/" role="search" aria-label="Search assets, collections, and folders">
+      <Search size={17} strokeWidth={1.9} aria-hidden="true" />
+      <label className="sr-only" htmlFor="dam-global-search">Search assets, collections, and folders</label>
+      <input
+        id="dam-global-search"
+        name="q"
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Search assets, collections, folders, people, or campaigns..."
+        autoComplete="off"
+      />
+      <kbd>⌘ K</kbd>
+    </form>
   );
 }
 
@@ -127,11 +155,11 @@ export function DamShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="grain-overlay" aria-hidden="true" />
       <header className="dam-app-header sticky top-0 z-40 px-3 py-3 md:px-5">
-        <div className="dam-header-inner mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 xl:grid-cols-[minmax(18rem,.52fr)_minmax(0,1fr)_auto]">
+        <div className="dam-header-inner mx-auto grid min-h-16 w-full max-w-[1760px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 xl:grid-cols-[minmax(18rem,.45fr)_minmax(18rem,42rem)_auto]">
           <DamBrand opsShell={opsShell} />
 
-          <div className="dam-top-nav-slot hidden min-w-0 justify-center 2xl:flex">
-            <AppNav role={role} variant="top" />
+          <div className="dam-top-nav-slot hidden min-w-0 justify-center md:flex">
+            <DamTopSearch />
           </div>
 
           <DamUtilityActions role={role} opsShell={opsShell} />
@@ -153,8 +181,24 @@ export function DamShell({ children }: { children: ReactNode }) {
 
       <aside className="dam-desktop-rail hidden border-r border-[#d7dde2] bg-white lg:block" aria-label="Desktop workspace navigation">
         <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] content-start gap-3 p-3">
+          <Link href="/" className="dam-rail-brand" aria-label="True Jesus Church Media Library home">
+            <img src="/brand/tjc-logo-english-white.png" alt="True Jesus Church" />
+            <span>Media Library</span>
+          </Link>
           <DamRailSummary role={role} opsShell={opsShell} />
           <AppNav role={role} variant="menu" />
+          <section className="dam-quick-access" aria-label="Quick access">
+            <h2>Quick access</h2>
+            <Link href="/"><Star size={15} />Favorites</Link>
+            <Link href="/"><Clock size={15} />Recent</Link>
+            <Link href="/upload"><UploadCloud size={15} />My uploads</Link>
+          </section>
+          <section className="dam-storage-meter" aria-label="Storage usage">
+            <h2>Storage</h2>
+            <span><i /></span>
+            <p>2.45 TB of 5 TB used</p>
+            <Link href="/admin">Manage storage</Link>
+          </section>
         </div>
       </aside>
 

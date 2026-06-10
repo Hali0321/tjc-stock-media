@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, FolderOpen, Gauge, HelpCircle, History, Search, UploadCloud, type LucideIcon } from "lucide-react";
+import { BarChart3, Box, CheckCircle2, ClipboardList, Grid3X3, Library, PackageCheck, Settings, type LucideIcon } from "lucide-react";
 import type { DemoRole } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
@@ -15,25 +15,36 @@ type AppNavItem = {
 };
 
 const viewerNav: AppNavItem[] = [
-  { href: "/", label: "Find", icon: Search },
-  { href: "/collections", label: "Packages", icon: FolderOpen },
-  { href: "/upload", label: "Send", icon: UploadCloud },
-  { href: "/guide", label: "Help", icon: HelpCircle }
+  { href: "/", label: "Library", icon: Library },
+  { href: "/collections", label: "Collections", icon: Grid3X3 },
+  { href: "/packages", label: "Packages", icon: Box },
+  { href: "/review", label: "Approvals", mobileLabel: "Review", icon: CheckCircle2 },
+  { href: "/guide", label: "Usage", icon: ClipboardList },
+  { href: "/insights", label: "Insights", icon: BarChart3 },
+  { href: "/brand-hub", label: "Brand Hub", icon: PackageCheck },
+  { href: "/admin", label: "Admin", icon: Settings }
 ];
 
 const reviewerNav: AppNavItem[] = [
-  { href: "/review", label: "Review Inbox", mobileLabel: "Review", icon: ClipboardList },
-  { href: "/", label: "Ops Search", mobileLabel: "Search", icon: Search },
-  { href: "/collections", label: "Packages", icon: FolderOpen },
-  { href: "/guide", label: "Audit", icon: History }
+  { href: "/", label: "Library", icon: Library },
+  { href: "/collections", label: "Collections", icon: Grid3X3 },
+  { href: "/packages", label: "Packages", icon: Box },
+  { href: "/review", label: "Approvals", mobileLabel: "Review", icon: ClipboardList },
+  { href: "/guide", label: "Usage", icon: CheckCircle2 },
+  { href: "/insights", label: "Insights", icon: BarChart3 },
+  { href: "/brand-hub", label: "Brand Hub", icon: PackageCheck },
+  { href: "/admin", label: "Admin", icon: Settings }
 ];
 
 const adminNav: AppNavItem[] = [
-  { href: "/review", label: "Review Inbox", mobileLabel: "Review", icon: ClipboardList },
-  { href: "/", label: "Ops Search", mobileLabel: "Search", icon: Search },
-  { href: "/collections", label: "Packages", icon: FolderOpen },
-  { href: "/admin", label: "Governance", mobileLabel: "Govern", icon: Gauge, adminOnly: true },
-  { href: "/guide", label: "Audit", icon: History }
+  { href: "/", label: "Library", icon: Library },
+  { href: "/collections", label: "Collections", icon: Grid3X3 },
+  { href: "/packages", label: "Packages", icon: Box },
+  { href: "/review", label: "Approvals", mobileLabel: "Review", icon: ClipboardList },
+  { href: "/guide", label: "Usage", icon: CheckCircle2 },
+  { href: "/insights", label: "Insights", icon: BarChart3 },
+  { href: "/brand-hub", label: "Brand Hub", icon: PackageCheck },
+  { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
 ];
 
 function navItemsForRole(role: DemoRole) {
@@ -70,7 +81,7 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
         const label = top || menu ? item.label : item.mobileLabel || item.label;
         return (
           <Link
-            key={item.href}
+            key={`${item.href}-${item.label}`}
             href={item.href}
             className={cn(
               "group relative inline-flex min-w-0 flex-1 items-center justify-center font-black text-[#5b655f] transition-all duration-200 hover:text-tjc-evergreen active:translate-y-px",
@@ -86,6 +97,7 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
             {isActive ? <span className="absolute inset-0 rounded-[inherit] bg-white shadow-[0_8px_24px_rgba(15,61,46,.10)]" aria-hidden="true" /> : null}
             <Icon className={cn("relative z-10 shrink-0", top ? "h-[16px] w-[16px]" : menu ? "h-[17px] w-[17px]" : "h-5 w-5")} aria-hidden="true" strokeWidth={1.9} />
             <span className={cn("nav-label relative z-10 truncate leading-none", top && "max-w-none")}>{label}</span>
+            {item.label === "Approvals" ? <span className="nav-count-badge relative z-10 ml-auto">28</span> : null}
           </Link>
         );
       })}

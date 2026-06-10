@@ -54,12 +54,15 @@ function normalizeChecklist(value: unknown): ReviewEvidenceChecklist {
   return {
     sourceConfirmed: raw.sourceConfirmed === true,
     rightsConfirmed: raw.rightsConfirmed === true,
+    attributionConfirmed: raw.attributionConfirmed === true,
     peopleVisibilityConfirmed: raw.peopleVisibilityConfirmed === true,
     childrenYouthChecked: raw.childrenYouthChecked === true,
     usageScopeSelected: raw.usageScopeSelected === true,
     derivativeAvailable: raw.derivativeAvailable === true,
     sensitiveContextChecked: raw.sensitiveContextChecked === true,
-    creditRequirementChecked: raw.creditRequirementChecked === true
+    creditRequirementChecked: raw.creditRequirementChecked === true,
+    expirationRereviewSet: raw.expirationRereviewSet === true,
+    proofLinkAttached: raw.proofLinkAttached === true
   };
 }
 
@@ -72,7 +75,14 @@ function missingEvidenceFields(action: ReviewActionBackend, checklist: ReviewEvi
     "usageScopeSelected"
   ];
   if (action === "Approve Public") {
-    required.push("derivativeAvailable", "sensitiveContextChecked", "creditRequirementChecked");
+    required.push(
+      "derivativeAvailable",
+      "sensitiveContextChecked",
+      "creditRequirementChecked",
+      "attributionConfirmed",
+      "expirationRereviewSet",
+      "proofLinkAttached"
+    );
   }
   const missing = required.filter((field) => !checklist[field]).map((field) => String(field));
   if (note.trim().length <= 10) missing.push("reviewNote");

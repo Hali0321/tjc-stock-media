@@ -167,15 +167,15 @@ function HeroSearch({
   placeholder: string;
 }) {
   return (
-    <form className="hero-search-shell grid gap-2 rounded-2xl bg-white p-1 md:grid-cols-[auto_1fr_auto]" onSubmit={onSubmit} aria-label={ops ? "Ops search" : "Find approved media"}>
+    <form className="hero-search-shell grid gap-2 rounded-2xl bg-white p-1 md:grid-cols-[auto_1fr_auto]" onSubmit={onSubmit} aria-label={ops ? "Asset library search" : "Find approved media"}>
       <span className="hidden h-13 w-13 place-items-center rounded-xl bg-[#eef7f1] text-tjc-evergreen md:grid" aria-hidden="true">
         <Search size={20} strokeWidth={2} />
       </span>
-      <label className="sr-only" htmlFor="find-media-search" id="find-media-search-label">{ops ? "Ops Search" : "Search approved media"}</label>
+      <label className="sr-only" htmlFor="find-media-search" id="find-media-search-label">{ops ? "Asset library search" : "Search approved media"}</label>
       <input
         id="find-media-search"
         role="searchbox"
-        aria-label={ops ? "Ops Search" : "Search approved media"}
+        aria-label={ops ? "Asset library search" : "Search approved media"}
         aria-labelledby="find-media-search-label"
         className="min-h-13 min-w-0 rounded-xl border border-transparent bg-[#fbfcfb] px-4 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d] focus:border-[#9cb9ab] sm:text-base"
         value={value}
@@ -231,6 +231,23 @@ function AssistantLaneCard({
       <strong>{label}</strong>
       <small>{detail}</small>
     </div>
+  );
+}
+
+function TrustSignalStrip({
+  signals
+}: {
+  signals: Array<{ label: string; value: ReactNode; tone?: "approved" | "review" | "blocked" | "info" }>;
+}) {
+  return (
+    <section className="dam-trust-signal-strip" aria-label="DAM trust signals">
+      {signals.map((signal) => (
+        <div className={cn("dam-trust-signal", signal.tone && `is-${signal.tone}`)} key={signal.label}>
+          <span>{signal.label}</span>
+          <strong>{signal.value}</strong>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -375,6 +392,7 @@ export { HeroSearch as DamHeroSearch };
 export { PrimaryAction as DamPrimaryAction };
 export { UseCaseCard as DamUseCaseCard };
 export { AssistantLaneCard as DamAssistantLaneCard };
+export { TrustSignalStrip as DamTrustSignalStrip };
 export { HelpDecisionPanel as DamHelpDecisionPanel };
 export { HelpTopicButton as DamHelpTopicButton };
 export { FilterPills as DamFilterPills };

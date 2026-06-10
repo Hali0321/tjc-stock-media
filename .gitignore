@@ -17,6 +17,9 @@ frontend/*.tsbuildinfo
 *.jpg
 *.jpeg
 *.png
+!frontend/public/
+!frontend/public/brand/
+!frontend/public/brand/*.png
 *.heic
 *.heif
 *.gif

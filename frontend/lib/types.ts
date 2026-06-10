@@ -122,12 +122,15 @@ export type MetadataConfidence = {
 export type ReviewEvidenceChecklist = {
   sourceConfirmed: boolean;
   rightsConfirmed: boolean;
+  attributionConfirmed: boolean;
   peopleVisibilityConfirmed: boolean;
   childrenYouthChecked: boolean;
   usageScopeSelected: boolean;
   derivativeAvailable: boolean;
   sensitiveContextChecked: boolean;
   creditRequirementChecked: boolean;
+  expirationRereviewSet: boolean;
+  proofLinkAttached: boolean;
 };
 
 export type ReviewWriteSyncState =

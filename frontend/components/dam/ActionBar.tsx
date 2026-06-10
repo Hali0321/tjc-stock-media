@@ -12,6 +12,7 @@ type ActionButtonProps = {
   icon?: LucideIcon;
   tone?: "primary" | "secondary" | "quiet" | "danger";
   disabled?: boolean;
+  disabledReason?: string;
   type?: "button" | "submit";
 };
 
@@ -22,6 +23,7 @@ export function DamActionButton({
   icon: Icon,
   tone = "secondary",
   disabled,
+  disabledReason,
   type = "button"
 }: ActionButtonProps) {
   const className = cn(
@@ -37,8 +39,8 @@ export function DamActionButton({
       <span>{children}</span>
     </>
   );
-  if (href && !disabled) return <Link className={className} href={href}>{content}</Link>;
-  return <button className={className} type={type} onClick={onClick} disabled={disabled}>{content}</button>;
+  if (href && !disabled) return <Link className={className} href={href} title={disabledReason}>{content}</Link>;
+  return <button className={className} type={type} onClick={onClick} disabled={disabled} title={disabled ? disabledReason : undefined}>{content}</button>;
 }
 
 export function DamActionBar({

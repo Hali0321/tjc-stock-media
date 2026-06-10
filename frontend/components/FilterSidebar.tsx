@@ -2,14 +2,17 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/ui";
 
 export const filterGroups = [
-  { label: "Status", priority: "primary", options: ["Church-wide use", "Internal ministry", "Needs review", "Archive only"] },
+  { label: "Verdict", priority: "primary", options: ["Approved copy", "Needs review", "Restricted", "Do Not Use", "Expired/re-review"] },
+  { label: "Rights status", priority: "primary", options: ["Evidence complete", "Evidence missing", "Owner/license missing", "Proof link missing"] },
   { label: "People/minors", priority: "primary", options: ["No people", "Adults only", "People unknown", "Children/youth"] },
   { label: "Media type", priority: "primary", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
   { label: "Ministry", priority: "primary", options: ["Worship", "Bible Study", "Fellowship", "Sabbath", "Welcome Team"] },
-  { label: "Governance", priority: "advanced", options: ["Missing source", "Rights review", "Portal ready", "Metadata enrichment", "Taxonomy drift", "Duplicate candidate", "Stale approval", "Rendition gap"] },
+  { label: "Governance", priority: "advanced", options: ["Missing source", "Rights review", "Portal ready", "Metadata enrichment", "Taxonomy drift", "Duplicate candidate", "Stale approval", "Rendition gap", "Pending write"] },
+  { label: "Custody", priority: "advanced", options: ["S3 derivative ready", "Drive original restricted", "ResourceSpace reference", "Source access request"] },
+  { label: "Incident search", priority: "advanced", options: ["Denied downloads", "Downloaded by user", "Used in package", "Takedown path"] },
   { label: "Event/date", priority: "advanced", options: ["2026", "2025", "2024"] },
   { label: "Orientation", priority: "advanced", options: ["Landscape", "Square", "Portrait"] },
-  { label: "Source", priority: "advanced", options: ["LM Photos", "Media library", "Photographer"] }
+  { label: "Source", priority: "advanced", options: ["Church photographer", "Online source", "License owner", "ResourceSpace ID", "Google Drive custody"] }
 ];
 
 export function FilterSidebar({

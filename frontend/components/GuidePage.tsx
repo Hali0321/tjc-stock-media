@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileLock2, MessageCircle, Search, UploadCloud } from "lucide-react";
-import { DamHelpDecisionPanel, DamHelpTopicButton } from "@/components/dam/DamWorkspace";
+import { DamAssistantLaneCard as AssistantLaneCard, DamHelpDecisionPanel, DamHelpTopicButton, DamTrustSignalStrip as TrustSignalStrip } from "@/components/dam/DamWorkspace";
 
 type HelpTopic = {
   id: string;
@@ -27,12 +27,12 @@ const helpTopics: HelpTopic[] = [
   },
   {
     id: "download",
-    title: "Download a copy",
-    summary: "Open the media record and follow the verdict before reuse.",
+    title: "Download only approved copy",
+    summary: "Open the media record and download only the approved derivative when verdict and scope match.",
     route: "/",
     lane: "Record check",
-    doText: "Download only when the record says Ready to use and the guidance matches your channel.",
-    avoidText: "Do not treat review-required or source-file restricted media as approved."
+    doText: "Use Download Approved Copy only when the record says Ready to use and the guidance matches your channel.",
+    avoidText: "Do not use Google Drive originals, remembered files, screenshots, or source files as a shortcut."
   },
   {
     id: "packages",
@@ -54,8 +54,8 @@ const helpTopics: HelpTopic[] = [
   },
   {
     id: "source",
-    title: "Request source-file access",
-    summary: "Source files are restricted and require a separate request.",
+    title: "Source/original access is restricted",
+    summary: "Master originals remain restricted and require a separate request.",
     route: "/guide#request-review",
     lane: "Access request",
     doText: "Include the media record, ministry use, deadline, and why the approved copy is not enough.",
@@ -71,6 +71,24 @@ const helpTopics: HelpTopic[] = [
     avoidText: "Do not send media expecting it to publish immediately."
   },
   {
+    id: "public",
+    title: "Public or external use",
+    summary: "Public/social/web use needs stronger evidence than internal drafts or slides.",
+    route: "/review?queue=rights-review",
+    lane: "Strict gate",
+    doText: "Confirm source, owner/license, usage scope, attribution, proof link, reviewer, review date, and re-review date.",
+    avoidText: "Do not treat online free images, package membership, or old use as proof."
+  },
+  {
+    id: "incident",
+    title: "Rights incident or takedown",
+    summary: "If an asset becomes unsafe, stop reuse and make the audit trail answer who used it and why.",
+    route: "/review?queue=rights-review",
+    lane: "Incident path",
+    doText: "Use Do Not Use, request review, and preserve notes about source, license, downloads, package use, and allowed scope.",
+    avoidText: "Do not quietly replace or keep sharing media after rights, people, or source concerns appear."
+  },
+  {
     id: "review",
     title: "Request DAM review",
     summary: "Ask the media team to confirm whether a media record can be reused.",
@@ -82,10 +100,12 @@ const helpTopics: HelpTopic[] = [
 ];
 
 const decisionTree = [
-  ["Need media now?", "Search Find first. If nothing is ready, browse Packages."],
+  ["Need media now?", "Search approved media first. If nothing is ready, browse Packages."],
+  ["Opened media record?", "Confirm verdict, scope, evidence, and derivative state before reuse."],
   ["Verdict says Ready to use?", "Download approved copy and follow guidance."],
+  ["Public/external use?", "Requires source, owner/license, usage scope, attribution, proof, reviewer, and re-review evidence."],
   ["People/youth, rights, or source unclear?", "Stop and request DAM review."],
-  ["Need original/source file?", "Request source-file access. It is not automatic."]
+  ["Need original/source file?", "Request source-file access. It is restricted by default."]
 ] as const;
 
 export function GuidePage() {
@@ -104,16 +124,19 @@ export function GuidePage() {
   const selected = visibleTopics.find((topic) => topic.id === openTopic) || visibleTopics[0] || helpTopics[0];
 
   return (
-    <div className="dam-help-shell mx-auto grid w-full max-w-[1180px] gap-4 px-4 py-5 md:px-6 lg:grid-cols-[minmax(0,.68fr)_minmax(22rem,.32fr)]">
+    <div className="dam-help-shell mx-auto grid w-full max-w-[1760px] gap-5 px-4 py-5 md:px-6 xl:grid-cols-[minmax(0,1fr)_minmax(26rem,30rem)]">
       <section className="min-w-0">
         <div className="help-hero">
           <div className="help-command-main">
             <p className="dam-kicker">Media use guide</p>
             <h1 className="mt-1 text-2xl font-black leading-tight tracking-[0] text-[#111827] sm:text-3xl">
-              What are you trying to do?
+              Safe reuse guide
             </h1>
             <p className="mt-2 max-w-[58ch] text-sm font-semibold leading-6 text-[#4b5563]">
-              Use approved copies when they are ready. When approval, people/youth, rights, or source access is unclear, send it for review.
+              Find approved media first. Open the media record before reuse. Download only approved copies. If rights, people, source, or scope is unclear, request DAM review.
+            </p>
+            <p className="mt-2 max-w-[72ch] text-xs font-black uppercase tracking-[.04em] text-[#725216]">
+              Package approval does not mean item approval. Source/original access is restricted by default.
             </p>
 
             <form className="mt-4 grid min-h-11 grid-cols-[auto_1fr] items-center rounded-lg border border-[#d7dde2] bg-white px-3" role="search">
@@ -130,9 +153,10 @@ export function GuidePage() {
             </form>
           </div>
           <dl className="help-command-ledger" aria-label="Help workflow summary">
-            {[
+              {[
               ["Start", "Find approved media"],
               ["Verify", "Open media record"],
+              ["Download", "Approved copy only"],
               ["Escalate", "Request DAM review"]
             ].map(([label, value]) => (
               <div key={label}>
@@ -142,6 +166,24 @@ export function GuidePage() {
             ))}
           </dl>
         </div>
+
+        <div className="mt-3">
+          <TrustSignalStrip
+            signals={[
+              { label: "First answer", value: "Open media record", tone: "info" },
+              { label: "Use media", value: "Only if verdict says ready", tone: "approved" },
+              { label: "Public use", value: "Evidence required", tone: "review" },
+              { label: "Unclear rights", value: "Request DAM review", tone: "review" },
+              { label: "Source files", value: "Restricted by default", tone: "blocked" }
+            ]}
+          />
+        </div>
+
+        <section className="help-lane-strip mt-4 grid gap-3 lg:grid-cols-3" aria-label="Safe media use paths">
+          <AssistantLaneCard label="Find" detail="Start from approved copies, saved views, or ministry packages." />
+          <AssistantLaneCard label="Verify" detail="Open the media record for approval, restrictions, evidence, and source state." />
+          <AssistantLaneCard label="Escalate" detail="Request DAM review when people, rights, source, scope, proof, or attribution is unclear." />
+        </section>
 
         <section className="help-mobile-decision mt-3 grid gap-2 md:hidden" aria-label="Mobile quick help">
           <DamHelpDecisionPanel items={decisionTree} mobile />
@@ -202,6 +244,10 @@ export function GuidePage() {
                 <p>{selected.avoidText}</p>
               </div>
             </div>
+            <section className="mt-4 rounded-[12px] border border-[#ead6a8] bg-[#fff8e8] p-4 text-sm font-semibold leading-relaxed text-[#725216]">
+              <strong className="block text-[#5c3c05]">Fast safety rule</strong>
+              <span>No evidence = no public/external download. Approved derivative is the safe copy. Master/original remains restricted. DAM review remains the approval truth.</span>
+            </section>
           </section>
         </section>
 
