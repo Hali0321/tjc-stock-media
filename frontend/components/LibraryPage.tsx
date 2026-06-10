@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ClipboardCheck, Database, Filter, FolderOpen, Mail, Package, RotateCcw, Search, ShieldCheck, UploadCloud } from "lucide-react";
+import { CheckCircle2, Database, Filter, FolderOpen, Mail, Package, RotateCcw, Search, UploadCloud } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
 import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamMediaCard as MediaCard, DamPrimaryAction as PrimaryAction, DamUseCaseCard as UseCaseCard, findUseCases } from "@/components/dam/DamWorkspace";
 import { FilterSidebar } from "@/components/FilterSidebar";
@@ -21,30 +21,6 @@ const viewerFacetGroups = [
   { label: "Media type", options: ["Photo", "Video", "Graphic", "Document"] },
   { label: "People", options: ["No people", "Adults visible", "Youth review needed"] },
   { label: "Availability", options: ["Approved copies", "Review required before use"] }
-] as const;
-
-const viewerEmptyGuidance = [
-  {
-    label: "Start with packages",
-    detail: "Curated kits may already match the ministry use.",
-    action: "Open packages",
-    href: "/collections",
-    icon: Package
-  },
-  {
-    label: "Request review",
-    detail: "Ask the media team to clear rights, people, and use guidance.",
-    action: "Request review",
-    href: "mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20media%20for%20safe%20reuse.%0AContext:%20",
-    icon: ClipboardCheck
-  },
-  {
-    label: "Send new media",
-    detail: "Build a reviewer packet. Sending never publishes.",
-    action: "Send media",
-    href: "/upload",
-    icon: UploadCloud
-  }
 ] as const;
 
 function healthTone(score: number) {
@@ -387,7 +363,7 @@ export function LibraryPage() {
 
       <div className={cn("asset-bank-console mt-5 grid gap-3", !opsView && "lg:grid-cols-[15.5rem_minmax(0,1fr)]")} data-testid="asset-bank-console">
         {!opsView ? (
-          <aside className="find-facet-rail grid gap-3 self-start rounded-lg border border-[#d9dee3] bg-white p-3 lg:sticky lg:top-[calc(var(--app-header-height)+1rem)]" aria-label="Asset bank navigation">
+          <aside className="find-facet-rail order-2 grid gap-3 self-start rounded-lg border border-[#d9dee3] bg-white p-3 lg:order-none lg:sticky lg:top-[calc(var(--app-header-height)+1rem)]" aria-label="Asset bank navigation">
             <section className="grid gap-2">
               <div>
                 <h2 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Workspace</h2>
@@ -450,7 +426,7 @@ export function LibraryPage() {
           </aside>
         ) : null}
 
-      <section className="asset-bank-results grid gap-3" aria-label="Find results">
+      <section className="asset-bank-results order-1 grid gap-3 lg:order-none" aria-label="Find results">
         {!(viewerSafeDefaultEmpty && !loading && !assets.length) ? (
         <div className="asset-results-toolbar flex flex-wrap items-end justify-between gap-3 rounded-lg border border-[#e5e7eb] bg-white px-3 py-3">
           <div>
@@ -516,45 +492,6 @@ export function LibraryPage() {
 	                  Show items needing review, downloads stay blocked
 	                </button>
 	                <ReviewNeededShelf assets={reviewNeededPreview} onOpen={() => openSavedView("batch-approved-blockers")} />
-	                <section className="approved-copy-workbench mt-3" aria-label="Approved-copy next steps">
-                  <div className="approved-copy-workbench-main">
-                    <header>
-                      <span>Approved-copy map</span>
-                      <h3>Use the holding lanes while the library is empty.</h3>
-                    </header>
-                    <div className="approved-copy-flow" aria-hidden="true">
-                      <span>Find</span>
-                      <span>Open record</span>
-                      <span>Check use</span>
-                      <span>Request review</span>
-                    </div>
-                    <div className="approved-copy-workbench-grid">
-                      {viewerEmptyGuidance.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <Link className="approved-copy-next-card" href={item.href} key={item.label}>
-                            <span className="approved-copy-next-icon"><Icon size={17} strokeWidth={1.9} aria-hidden="true" /></span>
-                            <span>
-                              <strong>{item.label}</strong>
-                              <small>{item.detail}</small>
-                            </span>
-                            <em>{item.action}</em>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <aside className="approved-copy-safety-panel">
-                    <ShieldCheck size={19} strokeWidth={1.9} aria-hidden="true" />
-                    <strong>Safe-use rule</strong>
-                    <p>Normal users reuse media only after a media record says it is ready. Source-file access stays request-only.</p>
-                    <dl>
-                      <div><dt>Approved copy</dt><dd>Self-serve when cleared</dd></div>
-                      <div><dt>Unknown rights</dt><dd>Request review</dd></div>
-                      <div><dt>People/youth</dt><dd>Open record first</dd></div>
-                    </dl>
-                  </aside>
-                </section>
               </div>
             ) : (
               <EmptyState
