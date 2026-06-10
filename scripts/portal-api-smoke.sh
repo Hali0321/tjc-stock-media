@@ -337,6 +337,34 @@ if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnost
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"
 
+expect_json_status 400 upload-display-fields-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (!Array.isArray(data.missingRequired) || !data.missingRequired.includes("title") || !data.missingRequired.includes("event date") || !data.missingRequired.includes("ministry/team") || !data.missingRequired.includes("source/photographer")) {
+  console.error(`FAIL: unsafe upload display/date fields did not become missing requirements: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  console.error(`FAIL: upload validation echoed unsafe display fields: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST \
+  -F 'role=Contributor' \
+  -F 'title=../private source path' \
+  -F 'eventName=../private event' \
+  -F 'eventDate=2026-02-30' \
+  -F 'ministry=../private master drive' \
+  -F 'source=../private checksum' \
+  -F 'peopleVisible=No' \
+  -F 'minorsVisible=No' \
+  -F 'usageRights=TJC-owned / permission confirmed' \
+  -F 'approvalSuggestion=Internal ministry' \
+  -F 'notes=No consent restrictions; no people visible.' \
+  -F 'tags=Bible, worship' \
+  -F 'intakeNotes=QA unsafe display fields.' \
+  -F 'sourceLink=https://drive.google.com/example' \
+  "$BASE_URL/api/upload"
+
 expect_json_status 403 batch-viewer-payload-safe '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);

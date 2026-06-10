@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeTextField } from "@/lib/request-validation";
+import { normalizeDateField, normalizeDisplayTextField, normalizeTextField } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
@@ -26,11 +26,11 @@ export async function POST(request: NextRequest) {
 
   const files = form.getAll("files").filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0);
   const sourceLink = normalizeTextField(form.get("sourceLink"), "", 500);
-  const title = normalizeTextField(form.get("title"), "", 160);
-  const eventName = normalizeTextField(form.get("eventName"), "", 120);
-  const eventDate = normalizeTextField(form.get("eventDate"), "", 40);
-  const ministry = normalizeTextField(form.get("ministry"), "", 120);
-  const source = normalizeTextField(form.get("source"), "", 160);
+  const title = normalizeDisplayTextField(form.get("title"), "", 160);
+  const eventName = normalizeDisplayTextField(form.get("eventName"), "", 120);
+  const eventDate = normalizeDateField(form.get("eventDate"));
+  const ministry = normalizeDisplayTextField(form.get("ministry"), "", 120);
+  const source = normalizeDisplayTextField(form.get("source"), "", 160);
   const peopleVisible = normalizeTextField(form.get("peopleVisible"), "Unknown", 40);
   const minorsVisible = normalizeTextField(form.get("minorsVisible"), "Unknown", 40);
   const usageRights = normalizeTextField(form.get("usageRights"), "Unknown - needs review", 80);
