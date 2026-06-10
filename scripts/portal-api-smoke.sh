@@ -604,6 +604,49 @@ if (data.total < 2000 || !data.assets.every((asset) => asset.peopleRisk === "Unk
 }
 ' "$BASE_URL/api/assets/search?role=Reviewer&view=people-unknown&limit=10"
 
+expect_json brand-kit-viewer-redacts-operations '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if ("collectionStatus" in data || data.kit?.collectionEnvKey || data.kit?.resourceSpaceCollectionId) {
+  console.error(`FAIL: Viewer Brand Kit leaked collection operations: ${JSON.stringify(data.kit).slice(0, 500)}`);
+  process.exit(1);
+}
+const leakedSection = (data.kit?.sections || []).find((section) => section.envKey || section.resourceSpaceCollectionId);
+if (leakedSection) {
+  console.error(`FAIL: Viewer Brand Kit section leaked operations: ${JSON.stringify(leakedSection)}`);
+  process.exit(1);
+}
+if (/BRAND_KIT_|ResourceSpace collection|collection\/source membership|Configured BRAND_KIT|Missing BRAND_KIT/i.test(text)) {
+  console.error(`FAIL: Viewer Brand Kit leaked operational setup copy: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+if (!data.source || data.source.label !== "Media library") {
+  console.error(`FAIL: Viewer Brand Kit source was not redacted: ${JSON.stringify(data.source)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/brand-kits/mvp-2024?role=Viewer"
+
+expect_json brand-kit-contributor-redacts-operations '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if ("collectionStatus" in data || data.kit?.collectionEnvKey || data.kit?.resourceSpaceCollectionId) {
+  console.error(`FAIL: Contributor Brand Kit leaked collection operations: ${JSON.stringify(data.kit).slice(0, 500)}`);
+  process.exit(1);
+}
+if (/BRAND_KIT_|ResourceSpace collection|collection\/source membership|Configured BRAND_KIT|Missing BRAND_KIT/i.test(text)) {
+  console.error(`FAIL: Contributor Brand Kit leaked operational setup copy: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/brand-kits/mvp-2024?role=Contributor"
+
+expect_json brand-kit-admin-keeps-operations '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!data.kit || !("collectionEnvKey" in data.kit) || !Array.isArray(data.kit.sections) || !data.kit.sections.every((section) => "envKey" in section)) {
+  console.error(`FAIL: DAM Admin Brand Kit lost setup diagnostics: ${JSON.stringify(data.kit).slice(0, 500)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/brand-kits/mvp-2024?role=DAM%20Admin"
+
 expect_json az-sort-applies-before-limit '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const titles = data.assets.map((asset) => asset.title);

@@ -122,6 +122,18 @@ function buildBrandKitWarnings({
   ];
 }
 
+function canSeeBrandKitOperations(role: DemoRole) {
+  return role === "Reviewer" || role === "DAM Admin";
+}
+
+function publicSectionMappings(sectionMappings: BrandKitSectionMapping[]) {
+  return sectionMappings.map(({ resourceSpaceCollectionId: _resourceSpaceCollectionId, envKey: _envKey, ...section }) => section);
+}
+
+function publicWarnings(warnings: string[]) {
+  return warnings.length ? ["Brand kit downloads are limited until media-team mappings and review status are complete."] : [];
+}
+
 export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRole) {
   const { assets, ...envelope } = await getMediaSourceSession(role);
   const collectionId = brandKitCollectionId(config.collectionEnvKey);
@@ -142,6 +154,8 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
     matchedAssetCount: matchedAssets.length,
     sectionMappings
   }))];
+  const opsView = canSeeBrandKitOperations(role);
+  const governanceWarnings = opsView ? warnings : publicWarnings(warnings);
 
   return {
     kit: {
@@ -149,14 +163,16 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
       title: config.title,
       owner: config.owner,
       reviewDate: config.reviewDate,
-      resourceSpaceCollectionId: collectionId || null,
-      collectionEnvKey: config.collectionEnvKey,
       configured: Boolean(collectionId),
       navItems: config.navItems,
       principles: config.principles,
       keyMessages: config.keyMessages,
       logoUsage: config.logoUsage,
-      sections: sectionMappings
+      sections: opsView ? sectionMappings : publicSectionMappings(sectionMappings),
+      ...(opsView ? {
+        resourceSpaceCollectionId: collectionId || null,
+        collectionEnvKey: config.collectionEnvKey
+      } : {})
     },
     assets: matchedAssets,
     governance: buildBrandKitGovernance({
@@ -164,11 +180,11 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
       assets: matchedAssets,
       role,
       missingSectionMappings: sectionMappings.filter((section) => !section.configured).length,
-      warnings
+      warnings: governanceWarnings
     }),
     ...envelope,
-    warnings,
-    collectionStatus: liveCollection
+    warnings: governanceWarnings,
+    collectionStatus: opsView && liveCollection
       ? {
           ok: liveCollection.ok,
           status: liveCollection.status,

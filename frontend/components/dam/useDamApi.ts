@@ -47,14 +47,14 @@ export type BrandKitResponse = {
     title: string;
     owner: string;
     reviewDate?: string;
-    resourceSpaceCollectionId: string | number | null;
-    collectionEnvKey: string;
+    resourceSpaceCollectionId?: string | number | null;
+    collectionEnvKey?: string;
     configured: boolean;
     navItems: string[];
     principles: Array<{ title: string; description: string }>;
     keyMessages: string[];
     logoUsage: Array<{ title: string; guidance: string; variant: "color" | "reverse"; discouraged?: boolean }>;
-    sections: Array<{ id: string; title: string; envKey: string; resourceSpaceCollectionId?: string | number; configured: boolean }>;
+    sections: Array<{ id: string; title: string; envKey?: string; resourceSpaceCollectionId?: string | number; configured: boolean }>;
   };
   assets: StockMediaAsset[];
   governance?: BrandKitGovernance;
