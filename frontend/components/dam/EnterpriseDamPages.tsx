@@ -36,6 +36,7 @@ import {
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { useDemoRole } from "@/components/RoleProvider";
 import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
+import { assetDetailMetadataRows, assetKeywordText, inspectorMetadataRows, reviewEvidenceRows, reviewMetadataRows, rightsRestrictionRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
 import { addPackageAssetRef, availableAssetsForSection, createPackageDraft, packagePublishReadiness, removePackageAssetRef, resolvePackageSections, seedPackageDraft, updatePackageTitle } from "@/lib/package-drafts";
@@ -168,14 +169,7 @@ function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAsset; sou
   const [tab, setTab] = useState("Details");
   const tabs = ["Details", "Rights & restrictions", "Versions", "Activity"];
   if (!asset) return <aside className="ed-inspector ed-panel"><h2>Select an asset</h2><p>{sourceNoun(source)} search returned no visible assets.</p></aside>;
-  const tabRows =
-    tab === "Rights & restrictions"
-      ? [["Approval status", asset.status], ["Usage scope", asset.usageScope], ["Rights status", asset.rightsStatus || "Not provided"], ["Consent status", asset.consentStatus || "Not provided"], ["People/minors", asset.peopleRisk || "Not provided"], ["Policy", asset.downloadPolicy]]
-        : tab === "Versions"
-        ? [["Versions", "Not provided by current ResourceSpace export"], [recordIdLabel(source), asset.resourceSpaceId || asset.id]]
-        : tab === "Activity"
-          ? [["Reviewer", asset.reviewer || "Not provided"], ["Reviewed date", asset.reviewedDate || "Not provided"], ["Pending sync", asset.pendingReviewWrite ? "Pending ResourceSpace write" : "None"]]
-          : [[recordIdLabel(source), asset.resourceSpaceId || asset.id], ["File type", assetType(asset)], ["Dimensions", asset.imageDimensions || "Not provided"], ["File size", formatBytes(asset.fileSizeBytes)], ["Created by", asset.sourceAccount || "Not provided"], ["Capture date", asset.capturedDate || "Not provided"], ["Collection", asset.collection || "Not provided"], ["Keywords", [...(asset.tags || []), ...(asset.tjcTerms || [])].join(", ") || "Not provided"]];
+  const tabRows = inspectorMetadataRows({ asset, tab, source });
   return (
     <aside className="ed-inspector ed-panel">
       <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {asset.resourceSpaceId || asset.id}</strong><span>›</span><button type="button">×</button></div>
@@ -311,23 +305,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const detailTabs = ["Metadata", "Keywords", "AI Insights", "Comments", "Activity", "Usage History"];
   if (detail.loading) return <div className="enterprise-page"><LoadingCard label="Loading media asset record..." /></div>;
   if (detail.error || !asset) return <div className="enterprise-page"><ErrorCard message={detail.error || "Asset not found."} source={detail.source} /></div>;
-  const metadataRows = [
-    ["Title", displayTitle(asset)],
-    ["Description", asset.usageGuidance || "Not provided"],
-    ["Creator", asset.sourceAccount || "Not provided"],
-    ["Capture Date", asset.capturedDate || "Not provided"],
-    ["Collection", asset.collection || "Not provided"],
-    ["Categories", asset.tjcTerms?.join(", ") || "Not provided"],
-    ["Keywords", asset.tags?.join(", ") || "Not provided"],
-    [recordIdLabel(detail.source), asset.resourceSpaceId || asset.id],
-    ["File Type", assetType(asset)],
-    ["Dimensions", asset.imageDimensions || "Not provided"],
-    ["File Size", formatBytes(asset.fileSizeBytes)],
-    ["Uploaded", asset.importDate || "Not provided"],
-    ["Uploaded By", asset.sourceAccount || "Not provided"],
-    ["Source", asset.sourceSystem || "Not provided"],
-    ...(role === "DAM Admin" ? [["Checksum", asset.checksumSha256 || "Not provided"], ["Original filename", asset.originalFilename || "Not provided"]] : [])
-  ];
+  const metadataRows = assetDetailMetadataRows(asset, role);
   return (
     <div className="enterprise-page enterprise-detail">
       <div className="ed-breadcrumb">Library <span>›</span> {sourceNoun(detail.source)} <span>›</span> {asset.resourceSpaceId || asset.id}</div>
@@ -342,7 +320,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
           <nav className="ed-tabs is-large" aria-label="Asset record tabs">{detailTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
           <section className="ed-card ed-metadata-card">
             {tab === "Metadata" ? <dl className="ed-metadata is-two">{metadataRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
-            {tab === "Keywords" ? <div className="ed-chip-row">{[...(asset.tags || []), ...(asset.tjcTerms || [])].length ? [...(asset.tags || []), ...(asset.tjcTerms || [])].map((keyword) => <span key={keyword}>{keyword}</span>) : <p>Not provided in the current data source.</p>}</div> : null}
+            {tab === "Keywords" ? <div className="ed-chip-row">{assetKeywordText(asset) !== "Not provided" ? [...(asset.tags || []), ...(asset.tjcTerms || [])].map((keyword) => <span key={keyword}>{keyword}</span>) : <p>Not provided in the current data source.</p>}</div> : null}
             {tab === "AI Insights" ? <div className="ed-two-col"><p>AI suggestions are not live. Approved metadata remains review truth.</p><p>Human review controls usage, people visibility, rights, and reuse scope.</p></div> : null}
             {tab === "Comments" ? <div className="ed-comment-stack"><p className="ed-comment"><strong>Review note</strong> {asset.rightsNotes || "No reviewer note exported."}</p><input className="ed-input" aria-label="Add asset comment" placeholder="Add a local follow-up note..." /></div> : null}
             {tab === "Activity" || tab === "Usage History" ? <div className="ed-table-mini">{[asset.reviewedDate ? `Reviewed ${asset.reviewedDate} by ${asset.reviewer || "review team"}` : "Review activity not provided", asset.pendingReviewWrite ? "Pending sync to ResourceSpace" : "No pending write", downloadMessage || "No download gate action this session"].map((item) => <p key={item}>{item}</p>)}</div> : null}
@@ -351,7 +329,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
         </main>
         <aside className="ed-detail-rail">
           <RightsVerdictCard asset={asset} source={detail.source} />
-          <section className="ed-card"><h3>Rights & Restrictions</h3><dl className="ed-metadata">{[["Approval status", asset.status], ["Usage", asset.usageScope], ["Rights status", asset.rightsStatus || "Not provided"], ["Consent", asset.consentStatus || "Not provided"], ["People/minors", asset.peopleRisk || "Not provided"], ["Restrictions", asset.reuseDecision?.summary || "Not provided"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl>{detail.data?.resourceSpaceUrl ? <a href={detail.data.resourceSpaceUrl}>Open in ResourceSpace ↗</a> : null}</section>
+          <section className="ed-card"><h3>Rights & Restrictions</h3><dl className="ed-metadata">{rightsRestrictionRows(asset).map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl>{detail.data?.resourceSpaceUrl ? <a href={detail.data.resourceSpaceUrl}>Open in ResourceSpace ↗</a> : null}</section>
           <section className="ed-card"><header className="ed-card-head"><h3>Versions</h3></header><p>Versions/alternates are not provided by the current ResourceSpace export.</p></section>
           <section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3></header><p className="ed-activity"><CheckCircle2 size={16} />{asset.reviewedDate ? `Reviewed by ${asset.reviewer || "ResourceSpace"}` : "No review activity exported"}<small>{asset.reviewedDate || "Not provided"}</small></p></section>
         </aside>
@@ -415,11 +393,11 @@ export function EnterpriseReviewPage() {
               <header className="ed-detail-header"><div><h1 title={displayTitle(selectedAsset)}>{displayTitle(selectedAsset)}</h1><span className="ed-file-soft">{assetType(selectedAsset)}</span></div><div className="ed-chip-row">{[selectedAsset.collection, selectedAsset.usageScope].filter(Boolean).map((chip) => <span key={chip}>{chip}</span>)}<StatusBadge status={selectedStatus} />{selectedPending ? <StatusBadge status="Read-only" /> : null}</div><div className="ed-detail-actions"><IconButton label="Favorite"><Star size={18} /></IconButton><IconButton label="Download"><Download size={18} /></IconButton><IconButton label="Fullscreen"><Grid3X3 size={18} /></IconButton></div></header>
               <div className="ed-hero-preview is-review"><AssetThumb asset={selectedAsset} fit="contain" /><span>{selectedAsset.imageDimensions || "Preview unavailable or not provided"}</span><button>100%</button></div>
               <nav className="ed-tabs is-large"><span className="is-active">Details</span><span>Metadata</span><span>Rights & Checks</span><span>Comments</span><span>Activity</span><span>History</span></nav>
-              <section className="ed-card ed-metadata-card"><dl className="ed-metadata is-two">{[["Title", displayTitle(selectedAsset)], ["Review summary", selectedAsset.reuseDecision?.summary || "Needs reviewer decision."], ["Pending sync", selectedPending ? selectedPending.action : "None"], ["Source", selectedAsset.sourceSystem || "Not provided"], ["Capture Date", selectedAsset.capturedDate || "Not provided"], ["Collection", selectedAsset.collection], ["Asset ID", selectedAsset.resourceSpaceId || selectedAsset.id], ["File Type", assetType(selectedAsset)], ["Dimensions", selectedAsset.imageDimensions || "Not provided"], ["File Size", formatBytes(selectedAsset.fileSizeBytes)], ["Uploaded By", selectedAsset.sourceAccount || "Not provided"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section>
+              <section className="ed-card ed-metadata-card"><dl className="ed-metadata is-two">{reviewMetadataRows({ asset: selectedAsset, pendingAction: selectedPending?.action }).map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section>
               <div className="ed-review-cards"><section className="ed-card"><h3>Metadata Completeness</h3><div className="ed-score-ring">{selectedAsset.tags?.length || selectedAsset.tjcTerms?.length ? "70%" : "35%"}</div><p>{selectedAsset.tags?.length ? "Tags exported from ResourceSpace." : "Tags not provided."}</p></section><section className="ed-card"><h3>Rights & Model Checks</h3>{["Source confirmed", selectedAsset.rightsStatus || "Rights not provided", selectedAsset.consentStatus || "Consent not provided", selectedAsset.peopleRisk || "People/minors unknown"].map((row) => <p className="ed-checkline" key={row}><CheckCircle2 size={16} />{row}</p>)}</section><section className="ed-card"><h3>Review Policy</h3><p>ResourceSpace remains final approval truth.</p><p>{selectedPending ? "Pending sync to ResourceSpace." : "No pending sync."}</p>{selectedPending ? <p className="ed-inline-success">{selectedPending.message}</p> : null}</section></div>
             </main>
             <aside className="ed-review-rail">
-              <section className="ed-card"><h3>Review Evidence</h3><dl className="ed-metadata">{[["ResourceSpace ID", selectedAsset.resourceSpaceId || selectedAsset.id], ["Assigned to", "Reviewer queue"], ["Policy", selectedAsset.downloadPolicy], ["Source", selectedAsset.sourceSystem || "Not provided"], ["Current ResourceSpace status", selectedStatus], ["Portal pending decision", selectedPending ? selectedPending.status : "None"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl><ActionButton icon={FileText}>View Submission Package</ActionButton></section>
+              <section className="ed-card"><h3>Review Evidence</h3><dl className="ed-metadata">{reviewEvidenceRows({ asset: selectedAsset, currentStatus: selectedStatus, pendingStatus: selectedPending?.status }).map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl><ActionButton icon={FileText}>View Submission Package</ActionButton></section>
               <section className="ed-card"><header className="ed-card-head"><h3>Comments</h3><button type="button" onClick={() => setComment("")}>Clear</button></header><p className="ed-comment"><strong>ResourceSpace note</strong> {selectedAsset.rightsNotes || "No exported note."}</p>{decisionMessage ? <p className="ed-inline-success">{decisionMessage}</p> : null}<input className="ed-input" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add a review note..." aria-label="Add review comment" /></section>
               <section className="ed-card"><h3>Assignment</h3><p>Loaded from ResourceSpace review queue. Final write is pending until adapter sync is verified.</p><a>Reassign</a></section>
               <section className="ed-card ed-decision-card"><h3>Review Decision</h3><p className="ed-setup-note">ResourceSpace writeback is not configured. Decisions save as portal pending-sync events.</p><button className={cn("is-approve", selectedPending?.status === "Approved" && "is-selected")} onClick={() => decide("Approved", "Approve Public")}><CheckCircle2 />Approve<span>Queues a pending ResourceSpace write.</span></button><button className={cn(selectedPending?.status === "Needs Review" && "is-selected")} onClick={() => decide("Needs Review", "Request More Info")}><FileText />Request Changes<span>Send back to uploader for updates.</span></button><button className={cn("is-restrict", selectedPending?.status === "Restricted" && "is-selected")} onClick={() => decide("Restricted", "Do Not Use")}><AlertTriangle />Restrict<span>Limit or block usage of this asset.</span></button><button>More Actions <ChevronDown size={14} /></button></section>
