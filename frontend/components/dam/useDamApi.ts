@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchDamJson, sourceFromPayload, type DamApiPayload } from "@/lib/dam-api-client";
 import { mediaSourceIsLive, mediaSourceKind, type MediaSourceKind } from "@/lib/media-source/truth";
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, SearchResult, StockMediaAsset } from "@/lib/types";
 
@@ -67,7 +68,7 @@ export type DownloadGateResponse = {
   live?: boolean;
 };
 
-function useJsonApi<T>(url: string | null, role?: DemoRole): ApiEnvelope<T> {
+function useJsonApi<T extends DamApiPayload>(url: string | null, role?: DemoRole): ApiEnvelope<T> {
   const [data, setData] = useState<T | null>(null);
   const [source, setSource] = useState<MediaSourceStatus | null>(null);
   const [loading, setLoading] = useState(Boolean(url));
@@ -86,18 +87,11 @@ function useJsonApi<T>(url: string | null, role?: DemoRole): ApiEnvelope<T> {
     setLoading(true);
     setError(null);
 
-    fetch(url, { headers: { Accept: "application/json" } })
-      .then(async (response) => {
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload?.error || `Request failed with ${response.status}`);
-        }
-        return payload as T & { source?: MediaSourceStatus; sourceStatus?: MediaSourceStatus };
-      })
+    fetchDamJson<T>(url)
       .then((payload) => {
         if (cancelled) return;
         setData(payload);
-        setSource(payload.sourceStatus || payload.source || null);
+        setSource(sourceFromPayload(payload));
       })
       .catch((apiError: Error) => {
         if (cancelled) return;

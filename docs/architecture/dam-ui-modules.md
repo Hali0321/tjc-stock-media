@@ -66,6 +66,10 @@ Owns request-time source truth for the DAM portal. It wraps the active media sou
 
 Client-safe source truth helpers live separately from server-side source lookup so rendered pages can label source states without importing filesystem-backed adapters.
 
+### `DamApiClient`
+
+Owns client-side JSON fetch timeout, API error normalization, and source-envelope extraction for DAM hooks. Rendered pages should receive `{ data, loading, error, source, live }` state from hooks instead of managing fetch lifecycles directly.
+
 ### `CatalogLanguage`
 
 Owns saved views, collection definitions, search intent aliases, filter matching, and the catalog haystack. `catalog.ts` remains the orchestration module for search, pagination, counts, collection summaries, and review queues.
