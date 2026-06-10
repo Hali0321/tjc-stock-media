@@ -36,11 +36,20 @@ function parseRoleMap() {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
     return Object.fromEntries(
       Object.entries(parsed)
-        .map(([key, value]) => [key.toLowerCase(), normalizeRole(String(value))] as const)
+        .map(([key, value]) => [key.toLowerCase().trim(), normalizeRole(String(value))] as const)
+        .filter(([key]) => Boolean(key))
     );
   } catch {
     return {};
   }
+}
+
+function highestTrustedRole(...roles: Array<DemoRole | null>) {
+  return roles.reduce<DemoRole | null>((best, next) => {
+    if (!next) return best;
+    if (!best) return next;
+    return roleRank.indexOf(next) > roleRank.indexOf(best) ? next : best;
+  }, null);
 }
 
 function mappedRole(groups: string[]) {
@@ -75,7 +84,7 @@ export function requestIdentity(request: NextRequest, explicitRole?: string | nu
     || "";
   const groups = rawGroups.split(/[,|;]/).map((item) => item.trim()).filter(Boolean);
   const directRole = roleFromTrustedValue(headers.get("x-tjc-role"));
-  const role = directRole || mappedRole(groups) || highestRole(groups) || fallbackRole;
+  const role = highestTrustedRole(directRole, mappedRole(groups), highestRole(groups)) || fallbackRole;
 
   return {
     id: email ? `sso:${email.toLowerCase()}` : `sso:${role}`,

@@ -69,6 +69,12 @@ negative_phrase_headers=(
   -H "cf-access-authenticated-user-email: negative.sso@example.test"
 )
 
+group_admin_headers=(
+  -H "x-tjc-role: Viewer"
+  -H "x-tjc-groups: ministry members, DAM Admin"
+  -H "cf-access-authenticated-user-email: group-admin.sso@example.test"
+)
+
 expect_json_status 403 malformed-admin-header-does-not-escalate '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (!/DAM Admin/i.test(data.error || "")) {
@@ -84,6 +90,14 @@ if (!/DAM Admin/i.test(data.error || "")) {
   process.exit(1);
 }
 ' "${negative_phrase_headers[@]}" "$BASE_URL/api/admin/readiness?role=Viewer"
+
+expect_json group-admin-claim-beats-viewer-header '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!Array.isArray(data.readiness) || !data.betaReadiness || !data.auditLog) {
+  console.error(`group admin claim did not beat lower direct role: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' "${group_admin_headers[@]}" "$BASE_URL/api/admin/readiness?role=Viewer"
 
 expect_json admin-header-overrides-viewer '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
