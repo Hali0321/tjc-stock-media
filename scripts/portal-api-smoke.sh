@@ -478,7 +478,7 @@ if (data.title !== "Untitled ministry collection" || data.owner !== "Ministry me
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d '{"role":"Contributor","assetIds":["368"],"title":"../private source path","owner":"../private master drive","expiry":"2026-02-30","audience":"Internal ministry"}' \
+  -d '{"role":"Contributor","assetIds":["368"],"title":"source path handoff","owner":"master drive checksum owner","expiry":"2026-02-30","audience":"Internal ministry"}' \
   "$BASE_URL/api/collections"
 
 expect_json collection-expiry-date-preserved '

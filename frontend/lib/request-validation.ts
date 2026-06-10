@@ -19,6 +19,7 @@ export function normalizeTextField(value: unknown, fallback: string, max = 100) 
 export function normalizeDisplayTextField(value: unknown, fallback: string, max = 100) {
   const text = normalizeTextField(value, fallback, max).replace(/\s+/g, " ").trim();
   if (text.includes("..") || /[\\/]/.test(text)) return fallback.slice(0, max);
+  if (/source path|master drive|checksum/i.test(text)) return fallback.slice(0, max);
   return text;
 }
 
