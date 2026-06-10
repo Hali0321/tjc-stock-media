@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { useDemoRole } from "@/components/RoleProvider";
+import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
 import { cn } from "@/lib/ui";
 import { useAdminReadiness, useAssetDetail, useAssetsSearch, useBrandKit, useDownloadGate, useReviewQueue } from "@/components/dam/useDamApi";
@@ -82,50 +83,6 @@ function PageHeader({ title, subtitle, count, actions }: { title: string; subtit
       {actions ? <div className="ed-page-actions">{actions}</div> : null}
     </header>
   );
-}
-
-function formatBytes(bytes?: number) {
-  if (!bytes) return "Not provided";
-  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-  if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
-  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${bytes} B`;
-}
-
-function assetType(asset: StockMediaAsset) {
-  return (asset.fileExtension || asset.mediaType || "asset").toUpperCase();
-}
-
-function assetDate(asset: StockMediaAsset) {
-  return asset.capturedDate || asset.eventDate || asset.reviewedDate || asset.importDate || "Not provided";
-}
-
-function displayTitle(asset?: StockMediaAsset) {
-  return asset?.title?.trim() || asset?.originalFilename || `ResourceSpace ${asset?.resourceSpaceId || asset?.id || "asset"}`;
-}
-
-function metadataQualityLabel(asset: StockMediaAsset) {
-  if (asset.status === "Approved Public") return "Approved public";
-  if (asset.status === "Approved Internal") return "Internal only";
-  if (!asset.rightsStatus || /unknown|needs review|review required/i.test(asset.rightsStatus)) return "Needs rights review";
-  if (!asset.tags?.length && !asset.tjcTerms?.length) return "Metadata incomplete";
-  return "Metadata reviewed";
-}
-
-function sourceLabel(source?: MediaSourceStatus | null) {
-  if (!source) return "ResourceSpace disconnected";
-  if (source.adapter === "resourcespace-api") return source.readOnly ? "Read-only ResourceSpace" : "Live ResourceSpace";
-  if (source.adapter === "exported-metadata") return "Read-only ResourceSpace export";
-  if (source.adapter === "demo-fallback") return "Fixture fallback";
-  return "Media library";
-}
-
-function sourceNoun(source?: MediaSourceStatus | null) {
-  return source?.adapter === "media-library" ? "media library" : "ResourceSpace";
-}
-
-function recordIdLabel(source?: MediaSourceStatus | null) {
-  return source?.adapter === "media-library" ? "Reference code" : "ResourceSpace ID";
 }
 
 function SourcePill({ source, live }: { source?: MediaSourceStatus | null; live?: boolean }) {

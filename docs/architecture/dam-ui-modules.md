@@ -90,6 +90,14 @@ Owns review checklist normalization, required evidence rules, and local pending-
 
 Owns Admin readiness rows for ResourceSpace export/API, preview, writeback, pending review writes, audit log, SSO, Google Shared Drive, S3 delivery, usage analytics, Brand Kit mapping, and package publishing. `dam-readiness.ts` owns aggregate asset health and calls this module for integration custody state.
 
+### `DamReadinessMetadata`
+
+Owns ResourceSpace field coverage and vocabulary drift summaries for Admin readiness. Field-map and taxonomy terminology stay local to this module instead of leaking through score assembly.
+
+### `EnterpriseDisplay`
+
+Owns small but repeated display rules for enterprise DAM pages: asset title fallback, ResourceSpace/reference labels, source nouns, metadata quality labels, dates, file type labels, and byte formatting. Page modules render these decisions instead of redefining them inline.
+
 ## Current Implementation Shape
 
 The first system pass keeps existing stable components in place and introduces `frontend/components/dam/*` as import boundaries. This lets route files depend on named DAM responsibilities while preserving behavior and reducing risk during continued polish.
