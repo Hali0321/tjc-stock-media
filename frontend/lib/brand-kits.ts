@@ -10,12 +10,28 @@ export type BrandKitSectionConfig = {
   envKey: string;
 };
 
+export type BrandKitPrinciple = {
+  title: string;
+  description: string;
+};
+
+export type BrandKitLogoUsage = {
+  title: string;
+  guidance: string;
+  variant: "color" | "reverse";
+  discouraged?: boolean;
+};
+
 export type BrandKitConfig = {
   id: string;
   title: string;
   owner: string;
   reviewDate?: string;
   collectionEnvKey: string;
+  navItems: string[];
+  principles: BrandKitPrinciple[];
+  keyMessages: string[];
+  logoUsage: BrandKitLogoUsage[];
   sections: BrandKitSectionConfig[];
 };
 
@@ -31,6 +47,25 @@ export const brandKitConfigs = {
     owner: "Brand Team",
     reviewDate: "2025-03-01",
     collectionEnvKey: "BRAND_KIT_EASTER_2024_COLLECTION_ID",
+    navItems: ["How to use these assets", "Key messages", "Logo usage", "Color & typography", "Photography style", "Example applications", "Downloads", "Allowed channels", "FAQs"],
+    principles: [
+      { title: "Worship God", description: "Keep communication reverent, accurate, and centered on faith." },
+      { title: "Follow Christ", description: "Use approved words and visuals with humility and clarity." },
+      { title: "Love People", description: "Protect consent, privacy, and dignity in every media choice." },
+      { title: "Bring Hope", description: "Choose images and messages that feel welcoming and truthful." }
+    ],
+    keyMessages: [
+      "Easter changes everything.",
+      "Everyone is welcome.",
+      "Hope is here.",
+      "Celebrate the resurrection."
+    ],
+    logoUsage: [
+      { title: "Primary logo", guidance: "Preferred", variant: "color" },
+      { title: "Reverse logo", guidance: "Ensure clear contrast", variant: "reverse" },
+      { title: "On photo", guidance: "Ensure clear contrast", variant: "color" },
+      { title: "Don't alter", guidance: "No effects or distortions", variant: "color", discouraged: true }
+    ],
     sections: [
       { id: "logos", title: "Logo usage", envKey: "BRAND_KIT_LOGO_COLLECTION_ID" },
       { id: "social", title: "Social templates", envKey: "BRAND_KIT_SOCIAL_TEMPLATES_COLLECTION_ID" },
@@ -107,6 +142,10 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
       resourceSpaceCollectionId: collectionId || null,
       collectionEnvKey: config.collectionEnvKey,
       configured: Boolean(collectionId),
+      navItems: config.navItems,
+      principles: config.principles,
+      keyMessages: config.keyMessages,
+      logoUsage: config.logoUsage,
       sections: sectionMappings
     },
     assets: matchedAssets,

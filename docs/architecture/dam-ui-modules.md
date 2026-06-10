@@ -82,7 +82,7 @@ Owns saved-view counts, collection cards, metadata health, zero-result insights,
 
 ### `BrandKitRegistry`
 
-Owns ministry kit configuration, ResourceSpace collection environment keys, collection matching, setup warnings, and role-safe asset payloads. Brand Hub routes use this module instead of embedding collection mapping inside transport code.
+Owns ministry kit configuration, editorial guidance, ResourceSpace collection environment keys, collection matching, setup warnings, and role-safe asset payloads. Brand Hub routes use this module instead of embedding collection mapping or ministry-kit copy inside transport code.
 
 Brand kits may contain editorial guidance in the portal, but downloadable assets remain ResourceSpace-backed records or explicit setup states.
 
