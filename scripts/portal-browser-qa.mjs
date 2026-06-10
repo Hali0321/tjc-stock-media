@@ -181,13 +181,21 @@ async function openCommandPalette(page) {
 
 async function gotoAndSettle(page, url) {
   let response;
-  try {
-    response = await page.goto(url, { waitUntil: "load", timeout: 60000 });
-  } catch (error) {
-    const message = String(error?.message || error);
-    if (!/ERR_ABORTED|frame was detached/i.test(message)) throw error;
-    response = { status: () => 200 };
-    await page.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      response = await page.goto(url, { waitUntil: "load", timeout: 60000 });
+      break;
+    } catch (error) {
+      const message = String(error?.message || error);
+      if (/ERR_CONNECTION_REFUSED|ECONNREFUSED|ERR_EMPTY_RESPONSE/i.test(message) && attempt < 3) {
+        await page.waitForTimeout(750);
+        continue;
+      }
+      if (!/ERR_ABORTED|frame was detached/i.test(message)) throw error;
+      response = { status: () => 200 };
+      await page.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+      break;
+    }
   }
   await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
   await page.waitForTimeout(500);
@@ -374,14 +382,23 @@ for (const width of qaViewports) {
   }
 }
 
+await browser.close().catch(() => {});
+browser = await launchBrowser();
+
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, base);
-  await page.getByRole("searchbox", { name: "Search approved media" }).fill("Bible");
-  await page.getByRole("button", { name: "Search", exact: true }).click();
-  await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
-  if (!page.url().includes("q=Bible")) failures.push("search interaction: search query did not update URL");
-  if ((await page.getByRole("searchbox", { name: "Search approved media" }).inputValue()) !== "Bible") failures.push("search interaction: search input did not retain query");
+  const findSearchInput = page.locator('form[aria-label="Find approved media"] input[name="q"]').first();
+  if (!(await findSearchInput.isVisible({ timeout: 10000 }).catch(() => false))) {
+    const bodySample = await page.locator("body").innerText({ timeout: 1000 }).catch(() => "");
+    failures.push(`search interaction: Find search input missing before query in "${bodySample.replace(/\s+/g, " ").slice(0, 180)}"`);
+  } else {
+    await findSearchInput.fill("Bible");
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+    await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
+    if (!page.url().includes("q=Bible")) failures.push("search interaction: search query did not update URL");
+    if ((await findSearchInput.inputValue()) !== "Bible") failures.push("search interaction: search input did not retain query");
+  }
   await closeContext(context);
 }
 
@@ -453,6 +470,19 @@ for (const width of qaViewports) {
   await page.keyboard.press("Enter");
   await page.waitForURL(/view=website-hero/, { timeout: 10000 });
   if (!page.url().includes("view=website-hero")) failures.push("command palette: website hero did not open stable view");
+  await closeContext(context);
+}
+
+{
+  const { page, context } = await newRolePage("Viewer", 320, 900);
+  await gotoAndSettle(page, base);
+  const emptyBox = await page.getByTestId("library-empty-state").boundingBox();
+  const facetBox = await page.locator(".find-facet-rail").boundingBox();
+  if (!emptyBox || !facetBox) {
+    failures.push("viewer-find-mobile-order: empty workspace or facet rail missing");
+  } else if (emptyBox.y > facetBox.y) {
+    failures.push("viewer-find-mobile-order: saved views appear before useful empty workspace");
+  }
   await closeContext(context);
 }
 
