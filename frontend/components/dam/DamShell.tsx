@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Bell, ChevronDown, Clock, HelpCircle, Menu, Search, ShieldCheck, Star, UploadCloud, X } from "lucide-react";
+import { Bell, ChevronDown, Clock, HelpCircle, LogOut, Menu, Search, ShieldCheck, Star, UploadCloud, UserCircle, X } from "lucide-react";
 import { Toaster } from "sonner";
 import { AppNav } from "@/components/AppNav";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -54,6 +54,29 @@ function DamRailSummary({ role, opsShell }: { role: DemoRole; opsShell: boolean 
 }
 
 function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boolean }) {
+  const { setRole } = useDemoRole();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountMessage, setAccountMessage] = useState("SSO-ready, not live. Local beta role controls this session.");
+  const accountRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    function closeOnPointer(event: PointerEvent) {
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setAccountOpen(false);
+    }
+    document.addEventListener("pointerdown", closeOnPointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnPointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [accountOpen]);
+
   return (
     <div className="dam-utility-actions hidden min-w-0 items-center justify-end gap-3 md:flex">
       <span className="dam-shell-mode hidden min-h-10 items-center gap-2 rounded-xl border px-3 text-xs font-black 2xl:inline-flex">
@@ -67,10 +90,45 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
       <Link href="/review" className="dam-header-icon dam-bell-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open notifications">
         <Bell size={18} strokeWidth={1.9} aria-hidden="true" />
       </Link>
-      <div className="dam-user-menu">
-        <span className="dam-avatar">AK</span>
-        <span><strong>Alex Kim</strong><small>Brand Team</small></span>
-        <ChevronDown size={14} aria-hidden="true" />
+      <div className="dam-account-menu-wrap" ref={accountRef}>
+        <button className="dam-user-menu" type="button" aria-haspopup="menu" aria-expanded={accountOpen} onClick={() => setAccountOpen((open) => !open)}>
+          <span className="dam-avatar">AK</span>
+          <span><strong>Alex Kim</strong><small>Brand Team</small></span>
+          <ChevronDown size={14} aria-hidden="true" />
+        </button>
+        {accountOpen ? (
+          <div className="dam-account-menu" role="menu" aria-label="Account menu">
+            <header>
+              <span className="dam-avatar">AK</span>
+              <div><strong>Alex Kim</strong><small>{role} · Brand Team</small></div>
+            </header>
+            <p>{accountMessage}</p>
+            <section aria-label="Beta role switch">
+              <span>Beta access role</span>
+              <div>
+                {roles.map((item) => (
+                  <button
+                    className={item === role ? "is-active" : ""}
+                    key={item}
+                    type="button"
+                    onClick={() => {
+                      setRole(item);
+                      setAccountMessage(`${item} role selected for this local beta session.`);
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </section>
+            <button type="button" onClick={() => setAccountMessage("Profile is mapped to trusted SSO headers in production. This beta uses local role simulation.")}>
+              <UserCircle size={16} /> Profile & access
+            </button>
+            <Link href="/guide" role="menuitem" onClick={() => setAccountOpen(false)}><HelpCircle size={16} /> Help guide</Link>
+            {role === "DAM Admin" ? <Link href="/admin" role="menuitem" onClick={() => setAccountOpen(false)}><ShieldCheck size={16} /> Admin console</Link> : null}
+            <button type="button" disabled><LogOut size={16} /> Sign out when SSO is live</button>
+          </div>
+        ) : null}
       </div>
       <DamRoleSwitch />
     </div>

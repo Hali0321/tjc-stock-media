@@ -143,12 +143,33 @@ body,
   font-weight: 800;
 }
 
+.dam-account-menu-wrap {
+  position: relative;
+}
+
 .dam-user-menu {
   display: grid;
   grid-template-columns: auto auto auto;
   align-items: center;
   gap: 9px;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
   color: var(--ed-text);
+  padding: 4px 8px 4px 4px;
+  text-align: left;
+}
+
+.dam-user-menu:hover,
+.dam-user-menu[aria-expanded="true"] {
+  border-color: var(--ed-border);
+  background: #f6faf8;
+}
+
+.dam-user-menu:focus-visible {
+  outline: 3px solid rgb(24 180 212 / .28);
+  outline-offset: 2px;
 }
 
 .dam-avatar {
@@ -174,6 +195,102 @@ body,
   color: var(--ed-muted);
   font-size: 11px;
   font-weight: 600;
+}
+
+.dam-account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 80;
+  display: grid;
+  width: min(24rem, calc(100vw - 32px));
+  gap: 10px;
+  border: 1px solid var(--ed-border);
+  border-radius: 12px;
+  background: white;
+  padding: 12px;
+  box-shadow: 0 22px 60px rgb(6 29 61 / .18);
+}
+
+.dam-account-menu header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--ed-border);
+  padding-bottom: 10px;
+}
+
+.dam-account-menu header strong,
+.dam-account-menu header small {
+  display: block;
+}
+
+.dam-account-menu header strong {
+  color: var(--ed-text);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.dam-account-menu header small,
+.dam-account-menu p,
+.dam-account-menu section > span {
+  color: var(--ed-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.dam-account-menu p {
+  margin: 0;
+  border: 1px solid #bee5c8;
+  border-radius: 9px;
+  background: #f2fbf4;
+  padding: 9px 10px;
+  color: #166534;
+}
+
+.dam-account-menu section {
+  display: grid;
+  gap: 8px;
+}
+
+.dam-account-menu section > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dam-account-menu button,
+.dam-account-menu a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--ed-border);
+  border-radius: 8px;
+  background: white;
+  color: var(--ed-text);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.dam-account-menu section button {
+  justify-content: center;
+}
+
+.dam-account-menu button:hover:not(:disabled),
+.dam-account-menu a:hover,
+.dam-account-menu button.is-active {
+  border-color: var(--ed-accent);
+  background: var(--tjc-sky-50);
+  color: var(--tjc-teal-700);
+}
+
+.dam-account-menu button:disabled {
+  cursor: not-allowed;
+  opacity: .62;
 }
 
 .dam-utility-actions label:not(.grid) {
