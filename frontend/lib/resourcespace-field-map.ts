@@ -91,6 +91,20 @@ export const resourceSpaceFieldMap = {
   ...configuredResourceSpaceFieldMap
 } as const;
 
+export function resourceSpaceWritebackFieldMapDiagnostics() {
+  const required = ["approvalStatus", "reviewer", "reviewedDate", "notes"];
+  const configuredKeys = Object.keys(configuredResourceSpaceFieldMap);
+  const missing = required.filter((key) => !configuredResourceSpaceFieldMap[key]);
+  return {
+    configured: configured.configured,
+    valid: configured.configured && configured.valid && missing.length === 0,
+    error: configured.error,
+    required,
+    missing,
+    configuredKeys
+  };
+}
+
 export function resourceSpaceFieldMapDiagnostics() {
   const required = [
     "title",

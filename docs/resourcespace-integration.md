@@ -45,13 +45,13 @@ Reviewer/Admin responses may show operational ResourceSpace/export details. View
 
 ## What Does Not Work Yet
 
-- Live ResourceSpace API reads.
-- Live ResourceSpace review writeback.
-- ResourceSpace collection endpoint reads for Brand Hub.
+- Live ResourceSpace API reads require server-only credentials. The portal has a signed API adapter and falls back to export mode when credentials or endpoints fail.
+- Live ResourceSpace review writeback is gated by `RESOURCESPACE_ENABLE_WRITEBACK=1`, `RESOURCESPACE_WRITEBACK_MODE=live`, a valid field map, and a ResourceSpace API smoke check. Otherwise decisions remain pending-sync.
+- ResourceSpace collection endpoint reads for Brand Hub are backend-gated and report setup/error states when collection IDs or credentials are missing.
 - Google Shared Drive ingest automation.
 - S3 derivative generation and signed delivery.
-- SSO-backed identity and group claims.
-- Durable production audit/event analytics storage.
+- SSO-backed identity and group claims. A trusted-header shim is available, but production IdP headers still need verification.
+- Durable external audit/event analytics storage. Local SQLite usage analytics is available when `PORTAL_USAGE_LOGGING=1`; external analytics remains pending.
 
 ## Required Server-Only Env Vars
 
@@ -61,6 +61,8 @@ RESOURCESPACE_API_USER=
 RESOURCESPACE_API_KEY=
 RESOURCESPACE_FIELD_MAP_JSON=
 RESOURCESPACE_DEFAULT_COLLECTION_ID=
+RESOURCESPACE_ENABLE_WRITEBACK=0
+RESOURCESPACE_WRITEBACK_MODE=queued
 
 S3_BUCKET=
 S3_REGION=
@@ -73,8 +75,11 @@ GOOGLE_APPLICATION_CREDENTIALS=
 
 SSO_PROVIDER=
 SSO_CLIENT_ID=
+SSO_TRUSTED_HEADERS=0
+SSO_ROLE_MAP_JSON=
 PORTAL_USAGE_LOGGING=0
 USAGE_ANALYTICS_DSN=
+USAGE_ANALYTICS_DB_PATH=
 
 BRAND_KIT_EASTER_2024_COLLECTION_ID=
 BRAND_KIT_LOGO_COLLECTION_ID=
@@ -119,6 +124,28 @@ Current route: `/api/brand-kits/easter-2024`
 Current registry: `frontend/lib/brand-kits.ts`
 
 If `BRAND_KIT_EASTER_2024_COLLECTION_ID` is missing, the UI shows setup state and disables downloads. If it is configured but no export records match collection/source membership, the UI reports that mismatch instead of inventing files.
+
+When ResourceSpace API credentials are configured, Brand Hub uses the ResourceSpace collection endpoint through backend routes and resolves collection resource IDs against ResourceSpace metadata records. If the collection endpoint fails, responses include `collectionStatus` and keep downloads blocked or clearly setup-gated instead of showing fake kit files.
+
+## Writeback Guard
+
+Reviewer decisions create a local pending write record first. Live ResourceSpace updates happen only when all are true:
+
+- `RESOURCESPACE_ENABLE_WRITEBACK=1`
+- `RESOURCESPACE_WRITEBACK_MODE=live`
+- ResourceSpace API credentials are configured
+- the field map contains approval, reviewer, review date, and notes fields
+- ResourceSpace API smoke succeeds
+
+If any condition fails, the pending write stays queued or sync-failed and the UI/API must not claim ResourceSpace was updated.
+
+## SSO-Ready Shim
+
+Production SSO is deferred, but the backend can map trusted headers to portal roles when `SSO_TRUSTED_HEADERS=1` or `SSO_PROVIDER=cloudflare-access`. Supported inputs include Cloudflare Access style email headers, generic auth request group headers, and optional `SSO_ROLE_MAP_JSON`. Local query/form roles remain beta fallback only.
+
+## Durable Analytics
+
+When `PORTAL_USAGE_LOGGING=1`, the portal records search, asset view, download gate, review action, and Brand Hub view events into local SQLite at `.runtime/analytics/portal-usage.sqlite` or `USAGE_ANALYTICS_DB_PATH`. Insights can replace sample search/asset rows when real event rows exist.
 
 ## Next Integration Work
 

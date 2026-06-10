@@ -102,3 +102,36 @@ export function createPendingReviewWrite({
   fs.writeFileSync(path.join(pendingDir(), `${id}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
   return record;
 }
+
+function writeRecord(record: ReviewWriteRecord) {
+  ensurePendingDir();
+  fs.writeFileSync(path.join(pendingDir(), `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  return record;
+}
+
+export function updatePendingReviewWrite(id: string, update: Partial<Pick<ReviewWriteRecord, "syncState" | "lastError" | "retryCount">>) {
+  const record = listPendingReviewWrites().find((item) => item.id === id);
+  if (!record) return null;
+  return writeRecord({
+    ...record,
+    ...update,
+    updatedAt: new Date().toISOString(),
+    retryCount: update.retryCount ?? record.retryCount
+  });
+}
+
+export function markPendingReviewWriteSyncFailed(id: string, error: string) {
+  const record = listPendingReviewWrites().find((item) => item.id === id);
+  return updatePendingReviewWrite(id, {
+    syncState: "sync_failed",
+    lastError: error,
+    retryCount: record ? record.retryCount + 1 : 1
+  });
+}
+
+export function markPendingReviewWriteSynced(id: string) {
+  return updatePendingReviewWrite(id, {
+    syncState: "synced_to_resourcespace",
+    lastError: undefined
+  });
+}

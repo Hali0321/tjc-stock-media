@@ -3,7 +3,10 @@ import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { roleSourceEnvelope } from "@/lib/media-source/session";
 import { normalizeTextField } from "@/lib/request-validation";
+import { requestIdentity } from "@/lib/request-identity";
 import { assetForRolePayload, savedViewsForRolePayload } from "@/lib/source-redaction";
+import { recordUsageEvent } from "@/lib/usage-analytics";
+import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { DemoRole, SearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +54,8 @@ function searchResultForRole(role: DemoRole, result: SearchResult) {
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const role = normalizeRole(params.get("role"));
+  const identity = requestIdentity(request, params.get("role"));
+  const role = identity.role;
   const query = normalizeTextField(params.get("q"), "", 200);
   const filters = params
     .getAll("filter")
@@ -71,5 +75,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unknown collection." }, { status: 400 });
   }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
+  const usageAnalytics = usageAnalyticsDiagnostics();
+  if (canSeeOperationalSearch(role)) {
+    result.usageAnalytics = {
+      enabled: usageAnalytics.enabled,
+      totalEvents: usageAnalytics.totalEvents,
+      topSearches: usageAnalytics.topSearches,
+      topAssets: usageAnalytics.topAssets
+    };
+  }
+  recordUsageEvent({
+    type: "search",
+    role,
+    actor: identity.id,
+    route: "/api/assets/search",
+    query: query || view || collection || "default",
+    metadata: { rendered: result.pagination.rangeEnd - result.pagination.rangeStart + (result.pagination.rangeStart ? 1 : 0), total: result.total }
+  });
   return NextResponse.json(searchResultForRole(role, result));
 }

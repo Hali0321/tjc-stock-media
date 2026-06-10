@@ -505,6 +505,12 @@ export type SearchResult = {
   operationalInsights: OperationalInsight[];
   savedViews: SavedViewSummary[];
   collections: CatalogCollection[];
+  usageAnalytics?: {
+    enabled: boolean;
+    totalEvents: number;
+    topSearches: Array<{ label: string; value: number }>;
+    topAssets: Array<{ label: string; value: number }>;
+  };
 };
 
 export type MediaSourceStatus = {

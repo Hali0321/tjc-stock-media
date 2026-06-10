@@ -5,10 +5,12 @@ import {
   hasResourceSpaceApiConfig,
   hasS3DeliveryConfig,
   hasSsoConfig,
-  hasUsageAnalyticsConfig
+  resourceSpaceWritebackEnabled,
+  trustedSsoHeadersEnabled
 } from "@/lib/env";
 import { pendingReviewWriteDiagnostics } from "@/lib/pending-review-writes";
-import { resourceSpaceFieldMapDiagnostics } from "@/lib/resourcespace-field-map";
+import { resourceSpaceFieldMapDiagnostics, resourceSpaceWritebackFieldMapDiagnostics } from "@/lib/resourcespace-field-map";
+import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { IntegrationReadinessItem, MediaSourceStatus } from "@/lib/types";
 
 export function buildIntegrationReadiness({
@@ -28,7 +30,9 @@ export function buildIntegrationReadiness({
   const s3Configured = hasS3DeliveryConfig();
   const driveConfigured = hasGoogleSharedDriveConfig();
   const ssoConfigured = hasSsoConfig();
-  const analyticsConfigured = hasUsageAnalyticsConfig();
+  const analytics = usageAnalyticsDiagnostics();
+  const writebackFieldMap = resourceSpaceWritebackFieldMapDiagnostics();
+  const liveWritebackReady = apiConfigured && resourceSpaceWritebackEnabled() && writebackFieldMap.valid;
   const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_EASTER_2024_COLLECTION_ID"));
   const sourceIsResourceSpace = status.adapter === "resourcespace-api" || status.adapter === "exported-metadata";
   return [
@@ -75,11 +79,15 @@ export function buildIntegrationReadiness({
     {
       id: "review-writes",
       label: "ResourceSpace review writeback",
-      ready: false,
+      ready: liveWritebackReady,
       owner: "ResourceSpace",
-      state: apiConfigured ? "Read-only" : "Not configured",
-      detail: apiConfigured
-        ? "Credentials are present, but writeback is intentionally disabled until safe ResourceSpace update behavior is verified."
+      state: liveWritebackReady ? "Degraded" : apiConfigured ? "Read-only" : "Not configured",
+      detail: liveWritebackReady
+        ? "Live writeback is enabled behind server-only env flags. Each decision still runs API smoke and records sync failure instead of faking success."
+        : apiConfigured && resourceSpaceWritebackEnabled()
+          ? `Writeback flags are enabled, but explicit review field refs are missing or invalid: ${writebackFieldMap.missing.join(", ") || writebackFieldMap.error || "unknown field map issue"}.`
+        : apiConfigured
+          ? "Credentials are present, but writeback is disabled until RESOURCESPACE_ENABLE_WRITEBACK=1 and RESOURCESPACE_WRITEBACK_MODE=live."
         : "Review decisions save as portal pending-sync events. They are not final ResourceSpace truth."
     },
     {
@@ -103,12 +111,12 @@ export function buildIntegrationReadiness({
     {
       id: "auth",
       label: "Real authentication / SSO",
-      ready: ssoConfigured,
+      ready: ssoConfigured && trustedSsoHeadersEnabled(),
       owner: "Identity Provider",
-      state: ssoConfigured ? "Degraded" : "Not configured",
-      detail: ssoConfigured
-        ? "SSO env placeholders are present. Production still needs end-to-end identity and group claim verification."
-        : "Local access-role selection supports review rehearsal; production needs real identity and permissions."
+      state: ssoConfigured && trustedSsoHeadersEnabled() ? "Degraded" : "Pending setup",
+      detail: ssoConfigured && trustedSsoHeadersEnabled()
+        ? "Trusted-header SSO shim is enabled. Production still needs real IdP header/group claim verification."
+        : "SSO-ready shim is implemented, but local role selection remains beta fallback until trusted IdP headers are enabled."
     },
     {
       id: "role-gates",
@@ -161,11 +169,11 @@ export function buildIntegrationReadiness({
     {
       id: "usage-analytics",
       label: "Usage analytics",
-      ready: analyticsConfigured,
+      ready: analytics.enabled,
       owner: "Portal",
-      state: analyticsConfigured ? "Degraded" : "Pending setup",
-      detail: analyticsConfigured
-        ? "Usage analytics configuration is present; replace sample charts after event pipeline smoke."
+      state: analytics.enabled ? (analytics.totalEvents > 0 ? "Operational" : "Degraded") : "Pending setup",
+      detail: analytics.enabled
+        ? `SQLite usage analytics is enabled at ${analytics.dbPath}. Recorded events: ${analytics.totalEvents.toLocaleString()}.`
         : "Insights uses real ResourceSpace counts plus clearly labeled sample trend/package charts until portal event logging is connected."
     },
     {

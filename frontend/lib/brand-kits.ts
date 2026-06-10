@@ -1,4 +1,5 @@
 import { brandKitCollectionId } from "@/lib/env";
+import { getResourceSpaceCollectionAssets } from "@/lib/media-source/resourcespace-api";
 import { getMediaSourceSession } from "@/lib/media-source/session";
 import { canSeeAsset } from "@/lib/permissions";
 import { assetForRolePayload } from "@/lib/source-redaction";
@@ -124,10 +125,12 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
   const { assets, ...envelope } = await getMediaSourceSession(role);
   const collectionId = brandKitCollectionId(config.collectionEnvKey);
   const sectionMappings = buildSectionMappings(config);
+  const liveCollection = collectionId ? await getResourceSpaceCollectionAssets(collectionId) : null;
+  const sourceAssets = liveCollection?.ok ? liveCollection.assets : assets;
 
   const matchedAssets = collectionId
-    ? assets
-      .filter((asset) => assetMatchesCollection(asset, collectionId))
+    ? sourceAssets
+      .filter((asset) => liveCollection?.ok ? true : assetMatchesCollection(asset, collectionId))
       .filter((asset) => canSeeAsset(role, asset))
       .slice(0, 36)
       .map((asset) => assetForRolePayload(role, asset))
@@ -155,6 +158,14 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
       collectionId,
       matchedAssetCount: matchedAssets.length,
       sectionMappings
-    }))]
+    }))],
+    collectionStatus: liveCollection
+      ? {
+          ok: liveCollection.ok,
+          status: liveCollection.status,
+          message: liveCollection.message,
+          resourceCount: liveCollection.resourceIds?.length || matchedAssets.length
+        }
+      : undefined
   };
 }

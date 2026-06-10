@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById, getReviewQueue } from "@/lib/catalog";
 import { sourceEnvelope } from "@/lib/media-source/session";
+import { updateResourceReviewStatus } from "@/lib/media-source/resourcespace-api";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
+import { requestIdentity } from "@/lib/request-identity";
 import { missingReviewEvidence, normalizeReviewChecklist, queuePendingReviewDecision } from "@/lib/review-decision";
 import { isReviewActionBackend, reviewActions, reviewQueues, type ReviewActionBackend, type ReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
+import { recordUsageEvent } from "@/lib/usage-analytics";
 import type { ReviewEvidenceChecklist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +21,13 @@ function normalizeQueue(value: string | null): ReviewQueueId {
 }
 
 export async function GET(request: NextRequest) {
-  const role = normalizeRole(request.nextUrl.searchParams.get("role"));
+  const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
+  const role = identity.role;
   if (!canReview(role)) {
     appendAuditEvent({
       type: "review_denied",
       role,
+      actor: identity.id,
       status: "denied",
       summary: "Review queue access denied for role.",
       details: { reason: "role-cannot-review" }
@@ -62,13 +67,15 @@ export async function POST(request: NextRequest) {
     checklist?: Partial<ReviewEvidenceChecklist>;
     reviewerName?: string;
   };
-  const role = normalizeRole(body.role);
+  const identity = requestIdentity(request, body.role);
+  const role = identity.role;
   const assetId = normalizeAssetId(body.id);
 
   if (!canReview(role)) {
     appendAuditEvent({
       type: "review_denied",
       role,
+      actor: identity.id,
       assetId: assetId || undefined,
       status: "denied",
       summary: "Review action denied for role.",
@@ -97,6 +104,7 @@ export async function POST(request: NextRequest) {
     appendAuditEvent({
       type: "review_evidence_incomplete",
       role,
+      actor: identity.id,
       assetId: asset.id,
       resourceSpaceId: asset.resourceSpaceId || asset.id,
       status: "blocked",
@@ -117,6 +125,7 @@ export async function POST(request: NextRequest) {
   appendAuditEvent({
     type: "review_pending_write_queued",
     role,
+    actor: identity.id,
     assetId: asset.id,
     resourceSpaceId: asset.resourceSpaceId || asset.id,
     status: "queued",
@@ -127,6 +136,16 @@ export async function POST(request: NextRequest) {
       pendingWriteId: pending.id
     }
   });
+  recordUsageEvent({
+    type: "review_action",
+    role,
+    actor: identity.id,
+    assetId: asset.id,
+    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    route: "/api/review",
+    metadata: { action: body.action, requestedStatus: action?.targetStatus || asset.status }
+  });
+  const sync = await updateResourceReviewStatus(pending);
   return NextResponse.json(
     {
       ok: true,
@@ -134,9 +153,12 @@ export async function POST(request: NextRequest) {
       action: body.action,
       label: body.label || body.action,
       notes: note,
-      message: "Review decision queued for media-team follow-up. Record status remains unchanged until review is completed.",
+      message: sync.ok
+        ? "ResourceSpace review fields were updated through the live API."
+        : `Review decision queued for media-team follow-up. Record status remains unchanged until review is completed. ${sync.message}`,
       pendingWriteId: pending.id,
-      syncState: pending.syncState,
+      syncState: sync.ok ? "synced_to_resourcespace" : sync.record?.syncState || pending.syncState,
+      sync,
       auditRecord: {
         assetId: asset.id,
         resourceSpaceId: asset.resourceSpaceId || asset.id,
@@ -148,8 +170,8 @@ export async function POST(request: NextRequest) {
         checklist,
         blockers: pending.blockers
       },
-      mode: "review-follow-up-preview"
+      mode: sync.ok ? "resourcespace-live-writeback" : "review-follow-up-preview"
     },
-    { status: 202 }
+    { status: sync.ok ? 200 : 202 }
   );
 }

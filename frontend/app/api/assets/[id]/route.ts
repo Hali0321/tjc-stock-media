@@ -4,15 +4,18 @@ import { roleSourceEnvelope } from "@/lib/media-source/session";
 import { canOpenResourceSpace, canReview, canSeeAsset, normalizeRole } from "@/lib/permissions";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { normalizeAssetId } from "@/lib/request-validation";
+import { requestIdentity } from "@/lib/request-identity";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { assetForRolePayload } from "@/lib/source-redaction";
+import { recordUsageEvent } from "@/lib/usage-analytics";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
-  const role = normalizeRole(request.nextUrl.searchParams.get("role"));
+  const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
+  const role = identity.role;
   if (!id) {
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
@@ -25,6 +28,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "This role cannot view this asset.", ...envelope }, { status: 403 });
   }
   const pending = latestPendingWriteForResource(asset.resourceSpaceId || asset.id);
+  recordUsageEvent({
+    type: "asset_view",
+    role,
+    actor: identity.id,
+    assetId: asset.id,
+    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    route: `/api/assets/${asset.id}`
+  });
   const isReviewerOrAdmin = canReview(role);
   const assetPayload = assetWithRoleImageUrls(asset, role);
   return NextResponse.json({

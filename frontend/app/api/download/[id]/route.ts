@@ -7,6 +7,8 @@ import { findFilestoreDerivative } from "@/lib/media-source";
 import { roleSourceEnvelope } from "@/lib/media-source/session";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
+import { requestIdentity } from "@/lib/request-identity";
+import { recordUsageEvent } from "@/lib/usage-analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +22,8 @@ type DownloadGateBody = {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
-  const role = normalizeRole(request.nextUrl.searchParams.get("role"));
+  const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
+  const role = identity.role;
   if (!id) {
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
@@ -81,7 +84,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
   const body = (await request.json().catch(() => ({}))) as DownloadGateBody;
-  const role = normalizeRole(body.role);
+  const identity = requestIdentity(request, body.role);
+  const role = identity.role;
   if (!id) {
     return NextResponse.json({ allowed: false, error: "Malformed asset id." }, { status: 400 });
   }
@@ -94,6 +98,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const access = decideAccess(role, "downloadApprovedCopy", asset);
+  recordUsageEvent({
+    type: "download_gate",
+    role,
+    actor: identity.id,
+    assetId: asset.id,
+    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    route: `/api/download/${asset.id}`,
+    metadata: { termsAccepted: body.termsAccepted === true, variant: body.variant || "download" }
+  });
   const termsAccepted = body.termsAccepted === true;
   const derivativeAvailable = Boolean(findFilestoreDerivative(id, "download"));
 

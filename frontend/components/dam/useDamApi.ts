@@ -59,6 +59,12 @@ export type BrandKitResponse = {
   sourceKind?: ApiSourceKind;
   live?: boolean;
   warnings: string[];
+  collectionStatus?: {
+    ok: boolean;
+    status: number;
+    message: string;
+    resourceCount: number;
+  };
 };
 
 export type DownloadGateResponse = {
