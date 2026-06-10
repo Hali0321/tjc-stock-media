@@ -21,3 +21,8 @@ export function normalizeDisplayTextField(value: unknown, fallback: string, max 
   if (text.includes("..") || /[\\/]/.test(text)) return fallback.slice(0, max);
   return text;
 }
+
+export function normalizeDateField(value: unknown) {
+  const text = normalizeTextField(value, "", 40);
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : "";
+}

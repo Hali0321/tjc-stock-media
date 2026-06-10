@@ -437,12 +437,22 @@ if (/ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|public g
 expect_json collection-display-fields-sanitized '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);
-if (data.title !== "Untitled ministry collection" || data.owner !== "Ministry media" || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+if (data.title !== "Untitled ministry collection" || data.owner !== "Ministry media" || data.expiry !== null || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
   console.error(`FAIL: collection display fields were not sanitized: ${text.slice(0, 700)}`);
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d '{"role":"Contributor","assetIds":["368"],"title":"../private source path","owner":"../private master drive","audience":"Internal ministry"}' \
+  -d '{"role":"Contributor","assetIds":["368"],"title":"../private source path","owner":"../private master drive","expiry":"../private","audience":"Internal ministry"}' \
+  "$BASE_URL/api/collections"
+
+expect_json collection-expiry-date-preserved '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.expiry !== "2026-06-30") {
+  console.error(`FAIL: valid collection expiry date was not preserved: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Contributor","assetIds":["368"],"title":"Expiry test","expiry":"2026-06-30","audience":"Internal ministry"}' \
   "$BASE_URL/api/collections"
 
 expect_json public-portal-collection-gate '

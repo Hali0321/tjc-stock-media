@@ -4,7 +4,7 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { assetIsPortalReady, assetNeedsStaleApprovalReview } from "@/lib/asset-governance";
 import { canSeeAsset, canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetIds, normalizeDisplayTextField } from "@/lib/request-validation";
+import { normalizeAssetIds, normalizeDateField, normalizeDisplayTextField } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
   const assetIds = normalizeAssetIds(body.assetIds);
   const audience = allowedAudiences.has(body.audience || "") ? body.audience! : "Private draft";
   const title = normalizeDisplayTextField(body.title, "Untitled ministry collection", 100);
+  const expiry = normalizeDateField(body.expiry);
 
   if (!canUpload(role)) {
     appendAuditEvent({
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     title,
     state: blockedPublic ? "private draft - sharing blocked" : audience,
     owner: normalizeDisplayTextField(body.owner, "Ministry media", 80),
-    expiry: body.expiry || null,
+    expiry: expiry || null,
     assetCount: found.length,
     sharePath: `/collections/${slugify(title)}`,
     sharingBlocked: blockedPublic,
