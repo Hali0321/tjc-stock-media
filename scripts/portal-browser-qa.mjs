@@ -619,12 +619,12 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Viewer", 390, 900);
   await gotoAndSettle(page, `${base}/guide`);
-  if ((await page.getByText("Safe reuse guide").count()) < 1) failures.push("guide-task-cards: guide heading missing");
-  await page.getByLabel("Search help").fill("children");
-  const childrenTask = page.getByLabel("Help topics").getByRole("button", { name: /Check people\/youth/ });
-  if ((await childrenTask.count()) < 1) failures.push("guide-task-cards: search did not match children task");
-  await childrenTask.click();
-  if ((await page.getByText("Do", { exact: true }).count()) < 1 || (await page.getByText("Avoid", { exact: true }).count()) < 1) failures.push("guide-task-cards: do/avoid guidance missing after open");
+  if ((await page.getByText("Media Help Center").count()) < 1) failures.push("guide-help-center: guide heading missing");
+  await page.getByLabel(/Search help articles/i).fill("source");
+  const sourceTask = page.getByRole("link", { name: /Request source-file access/ });
+  if ((await sourceTask.count()) < 1) failures.push("guide-help-center: search did not match source task");
+  if ((await page.getByRole("link", { name: /Open review request/ }).count()) < 1) failures.push("guide-help-center: review CTA missing");
+  if ((await page.getByText("What is an approved derivative?").count()) < 1) failures.push("guide-help-center: FAQ missing");
   await closeContext(context);
 }
 
@@ -708,7 +708,7 @@ await captureProof("media-preview-panel-image.png", "DAM Admin", 1440, 1000, "/a
 });
 
 await captureProof("media-preview-panel-document.png", "Viewer", 1440, 1000, "/guide", async (page) => {
-  await page.getByText("Safe reuse guide").scrollIntoViewIfNeeded();
+  await page.getByText("Media Help Center").scrollIntoViewIfNeeded();
 });
 
 await captureProof("upload-dropzone-tags.png", "Contributor", 1440, 1000, "/upload", async (page) => {
