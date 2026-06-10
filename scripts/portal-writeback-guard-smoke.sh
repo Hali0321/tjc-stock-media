@@ -151,6 +151,23 @@ fs.writeFileSync(path.join(pendingDir, `unsafe-${process.env.MARKER}.json`), `${
   retryCount: -7,
   lastError: "../private pending error"
 }, null, 2)}\n`);
+for (let index = 0; index < 210; index += 1) {
+  fs.writeFileSync(path.join(pendingDir, `filler-${process.env.MARKER}-${index}.json`), `${JSON.stringify({
+    id: `filler-${process.env.MARKER}-${index}`,
+    resourceId: `filler-${index}`,
+    oldStatus: "Needs Review",
+    requestedStatus: "Needs Review",
+    reviewerRole: "Reviewer",
+    reviewerName: "Writeback Guard Filler",
+    createdAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+    updatedAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+    note: "Filler pending write for cap probe.",
+    checklist: { sourceConfirmed: true },
+    blockers: [],
+    syncState: "queued",
+    retryCount: 0
+  }, null, 2)}\n`);
+}
 
 const auditDir = path.join(process.cwd(), ".runtime", "audit-log");
 fs.mkdirSync(auditDir, { recursive: true });
@@ -180,6 +197,12 @@ if (!item) {
 }
 if (!/pending review write/i.test(item.label || "") || !/pending writes?/i.test(item.detail || "")) {
   console.error(`FAIL: pending write readiness row is weak: ${JSON.stringify(item)}`);
+  process.exit(1);
+}
+const pendingMatch = String(item.detail || "").match(/([0-9,]+) pending write/);
+const pendingCount = pendingMatch ? Number(pendingMatch[1].replace(/,/g, "")) : NaN;
+if (!Number.isFinite(pendingCount) || pendingCount > 200) {
+  console.error(`FAIL: pending write readiness count was not capped: ${JSON.stringify(item)}`);
   process.exit(1);
 }
 const text = JSON.stringify(data);

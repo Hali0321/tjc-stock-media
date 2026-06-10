@@ -5,6 +5,7 @@ import { repoRoot } from "@/lib/env";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
 const pendingDirName = "pending-review-writes";
+export const maxPendingReviewWrites = 200;
 
 function pendingDir() {
   return path.join(repoRoot(), ".runtime", pendingDirName);
@@ -103,7 +104,8 @@ export function listPendingReviewWrites(): ReviewWriteRecord[] {
     .filter((file) => file.endsWith(".json"))
     .map((file) => readRecord(path.join(dir, file)))
     .filter((record): record is ReviewWriteRecord => Boolean(record))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, maxPendingReviewWrites);
 }
 
 export function pendingReviewWriteSummary(record: ReviewWriteRecord): ReviewWriteRecordSummary {
