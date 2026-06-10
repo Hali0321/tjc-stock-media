@@ -5,6 +5,10 @@ BASE_URL="${BASE_URL:-http://localhost:4868}"
 MARKER="feedback-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
+local_runtime_probe=0
+case "$BASE_URL" in
+  http://localhost:*|http://127.0.0.1:*) local_runtime_probe=1 ;;
+esac
 
 http_code() {
   local output="$1"
@@ -57,6 +61,38 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit"
 
+stale_feedback_id="stale-feedback-$MARKER"
+if [ "$local_runtime_probe" = "1" ]; then
+  STALE_FEEDBACK_ID="$stale_feedback_id" node <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const filePath = path.join(process.cwd(), "data", "runtime", "beta-feedback.json");
+fs.mkdirSync(path.dirname(filePath), { recursive: true });
+const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
+existing.unshift({
+  id: process.env.STALE_FEEDBACK_ID,
+  createdAt: "not-a-date",
+  updatedAt: "not-a-date",
+  role: "Root",
+  route: "javascript:alert(1)",
+  task: "../private stale feedback",
+  severity: "urgent",
+  expected: "../private expected",
+  actual: "../private actual",
+  status: "done",
+  notes: "../private note",
+  reporterName: "../private reporter",
+  browser: "../private browser",
+  device: "../private device",
+  viewport: "../private viewport",
+  attachmentUrl: "javascript:alert(1)",
+  storageMode: "filesystem",
+  actor: ""
+});
+fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
+NODE
+fi
+
 expect_json_status 400 feedback-submit-invalid-severity '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (!Array.isArray(data.missing) || !data.missing.includes("severity")) {
@@ -75,9 +111,15 @@ if (!/DAM Admin/i.test(data.error || "")) {
 }
 ' "$BASE_URL/api/beta-feedback?role=Viewer"
 
-FEEDBACK_ID="$feedback_id" expect_json_status 200 feedback-admin-list-visible '
+stale_feedback_probe_id=""
+if [ "$local_runtime_probe" = "1" ]; then
+  stale_feedback_probe_id="$stale_feedback_id"
+fi
+
+FEEDBACK_ID="$feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.FEEDBACK_ID;
+const staleId = process.env.STALE_FEEDBACK_ID;
 if (!Array.isArray(data.feedback) || typeof data.count !== "number") {
   console.error(`FAIL: feedback inbox shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
@@ -90,6 +132,13 @@ if (!record || record.status !== "new" || !["local-json", "vercel-kv"].includes(
 if (!record.actor) {
   console.error(`FAIL: submitted feedback missing actor identity: ${JSON.stringify(record).slice(0, 500)}`);
   process.exit(1);
+}
+if (staleId) {
+  const stale = data.feedback.find((item) => item.id === staleId);
+  if (!stale || stale.role !== "Viewer" || stale.route !== "/" || stale.severity !== "medium" || stale.status !== "new" || stale.storageMode !== "local-json" || stale.attachmentUrl) {
+    console.error(`FAIL: persisted unsafe feedback was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
+    process.exit(1);
+  }
 }
 ' "$BASE_URL/api/beta-feedback?role=DAM%20Admin"
 

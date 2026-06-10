@@ -31,6 +31,41 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function safeId(value: unknown) {
+  return safeText(value, 120).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+}
+
+function safeIso(value: unknown) {
+  const text = safeText(value, 40);
+  return Number.isNaN(Date.parse(text)) ? "" : text;
+}
+
+function safeRole(value: unknown): DemoRole {
+  return value === "Contributor" || value === "Reviewer" || value === "DAM Admin" ? value : "Viewer";
+}
+
+function safeSeverity(value: unknown): BetaFeedbackSeverity {
+  return betaFeedbackSeverities.includes(value as BetaFeedbackSeverity) ? value as BetaFeedbackSeverity : "medium";
+}
+
+function safeStatus(value: unknown): BetaFeedbackStatus {
+  return betaFeedbackStatuses.includes(value as BetaFeedbackStatus) ? value as BetaFeedbackStatus : "new";
+}
+
+function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
+  return value === "vercel-kv" ? "vercel-kv" : "local-json";
+}
+
+function safeRoute(value: unknown) {
+  const route = safeText(value, 240);
+  return route.startsWith("/") ? route : "/";
+}
+
+function safeUrl(value: unknown) {
+  const url = safeText(value, 500);
+  return /^https?:\/\//i.test(url) ? url : "";
+}
+
 function feedbackKey(id: string) {
   return `${feedbackRecordPrefix}${id}`;
 }
@@ -39,12 +74,39 @@ function newestFirst(records: BetaFeedbackRecord[]) {
   return [...records].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
+function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
+  const raw = (input || {}) as Partial<BetaFeedbackRecord>;
+  const id = safeId(raw.id);
+  if (!id) return null;
+  const createdAt = safeIso(raw.createdAt) || safeIso(raw.updatedAt) || new Date(0).toISOString();
+  return {
+    id,
+    createdAt,
+    updatedAt: safeIso(raw.updatedAt) || createdAt,
+    role: safeRole(raw.role),
+    route: safeRoute(raw.route),
+    task: safeText(raw.task, 220) || "Free play",
+    severity: safeSeverity(raw.severity),
+    expected: safeText(raw.expected, 1200),
+    actual: safeText(raw.actual, 1200),
+    status: safeStatus(raw.status),
+    notes: raw.notes === undefined ? undefined : safeText(raw.notes, 1200),
+    reporterName: raw.reporterName === undefined ? undefined : safeText(raw.reporterName, 120),
+    browser: raw.browser === undefined ? undefined : safeText(raw.browser, 280),
+    device: raw.device === undefined ? undefined : safeText(raw.device, 180),
+    viewport: raw.viewport === undefined ? undefined : safeText(raw.viewport, 60),
+    attachmentUrl: raw.attachmentUrl === undefined ? undefined : safeUrl(raw.attachmentUrl),
+    storageMode: safeStorageMode(raw.storageMode),
+    actor: raw.actor === undefined ? undefined : safeText(raw.actor, 160)
+  };
+}
+
 async function readLocalFeedback() {
-  if (!localFileFeedbackEnabled()) return newestFirst(memoryFeedback());
+  if (!localFileFeedbackEnabled()) return newestFirst(memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
   try {
     const raw = await readFile(localFeedbackPath(), "utf8");
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter(Boolean) as BetaFeedbackRecord[] : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[] : [];
   } catch {
     return [];
   }
@@ -78,7 +140,7 @@ async function readKvFeedback() {
   const ids = await kv.get<string[]>(feedbackIndexKey).catch(() => null);
   if (!ids?.length) return [];
   const records = await Promise.all(ids.map((id) => kv.get<BetaFeedbackRecord>(feedbackKey(id)).catch(() => null)));
-  return newestFirst(records.filter((record): record is BetaFeedbackRecord => Boolean(record)));
+  return newestFirst(records.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
 }
 
 async function writeKvFeedback(record: BetaFeedbackRecord) {
@@ -111,9 +173,9 @@ export function betaFeedbackDiagnostics() {
     if (!localFileFeedbackEnabled()) return memoryFeedback();
     try {
       const parsed = JSON.parse(readFileSync(localFeedbackPath(), "utf8")) as unknown;
-      return Array.isArray(parsed) ? parsed.filter(Boolean) as BetaFeedbackRecord[] : [];
+      return Array.isArray(parsed) ? parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[] : [];
     } catch {
-      return memoryFeedback();
+      return memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[];
     }
   })();
   const storageModes = Array.from(new Set(records.map((record) => record.storageMode))).sort();
