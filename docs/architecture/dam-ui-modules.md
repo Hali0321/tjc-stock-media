@@ -82,6 +82,12 @@ Owns ministry kit configuration, ResourceSpace collection environment keys, coll
 
 Brand kits may contain editorial guidance in the portal, but downloadable assets remain ResourceSpace-backed records or explicit setup states.
 
+### `PackageDrafts`
+
+Owns portal-local package draft creation, section refs, ResourceSpace ref add/remove operations, asset resolution, approved-only available asset filtering, and publish readiness. Package pages render this interface instead of copying asset records into draft state.
+
+Package drafts may hold ResourceSpace references and editorial package fields. They must not become a second asset record store or bypass item-level reuse approval.
+
 ### `ReviewDecision`
 
 Owns review checklist normalization, required evidence rules, and local pending-review-write creation. Review routes validate transport and permissions, then call this module so pending-sync behavior stays honest and reusable when ResourceSpace writeback is configured later.

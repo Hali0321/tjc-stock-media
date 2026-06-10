@@ -18,6 +18,8 @@ const requiredShots = [
   { name: "collections-desktop.png", path: "/collections", role: "Viewer", width: 1440, height: 1000 },
   { name: "collections-mobile-320.png", path: "/collections", role: "Viewer", width: 320, height: 900 },
   { name: "collections-mobile-390.png", path: "/collections", role: "Viewer", width: 390, height: 900 },
+  { name: "packages-desktop.png", path: "/packages", role: "Reviewer", width: 1440, height: 1000 },
+  { name: "packages-mobile-320.png", path: "/packages", role: "Reviewer", width: 320, height: 900 },
   { name: "upload-desktop.png", path: "/upload", role: "Contributor", width: 1440, height: 1000 },
   { name: "upload-mobile-320.png", path: "/upload", role: "Contributor", width: 320, height: 900 },
   { name: "upload-mobile-390.png", path: "/upload", role: "Contributor", width: 390, height: 900 },
@@ -41,6 +43,7 @@ const qaPaths = [
   { path: "/", role: "Reviewer", label: "library-reviewer" },
   { path: "/?view=website-hero", role: "Viewer", label: "library-website-hero" },
   { path: "/collections", role: "Viewer", label: "collections-viewer" },
+  { path: "/packages", role: "Reviewer", label: "packages-reviewer" },
   { path: "/?view=needs-review", role: "Viewer", label: "viewer-needs-review-hidden" },
   { path: "/assets/368", role: "Viewer", label: "detail-approved-viewer" },
   { path: "/assets/644", role: "Viewer", label: "detail-unsafe-viewer" },
@@ -449,6 +452,16 @@ browser = await launchBrowser();
     if ((await page.getByText(text).count()) < 1) failures.push(`brand hub ResourceSpace shell: missing ${text}`);
   }
   if ((await page.locator(".ed-logo-grid img").count()) < 4) failures.push("brand hub ResourceSpace shell: TJC logo assets missing");
+  await closeContext(context);
+}
+
+{
+  const { page, context } = await newRolePage("Reviewer", 1440, 1000);
+  await gotoAndSettle(page, `${base}/packages`);
+  for (const text of ["ResourceSpace Toolkit Draft", "Package outline", "Browse ResourceSpace assets", "ResourceSpace IDs retained", "Copied assets"]) {
+    if ((await page.getByText(text).count()) < 1) failures.push(`package builder ResourceSpace refs shell: missing ${text}`);
+  }
+  if ((await page.getByText(/Portal package stores ResourceSpace IDs only/i).count()) < 1) failures.push("package builder ResourceSpace refs shell: refs-only copy missing");
   await closeContext(context);
 }
 

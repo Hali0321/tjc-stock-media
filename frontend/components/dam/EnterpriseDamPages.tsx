@@ -37,6 +37,7 @@ import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset }
 import { useDemoRole } from "@/components/RoleProvider";
 import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
+import { addPackageAssetRef, availableAssetsForSection, createPackageDraft, packagePublishReadiness, removePackageAssetRef, resolvePackageSections, seedPackageDraft, updatePackageTitle } from "@/lib/package-drafts";
 import { cn } from "@/lib/ui";
 import { useAdminReadiness, useAssetDetail, useAssetsSearch, useBrandKit, useDownloadGate, useReviewQueue } from "@/components/dam/useDamApi";
 
@@ -497,50 +498,29 @@ export function EnterpriseInsightsPage() {
 export function EnterprisePackageBuilderPage() {
   const { role } = useDemoRole();
   const search = useAssetsSearch({ role, view: "approved-church-wide", limit: 18 });
-  const [activeSection, setActiveSection] = useState("Cover");
+  const [activeSection, setActiveSection] = useState("cover");
   const [approvedOnly, setApprovedOnly] = useState(true);
-  const [packageName, setPackageName] = useState("ResourceSpace Toolkit Draft");
-  const [packageRefsBySection, setPackageRefsBySection] = useState<Record<string, string[]>>({});
+  const [draft, setDraft] = useState(() => createPackageDraft());
   const assets = search.data?.assets || [];
-  const assetLookup = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
   useEffect(() => {
-    if (!assets.length || Object.keys(packageRefsBySection).length) return;
-    const approvedAssets = assets.filter((asset) => uiStatus(asset) === "Approved");
-    setPackageRefsBySection({
-      Cover: approvedAssets.slice(0, 1).map((asset) => asset.id),
-      "01. Hero Assets": approvedAssets.filter((asset) => asset.mediaType === "photo").slice(0, 5).map((asset) => asset.id),
-      "02. Social Media": approvedAssets.slice(5, 10).map((asset) => asset.id),
-      "03. Documents": approvedAssets.filter((asset) => asset.mediaType === "document" || asset.mediaType === "graphic").slice(0, 5).map((asset) => asset.id)
-    });
-  }, [assets, packageRefsBySection]);
-  const sections = useMemo(() => {
-    const names = ["Cover", "01. Hero Assets", "02. Social Media", "03. Documents"];
-    return names.map((name) => [
-      name,
-      (packageRefsBySection[name] || []).map((id) => assetLookup.get(id)).filter((asset): asset is StockMediaAsset => Boolean(asset))
-    ]) as Array<[string, StockMediaAsset[]]>;
-  }, [assetLookup, packageRefsBySection]);
-  const activeRefs = packageRefsBySection[activeSection] || [];
-  const activeAvailableAssets = assets.filter((asset) => !activeRefs.includes(asset.id) && (!approvedOnly || uiStatus(asset) === "Approved")).slice(0, 6);
-  const addAssetToSection = (section: string, asset: StockMediaAsset) => {
-    setPackageRefsBySection((current) => ({ ...current, [section]: [...new Set([...(current[section] || []), asset.id])] }));
-  };
-  const removeAssetFromSection = (section: string, asset: StockMediaAsset) => {
-    setPackageRefsBySection((current) => ({ ...current, [section]: (current[section] || []).filter((id) => id !== asset.id) }));
-  };
-  const allPackageAssets = sections.flatMap(([, list]) => list);
-  const publishBlocked = !allPackageAssets.length || allPackageAssets.some((asset) => uiStatus(asset) !== "Approved");
-  const cover = sections[0]?.[1][0] || assets[0];
+    if (!assets.length) return;
+    setDraft((current) => seedPackageDraft(current, assets, uiStatus));
+  }, [assets]);
+  const sections = useMemo(() => resolvePackageSections(draft, assets), [assets, draft]);
+  const activeAvailableAssets = availableAssetsForSection({ draft, sectionId: activeSection, assets, approvedOnly, statusOf: uiStatus });
+  const readiness = packagePublishReadiness(draft, sections, uiStatus);
+  const publishBlocked = !readiness.canPublish;
+  const cover = sections[0]?.assets[0] || assets[0];
   return (
     <div className="enterprise-page enterprise-package-builder">
-      <PageHeader title={packageName || "Untitled Toolkit"} subtitle={`${approvedOnly ? "Approved only" : "All visible assets"} · Portal-local draft · ResourceSpace references only`} actions={<><ActionButton icon={Eye}>Preview package</ActionButton><ActionButton icon={Users}>Share</ActionButton><ActionButton tone="primary" icon={Lock} disabled={publishBlocked}>Publish package</ActionButton><ActionButton icon={UploadCloud}>Save draft</ActionButton></>} />
+      <PageHeader title={draft.title || "Untitled Toolkit"} subtitle={`${approvedOnly ? "Approved only" : "All visible assets"} · Portal-local draft · ResourceSpace references only`} actions={<><ActionButton icon={Eye}>Preview package</ActionButton><ActionButton icon={Users}>Share</ActionButton><ActionButton tone="primary" icon={Lock} disabled={publishBlocked}>Publish package</ActionButton><ActionButton icon={UploadCloud}>Save draft</ActionButton></>} />
       {search.loading ? <LoadingCard /> : search.error ? <ErrorCard message={search.error} source={search.source} /> : (
         <div className="ed-builder-grid">
-          <aside className="ed-panel ed-package-outline"><div className="ed-panel-title"><h3>Package outline</h3><button><Plus size={15} /></button></div>{sections.map(([name, list]) => <button className={activeSection === name ? "is-active" : ""} type="button" key={name} onClick={() => setActiveSection(name)}>{list[0] ? <AssetThumb asset={list[0]} /> : <FileText size={28} />}<span><strong>{name}</strong><small>{list.length} ResourceSpace refs</small></span><MoreHorizontal size={15} /></button>)}<div className="ed-dropzone"><UploadCloud size={38} /><span>Use Library search to add ResourceSpace records</span><ActionButton disabled={!activeAvailableAssets[0]} onClick={() => activeAvailableAssets[0] && addAssetToSection(activeSection, activeAvailableAssets[0])}>Browse assets</ActionButton></div></aside>
-          <main className="ed-package-canvas"><section className="ed-card ed-cover-section"><header><h2>Cover</h2><a>Replace cover</a></header>{cover ? <div><AssetThumb asset={cover} fit="contain" /><div><h3 title={displayTitle(cover)}>{displayTitle(cover)}</h3><p>{assetType(cover)} · {formatBytes(cover.fileSizeBytes)} · ResourceSpace {cover.resourceSpaceId || cover.id}</p><StatusBadge status={uiStatus(cover)} /><ActionButton>View asset details</ActionButton></div></div> : <p>No approved ResourceSpace asset selected.</p>}</section>{sections.slice(1).map(([section, list]) => <section className={cn("ed-card ed-builder-section", activeSection === section && "is-active")} key={section}><header><h2>{section}</h2><div><button type="button" onClick={() => activeAvailableAssets[0] && addAssetToSection(section, activeAvailableAssets[0])}>Add assets</button><MoreHorizontal size={16} /></div></header><p>Portal package stores ResourceSpace IDs only. Asset records stay canonical in ResourceSpace.</p><div className="ed-builder-assets">{list.length ? list.map((asset) => <div className="ed-package-ref" key={asset.id}><AssetCard asset={asset} /><button type="button" onClick={() => removeAssetFromSection(section, asset)}>Remove ref</button></div>) : <p>No matching ResourceSpace assets for this section.</p>}</div><footer><span>{list.length} references · {list.filter((asset) => uiStatus(asset) !== "Approved").length} blocked</span><button type="button" onClick={() => setActiveSection(section)}>Select section</button></footer></section>)}
-            <section className="ed-card"><header className="ed-card-head"><h3>Browse ResourceSpace assets</h3><SourcePill source={search.source} live={search.live} /></header><div className="ed-table-mini">{activeAvailableAssets.length ? activeAvailableAssets.map((asset) => <p key={asset.id}><strong>{displayTitle(asset)}</strong><span>ResourceSpace {asset.resourceSpaceId || asset.id}</span><button type="button" onClick={() => addAssetToSection(activeSection, asset)}>Add to {activeSection}</button></p>) : <p>No additional approved assets available for this section.</p>}</div></section>
+          <aside className="ed-panel ed-package-outline"><div className="ed-panel-title"><h3>Package outline</h3><button><Plus size={15} /></button></div>{sections.map((section) => <button className={activeSection === section.id ? "is-active" : ""} type="button" key={section.id} onClick={() => setActiveSection(section.id)}>{section.assets[0] ? <AssetThumb asset={section.assets[0]} /> : <FileText size={28} />}<span><strong>{section.title}</strong><small>{section.resourceSpaceAssetIds.length} ResourceSpace refs</small></span><MoreHorizontal size={15} /></button>)}<div className="ed-dropzone"><UploadCloud size={38} /><span>Use Library search to add ResourceSpace records</span><ActionButton disabled={!activeAvailableAssets[0]} onClick={() => activeAvailableAssets[0] && setDraft((current) => addPackageAssetRef(current, activeSection, activeAvailableAssets[0]))}>Browse assets</ActionButton></div></aside>
+          <main className="ed-package-canvas"><section className="ed-card ed-cover-section"><header><h2>Cover</h2><a>Replace cover</a></header>{cover ? <div><AssetThumb asset={cover} fit="contain" /><div><h3 title={displayTitle(cover)}>{displayTitle(cover)}</h3><p>{assetType(cover)} · {formatBytes(cover.fileSizeBytes)} · ResourceSpace {cover.resourceSpaceId || cover.id}</p><StatusBadge status={uiStatus(cover)} /><ActionButton>View asset details</ActionButton></div></div> : <p>No approved ResourceSpace asset selected.</p>}</section>{sections.slice(1).map((section) => <section className={cn("ed-card ed-builder-section", activeSection === section.id && "is-active")} key={section.id}><header><h2>{section.title}</h2><div><button type="button" onClick={() => activeAvailableAssets[0] && setDraft((current) => addPackageAssetRef(current, section.id, activeAvailableAssets[0]))}>Add assets</button><MoreHorizontal size={16} /></div></header><p>Portal package stores ResourceSpace IDs only. Asset records stay canonical in ResourceSpace.</p><div className="ed-builder-assets">{section.assets.length ? section.assets.map((asset) => <div className="ed-package-ref" key={asset.id}><AssetCard asset={asset} /><button type="button" onClick={() => setDraft((current) => removePackageAssetRef(current, section.id, asset))}>Remove ref</button></div>) : <p>No matching ResourceSpace assets for this section.</p>}</div><footer><span>{section.resourceSpaceAssetIds.length} references · {section.assets.filter((asset) => uiStatus(asset) !== "Approved").length + section.missingResourceSpaceAssetIds.length} blocked</span><button type="button" onClick={() => setActiveSection(section.id)}>Select section</button></footer></section>)}
+            <section className="ed-card"><header className="ed-card-head"><h3>Browse ResourceSpace assets</h3><SourcePill source={search.source} live={search.live} /></header><div className="ed-table-mini">{activeAvailableAssets.length ? activeAvailableAssets.map((asset) => <p key={asset.id}><strong>{displayTitle(asset)}</strong><span>ResourceSpace {asset.resourceSpaceId || asset.id}</span><button type="button" onClick={() => setDraft((current) => addPackageAssetRef(current, activeSection, asset))}>Add to {sections.find((section) => section.id === activeSection)?.title || "section"}</button></p>) : <p>No additional approved assets available for this section.</p>}</div></section>
           </main>
-          <aside className="ed-panel ed-package-details"><h3>Package details</h3><label>Package name<input className="ed-input" value={packageName} onChange={(event) => setPackageName(event.target.value)} /></label><label>Description<input className="ed-input" defaultValue="A portal-local package draft referencing ResourceSpace assets." /></label><h3>Sharing & access</h3><label>Visibility<select className="ed-input" defaultValue="Shared"><option>Shared with specific people</option></select></label><label>Message<input className="ed-input" placeholder="Add a message to recipients..." /></label><h3>Governance</h3><p className="ed-checkline"><CheckCircle2 size={16} />ResourceSpace IDs retained</p><p className="ed-checkline"><CheckCircle2 size={16} />Backend download gate required</p><p className={cn("ed-checkline", publishBlocked && "is-warn")}><ShieldCheck size={16} />{publishBlocked ? "Publish blocked until all refs are approved" : "All refs pass current approval check"}</p><label className="ed-toggle">Approved only <input type="checkbox" checked={approvedOnly} onChange={(event) => setApprovedOnly(event.target.checked)} /></label><h3>Package summary</h3><div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(sections.reduce((total, [, list]) => total + list.length, 0)), "Refs"], ["0", "Copied assets"], [sourceLabel(search.source), "Source"]].map(([v,l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div></aside>
+          <aside className="ed-panel ed-package-details"><h3>Package details</h3><label>Package name<input className="ed-input" value={draft.title} onChange={(event) => setDraft((current) => updatePackageTitle(current, event.target.value))} /></label><label>Description<input className="ed-input" defaultValue="A portal-local package draft referencing ResourceSpace assets." /></label><h3>Sharing & access</h3><label>Visibility<select className="ed-input" defaultValue="Shared"><option>Shared with specific people</option></select></label><label>Message<input className="ed-input" placeholder="Add a message to recipients..." /></label><h3>Governance</h3><p className="ed-checkline"><CheckCircle2 size={16} />ResourceSpace IDs retained</p><p className="ed-checkline"><CheckCircle2 size={16} />Backend download gate required</p><p className={cn("ed-checkline", publishBlocked && "is-warn")}><ShieldCheck size={16} />{readiness.reason}</p><label className="ed-toggle">Approved only <input type="checkbox" checked={approvedOnly} onChange={(event) => setApprovedOnly(event.target.checked)} /></label><h3>Package summary</h3><div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(readiness.totalRefs), "Refs"], ["0", "Copied assets"], [sourceLabel(search.source), "Source"]].map(([v,l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div></aside>
         </div>
       )}
     </div>

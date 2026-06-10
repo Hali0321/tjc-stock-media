@@ -21,6 +21,7 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - **Collection**: ResourceSpace grouping used for source albums, run batches, and curated sets. Collections do not replace metadata/status fields.
 - **Saved view**: named portal search perspective for a recurring media job, such as website heroes, no-people assets, or children/youth review. It is a workflow shortcut, not a separate collection.
 - **Brand kit**: curated ministry guidance and downloadable ResourceSpace collection mapping for one campaign or identity use case. Editorial copy can live in the portal; downloadable media remains ResourceSpace-backed.
+- **Package draft**: portal-local curation object for assembling a ministry toolkit. It stores section names and ResourceSpace references only; asset records, approval state, and rights truth remain in ResourceSpace.
 - **Import batch**: a selected group of files imported into ResourceSpace for review.
 - **Rights reviewer**: person allowed to approve public/internal/restricted use.
 - **Quality status**: whether an asset is useful for stock media, such as `Hero Candidate`, `Useful`, `Context Only`, `Low Use`, or `Reject`.

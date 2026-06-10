@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-10T09:41:06.083Z",
+  "checkedAt": "2026-06-10T09:52:39.534Z",
   "viewports": [
     1440,
     1280,
@@ -8,7 +8,7 @@
     390,
     320
   ],
-  "pages": 15,
+  "pages": 16,
   "screenshots": [
     "library-desktop.png",
     "library-mobile-320.png",
@@ -16,6 +16,8 @@
     "collections-desktop.png",
     "collections-mobile-320.png",
     "collections-mobile-390.png",
+    "packages-desktop.png",
+    "packages-mobile-320.png",
     "upload-desktop.png",
     "upload-mobile-320.png",
     "upload-mobile-390.png",
