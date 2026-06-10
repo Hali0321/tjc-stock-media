@@ -1,4 +1,5 @@
 import { brandKitCollectionId } from "@/lib/env";
+import { buildBrandKitGovernance } from "@/lib/brand-kit-governance";
 import { getResourceSpaceCollectionAssets } from "@/lib/media-source/resourcespace-api";
 import { getMediaSourceSession } from "@/lib/media-source/session";
 import { canSeeAsset } from "@/lib/permissions";
@@ -135,6 +136,12 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
       .slice(0, 36)
       .map((asset) => assetForRolePayload(role, asset))
     : [];
+  const warnings = [...new Set(buildBrandKitWarnings({
+    config,
+    collectionId,
+    matchedAssetCount: matchedAssets.length,
+    sectionMappings
+  }))];
 
   return {
     kit: {
@@ -152,13 +159,15 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
       sections: sectionMappings
     },
     assets: matchedAssets,
+    governance: buildBrandKitGovernance({
+      configured: Boolean(collectionId),
+      assets: matchedAssets,
+      role,
+      missingSectionMappings: sectionMappings.filter((section) => !section.configured).length,
+      warnings
+    }),
     ...envelope,
-    warnings: [...new Set(buildBrandKitWarnings({
-      config,
-      collectionId,
-      matchedAssetCount: matchedAssets.length,
-      sectionMappings
-    }))],
+    warnings,
     collectionStatus: liveCollection
       ? {
           ok: liveCollection.ok,

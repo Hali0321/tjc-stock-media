@@ -110,8 +110,60 @@
         "Viewer and Reviewer browser QA still pass."
       ],
       "priority": 7,
+      "passes": true,
+      "notes": "Implemented frontend/lib/package-governance.ts, wired Package Builder to portal reuse decisions for seeded refs and Portal Ready filtering, restored refs-only safety copy including 0 Copied assets, and exposed preview/share/publish readiness inline. Verified by frontend-check, API smoke, browser QA, launch-readiness, and diff check."
+    },
+    {
+      "id": "US-008",
+      "title": "Add enterprise insights command center",
+      "description": "As a DAM operator, I want analytics to recommend next actions rather than only show charts so that review debt, metadata health, usage maturity, and search gaps translate into operating priorities.",
+      "acceptanceCriteria": [
+        "Add one insights command-center module that returns score, summary, signals, and prioritized actions from current SearchResult facts.",
+        "Insights Admin/Reviewer view shows command center without exposing operational diagnostics to Viewer.",
+        "Signals cover portal readiness, metadata health, analytics maturity, and unresolved warnings.",
+        "Actions route to review/admin/search surfaces without mutating ResourceSpace.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Browser QA still passes across Insights/Admin/Viewer routes."
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Implemented frontend/lib/insights-command-center.ts, wired Admin/Reviewer Insights to show score, signals, and prioritized actions, and kept Viewer role-safe Insights free of operational diagnostics. Verified by frontend-check, API smoke, browser QA, targeted Insights role/viewport check, launch-readiness, and diff check."
+    },
+    {
+      "id": "US-009",
+      "title": "Deepen Brand Kit governance",
+      "description": "As a ministry brand owner, I want Brand Hub share/download readiness to use ResourceSpace mapping and portal reuse policy so that brand kits cannot bypass DAM review.",
+      "acceptanceCriteria": [
+        "Add one brand kit governance module that returns preview/share/download readiness, counts, blockers, and command rows.",
+        "Brand kit API returns the governance packet with existing kit/source facts.",
+        "Brand Hub disables or explains Share Kit and Download Kit when mapped assets are missing or not Portal Ready.",
+        "Viewer-facing Brand Hub avoids source-file mutation and fake ZIP claims.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Browser QA and targeted Brand Hub role checks pass."
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Implemented frontend/lib/brand-kit-governance.ts, returned governance from the Brand Kit API, wired Brand Hub share/download readiness to policy-backed command rows, and kept fake ZIP/source mutation claims blocked. Verified by frontend-check, API smoke, browser QA, targeted Brand Hub role/viewport/API checks, launch-readiness, and diff check."
+    },
+    {
+      "id": "US-010",
+      "title": "Add governed package draft persistence",
+      "description": "As a ministry communications teammate, I want package drafts to save through a governed portal store so that curated toolkit work survives a browser session without copying ResourceSpace originals or bypassing review.",
+      "acceptanceCriteria": [
+        "Add one package draft store module that persists sanitized ResourceSpace refs only.",
+        "Add POST /api/packages for Contributor/Reviewer/DAM Admin saves and GET /api/packages for Reviewer/DAM Admin listing.",
+        "Server recomputes package governance from current media source session before saving.",
+        "Package Builder Save draft calls the API and reports storage mode/ref count.",
+        "Viewer save/list attempts are denied and audited.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Browser QA and targeted package API/UI checks pass."
+      ],
+      "priority": 10,
       "passes": false,
-      "notes": "In progress: implemented package governance packet and wired Package Builder. Awaiting full frontend-check, API smoke, browser QA, and launch-readiness verification."
+      "notes": "In progress: implemented local JSON package store, API route, audit events, and Save draft UI. Awaiting full frontend-check, API smoke, browser QA, targeted package checks, launch-readiness, and diff check."
     }
   ]
 }

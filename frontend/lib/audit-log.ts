@@ -17,6 +17,9 @@ export type AuditEventType =
   | "review_pending_write_queued"
   | "collection_draft_denied"
   | "collection_draft_previewed"
+  | "package_draft_denied"
+  | "package_draft_saved"
+  | "package_draft_listed"
   | "batch_action_denied"
   | "batch_action_previewed"
   | "admin_denied"
@@ -31,6 +34,7 @@ export type AuditEventRecord = {
   actor: string;
   assetId?: string;
   resourceSpaceId?: string;
+  packageId?: string;
   status: "allowed" | "denied" | "blocked" | "queued" | "preview";
   summary: string;
   details?: Record<string, string | number | boolean | string[] | null>;
@@ -109,6 +113,7 @@ export function auditLogDiagnostics() {
       status: event.status,
       assetId: event.assetId,
       resourceSpaceId: event.resourceSpaceId,
+      packageId: event.packageId,
       summary: event.summary
     }))
   };

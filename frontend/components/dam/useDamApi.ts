@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchDamJson, sourceFromPayload, type DamApiPayload } from "@/lib/dam-api-client";
+import type { BrandKitGovernance } from "@/lib/brand-kit-governance";
 import { mediaSourceIsLive, mediaSourceKind, type MediaSourceKind } from "@/lib/media-source/truth";
 import { canReview } from "@/lib/permissions";
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, SearchResult, StockMediaAsset } from "@/lib/types";
@@ -56,6 +57,7 @@ export type BrandKitResponse = {
     sections: Array<{ id: string; title: string; envKey: string; resourceSpaceCollectionId?: string | number; configured: boolean }>;
   };
   assets: StockMediaAsset[];
+  governance?: BrandKitGovernance;
   source: MediaSourceStatus;
   sourceKind?: ApiSourceKind;
   live?: boolean;

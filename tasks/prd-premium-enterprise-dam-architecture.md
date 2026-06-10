@@ -89,6 +89,43 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [ ] Build passes.
 - [ ] Viewer and Reviewer browser QA still pass.
 
+### US-008: Add enterprise insights command center
+**Description:** As a DAM operator, I want analytics to recommend next actions rather than only show charts so that review debt, metadata health, usage maturity, and search gaps translate into operating priorities.
+
+**Acceptance Criteria:**
+- [ ] Add one insights command-center module that returns score, summary, signals, and prioritized actions from current SearchResult facts.
+- [ ] Insights Admin/Reviewer view shows command center without exposing operational diagnostics to Viewer.
+- [ ] Signals cover portal readiness, metadata health, analytics maturity, and unresolved warnings.
+- [ ] Actions route to review/admin/search surfaces without mutating ResourceSpace.
+- [ ] Typecheck passes.
+- [ ] Build passes.
+- [ ] Browser QA still passes across Insights/Admin/Viewer routes.
+
+### US-009: Deepen Brand Kit governance
+**Description:** As a ministry brand owner, I want Brand Hub share/download readiness to use ResourceSpace mapping and portal reuse policy so that brand kits cannot bypass DAM review.
+
+**Acceptance Criteria:**
+- [ ] Add one brand kit governance module that returns preview/share/download readiness, counts, blockers, and command rows.
+- [ ] Brand kit API returns the governance packet with existing kit/source facts.
+- [ ] Brand Hub disables or explains Share Kit and Download Kit when mapped assets are missing or not Portal Ready.
+- [ ] Viewer-facing Brand Hub avoids source-file mutation and fake ZIP claims.
+- [ ] Typecheck passes.
+- [ ] Build passes.
+- [ ] Browser QA and targeted Brand Hub role checks pass.
+
+### US-010: Add governed package draft persistence
+**Description:** As a ministry communications teammate, I want package drafts to save through a governed portal store so that curated toolkit work survives a browser session without copying ResourceSpace originals or bypassing review.
+
+**Acceptance Criteria:**
+- [ ] Add one package draft store module that persists sanitized ResourceSpace refs only.
+- [ ] Add `POST /api/packages` for Contributor/Reviewer/DAM Admin saves and `GET /api/packages` for Reviewer/DAM Admin listing.
+- [ ] Server recomputes package governance from current media source session before saving.
+- [ ] Package Builder Save draft calls the API and reports storage mode/ref count.
+- [ ] Viewer save/list attempts are denied and audited.
+- [ ] Typecheck passes.
+- [ ] Build passes.
+- [ ] Browser QA and targeted package API/UI checks pass.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -99,6 +136,9 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-6: Keep module interfaces small and implementation-rich.
 - FR-7: Keep safety facts persistent inline; never rely on toasts alone.
 - FR-8: Package drafts must store ResourceSpace refs only and must not override portal reuse, download, or original-file restrictions.
+- FR-9: Analytics should distinguish real usage rows from current-export and sample/fallback panels.
+- FR-10: Brand kits must keep editorial guidance separate from ResourceSpace-backed downloadable media readiness.
+- FR-11: Package persistence must never store source binaries, copied assets, master paths, or final rights truth.
 
 ## Non-Goals
 

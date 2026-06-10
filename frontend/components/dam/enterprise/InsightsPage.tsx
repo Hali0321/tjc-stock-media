@@ -6,6 +6,7 @@ import { Calendar, CheckCircle2, Clock3, Database, Download, Eye, FileText, Filt
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
 import { assetType, displayTitle, formatBytes, sourceLabel } from "@/lib/enterprise-display";
+import { buildInsightsCommandCenter } from "@/lib/insights-command-center";
 import { insightHealthRows, insightKpis } from "@/lib/insights-dashboard";
 import type { SearchResult, StockMediaAsset } from "@/lib/types";
 import { ActionButton, AssetThumb, ErrorCard, LoadingCard, PageHeader, StatusBadge } from "./EnterpriseShared";
@@ -272,13 +273,36 @@ function CategoryDonut({ assets, visibleTotal }: { assets: StockMediaAsset[]; vi
   );
 }
 
+function CommandCenterPanel({ result }: { result?: SearchResult }) {
+  const center = buildInsightsCommandCenter(result);
+  return (
+    <section className="ed-card ed-insight-command-center">
+      <header>
+        <div>
+          <span>Enterprise DAM command center</span>
+          <h3>{center.scoreLabel}</h3>
+          <p>{center.summary}</p>
+        </div>
+        <strong>{center.score}<small>/100</small></strong>
+      </header>
+      <div className="ed-command-signals">
+        {center.signals.map((signal) => <p className={`is-${signal.tone}`} key={signal.label}><span>{signal.label}</span><strong>{signal.value}</strong><small>{signal.target}</small></p>)}
+      </div>
+      <div className="ed-command-actions">
+        {center.actions.map((item) => <a className={`is-${item.priority}`} href={item.href} key={item.id}><span>{item.priority}</span><strong>{item.title}</strong><small>{item.detail}</small></a>)}
+      </div>
+    </section>
+  );
+}
+
 function AdminInsights({
   counts,
   usage,
   assets,
   sourceText,
   hasUsageRows,
-  filters
+  filters,
+  result
 }: {
   counts: SearchResult["counts"];
   usage?: SearchResult["usageAnalytics"];
@@ -286,6 +310,7 @@ function AdminInsights({
   sourceText: string;
   hasUsageRows: boolean;
   filters: InsightFilterState;
+  result?: SearchResult;
 }) {
   const rawTotal = counts?.rawTotal || counts?.visibleToRole || counts?.totalMatching || 0;
   const reviewRows: MetricRow[] = [
@@ -311,6 +336,7 @@ function AdminInsights({
   return (
     <>
       <div className="ed-insight-stat-grid">{stats.map((stat) => <InsightStatCard key={stat.label} stat={stat} />)}</div>
+      <CommandCenterPanel result={result} />
       <div className="ed-insights-board is-admin">
         {filters.review ? <InsightPanel title="Review Workload" action="Open review queue" actionHref="/review"><MetricRows rows={reviewRows} /></InsightPanel> : null}
         {filters.review ? <InsightPanel title="Governance / Risk Summary" action="Open admin" actionHref="/admin"><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel> : null}
@@ -441,7 +467,7 @@ export function EnterpriseInsightsPage() {
       <section className={operationalView ? "ed-approved-banner" : "ed-role-safe-banner"}>{operationalView ? <Database size={22} /> : <Info size={22} />}<div><strong>{operationalView ? sourceLabel(insights.source) : "Role-safe insights"}</strong><span>{operationalView ? (insights.source?.detail || "Media library source unavailable.") : "These insights reflect only the content you can view based on your role and permissions."}</span></div><span>{operationalView ? (hasUsageRows ? "Usage rows from portal analytics" : "Sample analytics where event rows are unavailable") : "Operational diagnostics are hidden for this role."}</span></section>
       {insights.loading ? <LoadingCard /> : insights.error ? <ErrorCard message={insights.error} source={insights.source} /> : <>
         {operationalView
-          ? <AdminInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} sourceText={sourceLabel(insights.source)} hasUsageRows={hasUsageRows} filters={filters} />
+          ? <AdminInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} sourceText={sourceLabel(insights.source)} hasUsageRows={hasUsageRows} filters={filters} result={insights.data || undefined} />
           : <ViewerInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} savedViews={insights.data?.savedViews || []} collections={insights.data?.collections || []} />}
       </>}
     </div>
