@@ -41,6 +41,30 @@ export function EnterpriseLibraryPage() {
     setSelectedIds((current) => current.includes(asset.id) ? current.filter((id) => id !== asset.id) : [...current, asset.id]);
   };
   const announceLibraryAction = (message: string) => setLibraryMessage(message);
+  const saveCurrentSearch = async () => {
+    if (!query && !view && !collection && !filters.length) {
+      announceLibraryAction("Choose a query, saved view, collection, or filter before saving this beta search.");
+      return;
+    }
+    const response = await fetch(`/api/saved-searches?role=${encodeURIComponent(role)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        title: query || view || collection || filters.join(", "),
+        query,
+        view,
+        collection,
+        filters,
+        sort
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      announceLibraryAction(payload.error || "Saved search failed.");
+      return;
+    }
+    announceLibraryAction(`Saved "${payload.search?.title || "search"}" to ${payload.storageMode || "local-json"}. Durable team saved views need backend storage.`);
+  };
   const toggleFilter = (filter: string) => {
     setFilters((current) => current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]);
   };
@@ -53,7 +77,7 @@ export function EnterpriseLibraryPage() {
   };
   return (
     <div className="enterprise-page enterprise-library">
-      <PageHeader title="Asset Library" count={search.data ? `${search.data.total.toLocaleString()} assets` : undefined} actions={<><ActionButton onClick={() => announceLibraryAction("Saved views are available in the left panel. Choose one to update the library query.")}>Saved views <ChevronDown size={14} /></ActionButton><ActionButton tone="primary" onClick={() => announceLibraryAction(query || view || collection ? "Search saved locally for this beta session. Persistent saved views need backend storage." : "Choose a query, saved view, or collection before saving this beta search.")}>Save this search</ActionButton><IconButton label="More" onClick={() => announceLibraryAction("More library actions are limited to backend-gated download, package, and share workflows in this beta.")}><MoreHorizontal size={17} /></IconButton></>} />
+      <PageHeader title="Asset Library" count={search.data ? `${search.data.total.toLocaleString()} assets` : undefined} actions={<><ActionButton onClick={() => announceLibraryAction("Saved views are available in the left panel. Choose one to update the library query.")}>Saved views <ChevronDown size={14} /></ActionButton><ActionButton tone="primary" onClick={() => void saveCurrentSearch()}>Save this search</ActionButton><IconButton label="More" onClick={() => announceLibraryAction("More library actions are limited to backend-gated download, package, and share workflows in this beta.")}><MoreHorizontal size={17} /></IconButton></>} />
       {libraryMessage ? <p className="ed-inline-success">{libraryMessage}</p> : null}
       <section className="ed-approved-banner"><CheckCircle2 size={24} /><div><strong>{search.live ? `Showing ${sourceNoun(search.source)}-backed records` : `${sourceNoun(search.source)} disconnected or read-only`}</strong><span>{search.source?.detail || "The UI is waiting for the backend DAM source."}</span></div><SourcePill source={search.source} live={search.live} /><button type="button" onClick={() => announceLibraryAction("Source banner kept visible for tester safety; it cannot be dismissed in this beta.")}>×</button></section>
       <form className="ed-library-search" role="search" onSubmit={(event) => event.preventDefault()}>

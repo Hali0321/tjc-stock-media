@@ -12,6 +12,7 @@ import {
 import { pendingReviewWriteDiagnostics } from "@/lib/pending-review-writes";
 import { packageDraftDiagnostics } from "@/lib/package-store";
 import { resourceSpaceFieldMapDiagnostics, resourceSpaceWritebackFieldMapDiagnostics } from "@/lib/resourcespace-field-map";
+import { savedSearchDiagnostics } from "@/lib/saved-search-store";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { IntegrationReadinessItem, MediaSourceStatus } from "@/lib/types";
 
@@ -35,6 +36,7 @@ export function buildIntegrationReadiness({
   const analytics = usageAnalyticsDiagnostics();
   const feedback = betaFeedbackDiagnostics();
   const packages = packageDraftDiagnostics();
+  const savedSearches = savedSearchDiagnostics();
   const writebackFieldMap = resourceSpaceWritebackFieldMapDiagnostics();
   const liveWritebackReady = apiConfigured && resourceSpaceWritebackEnabled() && writebackFieldMap.valid;
   const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_MVP_2024_COLLECTION_ID"));
@@ -189,6 +191,14 @@ export function buildIntegrationReadiness({
       detail: feedback.kvConfigured
         ? `Vercel KV feedback storage is configured. Blob attachments: ${feedback.blobConfigured ? "configured" : "not configured"}. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}.`
         : `Feedback is using ${feedback.primaryStorageMode}${feedback.hostedRuntime ? " in hosted runtime" : ""}; this is suitable for local/private beta rehearsal only, not wider rollout. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}. Configure Vercel KV for durable hosted feedback and Blob for attachments before larger testing.`
+    },
+    {
+      id: "saved-search-storage",
+      label: "Saved search storage",
+      ready: savedSearches.count > 0,
+      owner: "Portal",
+      state: savedSearches.count > 0 ? "Degraded" : "Pending setup",
+      detail: `Saved searches use ${savedSearches.storageMode}; suitable for local/private beta only, not wider rollout. Saved searches: ${savedSearches.count.toLocaleString()}. Connect durable profile storage before favorites, teams, or persistent saved views are promised.`
     },
     {
       id: "package-draft-storage",

@@ -67,9 +67,11 @@ require_file "scripts/portal-usage-smoke.sh"
 require_file "scripts/portal-delivery-smoke.sh"
 require_file "scripts/portal-writeback-guard-smoke.sh"
 require_file "scripts/portal-package-smoke.sh"
+require_file "scripts/portal-saved-search-smoke.sh"
 require_file "scripts/portal-beta-rehearsal.sh"
 require_file "scripts/portal-hosted-smoke.sh"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
+require_file "frontend/app/api/saved-searches/route.ts"
 
 if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-launch-media-tracked.txt; then
   fail "media files are tracked by git"

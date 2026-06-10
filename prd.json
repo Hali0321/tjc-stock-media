@@ -404,6 +404,27 @@
       "priority": 23,
       "passes": true,
       "notes": "Added packageDraftDiagnostics, Admin package-draft-storage readiness row, portal-package-smoke, Make/launch-readiness coverage, and beta command-center docs. The smoke proves package role gates, sanitized refs-only persistence, Reviewer listing, and local-json wider-rollout warning. Verified by typecheck, frontend-check, launch-readiness, API smoke, package smoke, JSON parse, and diff check."
+    },
+    {
+      "id": "US-024",
+      "title": "Add saved search persistence readiness smoke",
+      "description": "As a ministry user, I want saved searches to persist through a governed portal store so recurring DAM discovery work is reusable without implying durable team profile storage is complete.",
+      "acceptanceCriteria": [
+        "Add a local-json saved search store and API.",
+        "Viewer cannot list or save saved searches.",
+        "Contributor, Reviewer, and DAM Admin can save/list saved searches.",
+        "Saved search payloads sanitize ids, view, collection, filters, and sort.",
+        "Library Save this search uses the server saved search API.",
+        "Admin readiness reports saved-search storage as local/private beta only.",
+        "Add a portal-saved-search-smoke command.",
+        "Launch readiness validates the saved-search route and smoke script exist.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Saved search smoke passes against a local server."
+      ],
+      "priority": 24,
+      "passes": true,
+      "notes": "Added saved-search-store, /api/saved-searches, Library Save this search API wiring, saved-search-storage readiness row, Make/launch-readiness coverage, beta docs, and portal-saved-search-smoke. The smoke proves role gates, empty-search rejection, sanitization/deduping, Reviewer listing, and local-json wider-rollout warning. Verified by typecheck, frontend-check, launch-readiness, API smoke, saved-search smoke, JSON parse, and diff check."
     }
   ]
 }
