@@ -162,6 +162,21 @@ The smoke checks that trusted Reviewer, Contributor, and DAM Admin headers overr
 
 When `PORTAL_USAGE_LOGGING=1`, the portal records search, asset view, download gate, review action, and Brand Hub view events into local SQLite at `.runtime/analytics/portal-usage.sqlite` or `USAGE_ANALYTICS_DB_PATH`. Insights can replace sample search/asset rows when real event rows exist.
 
+Rehearse local durable analytics before relying on Insights for beta decisions:
+
+```bash
+cd frontend
+PORTAL_USAGE_LOGGING=1 TJC_STOCK_MEDIA_ROOT=/Users/halim4pro/Desktop/MVP/tjc-stock-media npm exec next dev -- --port 4878
+```
+
+Then run:
+
+```bash
+BASE_URL=http://localhost:4878 make portal-usage-smoke
+```
+
+The smoke records search, asset view, download gate, review action, and Brand Hub usage events, then verifies the SQLite database contains those event types with actor identity and a unique search marker.
+
 ## Next Integration Work
 
 1. Confirm ResourceSpace API signing and collection endpoints.

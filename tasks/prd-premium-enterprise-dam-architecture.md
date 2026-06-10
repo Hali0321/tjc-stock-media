@@ -176,6 +176,19 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [x] Build passes.
 - [x] Launch readiness and SSO smoke pass.
 
+### US-015: Add durable usage analytics rehearsal smoke
+**Description:** As a DAM operator, I want one repeatable command that proves portal usage analytics records real SQLite events for search, asset view, download gate, review action, and Brand Hub usage before Insights claims analytics maturity.
+
+**Acceptance Criteria:**
+- [x] Add a `portal-usage-smoke` command that expects a server running with `PORTAL_USAGE_LOGGING=1`.
+- [x] Usage smoke records and verifies search events with a unique query marker.
+- [x] Usage smoke records and verifies asset view, download gate, review action, and Brand Hub events.
+- [x] Usage smoke verifies recorded usage events include actor identity.
+- [x] Launch readiness validates the usage smoke script exists.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Launch readiness and usage smoke pass.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -193,6 +206,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-13: Enterprise audit events for download and mutation gates must include resolved actor identity when the route has access to request identity.
 - FR-14: Beta readiness must use mechanical browser QA coverage and actor-backed audit evidence before teammate invite recommendations can be treated as rehearsal-ready.
 - FR-15: Production-style trusted-header identity must have a repeatable local smoke path before teammate beta access is treated as identity-ready.
+- FR-16: Usage analytics must have a repeatable local smoke path before Insights can be treated as event-backed rather than sample-only.
 
 ## Non-Goals
 
