@@ -8,6 +8,7 @@ const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
 const feedbackRecordPrefix = "tjc-stock-media:beta-feedback:record:";
 const localFeedbackPath = () => path.join(repoRoot(), "data", "runtime", "beta-feedback.json");
 const localFileFeedbackEnabled = () => process.env.VERCEL !== "1";
+export const maxBetaFeedbackRecords = 500;
 
 export const betaFeedbackSeverities: BetaFeedbackSeverity[] = ["low", "medium", "high", "critical"];
 export const betaFeedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "agent-ready", "fixed", "wont-fix"];
@@ -74,6 +75,10 @@ function newestFirst(records: BetaFeedbackRecord[]) {
   return [...records].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
+function newestFeedbackWindow(records: BetaFeedbackRecord[]) {
+  return newestFirst(records).slice(0, maxBetaFeedbackRecords);
+}
+
 function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
   const raw = (input || {}) as Partial<BetaFeedbackRecord>;
   const id = safeId(raw.id);
@@ -102,11 +107,11 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
 }
 
 async function readLocalFeedback() {
-  if (!localFileFeedbackEnabled()) return newestFirst(memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
+  if (!localFileFeedbackEnabled()) return newestFeedbackWindow(memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
   try {
     const raw = await readFile(localFeedbackPath(), "utf8");
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[] : [];
+    return Array.isArray(parsed) ? newestFeedbackWindow(parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]) : [];
   } catch {
     return [];
   }
@@ -115,16 +120,16 @@ async function readLocalFeedback() {
 async function writeLocalFeedback(records: BetaFeedbackRecord[]) {
   if (!localFileFeedbackEnabled()) {
     const store = memoryFeedback();
-    store.splice(0, store.length, ...newestFirst(records));
+    store.splice(0, store.length, ...newestFeedbackWindow(records));
     return;
   }
   const filePath = localFeedbackPath();
   try {
     await mkdir(path.dirname(filePath), { recursive: true });
-    await writeFile(filePath, `${JSON.stringify(newestFirst(records), null, 2)}\n`);
+    await writeFile(filePath, `${JSON.stringify(newestFeedbackWindow(records), null, 2)}\n`);
   } catch {
     const store = memoryFeedback();
-    store.splice(0, store.length, ...newestFirst(records));
+    store.splice(0, store.length, ...newestFeedbackWindow(records));
   }
 }
 
@@ -147,7 +152,7 @@ async function writeKvFeedback(record: BetaFeedbackRecord) {
   const kv = await getKvClient();
   if (!kv) return false;
   const ids = await kv.get<string[]>(feedbackIndexKey).catch(() => null);
-  const nextIds = [record.id, ...(ids || []).filter((id) => id !== record.id)].slice(0, 500);
+  const nextIds = [record.id, ...(ids || []).filter((id) => id !== record.id)].slice(0, maxBetaFeedbackRecords);
   await Promise.all([
     kv.set(feedbackKey(record.id), record),
     kv.set(feedbackIndexKey, nextIds)
@@ -173,9 +178,9 @@ export function betaFeedbackDiagnostics() {
     if (!localFileFeedbackEnabled()) return memoryFeedback();
     try {
       const parsed = JSON.parse(readFileSync(localFeedbackPath(), "utf8")) as unknown;
-      return Array.isArray(parsed) ? parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[] : [];
+      return Array.isArray(parsed) ? newestFeedbackWindow(parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]) : [];
     } catch {
-      return memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[];
+      return newestFeedbackWindow(memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
     }
   })();
   const storageModes = Array.from(new Set(records.map((record) => record.storageMode))).sort();
@@ -237,7 +242,7 @@ export async function createBetaFeedback(input: Omit<BetaFeedbackRecord, "id" | 
 export async function listBetaFeedback() {
   const kvRecords = await readKvFeedback().catch(() => null);
   if (kvRecords) return kvRecords;
-  return newestFirst(await readLocalFeedback());
+  return newestFeedbackWindow(await readLocalFeedback());
 }
 
 export function filterBetaFeedback(records: BetaFeedbackRecord[], filters: BetaFeedbackExportFilters) {

@@ -69,9 +69,23 @@ const path = require("path");
 const filePath = path.join(process.cwd(), "data", "runtime", "beta-feedback.json");
 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
+const filler = Array.from({ length: 510 }, (_, index) => ({
+  id: `${process.env.STALE_FEEDBACK_ID}-filler-${index}`,
+  createdAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+  updatedAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+  role: "Viewer",
+  route: "/",
+  task: `Oversized local-json feedback filler ${index}`,
+  severity: "low",
+  expected: "Local private beta feedback remains bounded.",
+  actual: "Filler record for cap probe.",
+  status: "fixed",
+  storageMode: "local-json",
+  actor: "feedback-smoke:filler"
+}));
 existing.unshift({
   id: process.env.STALE_FEEDBACK_ID,
-  createdAt: "not-a-date",
+  createdAt: "2030-01-01T00:00:00.000Z",
   updatedAt: "not-a-date",
   role: "Root",
   route: "javascript:alert(1)",
@@ -88,7 +102,7 @@ existing.unshift({
   attachmentUrl: "javascript:alert(1)",
   storageMode: "filesystem",
   actor: ""
-});
+}, ...filler);
 fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
 NODE
 fi
@@ -122,6 +136,10 @@ const id = process.env.FEEDBACK_ID;
 const staleId = process.env.STALE_FEEDBACK_ID;
 if (!Array.isArray(data.feedback) || typeof data.count !== "number") {
   console.error(`FAIL: feedback inbox shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+if (data.count > 500 || data.feedback.length > 500) {
+  console.error(`FAIL: feedback local-json inbox was not capped: ${JSON.stringify({ count: data.count, length: data.feedback.length })}`);
   process.exit(1);
 }
 const record = data.feedback.find((item) => item.id === id);
