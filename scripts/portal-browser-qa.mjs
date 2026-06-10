@@ -87,7 +87,8 @@ const normalUserOpsLeakPatterns = [
   /master files?/i,
   /original filename/i,
   /checksum/i,
-  /raw ResourceSpace/i
+  /raw ResourceSpace/i,
+  /ResourceSpace ID/i
 ];
 
 function isExpectedDeniedConsole(text) {
@@ -334,6 +335,9 @@ async function inspectPage(page, expected) {
         return positionedFixed && rect.width > 0 && rect.height > 0 && rect.bottom > window.innerHeight - 120;
       })
       .map((el) => (el.textContent || el.getAttribute("aria-label") || "mobile nav").trim().replace(/\s+/g, " "));
+    const mailtoHrefs = [...document.querySelectorAll('a[href^="mailto:"]')]
+      .map((el) => el.getAttribute("href") || "")
+      .slice(0, 20);
     return {
       expected: expectedPage,
       title: document.title,
@@ -347,6 +351,7 @@ async function inspectPage(page, expected) {
       clippedControls,
       headerOverlaps: headerOverlaps.slice(0, 10),
       fixedMobileNavs,
+      mailtoHrefs,
     hasBlockedDownload: visibleText.includes("Download unavailable") || visibleText.includes("Downloads blocked") || visibleText.includes("Download blocked") || visibleText.includes("Needs review") || visibleText.includes("Review required before use") || visibleText.includes("Source file restricted") || visibleText.includes("Request DAM review") || visibleText.includes("Request-only") || visibleText.includes("Preview protected"),
       hasReviewBlocker: visibleText.includes("Decision locked") || visibleText.includes("Complete required evidence before approval"),
       hasViewerReviewBlock: visibleText.includes("Review inbox requires reviewer access"),
@@ -383,6 +388,10 @@ for (const width of qaViewports) {
         if (normalUserRoles.has(item.role)) {
           const leaks = visibleOpsLeaks(state.visibleText);
           if (leaks.length) failures.push(`${item.label} ${width}: normal-user ops language leak ${leaks.join(", ")} in "${state.textSample}"`);
+          const hrefLeak = (state.mailtoHrefs || [])
+            .map((href) => ({ href, leaks: decodedHrefOpsLeaks(href) }))
+            .find((entry) => entry.leaks.length);
+          if (hrefLeak) failures.push(`${item.label} ${width}: normal-user mailto href ops leak ${hrefLeak.leaks.join(", ")} in "${hrefLeak.href}"`);
         }
         const governanceShortcutCount = await page.getByLabel("Open governance").count();
         if (item.role === "Reviewer" && governanceShortcutCount > 0) failures.push(`${item.label} ${width}: Reviewer sees governance shortcut`);

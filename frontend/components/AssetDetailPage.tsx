@@ -160,6 +160,7 @@ function DerivativeCustodyCard({
   canDownload: boolean;
 }) {
   const opsView = role === "Reviewer" || role === "DAM Admin";
+  const adminOps = role === "DAM Admin";
   const cards = [
     {
       label: "Approved Copy",
@@ -176,16 +177,16 @@ function DerivativeCustodyCard({
       icon: LockKeyhole
     },
     {
-      label: "Source Record",
+      label: adminOps ? "ResourceSpace ID" : opsView ? "Source Record" : "Media Team Record",
       value: opsView ? asset.resourceSpaceId || asset.id : "Media Team review record",
-      detail: "ResourceSpace remains metadata, review, rights, and status truth.",
+      detail: opsView ? "ResourceSpace remains metadata, review, rights, and status truth." : "The Media Team keeps source custody, review, rights, and status truth.",
       tone: "info",
       icon: ScrollText
     },
     {
-      label: "Pending ResourceSpace Write",
+      label: opsView ? "Pending ResourceSpace Write" : "Pending Review Update",
       value: asset.pendingReviewWrite ? `${asset.pendingReviewWrite.requestedStatus} / ${asset.pendingReviewWrite.syncState}` : "None queued",
-      detail: "Pending writes are not final truth until synced and reviewed in ResourceSpace.",
+      detail: opsView ? "Pending writes are not final truth until synced and reviewed in ResourceSpace." : "Review updates are not final until the Media Team confirms them.",
       tone: asset.pendingReviewWrite ? "warn" : "info",
       icon: History
     }
@@ -375,7 +376,7 @@ export function AssetDetailPage({ id }: { id: string }) {
 
   const { asset, display, verdict, provenance, preview } = content;
   const passport = assetGovernancePassport(asset);
-  const requestHref = requestReviewMailto(asset);
+  const requestHref = requestReviewMailto(asset, role);
   const adminOps = role === "DAM Admin";
   const sourceGuidance = adminOps ? asset.sourceAccount || asset.sourceSystem || asset.sourcePlatform || "Source not exported" : opsView ? "Media library record" : "Media team";
   const referenceLabel = adminOps ? "ResourceSpace ID" : "Reference code";

@@ -30,7 +30,7 @@ export function mediaPreviewUnavailableReason(state: MediaPreviewState) {
     case "Unsupported file type":
       return "This media type does not have an inline preview yet.";
     case "Preview unavailable":
-      return "No ResourceSpace preview derivative is available.";
+      return "No approved preview is available.";
     default:
       return "";
   }

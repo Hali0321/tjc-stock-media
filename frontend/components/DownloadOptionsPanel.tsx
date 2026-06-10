@@ -9,8 +9,9 @@ import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
 import { downloadState } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
+import { requestAssetMailto, type RequestMailtoKind } from "@/lib/viewer-verdict";
 
-type RequestKind = "original" | "review" | "coworker";
+type RequestKind = RequestMailtoKind;
 
 export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
   const [requestKind, setRequestKind] = useState<RequestKind | null>(null);
@@ -22,15 +23,10 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const assetTitle = asset.title || asset.resourceSpaceId || asset.id;
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
-  const requestRecordLabel = adminOps ? "ResourceSpace ID" : "Reference code";
-  const requestAccessLabel = adminOps ? "Original/master access" : "Source-file access";
-  const requestStateLine = opsView
-    ? `Raw%20status:%20${encodeURIComponent(asset.status)}%0AReuse%20state:%20${encodeURIComponent(state.reuse.label)}`
-    : `Use%20state:%20${encodeURIComponent(state.reuse.label)}`;
   const requestLinks: Record<RequestKind, string> = {
-    original: `mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(assetTitle)}&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0ARequest:%20${encodeURIComponent(requestAccessLabel)}%0AReason:%20`,
-    review: `mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(assetTitle)}&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0A${requestStateLine}%0AReason:%20`,
-    coworker: `mailto:media@tjc.org?subject=TJC Stock Media asset question&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0AAsset:%20${encodeURIComponent(assetTitle)}%0AQuestion:%20`
+    original: requestAssetMailto(asset, role, "original"),
+    review: requestAssetMailto(asset, role, "review", state.reuse.label),
+    coworker: requestAssetMailto(asset, role, "coworker")
   };
   const options = [
     { label: "Web image", detail: "Approved web copy for websites and newsletters.", icon: ImageIcon, available: state.approvedCopy.allowed, kind: "download" as const },

@@ -1,5 +1,5 @@
 import { assetDisplayTitle } from "@/lib/presentation";
-import type { StockMediaAsset } from "@/lib/types";
+import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
 export {
   viewerVerdictForAsset
@@ -11,8 +11,49 @@ export type {
   ViewerVerdictTone
 } from "@/lib/portal-reuse-decision";
 
-export function requestReviewMailto(asset: StockMediaAsset) {
-  const title = assetDisplayTitle(asset);
-  const recordId = asset.resourceSpaceId || asset.id;
-  return `mailto:media@tjc.org?subject=${encodeURIComponent(`Request DAM review for ${title}`)}&body=${encodeURIComponent(`Reference code: ${recordId}\nAsset: ${title}\nReason: `)}`;
+export type RequestMailtoKind = "original" | "review" | "coworker";
+
+const unsafeRequestTextPattern = /ResourceSpace|Shared Drive|source[- ]path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|\.\.\/private|javascript:/i;
+
+function canExposeOpsReference(role: DemoRole) {
+  return role === "Reviewer" || role === "DAM Admin";
+}
+
+function safeRequestTitle(asset: StockMediaAsset) {
+  const title = assetDisplayTitle(asset).replace(/\s+/g, " ").trim();
+  if (!title || unsafeRequestTextPattern.test(title)) return "Media asset";
+  return title.slice(0, 120);
+}
+
+function safeRequestReference(asset: StockMediaAsset, role: DemoRole) {
+  const raw = String(canExposeOpsReference(role) ? asset.resourceSpaceId || asset.id : asset.id);
+  const cleaned = raw.replace(/[^\w:-]/g, "").slice(0, 80);
+  if (!cleaned || unsafeRequestTextPattern.test(cleaned)) return String(asset.id).replace(/[^\w:-]/g, "").slice(0, 80) || "media-record";
+  return cleaned;
+}
+
+function mailto(subject: string, body: string) {
+  return `mailto:media@tjc.org?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+export function requestReviewMailto(asset: StockMediaAsset, role: DemoRole = "Viewer") {
+  return requestAssetMailto(asset, role, "review");
+}
+
+export function requestAssetMailto(asset: StockMediaAsset, role: DemoRole, kind: RequestMailtoKind, stateLabel?: string) {
+  const title = safeRequestTitle(asset);
+  const recordId = safeRequestReference(asset, role);
+  const recordLabel = role === "DAM Admin" ? "ResourceSpace ID" : "Reference code";
+  const stateLine = stateLabel ? `\nUse state: ${stateLabel}` : "";
+
+  if (kind === "original") {
+    const accessLabel = role === "DAM Admin" ? "Original/master access" : "Source-file access";
+    return mailto(`Original access request for ${title}`, `${recordLabel}: ${recordId}\nRequest: ${accessLabel}\nReason: `);
+  }
+
+  if (kind === "coworker") {
+    return mailto("TJC Stock Media asset question", `${recordLabel}: ${recordId}\nAsset: ${title}\nQuestion: `);
+  }
+
+  return mailto(`Request DAM review for ${title}`, `${recordLabel}: ${recordId}\nAsset: ${title}${stateLine}\nReason: `);
 }

@@ -17,7 +17,7 @@ export function assetDate(asset: StockMediaAsset) {
 }
 
 export function displayTitle(asset?: StockMediaAsset) {
-  return asset?.title?.trim() || asset?.originalFilename || `ResourceSpace ${asset?.resourceSpaceId || asset?.id || "asset"}`;
+  return asset?.title?.trim() || asset?.originalFilename || `Media asset ${asset?.resourceSpaceId || asset?.id || ""}`.trim();
 }
 
 export function metadataQualityLabel(asset: StockMediaAsset) {
@@ -41,5 +41,5 @@ export function sourceNoun(source?: MediaSourceStatus | null) {
 }
 
 export function recordIdLabel(source?: MediaSourceStatus | null) {
-  return source?.adapter === "media-library" ? "Reference code" : "ResourceSpace ID";
+  return source && source.adapter !== "media-library" ? "ResourceSpace ID" : "Reference code";
 }
