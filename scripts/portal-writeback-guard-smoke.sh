@@ -189,6 +189,19 @@ fs.appendFileSync(path.join(auditDir, `${month}.jsonl`), `${JSON.stringify({
   summary: "../private audit summary",
   details: { "../private": "../private detail", unsafeNumber: Number.NaN }
 })}\n`);
+fs.appendFileSync(path.join(auditDir, `${month}.jsonl`), `${JSON.stringify({
+  id: `unsafe-phrase-${process.env.MARKER}`,
+  type: "saved_search_saved",
+  createdAt: now,
+  role: "Reviewer",
+  actor: "source path actor",
+  assetId: "master drive asset",
+  resourceSpaceId: "checksum resource",
+  packageId: "source path package",
+  status: "preview",
+  summary: "source path audit summary",
+  details: { "source path": "master drive checksum", plain: "checksum handoff" }
+})}\n`);
 NODE
 fi
 
@@ -209,9 +222,9 @@ if (!Number.isFinite(pendingCount) || pendingCount > 200) {
   console.error(`FAIL: pending write readiness count was not capped: ${JSON.stringify(item)}`);
   process.exit(1);
 }
-const text = JSON.stringify(data);
-if (/synced_as_admin|root_shell|Root/.test(text)) {
-  console.error(`FAIL: unsafe persisted audit/pending fields leaked into readiness: ${text.slice(0, 900)}`);
+const readinessText = JSON.stringify({ auditLog: data.auditLog, integrationReadiness: data.integrationReadiness });
+if (/synced_as_admin|root_shell|Root|source path|master drive/i.test(readinessText)) {
+  console.error(`FAIL: unsafe persisted audit/pending fields leaked into readiness: ${readinessText.slice(0, 900)}`);
   process.exit(1);
 }
 const recent = data.auditLog?.recent || [];
@@ -245,7 +258,7 @@ if (!smokeLines.length) {
   console.error("FAIL: no persisted audit lines found for writeback guard smoke marker");
   process.exit(1);
 }
-const unsafe = smokeLines.find((line) => /\.\.\/private|synced_as_admin|root_shell|Root/.test(line));
+const unsafe = smokeLines.find((line) => /\.\.\/private|synced_as_admin|root_shell|Root|source path|master drive|checksum/i.test(line));
 if (unsafe) {
   console.error(`FAIL: appendAuditEvent persisted unsafe audit material: ${unsafe.slice(0, 900)}`);
   process.exit(1);

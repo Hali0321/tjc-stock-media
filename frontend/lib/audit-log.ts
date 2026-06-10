@@ -64,13 +64,19 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function containsPrivateSourceText(value: string) {
+  return /source path|master drive|checksum/i.test(value);
+}
+
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  return text.includes("..") || /[\\/]/.test(text) ? "" : text;
+  return text.includes("..") || /[\\/]/.test(text) || containsPrivateSourceText(text) ? "" : text;
 }
 
 function safeId(value: unknown) {
-  return safeText(value, 120).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+  const text = safeText(value, 120);
+  if (containsPrivateSourceText(text)) return "";
+  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
 function safeIso(value: unknown) {
@@ -146,7 +152,7 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
     type: safeType(raw.type),
     createdAt,
     role: safeRole(raw.role),
-    actor: safeText(raw.actor, 160) || "local-beta:unknown",
+    actor: safeDisplayText(raw.actor, 160) || "local-beta:unknown",
     assetId: raw.assetId === undefined ? undefined : safeId(raw.assetId),
     resourceSpaceId: raw.resourceSpaceId === undefined ? undefined : safeId(raw.resourceSpaceId),
     packageId: raw.packageId === undefined ? undefined : safeId(raw.packageId),
