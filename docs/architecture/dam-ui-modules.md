@@ -82,6 +82,14 @@ Owns ministry kit configuration, ResourceSpace collection environment keys, coll
 
 Brand kits may contain editorial guidance in the portal, but downloadable assets remain ResourceSpace-backed records or explicit setup states.
 
+### `ReviewDecision`
+
+Owns review checklist normalization, required evidence rules, and local pending-review-write creation. Review routes validate transport and permissions, then call this module so pending-sync behavior stays honest and reusable when ResourceSpace writeback is configured later.
+
+### `DamReadinessIntegrations`
+
+Owns Admin readiness rows for ResourceSpace export/API, preview, writeback, pending review writes, audit log, SSO, Google Shared Drive, S3 delivery, usage analytics, Brand Kit mapping, and package publishing. `dam-readiness.ts` owns aggregate asset health and calls this module for integration custody state.
+
 ## Current Implementation Shape
 
 The first system pass keeps existing stable components in place and introduces `frontend/components/dam/*` as import boundaries. This lets route files depend on named DAM responsibilities while preserving behavior and reducing risk during continued polish.

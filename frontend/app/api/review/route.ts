@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById, getReviewQueue } from "@/lib/catalog";
 import { sourceEnvelope } from "@/lib/media-source/session";
-import { createPendingReviewWrite, latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
+import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
+import { missingReviewEvidence, normalizeReviewChecklist, queuePendingReviewDecision } from "@/lib/review-decision";
 import { isReviewActionBackend, reviewActions, reviewQueues, type ReviewActionBackend, type ReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
-import { buildReuseDecision } from "@/lib/reuse-policy";
 import type { ReviewEvidenceChecklist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -52,46 +52,6 @@ export async function GET(request: NextRequest) {
   });
 }
 
-function normalizeChecklist(value: unknown): ReviewEvidenceChecklist {
-  const raw = typeof value === "object" && value ? (value as Partial<Record<keyof ReviewEvidenceChecklist, unknown>>) : {};
-  return {
-    sourceConfirmed: raw.sourceConfirmed === true,
-    rightsConfirmed: raw.rightsConfirmed === true,
-    attributionConfirmed: raw.attributionConfirmed === true,
-    peopleVisibilityConfirmed: raw.peopleVisibilityConfirmed === true,
-    childrenYouthChecked: raw.childrenYouthChecked === true,
-    usageScopeSelected: raw.usageScopeSelected === true,
-    derivativeAvailable: raw.derivativeAvailable === true,
-    sensitiveContextChecked: raw.sensitiveContextChecked === true,
-    creditRequirementChecked: raw.creditRequirementChecked === true,
-    expirationRereviewSet: raw.expirationRereviewSet === true,
-    proofLinkAttached: raw.proofLinkAttached === true
-  };
-}
-
-function missingEvidenceFields(action: ReviewActionBackend, checklist: ReviewEvidenceChecklist, note: string) {
-  const required: Array<keyof ReviewEvidenceChecklist> = [
-    "sourceConfirmed",
-    "rightsConfirmed",
-    "peopleVisibilityConfirmed",
-    "childrenYouthChecked",
-    "usageScopeSelected"
-  ];
-  if (action === "Approve Public") {
-    required.push(
-      "derivativeAvailable",
-      "sensitiveContextChecked",
-      "creditRequirementChecked",
-      "attributionConfirmed",
-      "expirationRereviewSet",
-      "proofLinkAttached"
-    );
-  }
-  const missing = required.filter((field) => !checklist[field]).map((field) => String(field));
-  if (note.trim().length <= 10) missing.push("reviewNote");
-  return missing;
-}
-
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as {
     role?: string;
@@ -130,9 +90,9 @@ export async function POST(request: NextRequest) {
   }
 
   const action = reviewActions.find((item) => item.backend === body.action);
-  const checklist = normalizeChecklist(body.checklist);
+  const checklist = normalizeReviewChecklist(body.checklist);
   const note = typeof body.notes === "string" ? body.notes : "";
-  const missingEvidence = missingEvidenceFields(body.action, checklist, note);
+  const missingEvidence = missingReviewEvidence(body.action, checklist, note);
   if (missingEvidence.length) {
     appendAuditEvent({
       type: "review_evidence_incomplete",
@@ -146,15 +106,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Review evidence is incomplete.", missingEvidence, ...envelope }, { status: 400 });
   }
 
-  const reuse = buildReuseDecision(asset);
-  const pending = createPendingReviewWrite({
+  const pending = queuePendingReviewDecision({
     asset,
     requestedStatus: action?.targetStatus || asset.status,
-    reviewerRole: role === "DAM Admin" ? "DAM Admin" : "Reviewer",
+    role,
     reviewerName: body.reviewerName,
     note,
-    checklist,
-    blockers: reuse.blockers.map((item) => item.label)
+    checklist
   });
   appendAuditEvent({
     type: "review_pending_write_queued",
