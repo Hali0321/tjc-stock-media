@@ -192,6 +192,14 @@ if (Object.prototype.hasOwnProperty.call(data, "collection") || JSON.stringify(d
   process.exit(1);
 }
 ' "$BASE_URL/api/assets/search?role=Viewer&collection=../../admin"
+expect_json_status 400 unknown-sort-payload-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (Object.prototype.hasOwnProperty.call(data, "sort") || text.includes("../") || /source path|master drive|checksum/i.test(text)) {
+  console.error("FAIL: unknown sort response echoed rejected input");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&sort=../private-source-path"
 
 expect_code 400 bad-review-action \
   -X POST -H 'Content-Type: application/json' \

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeRole } from "@/lib/permissions";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
+import { catalogSortOptions } from "@/lib/catalog-language";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { normalizeTextField } from "@/lib/request-validation";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
@@ -71,6 +72,9 @@ export async function GET(request: NextRequest) {
   }
   if (collection && !isKnownCollectionId(collection)) {
     return NextResponse.json({ error: "Unknown collection." }, { status: 400 });
+  }
+  if (sort && !catalogSortOptions.includes(sort as (typeof catalogSortOptions)[number])) {
+    return NextResponse.json({ error: "Unknown sort option." }, { status: 400 });
   }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
   const usageAnalytics = usageAnalyticsDiagnostics();
