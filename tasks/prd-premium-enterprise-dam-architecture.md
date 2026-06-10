@@ -126,6 +126,19 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [ ] Build passes.
 - [ ] Browser QA and targeted package API/UI checks pass.
 
+### US-011: Standardize enterprise identity on mutation routes
+**Description:** As a DAM admin, I want upload, batch, and collection mutation previews to resolve role/actor through the same request identity seam as package, review, and admin routes so that trusted SSO headers can govern unsafe actions when enabled.
+
+**Acceptance Criteria:**
+- [ ] Upload intake uses `requestIdentity` instead of trusting only form role.
+- [ ] Batch action preview uses `requestIdentity` instead of trusting only body role.
+- [ ] Collection draft preview uses `requestIdentity` instead of trusting only body role.
+- [ ] Audit events include resolved actor identity.
+- [ ] Local beta role fallback still works when trusted SSO headers are disabled.
+- [ ] Typecheck passes.
+- [ ] Build passes.
+- [ ] Browser QA and targeted trusted-header route checks pass.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -139,6 +152,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-9: Analytics should distinguish real usage rows from current-export and sample/fallback panels.
 - FR-10: Brand kits must keep editorial guidance separate from ResourceSpace-backed downloadable media readiness.
 - FR-11: Package persistence must never store source binaries, copied assets, master paths, or final rights truth.
+- FR-12: Mutating or mutation-preview routes must resolve role through one identity seam so production SSO can override beta query/body role safely.
 
 ## Non-Goals
 

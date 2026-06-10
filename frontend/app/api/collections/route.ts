@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById } from "@/lib/catalog";
 import { assetIsPortalReady, assetNeedsStaleApprovalReview } from "@/lib/asset-governance";
-import { canSeeAsset, canUpload, normalizeRole } from "@/lib/permissions";
+import { canSeeAsset, canUpload } from "@/lib/permissions";
+import { requestIdentity } from "@/lib/request-identity";
 import { normalizeAssetIds, normalizeTextField } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,8 @@ export async function POST(request: NextRequest) {
     expiry?: string;
     owner?: string;
   };
-  const role = normalizeRole(body.role);
+  const identity = requestIdentity(request, body.role);
+  const role = identity.role;
   const assetIds = normalizeAssetIds(body.assetIds);
   const audience = allowedAudiences.has(body.audience || "") ? body.audience! : "Private draft";
   const title = normalizeTextField(body.title, "Untitled ministry collection", 100);
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
     appendAuditEvent({
       type: "collection_draft_denied",
       role,
+      actor: identity.id,
       status: "denied",
       summary: "Collection draft denied for role.",
       details: { assetCount: assetIds.length, audience }
@@ -64,6 +67,7 @@ export async function POST(request: NextRequest) {
   appendAuditEvent({
     type: "collection_draft_previewed",
     role,
+    actor: identity.id,
     status: blockedPublic ? "blocked" : "preview",
     summary: blockedPublic ? "Collection draft previewed with public gate blocked." : "Collection draft previewed.",
     details: {

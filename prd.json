@@ -162,8 +162,26 @@
         "Browser QA and targeted package API/UI checks pass."
       ],
       "priority": 10,
+      "passes": true,
+      "notes": "Implemented frontend/lib/package-store.ts, added POST/GET /api/packages with role gates and audit events, wired Package Builder Save draft to local-json persistence, and kept stored payloads to sanitized ResourceSpace refs plus server recomputed governance. Verified by frontend-check, API smoke, browser QA, targeted package API/UI checks, launch-readiness, and diff check."
+    },
+    {
+      "id": "US-011",
+      "title": "Standardize enterprise identity on mutation routes",
+      "description": "As a DAM admin, I want upload, batch, and collection mutation previews to resolve role/actor through the same request identity seam as package, review, and admin routes so that trusted SSO headers can govern unsafe actions when enabled.",
+      "acceptanceCriteria": [
+        "Upload intake uses requestIdentity instead of trusting only form role.",
+        "Batch action preview uses requestIdentity instead of trusting only body role.",
+        "Collection draft preview uses requestIdentity instead of trusting only body role.",
+        "Audit events include resolved actor identity.",
+        "Local beta role fallback still works when trusted SSO headers are disabled.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Browser QA and targeted trusted-header route checks pass."
+      ],
+      "priority": 11,
       "passes": false,
-      "notes": "In progress: implemented local JSON package store, API route, audit events, and Save draft UI. Awaiting full frontend-check, API smoke, browser QA, targeted package checks, launch-readiness, and diff check."
+      "notes": "In progress: converted upload, batch, and collection routes to requestIdentity with audit actor capture. Awaiting full frontend-check, API smoke, browser QA, targeted trusted-header checks, launch-readiness, and diff check."
     }
   ]
 }

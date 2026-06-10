@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById } from "@/lib/catalog";
-import { canReview, normalizeRole } from "@/lib/permissions";
+import { canReview } from "@/lib/permissions";
+import { requestIdentity } from "@/lib/request-identity";
 import { normalizeAssetIds } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -14,13 +15,15 @@ export async function POST(request: NextRequest) {
     action?: string;
     assetIds?: string[];
   };
-  const role = normalizeRole(body.role);
+  const identity = requestIdentity(request, body.role);
+  const role = identity.role;
   const assetIds = normalizeAssetIds(body.assetIds);
 
   if (!canReview(role)) {
     appendAuditEvent({
       type: "batch_action_denied",
       role,
+      actor: identity.id,
       status: "denied",
       summary: "Batch governance action denied for role.",
       details: { action: body.action || null, assetCount: assetIds.length }
@@ -46,6 +49,7 @@ export async function POST(request: NextRequest) {
   appendAuditEvent({
     type: "batch_action_previewed",
     role,
+    actor: identity.id,
     status: "preview",
     summary: "Batch governance action previewed; no production media-library write performed.",
     details: { action: body.action, assetCount: found.length }

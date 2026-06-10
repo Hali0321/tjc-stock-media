@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { canUpload, normalizeRole } from "@/lib/permissions";
+import { canUpload } from "@/lib/permissions";
+import { requestIdentity } from "@/lib/request-identity";
 import { normalizeTextField } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
@@ -9,11 +10,13 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
-  const role = normalizeRole(String(form.get("role") || "Viewer"));
+  const identity = requestIdentity(request, String(form.get("role") || "Viewer"));
+  const role = identity.role;
   if (!canUpload(role)) {
     appendAuditEvent({
       type: "upload_denied",
       role,
+      actor: identity.id,
       status: "denied",
       summary: "Upload intake denied for role.",
       details: { reason: "role-cannot-submit" }
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest) {
     appendAuditEvent({
       type: "upload_submitted",
       role,
+      actor: identity.id,
       status: "blocked",
       summary: "Large-media intake routed away from browser upload.",
       details: { eventName, fileCount: files.length, largeFileCount: largeFiles.length, sourceLink: sourceLink || null }
@@ -98,6 +102,7 @@ export async function POST(request: NextRequest) {
   appendAuditEvent({
     type: "upload_submitted",
     role,
+    actor: identity.id,
     status: "preview",
     summary: "Intake validated for DAM review; no media-library write performed.",
     details: { eventName, fileCount: files.length, sourceLink: sourceLink || null, reviewWarnings }
