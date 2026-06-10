@@ -307,38 +307,25 @@ body,
 
   .dam-storage-meter {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     margin-top: auto;
     padding: 18px 10px;
     border-top: 1px solid rgb(255 255 255 / .13);
   }
 
   .dam-storage-meter span {
-    display: block;
-    height: 7px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / .12);
-    overflow: hidden;
+    display: none;
   }
 
   .dam-storage-meter i {
-    display: block;
-    width: 49%;
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--tjc-teal-600), var(--tjc-teal-500));
+    display: none;
   }
 
-  .dam-storage-meter p,
-  .dam-storage-meter a {
+  .dam-storage-meter p {
     margin: 0;
-    color: #e5e7eb;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .dam-storage-meter a {
     color: #a6f4ff;
+    font-size: 14px;
+    font-weight: 900;
   }
 
   #main-content,

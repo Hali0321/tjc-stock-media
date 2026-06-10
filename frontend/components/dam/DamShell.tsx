@@ -192,11 +192,9 @@ export function DamShell({ children }: { children: ReactNode }) {
             <Link href="/"><Clock size={15} />Recent</Link>
             <Link href="/upload"><UploadCloud size={15} />My uploads</Link>
           </section>
-          <section className="dam-storage-meter" aria-label="Storage usage">
-            <h2>Storage</h2>
-            <span><i /></span>
-            <p>2.45 TB of 5 TB used</p>
-            <Link href="/admin">Manage storage</Link>
+          <section className="dam-storage-meter" aria-label="Storage used">
+            <h2>Storage used</h2>
+            <p>2.45 TB used</p>
           </section>
         </div>
       </aside>
