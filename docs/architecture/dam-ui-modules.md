@@ -96,6 +96,10 @@ Package drafts may hold ResourceSpace references and editorial package fields. T
 
 Owns review checklist normalization, required evidence rules, and local pending-review-write creation. Review routes validate transport and permissions, then call this module so pending-sync behavior stays honest and reusable when ResourceSpace writeback is configured later.
 
+### `ReviewWorkbenchModel`
+
+Owns reviewer-facing workbench tabs and decision actions, including missing-consent pending-sync handling. Review pages render these actions so read-only ResourceSpace export mode cannot accidentally imply final write success.
+
 ### `DamReadinessIntegrations`
 
 Owns Admin readiness rows for ResourceSpace export/API, preview, writeback, pending review writes, audit log, SSO, Google Shared Drive, S3 delivery, usage analytics, Brand Kit mapping, and package publishing. `dam-readiness.ts` owns aggregate asset health and calls this module for integration custody state.
