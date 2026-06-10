@@ -15,9 +15,12 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - **Master warehouse**: `TJC Stock Media Library` Google Shared Drive. It stores selected master originals by year/source album.
 - **Approved delivery copy**: curated output copy, shortcut, or derivative placed in Approved Public/Internal folders after review. It is not the only master record.
 - **DAM**: Digital Asset Management system. ResourceSpace is the DAM layer for tags, search, previews, rights review, and approved downloads.
+- **Media source session**: one request-time view of the active media source, including whether the portal is reading ResourceSpace live, ResourceSpace export, local fixture fallback, or role-safe media-library copy. It is the portal's way to keep source truth honest without exposing operational details to roles that should not see them.
 - **Source system**: where media originally came from, such as Google Photos, old Drive folders, IA DME folders, or local downloads.
 - **Source album**: original Google Photos album name. It is provenance and collection context, not the whole taxonomy.
 - **Collection**: ResourceSpace grouping used for source albums, run batches, and curated sets. Collections do not replace metadata/status fields.
+- **Saved view**: named portal search perspective for a recurring media job, such as website heroes, no-people assets, or children/youth review. It is a workflow shortcut, not a separate collection.
+- **Brand kit**: curated ministry guidance and downloadable ResourceSpace collection mapping for one campaign or identity use case. Editorial copy can live in the portal; downloadable media remains ResourceSpace-backed.
 - **Import batch**: a selected group of files imported into ResourceSpace for review.
 - **Rights reviewer**: person allowed to approve public/internal/restricted use.
 - **Quality status**: whether an asset is useful for stock media, such as `Hero Candidate`, `Useful`, `Context Only`, `Low Use`, or `Reject`.
@@ -26,6 +29,7 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - **Approved Public**: raw ResourceSpace status indicating ResourceSpace approval. It is not automatically portal-reusable unless portal reuse policy also passes.
 - **Approved Internal**: safe inside TJC, not public.
 - **Portal Ready**: computed portal state where source, rights/consent, people/minors, reviewer/date, usage scope, and derivative checks all pass.
+- **Portal reuse state**: computed user-facing answer to whether an asset can be reused now, previewed only, or blocked for source/rights/people/derivative reasons. It does not replace ResourceSpace approval fields.
 - **Batch Approved With Blockers**: raw ResourceSpace-approved asset that still lacks one or more portal reuse requirements. User-facing label: `Needs portal review`.
 - **Pending Review Write**: local queued review decision that has not yet been written to ResourceSpace; audit evidence and retry state, not source of truth.
 - **Needs Review**: default state for imported assets.

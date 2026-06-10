@@ -14,6 +14,19 @@ True Jesus Church Media Library UI
 
 ResourceSpace is the canonical source for asset records, metadata, review state, collections, previews, and permissions. Google Shared Drive remains master-original custody. Amazon S3 remains the intended approved derivative and preview delivery layer. The Media Library UI must consume backend API routes only.
 
+Backend routes expose a Media source session envelope so every portal surface reports source truth the same way:
+
+```json
+{
+  "source": "...role-safe source status...",
+  "sourceStatus": "...same status for older callers...",
+  "sourceKind": "resourcespace | fallback-fixtures | media-library",
+  "live": true
+}
+```
+
+Reviewer/Admin responses may show operational ResourceSpace/export details. Viewer/Contributor responses receive role-safe media-library copy where operational source truth would leak custody or setup details.
+
 ## What Works Now
 
 - Read-only ResourceSpace metadata export search through `/api/assets/search`.
@@ -103,6 +116,7 @@ Minimum required mapping keys:
 Brand Hub editorial content can exist in the portal. Downloadable assets must come from ResourceSpace collection/source mappings.
 
 Current route: `/api/brand-kits/easter-2024`
+Current registry: `frontend/lib/brand-kits.ts`
 
 If `BRAND_KIT_EASTER_2024_COLLECTION_ID` is missing, the UI shows setup state and disables downloads. If it is configured but no export records match collection/source membership, the UI reports that mismatch instead of inventing files.
 

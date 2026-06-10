@@ -4,9 +4,9 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { decideAccess } from "@/lib/access-decisions";
 import { getAssetRecordById } from "@/lib/catalog";
 import { findFilestoreDerivative } from "@/lib/media-source";
+import { roleSourceEnvelope } from "@/lib/media-source/session";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
-import { sourceForRole } from "@/lib/source-redaction";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
   const { asset, source } = await getAssetRecordById(id);
-  const safeSource = sourceForRole(role, source);
+  const envelope = roleSourceEnvelope(role, source);
 
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found", source: safeSource }, { status: 404 });
+    return NextResponse.json({ error: "Asset not found", ...envelope }, { status: 404 });
   }
   if (!canDownloadApprovedCopy(role, asset)) {
     appendAuditEvent({
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(
       {
         error: "Not approved for this role. Source-file access stays restricted.",
-        source: safeSource
+        ...envelope
       },
       { status: 403 }
     );
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const filePath = findFilestoreDerivative(id, "download");
   if (!filePath) {
-    return NextResponse.json({ error: "Approved derivative not available in local filestore.", source: safeSource }, { status: 404 });
+    return NextResponse.json({ error: "Approved derivative not available in local filestore.", ...envelope }, { status: 404 });
   }
 
   try {
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     });
   } catch {
-    return NextResponse.json({ error: "Approved derivative is indexed but unavailable.", source: safeSource }, { status: 404 });
+    return NextResponse.json({ error: "Approved derivative is indexed but unavailable.", ...envelope }, { status: 404 });
   }
 }
 
@@ -87,10 +87,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const { asset, source } = await getAssetRecordById(id);
-  const safeSource = sourceForRole(role, source);
+  const envelope = roleSourceEnvelope(role, source);
 
   if (!asset) {
-    return NextResponse.json({ allowed: false, reason: "Asset not found", source: safeSource }, { status: 404 });
+    return NextResponse.json({ allowed: false, reason: "Asset not found", ...envelope }, { status: 404 });
   }
 
   const access = decideAccess(role, "downloadApprovedCopy", asset);
@@ -117,8 +117,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         allowed: false,
         requiredAction: "accept-usage-terms",
         reason: "Accept the approved-copy usage terms before download.",
-        source: safeSource,
-        live: source.adapter !== "demo-fallback" && source.adapter !== "media-library"
+        ...envelope
       },
       { status: 403 }
     );
@@ -147,8 +146,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         reason: access.reason || "This asset is not approved for this role.",
         label: access.label || "Download blocked",
         reasonCodes: access.reasonCodes || [],
-        source: safeSource,
-        live: source.adapter !== "demo-fallback" && source.adapter !== "media-library"
+        ...envelope
       },
       { status: 403 }
     );
@@ -173,8 +171,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         allowed: false,
         requiredAction: "generate-approved-derivative",
         reason: "Approved derivative is not available yet. Source/master access remains restricted.",
-        source: safeSource,
-        live: source.adapter !== "demo-fallback" && source.adapter !== "media-library"
+        ...envelope
       },
       { status: 404 }
     );
@@ -200,8 +197,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     allowed: true,
     downloadUrl: `/api/download/${encodeURIComponent(asset.id)}?role=${encodeURIComponent(role)}&variant=${encodeURIComponent(body.variant || "download")}`,
     auditId: audit.id,
-    source: safeSource,
-    live: source.adapter !== "demo-fallback" && source.adapter !== "media-library",
+    ...envelope,
     message: "Approved copy is available through backend gate. Private originals and S3 paths are not exposed."
   });
 }

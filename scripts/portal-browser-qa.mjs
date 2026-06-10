@@ -420,8 +420,10 @@ browser = await launchBrowser();
   } else {
     await findSearchInput.fill("Bible");
     await findSearchInput.press("Enter");
+    await page.waitForURL(/q=Bible/, { timeout: 5000 }).catch(() => {});
     await page.waitForLoadState("networkidle", { timeout: 1500 }).catch(() => {});
-    if ((await findSearchInput.inputValue()) !== "Bible") failures.push("search interaction: search input did not retain query");
+    const submittedQuery = new URL(page.url()).searchParams.get("q");
+    if (submittedQuery !== "Bible") failures.push("search interaction: search input did not submit query");
   }
   for (const text of ["Asset Library", "Saved views", "Can I use this?", "Download"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`library ResourceSpace shell: missing ${text}`);

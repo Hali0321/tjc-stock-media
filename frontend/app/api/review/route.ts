@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById, getReviewQueue } from "@/lib/catalog";
+import { sourceEnvelope } from "@/lib/media-source/session";
 import { createPendingReviewWrite, latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
 import { isReviewActionBackend, reviewActions, reviewQueues, type ReviewActionBackend, type ReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 import { buildReuseDecision } from "@/lib/reuse-policy";
-import { sourceIsLive, sourceKind } from "@/lib/source-status";
 import type { ReviewEvidenceChecklist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -31,11 +31,10 @@ export async function GET(request: NextRequest) {
   }
   const queueId = normalizeQueue(request.nextUrl.searchParams.get("queue"));
   const queue = await getReviewQueue(role, queueId);
+  const envelope = sourceEnvelope(queue.source);
   return NextResponse.json({
     ...queue,
-    sourceStatus: queue.source,
-    sourceKind: sourceKind(queue.source),
-    live: sourceIsLive(queue.source),
+    ...envelope,
     pendingWrites: Object.fromEntries(
       queue.assets
         .map((asset) => {
@@ -125,8 +124,9 @@ export async function POST(request: NextRequest) {
   }
 
   const { asset, source } = await getAssetRecordById(assetId);
+  const envelope = sourceEnvelope(source);
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found.", source }, { status: 404 });
+    return NextResponse.json({ error: "Asset not found.", ...envelope }, { status: 404 });
   }
 
   const action = reviewActions.find((item) => item.backend === body.action);
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       summary: "Review decision blocked by missing evidence.",
       details: { action: body.action, missingEvidence }
     });
-    return NextResponse.json({ error: "Review evidence is incomplete.", missingEvidence, source }, { status: 400 });
+    return NextResponse.json({ error: "Review evidence is incomplete.", missingEvidence, ...envelope }, { status: 400 });
   }
 
   const reuse = buildReuseDecision(asset);

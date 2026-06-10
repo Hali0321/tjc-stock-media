@@ -58,6 +58,30 @@ Safety decisions remain in:
 
 UI modules render policy outputs and disabled-action explanations. They must not duplicate or weaken approval, download, review lock, RBAC, source access, or audit behavior.
 
+## Data Truth Modules
+
+### `MediaSourceSession`
+
+Owns request-time source truth for the DAM portal. It wraps the active media source adapter and produces one source envelope with `source`, `sourceStatus`, `sourceKind`, and `live`. Server routes use this seam instead of recalculating ResourceSpace/export/fallback status or role-safe media-library copy rules.
+
+Client-safe source truth helpers live separately from server-side source lookup so rendered pages can label source states without importing filesystem-backed adapters.
+
+### `CatalogLanguage`
+
+Owns saved views, collection definitions, search intent aliases, filter matching, and the catalog haystack. `catalog.ts` remains the orchestration module for search, pagination, counts, collection summaries, and review queues.
+
+Saved views are workflow shortcuts over ResourceSpace-backed records. Collections are ResourceSpace/source groupings or curated portal perspectives. Neither should copy or replace asset records.
+
+### `CatalogSummaries`
+
+Owns saved-view counts, collection cards, metadata health, zero-result insights, and operational insight rows. `catalog.ts` should assemble these summaries, not duplicate the definitions or scoring logic.
+
+### `BrandKitRegistry`
+
+Owns ministry kit configuration, ResourceSpace collection environment keys, collection matching, setup warnings, and role-safe asset payloads. Brand Hub routes use this module instead of embedding collection mapping inside transport code.
+
+Brand kits may contain editorial guidance in the portal, but downloadable assets remain ResourceSpace-backed records or explicit setup states.
+
 ## Current Implementation Shape
 
 The first system pass keeps existing stable components in place and introduces `frontend/components/dam/*` as import boundaries. This lets route files depend on named DAM responsibilities while preserving behavior and reducing risk during continued polish.

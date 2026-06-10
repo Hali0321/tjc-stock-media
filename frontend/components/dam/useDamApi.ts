@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { mediaSourceIsLive, mediaSourceKind, type MediaSourceKind } from "@/lib/media-source/truth";
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, SearchResult, StockMediaAsset } from "@/lib/types";
 
-type ApiSourceKind = "resourcespace" | "fallback-fixtures" | "media-library";
+type ApiSourceKind = MediaSourceKind;
 
 export type ApiEnvelope<T> = {
   data: T | null;
@@ -66,17 +67,6 @@ export type DownloadGateResponse = {
   live?: boolean;
 };
 
-function sourceKindFor(source?: MediaSourceStatus | null): ApiSourceKind {
-  if (!source) return "media-library";
-  if (source.adapter === "demo-fallback") return "fallback-fixtures";
-  if (source.adapter === "media-library") return "media-library";
-  return "resourcespace";
-}
-
-function isLiveSource(source?: MediaSourceStatus | null) {
-  return Boolean(source && source.adapter !== "demo-fallback" && source.adapter !== "media-library");
-}
-
 function useJsonApi<T>(url: string | null, role?: DemoRole): ApiEnvelope<T> {
   const [data, setData] = useState<T | null>(null);
   const [source, setSource] = useState<MediaSourceStatus | null>(null);
@@ -124,7 +114,7 @@ function useJsonApi<T>(url: string | null, role?: DemoRole): ApiEnvelope<T> {
     };
   }, [url, role, version]);
 
-  const sourceKind = useMemo(() => sourceKindFor(source), [source]);
+  const sourceKind = useMemo(() => mediaSourceKind(source), [source]);
 
   return {
     data,
@@ -132,7 +122,7 @@ function useJsonApi<T>(url: string | null, role?: DemoRole): ApiEnvelope<T> {
     error,
     source,
     sourceKind,
-    live: isLiveSource(source),
+    live: mediaSourceIsLive(source),
     refresh
   };
 }
