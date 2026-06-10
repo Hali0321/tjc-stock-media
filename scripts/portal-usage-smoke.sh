@@ -155,6 +155,34 @@ db.prepare(`
   "ignored",
   JSON.stringify({ "../private": "../private" })
 );
+db.prepare(`
+  INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).run(
+  new Date().toISOString(),
+  "search",
+  "Root",
+  "",
+  "master drive asset",
+  "checksum resource",
+  "/review/source path",
+  "source path handoff",
+  JSON.stringify({ "source path": "master drive checksum" })
+);
+db.prepare(`
+  INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).run(
+  new Date().toISOString(),
+  "asset_view",
+  "Root",
+  "",
+  "master-drive-checksum",
+  "review-resource",
+  "/library/master drive",
+  "ignored",
+  JSON.stringify({ "review note": "checksum ready" })
+);
 db.close();
 NODE
 
@@ -234,7 +262,7 @@ expect_json_status() {
 expect_json_status 200 usage-analytics-payload-sanitized '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data.usageAnalytics || {});
-if (/private|Root|javascript:/.test(text)) {
+if (/private|Root|javascript:|source path|master drive|checksum/i.test(text)) {
   console.error(`FAIL: unsafe usage analytics labels leaked to Reviewer payload: ${text.slice(0, 700)}`);
   process.exit(1);
 }

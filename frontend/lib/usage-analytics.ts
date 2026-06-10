@@ -69,14 +69,18 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function containsPrivateSourceText(value: string) {
+  return /source path|master drive|checksum/i.test(value);
+}
+
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  return text.includes("..") || /[\\/]/.test(text) ? "" : text;
+  return text.includes("..") || /[\\/]/.test(text) || containsPrivateSourceText(text) ? "" : text;
 }
 
 function safeRoute(value: unknown) {
   const text = safeText(value, 240);
-  if (!text.startsWith("/") || text.includes("..") || /[\\]/.test(text)) return "";
+  if (!text.startsWith("/") || text.includes("..") || /[\\]/.test(text) || containsPrivateSourceText(text)) return "";
   return text;
 }
 
