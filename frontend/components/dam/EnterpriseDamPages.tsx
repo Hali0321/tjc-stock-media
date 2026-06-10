@@ -36,9 +36,9 @@ import {
 import type { DamReadinessResult, DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { useDemoRole } from "@/components/RoleProvider";
 import { cn } from "@/lib/ui";
-import { useAdminReadiness, useAssetDetail, useAssetsSearch, useReviewQueue } from "@/components/dam/useDamApi";
+import { useAdminReadiness, useAssetDetail, useAssetsSearch, useBrandKit, useDownloadGate, useReviewQueue } from "@/components/dam/useDamApi";
 
-type UiStatus = "Approved" | "Needs Review" | "Restricted" | "Missing Consent" | "Expiring Soon" | "Active" | "Compliant" | "Operational" | "Read-only" | "Not configured" | "Degraded" | "Draft" | "Approved only";
+type UiStatus = "Approved" | "Needs Review" | "Restricted" | "Missing Consent" | "Expiring Soon" | "Active" | "Compliant" | "Operational" | "Read-only" | "Not configured" | "Degraded" | "Pending setup" | "Blocked" | "Draft" | "Approved only";
 
 function uiStatus(asset?: StockMediaAsset): UiStatus {
   if (!asset) return "Not configured";
@@ -99,6 +99,18 @@ function assetDate(asset: StockMediaAsset) {
   return asset.capturedDate || asset.eventDate || asset.reviewedDate || asset.importDate || "Not provided";
 }
 
+function displayTitle(asset?: StockMediaAsset) {
+  return asset?.title?.trim() || asset?.originalFilename || `ResourceSpace ${asset?.resourceSpaceId || asset?.id || "asset"}`;
+}
+
+function metadataQualityLabel(asset: StockMediaAsset) {
+  if (asset.status === "Approved Public") return "Approved public";
+  if (asset.status === "Approved Internal") return "Internal only";
+  if (!asset.rightsStatus || /unknown|needs review|review required/i.test(asset.rightsStatus)) return "Needs rights review";
+  if (!asset.tags?.length && !asset.tjcTerms?.length) return "Metadata incomplete";
+  return "Metadata reviewed";
+}
+
 function sourceLabel(source?: MediaSourceStatus | null) {
   if (!source) return "ResourceSpace disconnected";
   if (source.adapter === "resourcespace-api") return source.readOnly ? "Read-only ResourceSpace" : "Live ResourceSpace";
@@ -127,18 +139,20 @@ function ErrorCard({ message, source }: { message: string; source?: MediaSourceS
   return <section className="ed-card ed-empty-state"><AlertTriangle size={24} /><h2>{sourceNoun(source)} data unavailable</h2><p>{message}</p><SourcePill source={source} /></section>;
 }
 
-function AssetThumb({ asset, className }: { asset?: StockMediaAsset; className?: string }) {
+function AssetThumb({ asset, className, fit = "cover" }: { asset?: StockMediaAsset; className?: string; fit?: "cover" | "contain" }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [asset?.thumbnail]);
   if (!asset || failed || !asset.thumbnail) {
+    const state = !asset ? "Preview loading" : failed ? "Preview failed" : asset.mediaType === "audio" ? "Unsupported file type" : "Preview unavailable";
     return (
       <div className={cn("ed-doc-thumb", className)}>
         <strong>{asset ? assetType(asset) : "DAM"}</strong>
-        <span>Preview unavailable</span>
+        <span>{state}</span>
+        {asset ? <small>{recordIdLabel()} {asset.resourceSpaceId || asset.id}</small> : null}
       </div>
     );
   }
-  return <img className={cn("ed-thumb", className)} src={asset.thumbnail} alt={asset.thumbnailAlt || asset.title} onError={() => setFailed(true)} />;
+  return <img className={cn("ed-thumb", fit === "contain" && "is-contain", className)} src={asset.thumbnail} alt={asset.thumbnailAlt || displayTitle(asset)} onError={() => setFailed(true)} />;
 }
 
 function AssetCard({ asset, selected = false, onSelect }: { asset: StockMediaAsset; selected?: boolean; onSelect?: () => void }) {
@@ -150,9 +164,9 @@ function AssetCard({ asset, selected = false, onSelect }: { asset: StockMediaAss
         <span className="ed-check">{selected ? <Check size={13} /> : null}</span>
         <span className="ed-card-tools"><Star size={14} /><Download size={14} /><MoreHorizontal size={14} /></span>
       </button>
-      <strong>{asset.title}</strong>
-      <small>{assetDate(asset)} · {formatBytes(asset.fileSizeBytes)}</small>
-      <div className="ed-card-footer"><StatusBadge status={uiStatus(asset)} /><Link href={`/assets/${asset.id}`}>Open record</Link></div>
+      <strong title={displayTitle(asset)}>{displayTitle(asset)}</strong>
+      <small>{recordIdLabel()} {asset.resourceSpaceId || asset.id} · {assetDate(asset)} · {formatBytes(asset.fileSizeBytes)}</small>
+      <div className="ed-card-footer"><StatusBadge status={uiStatus(asset)} /><span className="ed-quality-chip">{metadataQualityLabel(asset)}</span><Link href={`/assets/${asset.id}`}>Open record</Link></div>
     </article>
   );
 }
@@ -221,8 +235,8 @@ function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAsset; sou
   return (
     <aside className="ed-inspector ed-panel">
       <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {asset.resourceSpaceId || asset.id}</strong><span>›</span><button type="button">×</button></div>
-      <AssetThumb asset={asset} className="ed-inspector-preview" />
-      <h2>{asset.title}</h2>
+      <AssetThumb asset={asset} className="ed-inspector-preview" fit="contain" />
+      <h2 title={displayTitle(asset)}>{displayTitle(asset)}</h2>
       <div className="ed-meta-line"><StatusBadge status={uiStatus(asset)} /><span>{assetDate(asset)}</span><span>{formatBytes(asset.fileSizeBytes)}</span></div>
       <SourcePill source={source} live={live} />
       <RightsVerdictCard asset={asset} source={source} />
@@ -254,10 +268,11 @@ function KpiCard({ label, value, delta, icon: Icon, danger = false }: { label: s
   );
 }
 
-function ChartCard({ title, large = false, children }: { title: string; large?: boolean; children?: ReactNode }) {
+function ChartCard({ title, large = false, sample = false, children }: { title: string; large?: boolean; sample?: boolean; children?: ReactNode }) {
   return (
     <section className={cn("ed-card ed-chart", large && "is-large")}>
       <header><h3>{title}</h3><button type="button">View all</button></header>
+      {sample ? <p className="ed-sample-label">Sample until portal usage logging is connected</p> : null}
       {children || <MiniLine />}
     </section>
   );
@@ -266,7 +281,9 @@ function ChartCard({ title, large = false, children }: { title: string; large?: 
 function CustodyMapPanel({ readiness }: { readiness?: DamReadinessResult | null }) {
   const integration = new Map((readiness?.integrationReadiness || []).map((item) => [item.id, item]));
   const statusFor = (id: string): UiStatus => {
-    const ready = integration.get(id)?.ready;
+    const item = integration.get(id);
+    if (item?.state) return item.state;
+    const ready = item?.ready;
     if (ready === true) return "Operational";
     if (id === "review-writes" && readiness?.source?.readOnly) return "Read-only";
     return ready === false ? "Not configured" : "Degraded";
@@ -341,7 +358,9 @@ export function EnterpriseLibraryPage() {
 export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const { role } = useDemoRole();
   const detail = useAssetDetail(id, role);
+  const downloadGate = useDownloadGate(id, role);
   const [tab, setTab] = useState("Metadata");
+  const [downloadMessage, setDownloadMessage] = useState("");
   const asset = detail.data?.asset;
   const related = detail.data?.related || [];
   const approved = asset?.reuseDecision?.downloadable || uiStatus(asset) === "Approved";
@@ -349,7 +368,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   if (detail.loading) return <div className="enterprise-page"><LoadingCard label="Loading media asset record..." /></div>;
   if (detail.error || !asset) return <div className="enterprise-page"><ErrorCard message={detail.error || "Asset not found."} source={detail.source} /></div>;
   const metadataRows = [
-    ["Title", asset.title],
+    ["Title", displayTitle(asset)],
     ["Description", asset.usageGuidance || "Not provided"],
     ["Creator", asset.sourceAccount || "Not provided"],
     ["Capture Date", asset.capturedDate || "Not provided"],
@@ -371,18 +390,18 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
       <div className="ed-detail-layout">
         <main>
           <header className="ed-detail-header">
-            <div><h1>{asset.title}</h1><span className="ed-file-soft">{assetType(asset)}</span></div>
+            <div><h1 title={displayTitle(asset)}>{displayTitle(asset)}</h1><span className="ed-file-soft">{assetType(asset)}</span></div>
             <div className="ed-chip-row">{[asset.collection, asset.status, asset.usageScope].filter(Boolean).slice(0, 4).map((chip) => <span key={chip}>{chip}</span>)}<SourcePill source={detail.source} live={detail.live} /></div>
             <div className="ed-detail-actions"><IconButton label="Favorite"><Star size={18} /></IconButton><IconButton label="Download"><Download size={18} /></IconButton><IconButton label="Versions"><FileText size={18} /></IconButton><IconButton label="Share"><Share2 size={18} /></IconButton><IconButton label="Fullscreen"><Grid3X3 size={18} /></IconButton></div>
           </header>
-          <div className="ed-hero-preview"><AssetThumb asset={asset} /><span>{asset.imageDimensions || "Preview"}</span><button><Search size={18} /></button></div>
+          <div className="ed-hero-preview"><AssetThumb asset={asset} fit="contain" /><span>{asset.imageDimensions || "Preview unavailable or not provided"}</span><button><Search size={18} /></button></div>
           <nav className="ed-tabs is-large" aria-label="Asset record tabs">{detailTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
           <section className="ed-card ed-metadata-card">
             {tab === "Metadata" ? <dl className="ed-metadata is-two">{metadataRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : null}
             {tab === "Keywords" ? <div className="ed-chip-row">{[...(asset.tags || []), ...(asset.tjcTerms || [])].length ? [...(asset.tags || []), ...(asset.tjcTerms || [])].map((keyword) => <span key={keyword}>{keyword}</span>) : <p>Not provided in the current data source.</p>}</div> : null}
             {tab === "AI Insights" ? <div className="ed-two-col"><p>AI suggestions are not live. Approved metadata remains review truth.</p><p>Human review controls usage, people visibility, rights, and reuse scope.</p></div> : null}
             {tab === "Comments" ? <div className="ed-comment-stack"><p className="ed-comment"><strong>Review note</strong> {asset.rightsNotes || "No reviewer note exported."}</p><input className="ed-input" aria-label="Add asset comment" placeholder="Add a local follow-up note..." /></div> : null}
-            {tab === "Activity" || tab === "Usage History" ? <div className="ed-table-mini">{[asset.reviewedDate ? `Reviewed ${asset.reviewedDate} by ${asset.reviewer || "review team"}` : "Review activity not provided", asset.pendingReviewWrite ? "Pending sync to ResourceSpace" : "No pending write"].map((item) => <p key={item}>{item}</p>)}</div> : null}
+            {tab === "Activity" || tab === "Usage History" ? <div className="ed-table-mini">{[asset.reviewedDate ? `Reviewed ${asset.reviewedDate} by ${asset.reviewer || "review team"}` : "Review activity not provided", asset.pendingReviewWrite ? "Pending sync to ResourceSpace" : "No pending write", downloadMessage || "No download gate action this session"].map((item) => <p key={item}>{item}</p>)}</div> : null}
           </section>
           <section className="ed-card"><header className="ed-card-head"><h3>Related Media</h3><span>{related.length} results</span></header><div className="ed-related-strip">{related.length ? related.slice(0, 5).map((item) => <AssetThumb asset={item} key={item.id} />) : <p>No related media records found.</p>}</div></section>
         </main>
@@ -395,7 +414,11 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
       </div>
       <div className={cn("ed-sticky-action-bar", !approved && "is-blocked")}>
         <div>{approved ? <ShieldCheck size={28} /> : <Lock size={28} />}<span><strong>{approved ? "Approved for use" : "Review required before use"}</strong><small>{approved ? "Download still goes through backend gate." : "Approved copy is blocked until evidence clears."}</small></span></div>
-        {approved ? <ActionButton tone="primary" icon={Download}>Download approved copy</ActionButton> : <ActionButton icon={FileText}>Request DAM review</ActionButton>}
+        {approved ? <ActionButton tone="primary" icon={Download} onClick={async () => {
+          const result = await downloadGate.requestDownload({ termsAccepted: true, usageChannel: "portal", reason: `Asset detail approved-copy request for ${displayTitle(asset)}` });
+          setDownloadMessage(result.allowed ? `Download gate allowed. Audit ${result.auditId || "recorded"}.` : `Download blocked: ${result.reason || result.requiredAction || "Not allowed"}.`);
+          if (result.allowed && result.downloadUrl) window.location.href = result.downloadUrl;
+        }}>Download approved copy</ActionButton> : <ActionButton icon={FileText}>Request DAM review</ActionButton>}
         <ActionButton icon={PackageCheck}>Add to package</ActionButton>
         <ActionButton icon={Share2}>Create share link</ActionButton>
         <ActionButton>More actions <ChevronDown size={14} /></ActionButton>
@@ -409,7 +432,7 @@ export function EnterpriseReviewPage() {
   const review = useReviewQueue(role);
   const queue = review.data?.assets || [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [statusById, setStatusById] = useState<Record<string, UiStatus>>({});
+  const [pendingDecisionById, setPendingDecisionById] = useState<Record<string, { status: UiStatus; message: string; action: string }>>({});
   const [comment, setComment] = useState("");
   const [decisionMessage, setDecisionMessage] = useState("");
   useEffect(() => {
@@ -420,14 +443,16 @@ export function EnterpriseReviewPage() {
   if (review.loading) return <div className="enterprise-page"><LoadingCard label="Loading ResourceSpace review queue..." /></div>;
   if (review.error) return <div className="enterprise-page"><ErrorCard message={review.error} source={review.source} /></div>;
   const selectedAsset = queue.find((asset) => asset.id === selectedId) || queue[0];
-  const selectedStatus = statusById[selectedAsset?.id || ""] || uiStatus(selectedAsset);
+  const selectedStatus = uiStatus(selectedAsset);
+  const selectedPending = pendingDecisionById[selectedAsset?.id || ""];
   const decide = async (nextStatus: UiStatus, action: "Approve Public" | "Request More Info" | "Do Not Use") => {
     if (!selectedAsset) return;
-    setStatusById((current) => ({ ...current, [selectedAsset.id]: nextStatus }));
     const checklist = { sourceConfirmed: true, rightsConfirmed: true, attributionConfirmed: true, peopleVisibilityConfirmed: true, childrenYouthChecked: true, usageScopeSelected: true, derivativeAvailable: true, sensitiveContextChecked: true, creditRequirementChecked: true, expirationRereviewSet: true, proofLinkAttached: true };
-    const response = await fetch("/api/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role, id: selectedAsset.id, action, notes: comment || `Beta decision for ${selectedAsset.title}. Pending ResourceSpace sync required.`, checklist, reviewerName: "Alex Kim" }) });
+    const response = await fetch("/api/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role, id: selectedAsset.id, action, notes: comment || `Beta decision for ${displayTitle(selectedAsset)}. Pending ResourceSpace sync required.`, checklist, reviewerName: "Alex Kim" }) });
     const payload = await response.json().catch(() => ({}));
-    setDecisionMessage(payload.message || payload.error || "Decision saved locally.");
+    const message = payload.message || payload.error || "ResourceSpace writeback is not configured. This decision is saved as a portal pending-sync event.";
+    setPendingDecisionById((current) => ({ ...current, [selectedAsset.id]: { status: nextStatus, message, action } }));
+    setDecisionMessage(message);
   };
   return (
     <div className="enterprise-page enterprise-review">
@@ -437,23 +462,23 @@ export function EnterpriseReviewPage() {
           <SourcePill source={review.source} live={review.live} />
           <nav className="ed-tabs wrap">{(review.data?.queues || []).slice(0, 6).map((tab, i) => <span className={i === 0 ? "is-active" : ""} key={tab.id}>{tab.label} {tab.count}</span>)}</nav>
           <button className="ed-sort" type="button">Sort by: Oldest First <ChevronDown size={14} /></button>
-          {queue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong>{asset.title}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={statusById[asset.id] || uiStatus(asset)} /></span></button>)}
+          {queue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={uiStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
         </aside>
         {selectedAsset ? (
           <>
             <main className="ed-review-canvas">
               <div className="ed-breadcrumb">Review Queue <span>›</span> ResourceSpace {selectedAsset.resourceSpaceId || selectedAsset.id}</div>
-              <header className="ed-detail-header"><div><h1>{selectedAsset.title}</h1><span className="ed-file-soft">{assetType(selectedAsset)}</span></div><div className="ed-chip-row">{[selectedAsset.collection, selectedAsset.usageScope].filter(Boolean).map((chip) => <span key={chip}>{chip}</span>)}<StatusBadge status={selectedStatus} /></div><div className="ed-detail-actions"><IconButton label="Favorite"><Star size={18} /></IconButton><IconButton label="Download"><Download size={18} /></IconButton><IconButton label="Fullscreen"><Grid3X3 size={18} /></IconButton></div></header>
-              <div className="ed-hero-preview is-review"><AssetThumb asset={selectedAsset} /><span>{selectedAsset.imageDimensions || "Preview"}</span><button>100%</button></div>
+              <header className="ed-detail-header"><div><h1 title={displayTitle(selectedAsset)}>{displayTitle(selectedAsset)}</h1><span className="ed-file-soft">{assetType(selectedAsset)}</span></div><div className="ed-chip-row">{[selectedAsset.collection, selectedAsset.usageScope].filter(Boolean).map((chip) => <span key={chip}>{chip}</span>)}<StatusBadge status={selectedStatus} />{selectedPending ? <StatusBadge status="Read-only" /> : null}</div><div className="ed-detail-actions"><IconButton label="Favorite"><Star size={18} /></IconButton><IconButton label="Download"><Download size={18} /></IconButton><IconButton label="Fullscreen"><Grid3X3 size={18} /></IconButton></div></header>
+              <div className="ed-hero-preview is-review"><AssetThumb asset={selectedAsset} fit="contain" /><span>{selectedAsset.imageDimensions || "Preview unavailable or not provided"}</span><button>100%</button></div>
               <nav className="ed-tabs is-large"><span className="is-active">Details</span><span>Metadata</span><span>Rights & Checks</span><span>Comments</span><span>Activity</span><span>History</span></nav>
-              <section className="ed-card ed-metadata-card"><dl className="ed-metadata is-two">{[["Title", selectedAsset.title], ["Review summary", selectedAsset.reuseDecision?.summary || "Needs reviewer decision."], ["Source", selectedAsset.sourceSystem || "Not provided"], ["Capture Date", selectedAsset.capturedDate || "Not provided"], ["Collection", selectedAsset.collection], ["Asset ID", selectedAsset.resourceSpaceId || selectedAsset.id], ["File Type", assetType(selectedAsset)], ["Dimensions", selectedAsset.imageDimensions || "Not provided"], ["File Size", formatBytes(selectedAsset.fileSizeBytes)], ["Uploaded By", selectedAsset.sourceAccount || "Not provided"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section>
-              <div className="ed-review-cards"><section className="ed-card"><h3>Metadata Completeness</h3><div className="ed-score-ring">{selectedAsset.tags?.length || selectedAsset.tjcTerms?.length ? "70%" : "35%"}</div><p>{selectedAsset.tags?.length ? "Tags exported from ResourceSpace." : "Tags not provided."}</p></section><section className="ed-card"><h3>Rights & Model Checks</h3>{["Source confirmed", selectedAsset.rightsStatus || "Rights not provided", selectedAsset.consentStatus || "Consent not provided", selectedAsset.peopleRisk || "People/minors unknown"].map((row) => <p className="ed-checkline" key={row}><CheckCircle2 size={16} />{row}</p>)}</section><section className="ed-card"><h3>Review Policy</h3><p>ResourceSpace remains final approval truth.</p><p>{selectedAsset.pendingReviewWrite ? "Pending sync to ResourceSpace." : "No pending sync."}</p></section></div>
+              <section className="ed-card ed-metadata-card"><dl className="ed-metadata is-two">{[["Title", displayTitle(selectedAsset)], ["Review summary", selectedAsset.reuseDecision?.summary || "Needs reviewer decision."], ["Pending sync", selectedPending ? selectedPending.action : "None"], ["Source", selectedAsset.sourceSystem || "Not provided"], ["Capture Date", selectedAsset.capturedDate || "Not provided"], ["Collection", selectedAsset.collection], ["Asset ID", selectedAsset.resourceSpaceId || selectedAsset.id], ["File Type", assetType(selectedAsset)], ["Dimensions", selectedAsset.imageDimensions || "Not provided"], ["File Size", formatBytes(selectedAsset.fileSizeBytes)], ["Uploaded By", selectedAsset.sourceAccount || "Not provided"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section>
+              <div className="ed-review-cards"><section className="ed-card"><h3>Metadata Completeness</h3><div className="ed-score-ring">{selectedAsset.tags?.length || selectedAsset.tjcTerms?.length ? "70%" : "35%"}</div><p>{selectedAsset.tags?.length ? "Tags exported from ResourceSpace." : "Tags not provided."}</p></section><section className="ed-card"><h3>Rights & Model Checks</h3>{["Source confirmed", selectedAsset.rightsStatus || "Rights not provided", selectedAsset.consentStatus || "Consent not provided", selectedAsset.peopleRisk || "People/minors unknown"].map((row) => <p className="ed-checkline" key={row}><CheckCircle2 size={16} />{row}</p>)}</section><section className="ed-card"><h3>Review Policy</h3><p>ResourceSpace remains final approval truth.</p><p>{selectedPending ? "Pending sync to ResourceSpace." : "No pending sync."}</p>{selectedPending ? <p className="ed-inline-success">{selectedPending.message}</p> : null}</section></div>
             </main>
             <aside className="ed-review-rail">
-              <section className="ed-card"><h3>Review Evidence</h3><dl className="ed-metadata">{[["ResourceSpace ID", selectedAsset.resourceSpaceId || selectedAsset.id], ["Assigned to", "Reviewer queue"], ["Policy", selectedAsset.downloadPolicy], ["Source", selectedAsset.sourceSystem || "Not provided"], ["Current decision", selectedStatus]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl><ActionButton icon={FileText}>View Submission Package</ActionButton></section>
+              <section className="ed-card"><h3>Review Evidence</h3><dl className="ed-metadata">{[["ResourceSpace ID", selectedAsset.resourceSpaceId || selectedAsset.id], ["Assigned to", "Reviewer queue"], ["Policy", selectedAsset.downloadPolicy], ["Source", selectedAsset.sourceSystem || "Not provided"], ["Current ResourceSpace status", selectedStatus], ["Portal pending decision", selectedPending ? selectedPending.status : "None"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl><ActionButton icon={FileText}>View Submission Package</ActionButton></section>
               <section className="ed-card"><header className="ed-card-head"><h3>Comments</h3><button type="button" onClick={() => setComment("")}>Clear</button></header><p className="ed-comment"><strong>ResourceSpace note</strong> {selectedAsset.rightsNotes || "No exported note."}</p>{decisionMessage ? <p className="ed-inline-success">{decisionMessage}</p> : null}<input className="ed-input" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add a review note..." aria-label="Add review comment" /></section>
               <section className="ed-card"><h3>Assignment</h3><p>Loaded from ResourceSpace review queue. Final write is pending until adapter sync is verified.</p><a>Reassign</a></section>
-              <section className="ed-card ed-decision-card"><h3>Review Decision</h3><button className={cn("is-approve", selectedStatus === "Approved" && "is-selected")} onClick={() => decide("Approved", "Approve Public")}><CheckCircle2 />Approve<span>Queues a pending ResourceSpace write.</span></button><button className={cn(selectedStatus === "Needs Review" && "is-selected")} onClick={() => decide("Needs Review", "Request More Info")}><FileText />Request Changes<span>Send back to uploader for updates.</span></button><button className={cn("is-restrict", selectedStatus === "Restricted" && "is-selected")} onClick={() => decide("Restricted", "Do Not Use")}><AlertTriangle />Restrict<span>Limit or block usage of this asset.</span></button><button>More Actions <ChevronDown size={14} /></button></section>
+              <section className="ed-card ed-decision-card"><h3>Review Decision</h3><p className="ed-setup-note">ResourceSpace writeback is not configured. Decisions save as portal pending-sync events.</p><button className={cn("is-approve", selectedPending?.status === "Approved" && "is-selected")} onClick={() => decide("Approved", "Approve Public")}><CheckCircle2 />Approve<span>Queues a pending ResourceSpace write.</span></button><button className={cn(selectedPending?.status === "Needs Review" && "is-selected")} onClick={() => decide("Needs Review", "Request More Info")}><FileText />Request Changes<span>Send back to uploader for updates.</span></button><button className={cn("is-restrict", selectedPending?.status === "Restricted" && "is-selected")} onClick={() => decide("Restricted", "Do Not Use")}><AlertTriangle />Restrict<span>Limit or block usage of this asset.</span></button><button>More Actions <ChevronDown size={14} /></button></section>
             </aside>
           </>
         ) : <main><ErrorCard message="No reviewable ResourceSpace records found." source={review.source} /></main>}
@@ -464,27 +489,31 @@ export function EnterpriseReviewPage() {
 
 export function EnterpriseBrandHubPage() {
   const { role } = useDemoRole();
-  const search = useAssetsSearch({ role, query: "easter logo social template", limit: 8 });
+  const brandKit = useBrandKit("easter-2024", role);
   const [section, setSection] = useState("How to use these assets");
   const [invite, setInvite] = useState("");
   const [sentInvite, setSentInvite] = useState("");
   const navItems = ["How to use these assets", "Key messages", "Logo usage", "Color & typography", "Photography style", "Example applications", "Downloads", "Allowed channels", "FAQs"];
-  const connected = Boolean(process.env.NEXT_PUBLIC_BRAND_HUB_COLLECTION_ID);
-  const noun = sourceNoun(search.source);
-  const recordLabel = recordIdLabel(search.source);
+  const kit = brandKit.data?.kit;
+  const kitAssets = brandKit.data?.assets || [];
+  const connected = Boolean(kit?.configured);
+  const noun = sourceNoun(brandKit.source);
+  const recordLabel = recordIdLabel(brandKit.source);
   return (
     <div className="enterprise-page enterprise-brand">
       <div className="ed-brand-top"><div className="ed-breadcrumb">Brand Hub <span>›</span> Ministry Kits <span>›</span> Easter at TJC 2024</div><div><ActionButton icon={Star}>Save</ActionButton><ActionButton icon={Share2}>Share Kit</ActionButton><ActionButton tone="dark" icon={Download} disabled={!connected}>Download Kit</ActionButton><IconButton label="More"><MoreHorizontal size={16} /></IconButton></div></div>
       <div className="ed-brand-layout">
         <aside className="ed-panel ed-brand-nav"><strong>Kit Overview</strong>{navItems.map((item) => <button className={section === item ? "is-active" : ""} type="button" key={item} onClick={() => setSection(item)}>{item}</button>)}<div className="ed-help-card">Need help?<br /><a>Contact Brand Steward ↗</a></div></aside>
         <main>
-          <section className="ed-brand-hero"><div><span>MINISTRY KIT</span><h1>Easter at TJC 2024 <em>{connected ? "Connected" : "Setup needed"}</em></h1><p>Editorial guidance can be curated here, but downloadable media must resolve to {noun} records or collections.</p><dl><div><dt>Owner</dt><dd>Brand Team</dd></div><div><dt>Data source</dt><dd>{sourceLabel(search.source)}</dd></div><div><dt>Next step</dt><dd>{connected ? "Review assets" : "Connect collection"}</dd></div></dl></div></section>
-          {!connected ? <section className="ed-card ed-empty-state"><Database size={24} /><h2>Connect this kit to a {noun} collection</h2><p>Set a Brand Hub collection mapping before showing downloadable kit files. Fake ZIP downloads are disabled.</p></section> : null}
+          <section className="ed-brand-hero"><div><span>MINISTRY KIT</span><h1>{kit?.title || "Easter at TJC 2024"} <em>{connected ? "Connected" : "Setup needed"}</em></h1><p>Editorial guidance can be curated here, but downloadable media must resolve to {noun} records or collections.</p><dl><div><dt>Owner</dt><dd>{kit?.owner || "Brand Team"}</dd></div><div><dt>Data source</dt><dd>{sourceLabel(brandKit.source)}</dd></div><div><dt>Next step</dt><dd>{connected ? "Review mapped assets" : "Connect collection"}</dd></div></dl></div></section>
+          {brandKit.loading ? <LoadingCard label="Loading Brand Kit mapping..." /> : null}
+          {!brandKit.loading && !connected ? <section className="ed-card ed-empty-state"><Database size={24} /><h2>Connect this kit to a {noun} collection</h2><p>Set <strong>{kit?.collectionEnvKey || "BRAND_KIT_EASTER_2024_COLLECTION_ID"}</strong> before showing downloadable kit files. Fake ZIP downloads are disabled.</p><ActionButton>Configure ResourceSpace collection</ActionButton></section> : null}
+          {(brandKit.data?.warnings || []).length ? <section className="ed-card ed-setup-note"><strong>Setup warnings</strong>{brandKit.data?.warnings.map((warning) => <p key={warning}>{warning}</p>)}</section> : null}
           <section className="ed-card"><h3>Our brand principles</h3><div className="ed-principle-grid">{[["Worship God", "Keep communication reverent, accurate, and centered on faith."], ["Follow Christ", "Use approved words and visuals with humility and clarity."], ["Love People", "Protect consent, privacy, and dignity in every media choice."], ["Bring Hope", "Choose images and messages that feel welcoming and truthful."]].map(([a, b]) => <article key={a}><CheckCircle2 size={20} /><strong>{a}</strong><p>{b}</p></article>)}</div></section>
           <section className="ed-card"><header className="ed-card-head"><h3>Logo usage</h3><a>View mapped logo assets →</a></header><div className="ed-logo-grid">{["Primary logo", "Reverse logo", "On photo", "Don't alter"].map((item, i) => <article key={item} className={i === 3 ? "is-wrong" : ""}><div><img src={i === 1 ? "/brand/tjc-logo-english-white.png" : "/brand/tjc-logo-english-color.png"} alt="True Jesus Church logo" /></div><strong>{item}</strong><small>{i === 0 ? "Preferred" : i === 3 ? "No effects or distortions" : "Ensure clear contrast"}</small></article>)}</div></section>
-          <div className="ed-two-col"><section className="ed-card"><h3>Key messages</h3>{["Easter changes everything.", "Everyone is welcome.", "Hope is here.", "Celebrate the resurrection."].map((item) => <p className="ed-checkline" key={item}><CheckCircle2 size={16} />{item}</p>)}</section><section className="ed-card"><header className="ed-card-head"><h3>{noun} kit assets</h3><SourcePill source={search.source} live={search.live} /></header><div className="ed-photo-row">{(search.data?.assets || []).slice(0, 4).map((asset) => <AssetThumb asset={asset} key={asset.id} />)}</div><p>{search.data?.assets.length ? `Assets are loaded through backend ${noun} search.` : "No mapped collection assets yet."}</p></section></div>
+          <div className="ed-two-col"><section className="ed-card"><h3>Key messages</h3>{["Easter changes everything.", "Everyone is welcome.", "Hope is here.", "Celebrate the resurrection."].map((item) => <p className="ed-checkline" key={item}><CheckCircle2 size={16} />{item}</p>)}</section><section className="ed-card"><header className="ed-card-head"><h3>{noun} kit assets</h3><SourcePill source={brandKit.source} live={brandKit.live} /></header><div className="ed-photo-row">{kitAssets.slice(0, 4).map((asset) => <AssetThumb asset={asset} key={asset.id} />)}</div><p>{kitAssets.length ? `Assets matched configured ResourceSpace collection/source membership.` : "No mapped collection assets yet."}</p></section></div>
         </main>
-        <aside className="ed-brand-rail"><section className="ed-card"><h3>Share this kit</h3><p>Invite others to view or use Easter at TJC 2024.</p><input className="ed-input" value={invite} onChange={(event) => setInvite(event.target.value)} placeholder="Enter email address" aria-label="Invite email address" /><ActionButton tone="primary" disabled={!invite.trim()} onClick={() => { setSentInvite(invite); setInvite(""); }}>Send Invite</ActionButton>{sentInvite ? <p className="ed-inline-success">Invite prepared for {sentInvite}</p> : null}</section><section className="ed-card"><h3>Kit details</h3><dl className="ed-metadata">{[["Current section", section], ["Collection", connected ? process.env.NEXT_PUBLIC_BRAND_HUB_COLLECTION_ID || "Configured" : "Not connected"], ["Downloads", connected ? `${search.data?.assets.length || 0} ${noun} assets` : "Disabled"], ["Owner", "Brand Team"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section><section className="ed-card"><header className="ed-card-head"><h3>Quick downloads</h3></header>{connected ? (search.data?.assets || []).slice(0, 5).map((asset) => <p className="ed-file-row" key={asset.id}><FileText size={17} />{asset.title}<small>{recordLabel} {asset.resourceSpaceId || asset.id}</small></p>) : <p>Connect this kit to a {noun} collection.</p>}</section></aside>
+        <aside className="ed-brand-rail"><section className="ed-card"><h3>Share this kit</h3><p>Invite others to view or use Easter at TJC 2024.</p><input className="ed-input" value={invite} onChange={(event) => setInvite(event.target.value)} placeholder="Enter email address" aria-label="Invite email address" /><ActionButton tone="primary" disabled={!invite.trim()} onClick={() => { setSentInvite(invite); setInvite(""); }}>Send Invite</ActionButton>{sentInvite ? <p className="ed-inline-success">Invite prepared for {sentInvite}</p> : null}</section><section className="ed-card"><h3>Kit details</h3><dl className="ed-metadata">{[["Current section", section], ["Collection", connected ? String(kit?.resourceSpaceCollectionId || "Configured") : "Not connected"], ["Config key", kit?.collectionEnvKey || "BRAND_KIT_EASTER_2024_COLLECTION_ID"], ["Downloads", connected ? `${kitAssets.length} ${noun} assets` : "Disabled"], ["Owner", kit?.owner || "Brand Team"]].map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section><section className="ed-card"><header className="ed-card-head"><h3>Quick downloads</h3></header>{connected && kitAssets.length ? kitAssets.slice(0, 5).map((asset) => <p className="ed-file-row" key={asset.id}><FileText size={17} />{displayTitle(asset)}<small>{recordLabel} {asset.resourceSpaceId || asset.id}</small></p>) : <p>Connect this kit to a {noun} collection.</p>}</section></aside>
       </div>
     </div>
   );
@@ -500,7 +529,7 @@ export function EnterpriseInsightsPage() {
       <section className="ed-approved-banner"><Database size={22} /><div><strong>{sourceLabel(insights.source)}</strong><span>{insights.source?.detail || "ResourceSpace not connected."}</span></div><span>Sample analytics until usage logging is connected</span></section>
       {insights.loading ? <LoadingCard /> : insights.error ? <ErrorCard message={insights.error} source={insights.source} /> : <>
         <div className="ed-kpi-grid"><KpiCard label="ResourceSpace Records" value={(counts?.rawTotal || 0).toLocaleString()} delta="from DAM source" icon={Database} /><KpiCard label="Visible to Role" value={(counts?.visibleToRole || 0).toLocaleString()} delta="permission-filtered" icon={Users} /><KpiCard label="Approved Public" value={(counts?.approvedRaw || 0).toLocaleString()} delta="raw approval" icon={Eye} /><KpiCard label="Needs Review" value={(counts?.needsReview || 0).toLocaleString()} delta="review queue" icon={Box} /><KpiCard label="Portal Ready" value={(counts?.portalReady || 0).toLocaleString()} delta="policy cleared" icon={PackageCheck} /><KpiCard label="Blocked / Risk" value={(counts?.rightsReview || 0).toLocaleString()} delta="rights review" icon={Shield} danger /></div>
-        <div className="ed-insights-grid"><ChartCard title="Review Load" large><div className="ed-big-line"><MiniLine /><MiniLine tone="orange" /></div></ChartCard><ChartCard title="Usage Trend (sample)" large><div className="ed-big-line"><MiniLine /><MiniLine tone="green" /></div></ChartCard><ChartCard title="Top Assets">{(insights.data?.assets || []).map((asset, i) => <p className="ed-top-asset" key={asset.id}><span>{i + 1}</span><AssetThumb asset={asset} /><strong>{asset.title}</strong><small>{asset.resourceSpaceId || asset.id}</small></p>)}</ChartCard><ChartCard title="Top Searches"><div className="ed-table-mini">{["Bible", "worship", "fellowship", "Sabbath", "newsletter"].map((r) => <p key={r}>{r}</p>)}</div></ChartCard><ChartCard title="Zero-Result Searches"><div className="ed-table-mini"><p>Usage logging not connected</p><p>Sample analytics only</p></div></ChartCard><ChartCard title="Package Performance"><div className="ed-table-mini"><p>Portal package logging not connected</p></div></ChartCard></div>
+        <div className="ed-insights-grid"><ChartCard title="Review Load" large><div className="ed-big-line"><MiniLine /><MiniLine tone="orange" /></div></ChartCard><ChartCard title="Usage Trend" large sample><div className="ed-big-line"><MiniLine /><MiniLine tone="green" /></div></ChartCard><ChartCard title="Top Assets">{(insights.data?.assets || []).map((asset, i) => <p className="ed-top-asset" key={asset.id}><span>{i + 1}</span><AssetThumb asset={asset} /><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{asset.resourceSpaceId || asset.id}</small></p>)}</ChartCard><ChartCard title="Top Searches" sample><div className="ed-table-mini">{["Bible", "worship", "fellowship", "Sabbath", "newsletter"].map((r) => <p key={r}>{r}</p>)}</div></ChartCard><ChartCard title="Zero-Result Searches" sample><div className="ed-table-mini"><p>Usage logging not connected</p><p>Sample analytics only</p></div></ChartCard><ChartCard title="Package Performance" sample><div className="ed-table-mini"><p>Portal package logging not connected</p></div></ChartCard></div>
         <section className="ed-card"><h3>Asset Health & Governance</h3><div className="ed-health-grid">{[["Missing Metadata", counts?.pendingReview || 0], ["Rights Review", counts?.rightsReview || 0], ["Children/Youth", counts?.childrenYouth || 0], ["Missing Source", counts?.missingSource || 0], ["Archive", counts?.archive || 0], ["Portal Ready", counts?.portalReady || 0]].map(([label, value], i) => <article key={label}><strong>{Number(value).toLocaleString()}</strong><span>{label}</span><MiniLine tone={i === 1 ? "red" : i === 3 ? "orange" : "indigo"} /></article>)}</div></section>
       </>}
     </div>
@@ -513,25 +542,47 @@ export function EnterprisePackageBuilderPage() {
   const [activeSection, setActiveSection] = useState("Cover");
   const [approvedOnly, setApprovedOnly] = useState(true);
   const [packageName, setPackageName] = useState("ResourceSpace Toolkit Draft");
+  const [packageRefsBySection, setPackageRefsBySection] = useState<Record<string, string[]>>({});
   const assets = search.data?.assets || [];
+  const assetLookup = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
+  useEffect(() => {
+    if (!assets.length || Object.keys(packageRefsBySection).length) return;
+    const approvedAssets = assets.filter((asset) => uiStatus(asset) === "Approved");
+    setPackageRefsBySection({
+      Cover: approvedAssets.slice(0, 1).map((asset) => asset.id),
+      "01. Hero Assets": approvedAssets.filter((asset) => asset.mediaType === "photo").slice(0, 5).map((asset) => asset.id),
+      "02. Social Media": approvedAssets.slice(5, 10).map((asset) => asset.id),
+      "03. Documents": approvedAssets.filter((asset) => asset.mediaType === "document" || asset.mediaType === "graphic").slice(0, 5).map((asset) => asset.id)
+    });
+  }, [assets, packageRefsBySection]);
   const sections = useMemo(() => {
-    const filtered = approvedOnly ? assets.filter((asset) => uiStatus(asset) === "Approved") : assets;
-    return [
-      ["Cover", filtered.slice(0, 1)],
-      ["01. Hero Assets", filtered.filter((asset) => asset.mediaType === "photo").slice(0, 5)],
-      ["02. Social Media", filtered.slice(5, 10)],
-      ["03. Documents", filtered.filter((asset) => asset.mediaType === "document" || asset.mediaType === "graphic").slice(0, 5)]
-    ] as Array<[string, StockMediaAsset[]]>;
-  }, [assets, approvedOnly]);
+    const names = ["Cover", "01. Hero Assets", "02. Social Media", "03. Documents"];
+    return names.map((name) => [
+      name,
+      (packageRefsBySection[name] || []).map((id) => assetLookup.get(id)).filter((asset): asset is StockMediaAsset => Boolean(asset))
+    ]) as Array<[string, StockMediaAsset[]]>;
+  }, [assetLookup, packageRefsBySection]);
+  const activeRefs = packageRefsBySection[activeSection] || [];
+  const activeAvailableAssets = assets.filter((asset) => !activeRefs.includes(asset.id) && (!approvedOnly || uiStatus(asset) === "Approved")).slice(0, 6);
+  const addAssetToSection = (section: string, asset: StockMediaAsset) => {
+    setPackageRefsBySection((current) => ({ ...current, [section]: [...new Set([...(current[section] || []), asset.id])] }));
+  };
+  const removeAssetFromSection = (section: string, asset: StockMediaAsset) => {
+    setPackageRefsBySection((current) => ({ ...current, [section]: (current[section] || []).filter((id) => id !== asset.id) }));
+  };
+  const allPackageAssets = sections.flatMap(([, list]) => list);
+  const publishBlocked = !allPackageAssets.length || allPackageAssets.some((asset) => uiStatus(asset) !== "Approved");
   const cover = sections[0]?.[1][0] || assets[0];
   return (
     <div className="enterprise-page enterprise-package-builder">
-      <PageHeader title={packageName || "Untitled Toolkit"} subtitle={`${approvedOnly ? "Approved only" : "All visible assets"} · Portal-local draft · ResourceSpace references only`} actions={<><ActionButton icon={Eye}>Preview package</ActionButton><ActionButton icon={Users}>Share</ActionButton><ActionButton tone="primary" icon={Lock}>Publish package</ActionButton><ActionButton icon={UploadCloud}>Save draft</ActionButton></>} />
+      <PageHeader title={packageName || "Untitled Toolkit"} subtitle={`${approvedOnly ? "Approved only" : "All visible assets"} · Portal-local draft · ResourceSpace references only`} actions={<><ActionButton icon={Eye}>Preview package</ActionButton><ActionButton icon={Users}>Share</ActionButton><ActionButton tone="primary" icon={Lock} disabled={publishBlocked}>Publish package</ActionButton><ActionButton icon={UploadCloud}>Save draft</ActionButton></>} />
       {search.loading ? <LoadingCard /> : search.error ? <ErrorCard message={search.error} source={search.source} /> : (
         <div className="ed-builder-grid">
-          <aside className="ed-panel ed-package-outline"><div className="ed-panel-title"><h3>Package outline</h3><button><Plus size={15} /></button></div>{sections.map(([name, list]) => <button className={activeSection === name ? "is-active" : ""} type="button" key={name} onClick={() => setActiveSection(name)}>{list[0] ? <AssetThumb asset={list[0]} /> : <FileText size={28} />}<span><strong>{name}</strong><small>{list.length} ResourceSpace refs</small></span><MoreHorizontal size={15} /></button>)}<div className="ed-dropzone"><UploadCloud size={38} /><span>Use Library search to add ResourceSpace records</span><ActionButton>Browse assets</ActionButton></div></aside>
-          <main className="ed-package-canvas"><section className="ed-card ed-cover-section"><header><h2>Cover</h2><a>Replace cover</a></header>{cover ? <div><AssetThumb asset={cover} /><div><h3>{cover.title}</h3><p>{assetType(cover)} · {formatBytes(cover.fileSizeBytes)} · ResourceSpace {cover.resourceSpaceId || cover.id}</p><StatusBadge status={uiStatus(cover)} /><ActionButton>View asset details</ActionButton></div></div> : <p>No approved ResourceSpace asset selected.</p>}</section>{sections.slice(1).map(([section, list]) => <section className={cn("ed-card ed-builder-section", activeSection === section && "is-active")} key={section}><header><h2>{section}</h2><div><a>Add assets</a><MoreHorizontal size={16} /></div></header><p>Portal package stores ResourceSpace IDs only. Asset records stay canonical in ResourceSpace.</p><div className="ed-builder-assets">{list.length ? list.map((asset) => <AssetCard asset={asset} key={asset.id} />) : <p>No matching ResourceSpace assets for this section.</p>}</div><footer><span>{list.length} references</span><button type="button" onClick={() => setActiveSection(section)}>Select section</button></footer></section>)}</main>
-          <aside className="ed-panel ed-package-details"><h3>Package details</h3><label>Package name<input className="ed-input" value={packageName} onChange={(event) => setPackageName(event.target.value)} /></label><label>Description<input className="ed-input" defaultValue="A portal-local package draft referencing ResourceSpace assets." /></label><h3>Sharing & access</h3><label>Visibility<select className="ed-input" defaultValue="Shared"><option>Shared with specific people</option></select></label><label>Message<input className="ed-input" placeholder="Add a message to recipients..." /></label><h3>Governance</h3><p className="ed-checkline"><CheckCircle2 size={16} />ResourceSpace IDs retained</p><p className="ed-checkline"><CheckCircle2 size={16} />Backend download gate required</p><label className="ed-toggle">Approved only <input type="checkbox" checked={approvedOnly} onChange={(event) => setApprovedOnly(event.target.checked)} /></label><h3>Package summary</h3><div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(sections.reduce((total, [, list]) => total + list.length, 0)), "Refs"], ["0", "Copied assets"], [sourceLabel(search.source), "Source"]].map(([v,l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div></aside>
+          <aside className="ed-panel ed-package-outline"><div className="ed-panel-title"><h3>Package outline</h3><button><Plus size={15} /></button></div>{sections.map(([name, list]) => <button className={activeSection === name ? "is-active" : ""} type="button" key={name} onClick={() => setActiveSection(name)}>{list[0] ? <AssetThumb asset={list[0]} /> : <FileText size={28} />}<span><strong>{name}</strong><small>{list.length} ResourceSpace refs</small></span><MoreHorizontal size={15} /></button>)}<div className="ed-dropzone"><UploadCloud size={38} /><span>Use Library search to add ResourceSpace records</span><ActionButton disabled={!activeAvailableAssets[0]} onClick={() => activeAvailableAssets[0] && addAssetToSection(activeSection, activeAvailableAssets[0])}>Browse assets</ActionButton></div></aside>
+          <main className="ed-package-canvas"><section className="ed-card ed-cover-section"><header><h2>Cover</h2><a>Replace cover</a></header>{cover ? <div><AssetThumb asset={cover} fit="contain" /><div><h3 title={displayTitle(cover)}>{displayTitle(cover)}</h3><p>{assetType(cover)} · {formatBytes(cover.fileSizeBytes)} · ResourceSpace {cover.resourceSpaceId || cover.id}</p><StatusBadge status={uiStatus(cover)} /><ActionButton>View asset details</ActionButton></div></div> : <p>No approved ResourceSpace asset selected.</p>}</section>{sections.slice(1).map(([section, list]) => <section className={cn("ed-card ed-builder-section", activeSection === section && "is-active")} key={section}><header><h2>{section}</h2><div><button type="button" onClick={() => activeAvailableAssets[0] && addAssetToSection(section, activeAvailableAssets[0])}>Add assets</button><MoreHorizontal size={16} /></div></header><p>Portal package stores ResourceSpace IDs only. Asset records stay canonical in ResourceSpace.</p><div className="ed-builder-assets">{list.length ? list.map((asset) => <div className="ed-package-ref" key={asset.id}><AssetCard asset={asset} /><button type="button" onClick={() => removeAssetFromSection(section, asset)}>Remove ref</button></div>) : <p>No matching ResourceSpace assets for this section.</p>}</div><footer><span>{list.length} references · {list.filter((asset) => uiStatus(asset) !== "Approved").length} blocked</span><button type="button" onClick={() => setActiveSection(section)}>Select section</button></footer></section>)}
+            <section className="ed-card"><header className="ed-card-head"><h3>Browse ResourceSpace assets</h3><SourcePill source={search.source} live={search.live} /></header><div className="ed-table-mini">{activeAvailableAssets.length ? activeAvailableAssets.map((asset) => <p key={asset.id}><strong>{displayTitle(asset)}</strong><span>ResourceSpace {asset.resourceSpaceId || asset.id}</span><button type="button" onClick={() => addAssetToSection(activeSection, asset)}>Add to {activeSection}</button></p>) : <p>No additional approved assets available for this section.</p>}</div></section>
+          </main>
+          <aside className="ed-panel ed-package-details"><h3>Package details</h3><label>Package name<input className="ed-input" value={packageName} onChange={(event) => setPackageName(event.target.value)} /></label><label>Description<input className="ed-input" defaultValue="A portal-local package draft referencing ResourceSpace assets." /></label><h3>Sharing & access</h3><label>Visibility<select className="ed-input" defaultValue="Shared"><option>Shared with specific people</option></select></label><label>Message<input className="ed-input" placeholder="Add a message to recipients..." /></label><h3>Governance</h3><p className="ed-checkline"><CheckCircle2 size={16} />ResourceSpace IDs retained</p><p className="ed-checkline"><CheckCircle2 size={16} />Backend download gate required</p><p className={cn("ed-checkline", publishBlocked && "is-warn")}><ShieldCheck size={16} />{publishBlocked ? "Publish blocked until all refs are approved" : "All refs pass current approval check"}</p><label className="ed-toggle">Approved only <input type="checkbox" checked={approvedOnly} onChange={(event) => setApprovedOnly(event.target.checked)} /></label><h3>Package summary</h3><div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(sections.reduce((total, [, list]) => total + list.length, 0)), "Refs"], ["0", "Copied assets"], [sourceLabel(search.source), "Source"]].map(([v,l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div></aside>
         </div>
       )}
     </div>
@@ -555,12 +606,12 @@ export function EnterpriseAdminPage() {
           {admin.loading ? <LoadingCard /> : admin.error ? <ErrorCard message={admin.error} source={admin.source} /> : <>
             <CustodyMapPanel readiness={readiness} />
             <div className="ed-kpi-grid is-four"><KpiCard label="Records" value={(readiness?.assetCount || 0).toLocaleString()} delta="ResourceSpace-backed" icon={Database} /><KpiCard label="Readiness" value={`${readiness?.score || 0}/100`} delta="policy score" icon={Shield} /><KpiCard label="Needs Review" value={(readiness?.metrics.needsReview || 0).toLocaleString()} delta="queue count" icon={FileText} /><KpiCard label="Audit Events" value={(readiness?.auditLog.count || 0).toLocaleString()} delta="portal log" icon={Box} /></div>
-            <section className="ed-card"><header className="ed-card-head"><div><h3>Integration Status</h3><p>ResourceSpace, Drive, S3, and portal readiness.</p></div><SourcePill source={readiness?.source} live={readiness?.source.adapter !== "demo-fallback"} /></header><table className="ed-table"><thead><tr><th>Module</th><th>Owner</th><th>Status</th><th>Detail</th></tr></thead><tbody>{(readiness?.integrationReadiness || []).map((row) => <tr key={row.id}><td>{row.label}</td><td>{row.owner}</td><td><StatusBadge status={row.ready ? "Operational" : row.id === "review-writes" && readiness?.source.readOnly ? "Read-only" : "Not configured"} /></td><td>{row.detail}</td></tr>)}</tbody></table></section>
+            <section className="ed-card"><header className="ed-card-head"><div><h3>Integration Status</h3><p>ResourceSpace, Drive, S3, and portal readiness.</p></div><SourcePill source={readiness?.source} live={readiness?.source.adapter !== "demo-fallback"} /></header><table className="ed-table"><thead><tr><th>Module</th><th>Owner</th><th>Status</th><th>Detail</th></tr></thead><tbody>{(readiness?.integrationReadiness || []).map((row) => <tr key={row.id}><td>{row.label}</td><td>{row.owner}</td><td><StatusBadge status={row.state || (row.ready ? "Operational" : "Not configured")} /></td><td>{row.detail}</td></tr>)}</tbody></table></section>
             <div className="ed-module-grid">{(readiness?.actionBacklog || []).slice(0, 6).map((item) => <section className="ed-card ed-module-card" key={item.id}><ShieldCheck size={22} /><h3>{item.label}</h3><p>{item.action}</p><small>{item.count.toLocaleString()} · {item.owner}</small><a>›</a></section>)}</div>
             <section className="ed-card"><header className="ed-card-head"><h3>Recent Audit Activity</h3><ActionButton>View all logs</ActionButton></header><table className="ed-table"><thead><tr><th>Time</th><th>Role</th><th>Action</th><th>Object</th><th>Summary</th></tr></thead><tbody>{(readiness?.auditLog.recent || []).slice(0, 6).map((row) => <tr key={row.id}><td>{row.createdAt}</td><td>{row.role}</td><td>{row.type}</td><td>{row.assetId || row.resourceSpaceId || "Portal"}</td><td>{row.summary}</td></tr>)}</tbody></table></section>
           </>}
         </main>
-        <aside className="ed-admin-rail"><section className="ed-card"><h3>Policy Summary</h3><p>{readiness?.source.detail || "Readiness not loaded."}</p><div className="ed-big-check"><Check size={30} /></div>{[["Approved public", readiness?.metrics.approvedPublic || 0], ["Portal ready", readiness?.metrics.portalReady || 0], ["Rights review", readiness?.metrics.rightsReview || 0], ["Missing source", readiness?.metrics.missingSource || 0], ["Rendition gaps", readiness?.metrics.renditionGaps || 0]].map(([l,v]) => <p className="ed-row-between" key={l}><span>{l}</span><strong>{Number(v).toLocaleString()}</strong></p>)}<ActionButton>Manage policies</ActionButton></section><section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3><a>View all</a></header>{(readiness?.auditLog.recent || []).slice(0, 5).map((item) => <p className="ed-activity" key={item.id}><Bell size={16} />{item.summary}<small>{item.role} · {item.createdAt}</small></p>)}</section><section className="ed-card"><h3>System Health</h3>{(readiness?.integrationReadiness || []).slice(0, 5).map((item) => <p className="ed-row-between" key={item.id}><span>{item.label}</span><StatusBadge status={item.ready ? "Operational" : "Not configured"} /></p>)}<a>View system status</a></section></aside>
+        <aside className="ed-admin-rail"><section className="ed-card"><h3>Policy Summary</h3><p>{readiness?.source.detail || "Readiness not loaded."}</p><div className="ed-big-check"><Check size={30} /></div>{[["Approved public", readiness?.metrics.approvedPublic || 0], ["Portal ready", readiness?.metrics.portalReady || 0], ["Rights review", readiness?.metrics.rightsReview || 0], ["Missing source", readiness?.metrics.missingSource || 0], ["Rendition gaps", readiness?.metrics.renditionGaps || 0]].map(([l,v]) => <p className="ed-row-between" key={l}><span>{l}</span><strong>{Number(v).toLocaleString()}</strong></p>)}<ActionButton>Manage policies</ActionButton></section><section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3><a>View all</a></header>{(readiness?.auditLog.recent || []).slice(0, 5).map((item) => <p className="ed-activity" key={item.id}><Bell size={16} />{item.summary}<small>{item.role} · {item.createdAt}</small></p>)}</section><section className="ed-card"><h3>System Health</h3>{(readiness?.integrationReadiness || []).slice(0, 5).map((item) => <p className="ed-row-between" key={item.id}><span>{item.label}</span><StatusBadge status={item.state || (item.ready ? "Operational" : "Not configured")} /></p>)}<a>View system status</a></section></aside>
       </div>
     </div>
   );

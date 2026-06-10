@@ -163,6 +163,126 @@ export type ReviewWriteRecordSummary = Pick<
   "id" | "resourceId" | "requestedStatus" | "createdAt" | "updatedAt" | "syncState" | "lastError"
 >;
 
+export type DamAssetStatus =
+  | "approved"
+  | "needs-review"
+  | "restricted"
+  | "missing-consent"
+  | "expiring-soon"
+  | "unknown";
+
+export type DamMediaType = "image" | "video" | "document" | "audio" | "other";
+
+export type DamAssetVersion = {
+  id: string;
+  label: string;
+  createdAt?: string;
+  createdBy?: string;
+  isCurrent?: boolean;
+  resourceSpaceId?: number | string;
+};
+
+export type DamActivity = {
+  id: string;
+  type: string;
+  actor?: string;
+  createdAt: string;
+  summary: string;
+};
+
+export type DamAsset = {
+  id: string;
+  resourceSpaceId: number | string;
+  title: string;
+  filename: string;
+  type: DamMediaType;
+  mime?: string;
+  extension?: string;
+  dimensions?: string;
+  duration?: string;
+  fileSize?: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  downloadUrl?: string;
+  status: DamAssetStatus;
+  approvalStatusRaw?: string;
+  createdBy?: string;
+  uploadedBy?: string;
+  createdAt?: string;
+  uploadedAt?: string;
+  modifiedAt?: string;
+  categories: string[];
+  keywords: string[];
+  collections: string[];
+  usageChannels: string[];
+  licenseType?: string;
+  usageRights?: string;
+  territory?: string;
+  durationRights?: string;
+  modelRelease?: "yes" | "no" | "not-required" | "unknown";
+  propertyRelease?: "yes" | "no" | "not-required" | "unknown";
+  sourceSystem: "resourcespace";
+  storageSource?: "s3" | "google-drive" | "resourcespace" | "unknown";
+  versions?: DamAssetVersion[];
+  activity?: DamActivity[];
+  raw?: unknown;
+};
+
+export type ResourceSpaceFieldMap = {
+  title: string | number;
+  description: string | number;
+  approvalStatus: string | number;
+  usageRights: string | number;
+  licenseType: string | number;
+  territory: string | number;
+  modelRelease: string | number;
+  propertyRelease: string | number;
+  categories: string | number;
+  keywords: string | number;
+  ministry: string | number;
+  campaign: string | number;
+  usageChannels: string | number;
+  [key: string]: string | number;
+};
+
+export type DamUser = {
+  id: string;
+  name: string;
+  email?: string;
+  role: DemoRole;
+  team?: string;
+  sourceSystem?: "sso" | "local-beta";
+};
+
+export type DamPackageSection = {
+  id: string;
+  title: string;
+  resourceSpaceAssetIds: Array<string | number>;
+};
+
+export type DamPackage = {
+  id: string;
+  title: string;
+  description?: string;
+  status: "draft" | "pending-review" | "approved" | "archived";
+  collectionId?: string | number;
+  sections: DamPackageSection[];
+  createdBy?: string;
+  updatedAt?: string;
+};
+
+export type DamAuditEvent = {
+  id: string;
+  type: string;
+  actor: string;
+  role?: DemoRole;
+  resourceSpaceId?: string | number;
+  packageId?: string;
+  status: "allowed" | "denied" | "blocked" | "queued" | "preview";
+  summary: string;
+  createdAt: string;
+};
+
 export type SavedViewSummary = {
   id: string;
   label: string;
@@ -265,7 +385,8 @@ export type IntegrationReadinessItem = {
   label: string;
   ready: boolean;
   detail: string;
-  owner: "ResourceSpace" | "Google Shared Drive" | "DAM Admin" | "Reviewers";
+  owner: "ResourceSpace" | "Google Shared Drive" | "Amazon S3" | "Identity Provider" | "DAM Admin" | "Reviewers" | "Portal";
+  state?: "Operational" | "Degraded" | "Not configured" | "Read-only" | "Blocked" | "Pending setup";
 };
 
 export type AuditEventSummary = {
@@ -391,4 +512,6 @@ export type MediaSourceStatus = {
   label: string;
   detail: string;
   readOnly: boolean;
+  live?: boolean;
+  sourceKind?: "resourcespace" | "fallback-fixtures" | "media-library";
 };

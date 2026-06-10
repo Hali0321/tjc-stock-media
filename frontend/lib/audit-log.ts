@@ -7,6 +7,7 @@ import type { DemoRole } from "@/lib/types";
 export type AuditEventType =
   | "admin_readiness_denied"
   | "admin_readiness_viewed"
+  | "download_gate_checked"
   | "approved_download"
   | "denied_download"
   | "upload_denied"

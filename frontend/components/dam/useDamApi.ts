@@ -37,6 +37,35 @@ export type ReviewQueueResponse = {
   canReview: boolean;
 };
 
+export type BrandKitResponse = {
+  kit: {
+    id: string;
+    title: string;
+    owner: string;
+    reviewDate?: string;
+    resourceSpaceCollectionId: string | number | null;
+    collectionEnvKey: string;
+    configured: boolean;
+    sections: Array<{ id: string; title: string; envKey: string; resourceSpaceCollectionId?: string | number; configured: boolean }>;
+  };
+  assets: StockMediaAsset[];
+  source: MediaSourceStatus;
+  sourceKind?: ApiSourceKind;
+  live?: boolean;
+  warnings: string[];
+};
+
+export type DownloadGateResponse = {
+  allowed: boolean;
+  downloadUrl?: string;
+  auditId?: string;
+  reason?: string;
+  requiredAction?: string;
+  message?: string;
+  source?: MediaSourceStatus;
+  live?: boolean;
+};
+
 function sourceKindFor(source?: MediaSourceStatus | null): ApiSourceKind {
   if (!source) return "media-library";
   if (source.adapter === "demo-fallback") return "fallback-fixtures";
@@ -154,4 +183,27 @@ export function useInsights(role: DemoRole) {
 
 export function useAdminReadiness(role: DemoRole) {
   return useJsonApi<DamReadinessResult>(`/api/admin/readiness?role=${encodeURIComponent(role)}`, role);
+}
+
+export function useBrandKit(id: string, role: DemoRole) {
+  return useJsonApi<BrandKitResponse>(`/api/brand-kits/${encodeURIComponent(id)}?role=${encodeURIComponent(role)}`, role);
+}
+
+export function useDownloadGate(id: string, role: DemoRole) {
+  const requestDownload = useCallback(async ({ termsAccepted = true, usageChannel = "portal", reason = "Approved-copy request", variant = "download" }: {
+    termsAccepted?: boolean;
+    usageChannel?: string;
+    reason?: string;
+    variant?: string;
+  } = {}) => {
+    const response = await fetch(`/api/download/${encodeURIComponent(id)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ role, termsAccepted, usageChannel, reason, variant })
+    });
+    const payload = await response.json().catch(() => ({ allowed: false, reason: `Download gate failed with ${response.status}` }));
+    return payload as DownloadGateResponse;
+  }, [id, role]);
+
+  return { requestDownload };
 }

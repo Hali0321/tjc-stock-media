@@ -5,9 +5,37 @@ export function repoRoot() {
 }
 
 export function resourceSpaceBaseUrl() {
-  return process.env.RS_BASE_URL || "http://localhost:8088";
+  return process.env.RESOURCESPACE_BASE_URL || process.env.RS_BASE_URL || "http://localhost:8088";
 }
 
 export function hasResourceSpaceApiConfig() {
-  return Boolean(process.env.RS_BASE_URL && process.env.RS_API_USER && process.env.RS_API_KEY);
+  return Boolean(
+    resourceSpaceBaseUrl()
+    && (process.env.RESOURCESPACE_API_USER || process.env.RS_API_USER)
+    && (process.env.RESOURCESPACE_API_KEY || process.env.RS_API_KEY)
+  );
+}
+
+export function hasResourceSpaceFieldMapConfig() {
+  return Boolean(process.env.RESOURCESPACE_FIELD_MAP_JSON);
+}
+
+export function hasS3DeliveryConfig() {
+  return Boolean(process.env.S3_BUCKET && process.env.S3_REGION && (process.env.S3_ACCESS_ROLE || process.env.AWS_ACCESS_KEY_ID));
+}
+
+export function hasGoogleSharedDriveConfig() {
+  return Boolean(process.env.GOOGLE_SHARED_DRIVE_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS);
+}
+
+export function hasSsoConfig() {
+  return Boolean(process.env.SSO_PROVIDER && (process.env.SSO_CLIENT_ID || process.env.AUTH_CLIENT_ID));
+}
+
+export function hasUsageAnalyticsConfig() {
+  return Boolean(process.env.PORTAL_USAGE_LOGGING === "1" || process.env.USAGE_ANALYTICS_DSN);
+}
+
+export function brandKitCollectionId(key: string) {
+  return process.env[key] || "";
 }

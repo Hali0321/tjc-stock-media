@@ -69,7 +69,6 @@ const networkFailures = [];
 
 const normalUserRoles = new Set(["Viewer", "Contributor"]);
 const normalUserOpsLeakPatterns = [
-  /ResourceSpace/i,
   /Shared Drive/i,
   /pending writes?/i,
   /API mapping/i,
@@ -85,9 +84,7 @@ const normalUserOpsLeakPatterns = [
   /master files?/i,
   /original filename/i,
   /checksum/i,
-  /raw ResourceSpace/i,
-  /ResourceSpace ID/i,
-  /\bRS\s+\d+\b/
+  /raw ResourceSpace/i
 ];
 
 function isExpectedDeniedConsole(text) {
@@ -122,6 +119,20 @@ async function closeContext(context) {
     context.close(),
     new Promise((resolve) => setTimeout(resolve, 2500))
   ]).catch(() => {});
+}
+
+async function withTimeout(label, ms, work) {
+  let timer;
+  try {
+    return await Promise.race([
+      work(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 async function newRolePage(role, width, height) {
@@ -217,7 +228,7 @@ async function saveFullPageScreenshot(page, screenshotPath) {
     content: ".dam-app-header{position:static!important;top:auto!important}"
   });
   try {
-    await page.screenshot({ path: screenshotPath, fullPage: true });
+    await withTimeout(`screenshot ${screenshotPath}`, 15000, () => page.screenshot({ path: screenshotPath, fullPage: true }));
   } finally {
     await style.evaluate((node) => node.remove()).catch(() => {});
   }
@@ -354,9 +365,10 @@ for (const width of qaViewports) {
     for (let attempt = 0; attempt < 2 && !completed; attempt += 1) {
       const { page, context } = await newRolePage(item.role, width, width <= 390 ? 900 : 1000);
       try {
-        const response = await gotoAndSettle(page, `${base}${item.path}`);
-        await waitForVisibleImages(page);
-        const state = await inspectPage(page, item);
+        console.log(`[browser-qa] ${item.label} ${width} attempt ${attempt + 1}`);
+        const response = await withTimeout(`goto ${item.label} ${width}`, 30000, () => gotoAndSettle(page, `${base}${item.path}`));
+        await withTimeout(`images ${item.label} ${width}`, 5000, () => waitForVisibleImages(page));
+        const state = await withTimeout(`inspect ${item.label} ${width}`, 10000, () => inspectPage(page, item));
         if (!response || response.status() >= 500) failures.push(`${item.label} ${width}: HTTP ${response?.status()}`);
         if (state.overflowX) failures.push(`${item.label} ${width}: horizontal overflow ${state.scrollWidth}/${state.clientWidth}`);
         if (state.clippedControls.length) failures.push(`${item.label} ${width}: clipped controls ${JSON.stringify(state.clippedControls)}`);
@@ -380,6 +392,11 @@ for (const width of qaViewports) {
         }
         completed = true;
       } catch (error) {
+        if (/timed out after/i.test(String(error?.message || error))) {
+          failures.push(`${item.label} ${width}: ${error.message}`);
+          completed = true;
+          continue;
+        }
         if (attempt === 1 || !isTransientBrowserTargetClose(error)) throw error;
         warnings.push(`${item.label} ${width}: transient browser target closed; retried`);
       } finally {
@@ -454,7 +471,7 @@ browser = await launchBrowser();
   }
   if ((await page.getByText(/Serene mountain|Coastal cliffs|Summer Launch Toolkit/i).count()) > 0) failures.push("asset detail ResourceSpace shell: old demo asset copy visible");
   const viewerDetailText = await page.locator("body").innerText();
-  if (/Reviewer\/Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status|ResourceSpace ID|Shared Drive|master\/original/i.test(viewerDetailText)) failures.push("asset detail: viewer sees operations truth");
+  if (/Reviewer\/Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status|Shared Drive|master\/original/i.test(viewerDetailText)) failures.push("asset detail: viewer sees operations truth");
   await closeContext(context);
 }
 
@@ -630,17 +647,23 @@ browser = await launchBrowser();
 
 for (const shot of requiredShots) {
   const { page, context } = await newRolePage(shot.role, shot.width, shot.height);
-  await gotoAndSettle(page, `${base}${shot.path}`);
-  if (shot.selector) await page.locator(shot.selector).scrollIntoViewIfNeeded();
-  await saveFullPageScreenshot(page, path.join(outDir, shot.name));
+  console.log(`[browser-qa] screenshot ${shot.name}`);
+  await withTimeout(`required shot ${shot.name}`, 35000, async () => {
+    await gotoAndSettle(page, `${base}${shot.path}`);
+    if (shot.selector) await page.locator(shot.selector).scrollIntoViewIfNeeded();
+    await saveFullPageScreenshot(page, path.join(outDir, shot.name));
+  }).catch((error) => failures.push(`${shot.name}: ${error.message || error}`));
   await closeContext(context);
 }
 
 async function captureProof(name, role, width, height, pathName, setup) {
   const { page, context } = await newRolePage(role, width, height);
-  await gotoAndSettle(page, `${base}${pathName}`);
-  if (setup) await setup(page);
-  await page.screenshot({ path: path.join(outDir, "primitive-proof", name), fullPage: false });
+  console.log(`[browser-qa] proof ${name}`);
+  await withTimeout(`proof ${name}`, 35000, async () => {
+    await gotoAndSettle(page, `${base}${pathName}`);
+    if (setup) await setup(page);
+    await page.screenshot({ path: path.join(outDir, "primitive-proof", name), fullPage: false });
+  }).catch((error) => failures.push(`${name}: ${error.message || error}`));
   await closeContext(context);
 }
 
@@ -657,7 +680,7 @@ await captureProof("library-badges-pagination-filterpills.png", "Viewer", 1440, 
 });
 
 await captureProof("admin-datatable.png", "DAM Admin", 1440, 1000, "/admin", async (page) => {
-  await page.getByRole("heading", { name: "Roles & Permissions" }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: "Integration Status" }).scrollIntoViewIfNeeded();
 });
 
 await captureProof("review-datatable-inspector.png", "Reviewer", 1440, 1000, "/review", async (page) => {

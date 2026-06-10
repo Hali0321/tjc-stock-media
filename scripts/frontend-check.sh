@@ -57,7 +57,7 @@ if rg -n "RS_API_KEY|RS_API_USER|api_key|private key" frontend/app frontend/comp
   exit 1
 fi
 
-if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' >/tmp/tjc-media-tracked.txt; then
+if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-media-tracked.txt; then
   echo "FAIL: media files are tracked by Git"
   cat /tmp/tjc-media-tracked.txt
   exit 1

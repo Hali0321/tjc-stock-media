@@ -1,5 +1,17 @@
-export const resourceSpaceFieldMap = {
+const defaultResourceSpaceFieldMap = {
   title: "title",
+  description: "description",
+  approvalStatus: "publish_status",
+  usageRights: "usage_terms",
+  licenseType: "license_type",
+  territory: "territory",
+  modelRelease: "model_release",
+  propertyRelease: "property_release",
+  categories: "tjc_terms",
+  keywords: "visible_content_tags",
+  ministry: "ministry",
+  campaign: "campaign",
+  usageChannels: "usage_terms",
   originalFilename: "original_filename",
   sourcePlatform: "source_platform",
   sourceSystem: "source_system",
@@ -34,3 +46,72 @@ export const resourceSpaceFieldMap = {
   checksumSha256: "checksum_sha256",
   collection: "import_batch"
 } as const;
+
+type FieldMap = Record<string, string | number>;
+
+function parseConfiguredFieldMap() {
+  const raw = process.env.RESOURCESPACE_FIELD_MAP_JSON;
+  if (!raw) {
+    return {
+      configured: false,
+      valid: false,
+      map: {} as FieldMap,
+      error: undefined
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("RESOURCESPACE_FIELD_MAP_JSON must be a JSON object.");
+    }
+    const entries = Object.entries(parsed).filter(([, value]) => typeof value === "string" || typeof value === "number");
+    return {
+      configured: true,
+      valid: true,
+      map: Object.fromEntries(entries) as FieldMap,
+      error: undefined
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      valid: false,
+      map: {} as FieldMap,
+      error: error instanceof Error ? error.message : "Invalid ResourceSpace field map JSON."
+    };
+  }
+}
+
+const configured = parseConfiguredFieldMap();
+
+export const configuredResourceSpaceFieldMap = configured.map;
+
+export const resourceSpaceFieldMap = {
+  ...defaultResourceSpaceFieldMap,
+  ...configuredResourceSpaceFieldMap
+} as const;
+
+export function resourceSpaceFieldMapDiagnostics() {
+  const required = [
+    "title",
+    "approvalStatus",
+    "usageRights",
+    "licenseType",
+    "territory",
+    "modelRelease",
+    "propertyRelease",
+    "categories",
+    "keywords",
+    "usageChannels"
+  ];
+  const missing = required.filter((key) => !resourceSpaceFieldMap[key as keyof typeof resourceSpaceFieldMap]);
+  return {
+    configured: configured.configured,
+    valid: configured.configured ? configured.valid : true,
+    error: configured.error,
+    required,
+    missing,
+    configuredKeys: Object.keys(configuredResourceSpaceFieldMap),
+    effectiveKeys: Object.keys(resourceSpaceFieldMap)
+  };
+}
