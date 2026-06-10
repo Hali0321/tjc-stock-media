@@ -81,7 +81,8 @@ export async function GET(request: NextRequest) {
       enabled: usageAnalytics.enabled,
       totalEvents: usageAnalytics.totalEvents,
       topSearches: usageAnalytics.topSearches,
-      topAssets: usageAnalytics.topAssets
+      topAssets: usageAnalytics.topAssets,
+      dailyEvents: usageAnalytics.dailyEvents
     };
   }
   recordUsageEvent({

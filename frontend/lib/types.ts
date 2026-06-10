@@ -510,6 +510,7 @@ export type SearchResult = {
     totalEvents: number;
     topSearches: Array<{ label: string; value: number }>;
     topAssets: Array<{ label: string; value: number }>;
+    dailyEvents?: Array<{ date: string; value: number }>;
   };
 };
 

@@ -24,6 +24,7 @@ export function EnterpriseReviewPage() {
   const [pendingDecisionById, setPendingDecisionById] = useState<Record<string, { status: EnterpriseStatus; message: string; action: string }>>({});
   const [comment, setComment] = useState("");
   const [decisionMessage, setDecisionMessage] = useState("");
+  const [moreActionsOpen, setMoreActionsOpen] = useState(false);
   const pageCount = Math.max(1, Math.ceil(queue.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, pageCount);
   const pageStart = (safeCurrentPage - 1) * pageSize;
@@ -61,6 +62,15 @@ export function EnterpriseReviewPage() {
     const message = payload.message || payload.error || "ResourceSpace writeback is not configured. This decision is saved as a portal pending-sync event.";
     setPendingDecisionById((current) => ({ ...current, [selectedAsset.id]: { status: nextStatus, message, action } }));
     setDecisionMessage(message);
+    setMoreActionsOpen(false);
+  };
+  const queuePortalNote = (action: string) => {
+    if (!selectedAsset) return;
+    const message = `${action} noted for ${displayTitle(selectedAsset)}. ResourceSpace remains unchanged until live writeback is configured.`;
+    setPendingDecisionById((current) => ({ ...current, [selectedAsset.id]: { status: "Read-only", message, action } }));
+    setDecisionMessage(message);
+    setComment((current) => current || message);
+    setMoreActionsOpen(false);
   };
   return (
     <div className="enterprise-page enterprise-review">
@@ -101,13 +111,13 @@ export function EnterpriseReviewPage() {
               <div className="ed-hero-preview is-review"><AssetThumb asset={selectedAsset} fit="contain" /><span>{selectedAsset.imageDimensions || "Preview unavailable or not provided"}</span><button>100%</button></div>
               <nav className="ed-tabs is-large">{reviewWorkbenchTabs.map((tab, index) => <span className={index === 0 ? "is-active" : ""} key={tab}>{tab}</span>)}</nav>
               <section className="ed-card ed-metadata-card"><dl className="ed-metadata is-two">{reviewMetadataRows({ asset: selectedAsset, pendingAction: selectedPending?.action }).map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section>
-              <div className="ed-review-cards"><section className="ed-card"><h3>Metadata Completeness</h3><div className="ed-score-ring">{selectedAsset.tags?.length || selectedAsset.tjcTerms?.length ? "70%" : "35%"}</div><p>{selectedAsset.tags?.length ? "Tags exported from ResourceSpace." : "Tags not provided."}</p></section><section className="ed-card"><h3>Rights & Model Checks</h3>{["Source confirmed", selectedAsset.rightsStatus || "Rights not provided", selectedAsset.consentStatus || "Consent not provided", selectedAsset.peopleRisk || "People/minors unknown"].map((row) => <p className="ed-checkline" key={row}><CheckCircle2 size={16} />{row}</p>)}</section><section className="ed-card"><h3>Review Policy</h3><p>ResourceSpace remains final approval truth.</p><p>{selectedPending ? "Pending sync to ResourceSpace." : "No pending sync."}</p>{selectedPending ? <p className="ed-inline-success">{selectedPending.message}</p> : null}</section></div>
+              <div className="ed-review-cards"><section className="ed-card"><h3>Metadata Completeness</h3><div className="ed-score-ring">{selectedAsset.tags?.length || selectedAsset.tjcTerms?.length ? "70%" : "35%"}</div><p>{selectedAsset.tags?.length ? "Tags exported from ResourceSpace." : "Tags not provided."}</p></section><section className="ed-card"><h3>Rights & Model Checks</h3>{["Source confirmed", selectedAsset.rightsStatus || "Rights not provided", selectedAsset.consentStatus || "Consent not provided", selectedAsset.peopleRisk || "People/minors unknown"].map((row, index) => <p className="ed-checkline" key={`${row}-${index}`}><CheckCircle2 size={16} />{row}</p>)}</section><section className="ed-card"><h3>Review Policy</h3><p>ResourceSpace remains final approval truth.</p><p>{selectedPending ? "Pending sync to ResourceSpace." : "No pending sync."}</p>{selectedPending ? <p className="ed-inline-success">{selectedPending.message}</p> : null}</section></div>
             </main>
             <aside className="ed-review-rail">
               <section className="ed-card"><h3>Review Evidence</h3><dl className="ed-metadata">{reviewEvidenceRows({ asset: selectedAsset, currentStatus: selectedStatus, pendingStatus: selectedPending?.status }).map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl><ActionButton icon={FileText}>View Submission Package</ActionButton></section>
               <section className="ed-card"><header className="ed-card-head"><h3>Comments</h3><button type="button" onClick={() => setComment("")}>Clear</button></header><p className="ed-comment"><strong>ResourceSpace note</strong> {selectedAsset.rightsNotes || "No exported note."}</p>{decisionMessage ? <p className="ed-inline-success">{decisionMessage}</p> : null}<input className="ed-input" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add a review note..." aria-label="Add review comment" /></section>
               <section className="ed-card"><h3>Assignment</h3><p>Loaded from ResourceSpace review queue. Final write is pending until adapter sync is verified.</p><a>Reassign</a></section>
-              <section className="ed-card ed-decision-card"><h3>Review Decision</h3><p className="ed-setup-note">ResourceSpace writeback is not configured. Decisions save as portal pending-sync events.</p>{reviewDecisionActions.map((item) => { const DecisionIcon = reviewDecisionIcon[item.icon]; return <button className={cn(item.tone === "approve" && "is-approve", item.tone === "restrict" && "is-restrict", selectedPending?.status === item.status && "is-selected")} key={item.id} onClick={() => decide(item.status, item.action)}><DecisionIcon />{item.label}<span>{item.helper}</span></button>; })}<button>More Actions <ChevronDown size={14} /></button></section>
+              <section className="ed-card ed-decision-card"><h3>Review Decision</h3><p className="ed-setup-note">ResourceSpace writeback is not configured. Decisions save as portal pending-sync events.</p>{reviewDecisionActions.map((item) => { const DecisionIcon = reviewDecisionIcon[item.icon]; return <button className={cn(item.tone === "approve" && "is-approve", item.tone === "restrict" && "is-restrict", selectedPending?.status === item.status && "is-selected")} key={item.id} onClick={() => decide(item.status, item.action)}><DecisionIcon />{item.label}<span>{item.helper}</span></button>; })}<button className="ed-more-actions-trigger" type="button" aria-expanded={moreActionsOpen} onClick={() => setMoreActionsOpen((open) => !open)}>More Actions <ChevronDown size={14} /></button>{moreActionsOpen ? <div className="ed-more-actions-menu" role="menu"><button type="button" onClick={() => queuePortalNote("Escalate to DAM Admin")}>Escalate to DAM Admin<span>Queue a portal note for admin follow-up.</span></button><button type="button" onClick={() => queuePortalNote("Flag possible duplicate")}>Flag possible duplicate<span>Mark for duplicate review without changing ResourceSpace.</span></button><button type="button" onClick={() => queuePortalNote("Request source verification")}>Request source verification<span>Ask for source/custody evidence before decision.</span></button></div> : null}</section>
             </aside>
           </>
         ) : <main><ErrorCard message="No reviewable ResourceSpace records found." source={review.source} /></main>}

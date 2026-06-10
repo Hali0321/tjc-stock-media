@@ -28,6 +28,11 @@ type UsageMetricRow = {
   value: number;
 };
 
+type DailyUsageMetricRow = {
+  date: string;
+  value: number;
+};
+
 let db: DatabaseSync | null = null;
 
 function dbFile() {
@@ -103,6 +108,27 @@ function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 
   }
 }
 
+function dailyEventRows(limit = 14): DailyUsageMetricRow[] {
+  if (!usageAnalyticsEnabled()) return [];
+  try {
+    const rows = database()
+      .prepare(`
+        SELECT substr(created_at, 1, 10) AS label, COUNT(*) AS value
+        FROM usage_events
+        GROUP BY substr(created_at, 1, 10)
+        ORDER BY label DESC
+        LIMIT ?
+      `)
+      .all(limit) as Array<{ label?: string; value?: number }>;
+    return rows
+      .filter((row): row is { label: string; value: number } => Boolean(row.label))
+      .map((row) => ({ date: row.label, value: Number(row.value || 0) }))
+      .reverse();
+  } catch {
+    return [];
+  }
+}
+
 export function usageAnalyticsDiagnostics() {
   if (!usageAnalyticsEnabled()) {
     return {
@@ -110,7 +136,8 @@ export function usageAnalyticsDiagnostics() {
       dbPath: dbFile(),
       totalEvents: 0,
       topSearches: [] as UsageMetricRow[],
-      topAssets: [] as UsageMetricRow[]
+      topAssets: [] as UsageMetricRow[],
+      dailyEvents: [] as DailyUsageMetricRow[]
     };
   }
   try {
@@ -120,7 +147,8 @@ export function usageAnalyticsDiagnostics() {
       dbPath: dbFile(),
       totalEvents: Number(total.count || 0),
       topSearches: metricRows("search", "query"),
-      topAssets: metricRows("asset_view", "asset_id")
+      topAssets: metricRows("asset_view", "asset_id"),
+      dailyEvents: dailyEventRows()
     };
   } catch {
     return {
@@ -128,7 +156,8 @@ export function usageAnalyticsDiagnostics() {
       dbPath: dbFile(),
       totalEvents: 0,
       topSearches: [] as UsageMetricRow[],
-      topAssets: [] as UsageMetricRow[]
+      topAssets: [] as UsageMetricRow[],
+      dailyEvents: [] as DailyUsageMetricRow[]
     };
   }
 }
