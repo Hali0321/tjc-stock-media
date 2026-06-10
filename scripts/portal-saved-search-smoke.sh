@@ -124,6 +124,17 @@ const filler = Array.from({ length: 260 }, (_, index) => ({
   storageMode: "local-json"
 }));
 existing.unshift({
+  id: "source path stale id",
+  title: "portal ready",
+  query: "Bible",
+  filters: ["portal ready"],
+  sort: "Newest",
+  createdAt: "2030-01-01T00:00:00.000Z",
+  updatedAt: "2030-01-01T00:00:00.000Z",
+  createdBy: "saved-search-smoke:unsafe-id",
+  role: "Reviewer",
+  storageMode: "local-json"
+}, {
   id: process.env.STALE_SEARCH_ID,
   title: "../private source path",
   query: "../private master drive checksum",
@@ -133,7 +144,7 @@ existing.unshift({
   sort: "unsafe-sort",
   createdAt: "not-a-date",
   updatedAt: "2030-01-01T00:00:00.000Z",
-  createdBy: "",
+  createdBy: "source path actor",
   role: "Viewer",
   storageMode: "local-json"
 }, ...filler);
@@ -171,13 +182,13 @@ if (!unsafeQueryRecord || unsafeQueryRecord.query || unsafeQueryRecord.title !==
 }
 if (staleId) {
   const stale = data.searches.find((item) => item.id === staleId);
-  if (!stale || stale.query || stale.title !== "portal ready" || stale.view || stale.collection || stale.filters.includes("../private") || stale.filters.length !== new Set(stale.filters).size || stale.sort !== "Approved first" || stale.role === "Viewer") {
+  if (!stale || stale.query || stale.title !== "portal ready" || stale.createdBy !== "local-beta:unknown" || stale.view || stale.collection || stale.filters.includes("../private") || stale.filters.length !== new Set(stale.filters).size || stale.sort !== "Approved first" || stale.role === "Viewer") {
     console.error(`FAIL: persisted unsafe saved search was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
     process.exit(1);
   }
 }
 const text = JSON.stringify(data.searches);
-if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+if (text.includes("../private") || /source[- ]path|master[- ]drive|checksum/i.test(text)) {
   console.error(`FAIL: saved search list leaked unsafe labels: ${text.slice(0, 700)}`);
   process.exit(1);
 }

@@ -43,7 +43,9 @@ function safeDisplayText(value: unknown, maxLength: number) {
 }
 
 function safeId(value: unknown) {
-  return safeText(value, 100).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+  const text = safeText(value, 100);
+  if (containsPrivateSourceText(text)) return "";
+  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
 function safeRef(value: unknown) {
@@ -98,7 +100,7 @@ function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
     ...draft,
     createdAt: safeIso(raw.createdAt) || updatedAt,
     updatedAt,
-    createdBy: safeText(raw.createdBy, 120) || "local-beta:unknown",
+    createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
     role: raw.role === "Contributor" || raw.role === "Reviewer" || raw.role === "DAM Admin" ? raw.role : "Contributor",
     storageMode: "local-json"
   };
