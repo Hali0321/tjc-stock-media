@@ -59,6 +59,19 @@ contributor_headers=(
   -H "cf-access-authenticated-user-email: contributor.sso@example.test"
 )
 
+malicious_headers=(
+  -H "x-tjc-role: not-admin"
+  -H "cf-access-authenticated-user-email: malicious.sso@example.test"
+)
+
+expect_json_status 403 malformed-admin-header-does-not-escalate '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!/DAM Admin/i.test(data.error || "")) {
+  console.error(`malformed admin denial copy invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' "${malicious_headers[@]}" "$BASE_URL/api/admin/readiness?role=Viewer"
+
 expect_json admin-header-overrides-viewer '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (!Array.isArray(data.readiness) || !data.betaReadiness || !data.auditLog) {

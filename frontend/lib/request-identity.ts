@@ -7,11 +7,14 @@ const roleRank: DemoRole[] = ["Viewer", "Contributor", "Reviewer", "DAM Admin"];
 
 function roleFromTrustedValue(value?: string | null): DemoRole | null {
   if (!value) return null;
-  const normalized = value.toLowerCase();
-  if (/dam[-_\s]?admin|media[-_\s]?admin|admin/.test(normalized)) return "DAM Admin";
-  if (/reviewer|approver|rights/.test(normalized)) return "Reviewer";
-  if (/contributor|uploader|submitter/.test(normalized)) return "Contributor";
-  if (/viewer|member|read/.test(normalized)) return "Viewer";
+  const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  const has = (term: string) => tokens.includes(term);
+  const phrase = (terms: string[]) => terms.every(has);
+  if (phrase(["dam", "admin"]) || phrase(["media", "admin"]) || normalized === "admin") return "DAM Admin";
+  if (has("reviewer") || has("approver") || has("rights")) return "Reviewer";
+  if (has("contributor") || has("uploader") || has("submitter")) return "Contributor";
+  if (has("viewer") || has("member") || has("read")) return "Viewer";
   return null;
 }
 
