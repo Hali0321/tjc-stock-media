@@ -86,6 +86,31 @@ const path = require("path");
 const filePath = path.join(process.cwd(), "data", "runtime", "package-drafts.json");
 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, "utf8")) : [];
+const filler = Array.from({ length: 210 }, (_, index) => ({
+  id: `${process.env.STALE_PACKAGE_ID}-filler-${index}`,
+  title: `Oversized local-json package filler ${index}`,
+  status: "draft",
+  sections: [{
+    id: "hero",
+    title: "Hero",
+    resourceSpaceAssetIds: ["367"]
+  }],
+  createdAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+  updatedAt: `2000-01-01T00:${String(index % 60).padStart(2, "0")}:00.000Z`,
+  createdBy: "package-smoke:filler",
+  role: "Reviewer",
+  governance: {
+    canPreview: true,
+    canShare: false,
+    canPublish: false,
+    totalRefs: 1,
+    portalReadyRefs: 0,
+    blockedRefs: 1,
+    missingRefs: 0,
+    reason: "Filler local-json cap probe"
+  },
+  storageMode: "local-json"
+}));
 existing.unshift({
   id: process.env.STALE_PACKAGE_ID,
   title: "Stale unsafe package",
@@ -96,7 +121,7 @@ existing.unshift({
     resourceSpaceAssetIds: ["367", "../private", "367"]
   }],
   createdAt: "not-a-date",
-  updatedAt: "not-a-date",
+  updatedAt: "2030-01-01T00:00:00.000Z",
   createdBy: "",
   role: "Viewer",
   governance: {
@@ -110,7 +135,7 @@ existing.unshift({
     reason: "../private"
   },
   storageMode: "local-json"
-});
+}, ...filler);
 fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
 NODE
 fi
@@ -128,6 +153,10 @@ if (!Array.isArray(data.packages) || data.storageMode !== "local-json") {
   console.error(`FAIL: package list shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
 }
+if (data.count > 200 || data.packages.length > 200) {
+  console.error(`FAIL: package local-json list was not capped: ${JSON.stringify({ count: data.count, length: data.packages.length })}`);
+  process.exit(1);
+}
 const record = data.packages.find((item) => item.id === id);
 if (!record || record.storageMode !== "local-json" || !record.governance) {
   console.error(`FAIL: saved package not visible to Reviewer: ${JSON.stringify({ id, count: data.count, record }).slice(0, 500)}`);
@@ -137,7 +166,7 @@ if (staleId) {
   const stale = data.packages.find((item) => item.id === staleId);
   const refs = (stale?.sections || []).flatMap((section) => section.resourceSpaceAssetIds || []);
   if (!stale || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0) {
-    console.error(`FAIL: persisted unsafe package was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
+    console.error(`FAIL: persisted unsafe package was not normalized: ${JSON.stringify(stale || null).slice(0, 500)}`);
     process.exit(1);
   }
 }

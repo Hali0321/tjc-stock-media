@@ -27,6 +27,7 @@ export type StoredPackageDraft = {
 };
 
 const packageStorePath = () => path.join(repoRoot(), "data", "runtime", "package-drafts.json");
+export const maxPackageDrafts = 200;
 
 function newestFirst(records: StoredPackageDraft[]) {
   return [...records].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
@@ -116,11 +117,11 @@ async function readLocalPackages() {
 async function writeLocalPackages(records: StoredPackageDraft[]) {
   const filePath = packageStorePath();
   await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(newestFirst(records).slice(0, 200), null, 2)}\n`);
+  await writeFile(filePath, `${JSON.stringify(newestFirst(records).slice(0, maxPackageDrafts), null, 2)}\n`);
 }
 
 export async function listStoredPackageDrafts() {
-  return newestFirst(await readLocalPackages());
+  return newestFirst(await readLocalPackages()).slice(0, maxPackageDrafts);
 }
 
 export async function savePackageDraft(record: Omit<StoredPackageDraft, "storageMode">) {
@@ -134,7 +135,7 @@ export function packageDraftDiagnostics() {
   const filePath = packageStorePath();
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
-    const records = Array.isArray(parsed) ? parsed.map(normalizeStoredPackageDraft).filter(Boolean) as StoredPackageDraft[] : [];
+    const records = Array.isArray(parsed) ? newestFirst(parsed.map(normalizeStoredPackageDraft).filter(Boolean) as StoredPackageDraft[]).slice(0, maxPackageDrafts) : [];
     const openDrafts = records.filter((record) => record.status !== "archived");
     const blockedRefs = records.reduce((sum, record) => sum + (record.governance?.blockedRefs || 0), 0);
     return {
