@@ -62,6 +62,7 @@ require_file "frontend/lib/beta-readiness-facts.ts"
 require_file "scripts/backup.sh"
 require_file "scripts/restore-test.sh"
 require_file "scripts/video-manifest.sh"
+require_file "scripts/portal-sso-smoke.sh"
 
 if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-launch-media-tracked.txt; then
   fail "media files are tracked by git"

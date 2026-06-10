@@ -215,6 +215,25 @@
       "priority": 13,
       "passes": true,
       "notes": "Tightened launch-readiness browser QA coverage checks for required pages, widths, and proof screenshots, added actor-backed Viewer/Reviewer/DAM Admin audit rehearsal checks, and expanded Admin beta readiness audit evidence to report actor-backed role coverage from recent audit rows. Verified by frontend-check, launch-readiness, post-build API smoke, targeted Admin beta audit fact check, JSON parse, and diff check."
+    },
+    {
+      "id": "US-014",
+      "title": "Add trusted-header SSO rehearsal smoke",
+      "description": "As a DAM operator, I want one repeatable command that proves production-style trusted identity headers override beta role inputs across sensitive portal routes while unsafe downloads remain blocked.",
+      "acceptanceCriteria": [
+        "Add a portal-sso-smoke command that expects a server running with trusted SSO headers enabled.",
+        "SSO smoke proves Reviewer headers override role=Viewer for review, package, batch, and download-gate routes.",
+        "SSO smoke proves Contributor headers override role=Viewer for collection and upload routes.",
+        "SSO smoke proves DAM Admin headers override role=Viewer for readiness and feedback inbox routes.",
+        "Unsafe download gate remains blocked under trusted Reviewer identity.",
+        "Launch readiness validates the SSO smoke script exists.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Launch readiness and SSO smoke pass."
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "Added scripts/portal-sso-smoke.sh, Make target, launch-readiness file check, and beta/SSO docs. The smoke proves trusted Reviewer, Contributor, and DAM Admin headers override beta role=Viewer inputs across review, package, batch, collection, upload, feedback, readiness, and download-gate routes while unsafe downloads remain blocked. Verified by bash syntax check, frontend-check, launch-readiness, post-build API smoke, post-build SSO smoke with SSO_TRUSTED_HEADERS=1, JSON parse, and diff check."
     }
   ]
 }

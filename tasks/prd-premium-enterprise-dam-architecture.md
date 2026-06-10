@@ -162,6 +162,20 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [x] Build passes.
 - [x] Launch readiness passes with only explicit environment warnings.
 
+### US-014: Add trusted-header SSO rehearsal smoke
+**Description:** As a DAM operator, I want one repeatable command that proves production-style trusted identity headers override beta role inputs across sensitive portal routes while unsafe downloads remain blocked.
+
+**Acceptance Criteria:**
+- [x] Add a `portal-sso-smoke` command that expects a server running with trusted SSO headers enabled.
+- [x] SSO smoke proves Reviewer headers override `role=Viewer` for review, package, batch, and download-gate routes.
+- [x] SSO smoke proves Contributor headers override `role=Viewer` for collection and upload routes.
+- [x] SSO smoke proves DAM Admin headers override `role=Viewer` for readiness and feedback inbox routes.
+- [x] Unsafe download gate remains blocked under trusted Reviewer identity.
+- [x] Launch readiness validates the SSO smoke script exists.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Launch readiness and SSO smoke pass.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -178,6 +192,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-12: Mutating or mutation-preview routes must resolve role through one identity seam so production SSO can override beta query/body role safely.
 - FR-13: Enterprise audit events for download and mutation gates must include resolved actor identity when the route has access to request identity.
 - FR-14: Beta readiness must use mechanical browser QA coverage and actor-backed audit evidence before teammate invite recommendations can be treated as rehearsal-ready.
+- FR-15: Production-style trusted-header identity must have a repeatable local smoke path before teammate beta access is treated as identity-ready.
 
 ## Non-Goals
 

@@ -13,6 +13,7 @@ Local dry run may continue when these pass:
 - [x] `make frontend-check`
 - [x] `make launch-readiness`
 - [x] `BASE_URL=http://localhost:4868 make portal-api-smoke`
+- [x] `BASE_URL=http://localhost:4876 make portal-sso-smoke` against `SSO_TRUSTED_HEADERS=1` local server
 - [x] `BASE_URL=http://localhost:4868 make portal-browser-qa`
 - [x] Viewer unsafe download stays blocked.
 - [x] Reviewer approval without evidence stays blocked.
@@ -52,6 +53,7 @@ Checks:
 - `make frontend-check`: pass.
 - `make launch-readiness`: pass with one `.env` placeholder warning.
 - `BASE_URL=http://localhost:4868 make portal-api-smoke`: pass.
+- `BASE_URL=http://localhost:4876 make portal-sso-smoke`: pass against local trusted-header server.
 - `BASE_URL=http://localhost:4868 make portal-browser-qa`: pass; 16 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, zero network failures.
 - Explicit Viewer probe: `Bible` search returned assets, Viewer source payload stayed redacted as `media-library`, asset `368` opened, blocked download returned `403`, Viewer review action returned `403`.
 - Explicit Reviewer probe: incomplete evidence returned `400` with evidence blockers; complete evidence returned `202` queued pending-write truth.
@@ -80,8 +82,11 @@ In another terminal:
 
 ```bash
 BASE_URL=http://localhost:4868 make portal-api-smoke
+BASE_URL=http://localhost:4868 make portal-sso-smoke
 BASE_URL=http://localhost:4868 make portal-browser-qa
 ```
+
+For SSO rehearsal, start the server with `SSO_TRUSTED_HEADERS=1` or `SSO_PROVIDER=cloudflare-access`; otherwise `portal-sso-smoke` should fail because beta role fallback is intentionally not treated as trusted identity.
 
 Manual Viewer dry run:
 

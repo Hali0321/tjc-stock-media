@@ -143,6 +143,21 @@ If any condition fails, the pending write stays queued or sync-failed and the UI
 
 Production SSO is deferred, but the backend can map trusted headers to portal roles when `SSO_TRUSTED_HEADERS=1` or `SSO_PROVIDER=cloudflare-access`. Supported inputs include Cloudflare Access style email headers, generic auth request group headers, and optional `SSO_ROLE_MAP_JSON`. Local query/form roles remain beta fallback only.
 
+Rehearse the trusted-header path before inviting teammates:
+
+```bash
+cd frontend
+SSO_TRUSTED_HEADERS=1 TJC_STOCK_MEDIA_ROOT=/Users/halim4pro/Desktop/MVP/tjc-stock-media npm exec next dev -- --port 4876
+```
+
+Then run:
+
+```bash
+BASE_URL=http://localhost:4876 make portal-sso-smoke
+```
+
+The smoke checks that trusted Reviewer, Contributor, and DAM Admin headers override beta `role=Viewer` inputs for read, review, package, collection, upload, feedback, and download-gate routes while unsafe downloads remain blocked.
+
 ## Durable Analytics
 
 When `PORTAL_USAGE_LOGGING=1`, the portal records search, asset view, download gate, review action, and Brand Hub view events into local SQLite at `.runtime/analytics/portal-usage.sqlite` or `USAGE_ANALYTICS_DB_PATH`. Insights can replace sample search/asset rows when real event rows exist.
