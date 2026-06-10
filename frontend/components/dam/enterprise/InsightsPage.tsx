@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Calendar, CheckCircle2, Clock3, Database, Download, Eye, FileText, Filter, FolderOpen, ImageIcon, Info, Package, Search, Share2, Shield, Star, Tags, UploadCloud } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
@@ -23,6 +24,28 @@ type InsightStat = {
   meta: string;
   tone?: "blue" | "green" | "orange" | "red" | "purple" | "teal";
   icon: typeof Database;
+};
+
+type InsightPeriodId = "current-export" | "events-14d" | "events-30d";
+
+type InsightFilterState = {
+  review: boolean;
+  usage: boolean;
+  source: boolean;
+  health: boolean;
+};
+
+const insightPeriods: Array<{ id: InsightPeriodId; label: string; helper: string }> = [
+  { id: "current-export", label: "Current export", helper: "ResourceSpace counts from the latest metadata export." },
+  { id: "events-14d", label: "Last 14 days", helper: "Portal usage panels use dated SQLite events when available." },
+  { id: "events-30d", label: "Last 30 days", helper: "Ready for longer durable analytics history; empty periods stay honest." }
+];
+
+const defaultInsightFilters: InsightFilterState = {
+  review: true,
+  usage: true,
+  source: true,
+  health: true
 };
 
 function MetricRows({ rows }: { rows: MetricRow[] }) {
@@ -68,6 +91,74 @@ function InsightPanel({ title, action = "View all", className = "", children }: 
 
 function SampleLabel({ children }: { children: ReactNode }) {
   return <p className="ed-sample-label">{children}</p>;
+}
+
+function PeriodMenu({
+  activePeriod,
+  onToggle
+}: {
+  activePeriod: InsightPeriodId;
+  onToggle: () => void;
+}) {
+  const active = insightPeriods.find((period) => period.id === activePeriod) || insightPeriods[0];
+  return (
+    <div className="ed-action-menu-wrap">
+      <ActionButton icon={Calendar} onClick={onToggle}>{active.label}</ActionButton>
+    </div>
+  );
+}
+
+function PeriodPickerPanel({
+  activePeriod,
+  onSelect
+}: {
+  activePeriod: InsightPeriodId;
+  onSelect: (period: InsightPeriodId) => void;
+}) {
+  return (
+    <section className="ed-card ed-insight-period-panel" aria-label="Insight period">
+      {insightPeriods.map((period) => (
+        <button className={period.id === activePeriod ? "is-active" : ""} key={period.id} type="button" onClick={() => onSelect(period.id)}>
+          <strong>{period.label}</strong>
+          <span>{period.helper}</span>
+        </button>
+      ))}
+    </section>
+  );
+}
+
+function InsightFilterPanel({
+  filters,
+  onChange,
+  onReset
+}: {
+  filters: InsightFilterState;
+  onChange: (next: InsightFilterState) => void;
+  onReset: () => void;
+}) {
+  const rows = [
+    ["review", "Review workload", "Queue volume, rights risk, metadata blockers"],
+    ["usage", "Usage analytics", "Searches, asset views, package/event panels"],
+    ["source", "Source health", "ResourceSpace/export status and content snapshot"],
+    ["health", "Governance health", "Asset health and readiness meters"]
+  ] as const;
+  return (
+    <section className="ed-card ed-insight-filter-panel" aria-label="Insight filters">
+      <header className="ed-card-head"><h3>Insight filters</h3><button type="button" onClick={onReset}>Reset</button></header>
+      <div>
+        {rows.map(([id, label, helper]) => (
+          <label className="ed-insight-filter-row" key={id}>
+            <input
+              type="checkbox"
+              checked={filters[id]}
+              onChange={(event) => onChange({ ...filters, [id]: event.target.checked })}
+            />
+            <span><strong>{label}</strong><small>{helper}</small></span>
+          </label>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function TopAssetsList({ assets, usage }: { assets: StockMediaAsset[]; usage?: SearchResult["usageAnalytics"] }) {
@@ -186,13 +277,15 @@ function AdminInsights({
   usage,
   assets,
   sourceText,
-  hasUsageRows
+  hasUsageRows,
+  filters
 }: {
   counts: SearchResult["counts"];
   usage?: SearchResult["usageAnalytics"];
   assets: StockMediaAsset[];
   sourceText: string;
   hasUsageRows: boolean;
+  filters: InsightFilterState;
 }) {
   const rawTotal = counts?.rawTotal || counts?.visibleToRole || counts?.totalMatching || 0;
   const reviewRows: MetricRow[] = [
@@ -219,15 +312,16 @@ function AdminInsights({
     <>
       <div className="ed-insight-stat-grid">{stats.map((stat) => <InsightStatCard key={stat.label} stat={stat} />)}</div>
       <div className="ed-insights-board is-admin">
-        <InsightPanel title="Review Workload" action="View all queues"><MetricRows rows={reviewRows} /></InsightPanel>
-        <InsightPanel title="Governance / Risk Summary" action="View details"><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel>
-        <InsightPanel title="Top Searched Terms"><TopicsList usage={usage} savedViews={[]} />{!hasUsageRows ? <SampleLabel>Sample data until search logging is connected</SampleLabel> : null}</InsightPanel>
-        <InsightPanel title="Top Assets"><TopAssetsList assets={assets} usage={usage} />{!usage?.topAssets?.length ? <SampleLabel>Sample data until usage logging is connected</SampleLabel> : null}</InsightPanel>
-        <InsightPanel title="Source Health / Integration Status"><SourceHealth total={rawTotal} usageTotal={usage?.totalEvents || 0} sourceLabelText={sourceText} /><p className="ed-footnote"><Info size={14} /> Operational diagnostics visible to reviewer/admin roles.</p></InsightPanel>
-        <InsightPanel title="Trends" className="is-wide" action="View trends"><TrendPanel usage={usage} /></InsightPanel>
-        <InsightPanel title="Content Snapshot"><ContentSnapshot assets={assets} /><p className="ed-footnote"><Info size={14} /> Based on current result page.</p></InsightPanel>
+        {filters.review ? <InsightPanel title="Review Workload" action="Open review queue"><MetricRows rows={reviewRows} /></InsightPanel> : null}
+        {filters.review ? <InsightPanel title="Governance / Risk Summary" action="View details"><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel> : null}
+        {filters.usage ? <InsightPanel title="Top Searched Terms"><TopicsList usage={usage} savedViews={[]} />{!hasUsageRows ? <SampleLabel>Sample data until search logging is connected</SampleLabel> : null}</InsightPanel> : null}
+        {filters.usage ? <InsightPanel title="Top Assets"><TopAssetsList assets={assets} usage={usage} />{!usage?.topAssets?.length ? <SampleLabel>Sample data until usage logging is connected</SampleLabel> : null}</InsightPanel> : null}
+        {filters.source ? <InsightPanel title="Source Health / Integration Status"><SourceHealth total={rawTotal} usageTotal={usage?.totalEvents || 0} sourceLabelText={sourceText} /><p className="ed-footnote"><Info size={14} /> Operational diagnostics visible to reviewer/admin roles.</p></InsightPanel> : null}
+        {filters.usage ? <InsightPanel title="Trends" className="is-wide" action="View trends"><TrendPanel usage={usage} /></InsightPanel> : null}
+        {filters.source ? <InsightPanel title="Content Snapshot"><ContentSnapshot assets={assets} /><p className="ed-footnote"><Info size={14} /> Based on current result page.</p></InsightPanel> : null}
       </div>
-      <section className="ed-card"><h3>Asset Health & Governance</h3><div className="ed-health-grid">{insightHealthRows(counts).map((row) => <article key={row.label}><strong>{row.value.toLocaleString()}</strong><span>{row.label}</span><meter className={`is-${row.tone}`} min={0} max={Math.max(rawTotal, row.value, 1)} value={row.value} /></article>)}</div></section>
+      {!Object.values(filters).some(Boolean) ? <section className="ed-card ed-analytics-empty"><Filter size={22} /><strong>No insight sections selected</strong><p>Turn on at least one filter to show operational panels.</p></section> : null}
+      {filters.health ? <section className="ed-card"><h3>Asset Health & Governance</h3><div className="ed-health-grid">{insightHealthRows(counts).map((row) => <article key={row.label}><strong>{row.value.toLocaleString()}</strong><span>{row.label}</span><meter className={`is-${row.tone}`} min={0} max={Math.max(rawTotal, row.value, 1)} value={row.value} /></article>)}</div></section> : null}
     </>
   );
 }
@@ -292,6 +386,11 @@ function ViewerInsights({
 
 export function EnterpriseInsightsPage() {
   const { role } = useDemoRole();
+  const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activePeriod, setActivePeriod] = useState<InsightPeriodId>("current-export");
+  const [filters, setFilters] = useState<InsightFilterState>(defaultInsightFilters);
+  const [exportStatus, setExportStatus] = useState("");
   const insights = useAssetsSearch({ role, limit: 5 });
   const counts = insights.data?.counts;
   const usage = insights.data?.usageAnalytics;
@@ -299,13 +398,50 @@ export function EnterpriseInsightsPage() {
   const operationalView = role === "Reviewer" || role === "DAM Admin";
   const title = operationalView ? "Insights / Analytics" : "Insights / My Library";
   const subtitle = operationalView ? "Operational visibility across your digital asset lifecycle." : "Role-safe overview of your visible media, saved views, and collections.";
+  const activePeriodLabel = insightPeriods.find((period) => period.id === activePeriod)?.label || "Current export";
+  const exportInsights = () => {
+    if (!insights.data) {
+      setExportStatus("Insights are still loading. Export will be available after data loads.");
+      return;
+    }
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      role,
+      period: activePeriodLabel,
+      note: activePeriod === "current-export" ? "Counts are from current ResourceSpace export." : "Period applies to portal usage event panels where dated SQLite events exist.",
+      source: operationalView ? insights.source : undefined,
+      counts: insights.data.counts,
+      usageAnalytics: operationalView ? insights.data.usageAnalytics : undefined,
+      topAssets: insights.data.assets.slice(0, 10).map((asset) => ({
+        id: asset.id,
+        resourceSpaceId: asset.resourceSpaceId,
+        title: displayTitle(asset),
+        mediaType: asset.mediaType,
+        status: asset.status,
+        usageScope: asset.usageScope
+      }))
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = `tjc-dam-insights-${activePeriod}-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(href);
+    setExportStatus(`Downloaded ${activePeriodLabel} Insights JSON. ResourceSpace remains unchanged.`);
+  };
   return (
     <div className="enterprise-page enterprise-insights">
-      <PageHeader title={title} subtitle={subtitle} actions={<><ActionButton icon={Calendar}>Current period</ActionButton>{operationalView ? <><ActionButton icon={Filter}>Filters</ActionButton><ActionButton icon={Download}>Export</ActionButton></> : null}</>} />
+      <PageHeader title={title} subtitle={subtitle} actions={<><PeriodMenu activePeriod={activePeriod} onToggle={() => { setPeriodMenuOpen((open) => !open); setFiltersOpen(false); }} />{operationalView ? <><ActionButton icon={Filter} onClick={() => { setFiltersOpen((open) => !open); setPeriodMenuOpen(false); }}>{filtersOpen ? "Hide filters" : "Filters"}</ActionButton><ActionButton icon={Download} onClick={exportInsights} disabled={insights.loading}>Export</ActionButton></> : null}</>} />
+      {periodMenuOpen ? <PeriodPickerPanel activePeriod={activePeriod} onSelect={(period) => { setActivePeriod(period); setPeriodMenuOpen(false); setExportStatus(`${insightPeriods.find((item) => item.id === period)?.label || "Current export"} selected. ResourceSpace counts remain latest export.`); }} /> : null}
+      {filtersOpen && operationalView ? <InsightFilterPanel filters={filters} onChange={setFilters} onReset={() => setFilters(defaultInsightFilters)} /> : null}
+      {exportStatus ? <p className="ed-inline-success ed-insight-status">{exportStatus}</p> : null}
       <section className={operationalView ? "ed-approved-banner" : "ed-role-safe-banner"}>{operationalView ? <Database size={22} /> : <Info size={22} />}<div><strong>{operationalView ? sourceLabel(insights.source) : "Role-safe insights"}</strong><span>{operationalView ? (insights.source?.detail || "Media library source unavailable.") : "These insights reflect only the content you can view based on your role and permissions."}</span></div><span>{operationalView ? (hasUsageRows ? "Usage rows from portal analytics" : "Sample analytics where event rows are unavailable") : "Operational diagnostics are hidden for this role."}</span></section>
       {insights.loading ? <LoadingCard /> : insights.error ? <ErrorCard message={insights.error} source={insights.source} /> : <>
         {operationalView
-          ? <AdminInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} sourceText={sourceLabel(insights.source)} hasUsageRows={hasUsageRows} />
+          ? <AdminInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} sourceText={sourceLabel(insights.source)} hasUsageRows={hasUsageRows} filters={filters} />
           : <ViewerInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} savedViews={insights.data?.savedViews || []} collections={insights.data?.collections || []} />}
       </>}
     </div>
