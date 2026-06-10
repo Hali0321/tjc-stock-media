@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-10T20:18:46.353Z",
+  "checkedAt": "2026-06-10T23:35:26.250Z",
   "viewports": [
     1440,
     1280,
@@ -48,31 +48,11 @@
     },
     {
       "role": "Viewer",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
       "width": 1280,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
     {
       "role": "Reviewer",
-      "width": 1280,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 1280,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
       "width": 1280,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
@@ -88,31 +68,11 @@
     },
     {
       "role": "Viewer",
-      "width": 1024,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 1024,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
       "width": 768,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
     {
       "role": "Reviewer",
-      "width": 768,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 768,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
       "width": 768,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
@@ -128,42 +88,12 @@
     },
     {
       "role": "Viewer",
-      "width": 390,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 390,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
       "width": 320,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
     {
       "role": "Reviewer",
       "width": 320,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 320,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 320,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "Viewer",
-      "width": 390,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 390,
       "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
     {
@@ -180,26 +110,6 @@
       "role": "Viewer",
       "width": 1440,
       "text": "Failed to load resource: the server responded with a status of 400 (Bad Request)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 320,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 390,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-    },
-    {
-      "role": "DAM Admin",
-      "width": 1440,
-      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     },
     {
       "role": "DAM Admin",

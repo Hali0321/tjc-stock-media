@@ -953,6 +953,14 @@ body,
   align-content: start;
   gap: 12px;
   padding: 14px;
+  min-width: 0;
+}
+
+.ed-inspector > *,
+.ed-inspector-actions,
+.ed-inspector-actions .ed-action {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ed-inspector-preview {
@@ -3765,9 +3773,11 @@ body,
   .ed-inspector-actions {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    width: 100%;
   }
 
   .ed-inspector-actions .ed-action {
+    min-width: 0;
     width: 100%;
   }
 

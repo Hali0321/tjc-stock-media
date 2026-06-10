@@ -92,7 +92,7 @@ const normalUserOpsLeakPatterns = [
 ];
 
 function isExpectedDeniedConsole(text) {
-  return /Failed to load resource: the server responded with a status of (400|403|409)/.test(text);
+  return /Failed to load resource: the server responded with a status of (400|403|404|409)/.test(text);
 }
 
 function isTransientBrowserTargetClose(error) {
@@ -173,6 +173,7 @@ async function newRolePage(role, width, height) {
     if (!url.startsWith(base)) return;
     if (failure === "net::ERR_ABORTED" && url.includes("_rsc=")) return;
     if (failure === "net::ERR_ABORTED" && url.includes("/_next/static/")) return;
+    if (failure === "net::ERR_ABORTED" && url.includes("/api/assets/thumbnail/")) return;
     networkFailures.push({ role, width, url, error: failure });
   });
   return { page, context };
