@@ -485,13 +485,13 @@ export function LibraryPage() {
                   description="Media may exist, but it still needs review, rights checks, or approved copies before normal users can reuse it."
                   primary={<PrimaryAction href="/collections" icon={Package}>Browse packages</PrimaryAction>}
                   secondary={<PrimaryAction href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20media%20for%20safe%20reuse.%0AContext:%20" tone="secondary" icon={Mail}>Request DAM review</PrimaryAction>}
-	                  tertiary={<PrimaryAction href="/upload" tone="secondary" icon={UploadCloud}>Send new media</PrimaryAction>}
-	                  className="library-empty-compact"
-	                />
-	                <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
-	                  Show items needing review, downloads stay blocked
-	                </button>
-	                <ReviewNeededShelf assets={reviewNeededPreview} onOpen={() => openSavedView("batch-approved-blockers")} />
+                  tertiary={<PrimaryAction href="/upload" tone="secondary" icon={UploadCloud}>Send new media</PrimaryAction>}
+                  className="library-empty-compact"
+                />
+                <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
+                  Show items needing review, downloads stay blocked
+                </button>
+                <ReviewNeededShelf assets={reviewNeededPreview} onOpen={() => openSavedView("batch-approved-blockers")} />
               </div>
             ) : (
               <EmptyState
