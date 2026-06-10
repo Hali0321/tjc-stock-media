@@ -308,6 +308,25 @@
       "priority": 18,
       "passes": true,
       "notes": "Added scripts/portal-hosted-smoke.sh, Make/launch-readiness coverage, and docs/teammate-beta-invite-pack.md. The hosted smoke checks stable Vercel routes, feedback POST, Viewer feedback denial, DAM Admin feedback inbox, and dynamic blocked download safety. Verified by bash syntax check, frontend-check, launch-readiness, hosted Vercel smoke, JSON parse, and diff check."
+    },
+    {
+      "id": "US-019",
+      "title": "Add beta feedback operations smoke",
+      "description": "As a beta operator, I want one repeatable command and readiness row for feedback intake, admin triage, storage mode, and actor-backed audit so teammate feedback can become an actionable DAM operating loop.",
+      "acceptanceCriteria": [
+        "Add a portal-feedback-smoke command.",
+        "Feedback smoke submits Viewer feedback and verifies DAM Admin can list it.",
+        "Feedback smoke verifies Viewer cannot open the feedback inbox.",
+        "Feedback smoke patches severity/status/notes through the DAM Admin route.",
+        "Feedback records include actor identity.",
+        "Admin readiness reports beta feedback storage state and record counts.",
+        "Typecheck passes.",
+        "Build passes.",
+        "Feedback smoke passes against a local production server."
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "Added scripts/portal-feedback-smoke.sh, Make target, feedback storage diagnostics, actor-backed feedback records/audit, and Admin readiness beta-feedback-storage row. The smoke submits feedback, verifies Viewer denial, lists and patches via DAM Admin, and checks readiness storage detail. Verified by bash syntax check, frontend-check, local production API smoke, feedback smoke, JSON parse, and diff check."
     }
   ]
 }

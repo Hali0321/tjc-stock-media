@@ -206,6 +206,16 @@ BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke
 
 The smoke checks `/`, `/upload`, `/review`, `/admin`, and `/guide`, verifies feedback POST plus DAM Admin feedback inbox access, proves Viewer feedback inbox access is denied, and selects a current blocked asset before verifying Viewer download still returns `403` without private URLs.
 
+## Feedback Operations Smoke
+
+Before widening teammate testing, rehearse feedback intake and triage against a local or hosted beta server:
+
+```bash
+BASE_URL=http://localhost:4868 make portal-feedback-smoke
+```
+
+The smoke submits Viewer feedback, proves Viewer cannot open the feedback inbox, verifies DAM Admin can list it, patches severity/status/notes, and confirms Admin readiness reports the feedback storage mode. Local runs use `data/runtime/beta-feedback.json`; hosted runs should use Vercel KV/Blob when configured.
+
 ## Next Integration Work
 
 1. Confirm ResourceSpace API signing and collection endpoints.

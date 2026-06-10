@@ -1,4 +1,5 @@
 import { auditLogDiagnostics } from "@/lib/audit-log";
+import { betaFeedbackDiagnostics } from "@/lib/beta-feedback";
 import {
   brandKitCollectionId,
   hasGoogleSharedDriveConfig,
@@ -31,6 +32,7 @@ export function buildIntegrationReadiness({
   const driveConfigured = hasGoogleSharedDriveConfig();
   const ssoConfigured = hasSsoConfig();
   const analytics = usageAnalyticsDiagnostics();
+  const feedback = betaFeedbackDiagnostics();
   const writebackFieldMap = resourceSpaceWritebackFieldMapDiagnostics();
   const liveWritebackReady = apiConfigured && resourceSpaceWritebackEnabled() && writebackFieldMap.valid;
   const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_MVP_2024_COLLECTION_ID"));
@@ -175,6 +177,16 @@ export function buildIntegrationReadiness({
       detail: analytics.enabled
         ? `SQLite usage analytics is enabled at ${analytics.dbPath}. Recorded events: ${analytics.totalEvents.toLocaleString()}.`
         : "Insights uses real ResourceSpace counts plus clearly labeled sample trend/package charts until portal event logging is connected."
+    },
+    {
+      id: "beta-feedback-storage",
+      label: "Beta feedback storage",
+      ready: feedback.kvConfigured || feedback.count > 0,
+      owner: "Portal",
+      state: feedback.kvConfigured ? (feedback.blobConfigured ? "Operational" : "Degraded") : feedback.count > 0 ? "Degraded" : "Pending setup",
+      detail: feedback.kvConfigured
+        ? `Vercel KV feedback storage is configured. Blob attachments: ${feedback.blobConfigured ? "configured" : "not configured"}. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}.`
+        : `Feedback is using ${feedback.primaryStorageMode}. Records: ${feedback.count.toLocaleString()}; open: ${feedback.openCount.toLocaleString()}; critical open: ${feedback.criticalOpenCount.toLocaleString()}. Configure Vercel KV/Blob before larger testing.`
     },
     {
       id: "brand-kit-collections",

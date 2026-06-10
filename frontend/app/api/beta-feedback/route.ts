@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
   if (!roles.includes(rawRole as never)) {
     return NextResponse.json({ error: "Feedback role is invalid.", missing: ["role"] }, { status: 400 });
   }
-  const role = normalizeRole(rawRole);
+  const identity = requestIdentity(request, rawRole);
+  const role = identity.role;
   const route = normalizeFeedbackText(fields.route, 240);
   const severity = normalizeFeedbackText(fields.severity, 20);
   const expected = normalizeFeedbackText(fields.expected, 1200);
@@ -85,12 +86,14 @@ export async function POST(request: NextRequest) {
     browser: normalizeFeedbackText(fields.browser, 280) || request.headers.get("user-agent") || undefined,
     device: normalizeFeedbackText(fields.device, 180) || undefined,
     viewport: normalizeFeedbackText(fields.viewport, 60) || undefined,
-    attachmentUrl: attachmentUrl || normalizeFeedbackText(fields.screenshotLink, 500) || undefined
+    attachmentUrl: attachmentUrl || normalizeFeedbackText(fields.screenshotLink, 500) || undefined,
+    actor: identity.id
   });
 
   appendAuditEvent({
     type: "beta_feedback_submitted",
     role,
+    actor: identity.id,
     status: "preview",
     summary: `Beta feedback submitted for ${route}.`,
     details: { feedbackId: record.id, task: record.task, severity: record.severity, storageMode: record.storageMode }

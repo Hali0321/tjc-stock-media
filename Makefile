@@ -1,4 +1,4 @@
-.PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui lm-photos-zip-inventory lm-photos-stream-run lm-photos-run-report video-manifest export-metadata backup restore-test launch-readiness frontend-dev frontend-check demo-check portal-api-smoke portal-sso-smoke portal-usage-smoke portal-delivery-smoke portal-beta-rehearsal portal-hosted-smoke portal-browser-qa
+.PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui lm-photos-zip-inventory lm-photos-stream-run lm-photos-run-report video-manifest export-metadata backup restore-test launch-readiness frontend-dev frontend-check demo-check portal-api-smoke portal-sso-smoke portal-usage-smoke portal-delivery-smoke portal-feedback-smoke portal-beta-rehearsal portal-hosted-smoke portal-browser-qa
 
 IMPORT_DIR ?= /Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024
 LM_PHOTOS_ZIP_DIR ?= /Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Incoming/lm-photo
@@ -81,6 +81,9 @@ portal-usage-smoke:
 
 portal-delivery-smoke:
 	./scripts/portal-delivery-smoke.sh
+
+portal-feedback-smoke:
+	./scripts/portal-feedback-smoke.sh
 
 portal-beta-rehearsal:
 	./scripts/portal-beta-rehearsal.sh

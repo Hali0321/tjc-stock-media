@@ -276,6 +276,7 @@ export type BetaFeedbackRecord = {
   viewport?: string;
   attachmentUrl?: string;
   storageMode: "vercel-kv" | "local-json";
+  actor?: string;
 };
 
 export type DamPackageSection = {

@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -95,6 +96,33 @@ export async function putBetaFeedbackAttachment(id: string, file: File | null) {
     addRandomSuffix: true
   });
   return blob.url;
+}
+
+export function betaFeedbackDiagnostics() {
+  const kvConfigured = hasVercelKvConfig();
+  const blobConfigured = hasVercelBlobConfig();
+  const records = (() => {
+    if (!localFileFeedbackEnabled()) return memoryFeedback();
+    try {
+      const parsed = JSON.parse(readFileSync(localFeedbackPath(), "utf8")) as unknown;
+      return Array.isArray(parsed) ? parsed.filter(Boolean) as BetaFeedbackRecord[] : [];
+    } catch {
+      return memoryFeedback();
+    }
+  })();
+  const storageModes = Array.from(new Set(records.map((record) => record.storageMode))).sort();
+  const openRecords = records.filter((record) => !["fixed", "wont-fix"].includes(record.status));
+  const criticalOpen = openRecords.filter((record) => record.severity === "critical");
+  return {
+    kvConfigured,
+    blobConfigured,
+    count: records.length,
+    openCount: openRecords.length,
+    criticalOpenCount: criticalOpen.length,
+    latestAt: records[0]?.createdAt || "",
+    storageModes,
+    primaryStorageMode: kvConfigured ? "vercel-kv" as const : "local-json" as const
+  };
 }
 
 export function validateFeedbackPayload(payload: {

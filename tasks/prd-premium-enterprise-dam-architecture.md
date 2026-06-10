@@ -230,6 +230,20 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - [x] Build passes.
 - [x] Launch readiness and hosted smoke pass against the stable Vercel beta URL.
 
+### US-019: Add beta feedback operations smoke
+**Description:** As a beta operator, I want one repeatable command and readiness row for feedback intake, admin triage, storage mode, and actor-backed audit so teammate feedback can become an actionable DAM operating loop.
+
+**Acceptance Criteria:**
+- [x] Add a `portal-feedback-smoke` command.
+- [x] Feedback smoke submits Viewer feedback and verifies DAM Admin can list it.
+- [x] Feedback smoke verifies Viewer cannot open the feedback inbox.
+- [x] Feedback smoke patches severity/status/notes through the DAM Admin route.
+- [x] Feedback records include actor identity.
+- [x] Admin readiness reports beta feedback storage state and record counts.
+- [x] Typecheck passes.
+- [x] Build passes.
+- [x] Feedback smoke passes against a local production server.
+
 ## Functional Requirements
 
 - FR-1: Preserve ResourceSpace approval state separately from computed portal reuse state.
@@ -251,6 +265,7 @@ Make TJC Stock Media feel and behave like a premium enterprise DAM by deepening 
 - FR-17: Delivery privacy must have a repeatable local smoke path before teammate beta payloads can be treated as storage-safe.
 - FR-18: Hosted beta launches must have a repeatable post-deploy smoke path and share-ready teammate invite packet before internal testers receive the URL.
 - FR-19: Private beta dry-runs must produce machine-readable evidence for Viewer, Reviewer, and DAM Admin before teammate invite decisions.
+- FR-20: Beta feedback intake and triage must have a repeatable smoke path before teammate feedback is treated as operational evidence.
 
 ## Non-Goals
 
