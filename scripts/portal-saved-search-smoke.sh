@@ -80,8 +80,12 @@ if (data.search.view || data.search.filters.includes("../private") || data.searc
   console.error(`FAIL: saved search fields were not sanitized/deduped: ${JSON.stringify(data.search).slice(0, 500)}`);
   process.exit(1);
 }
+if (JSON.stringify(data.search).includes("../private") || /source path|master drive|checksum/i.test(JSON.stringify(data.search))) {
+  console.error(`FAIL: saved search save echoed unsafe field labels: ${JSON.stringify(data.search).slice(0, 700)}`);
+  process.exit(1);
+}
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"id\":\"$search_id\",\"title\":\"$MARKER Bible search\",\"query\":\"Bible\",\"view\":\"../private\",\"filters\":[\"portal ready\",\"portal ready\",\"../private\"],\"sort\":\"A-Z\"}" \
+  -d "{\"id\":\"$search_id\",\"title\":\"$MARKER Bible search\",\"query\":\"Bible\",\"view\":\"source path board\",\"collection\":\"master drive set\",\"filters\":[\"portal ready\",\"portal ready\",\"../private\",\"source path\",\"master drive\",\"checksum\"],\"sort\":\"A-Z\"}" \
   "$BASE_URL/api/saved-searches?role=Contributor"
 
 UNSAFE_QUERY_SEARCH_ID="$unsafe_query_search_id" expect_json_status 200 saved-search-query-title-sanitized '
@@ -123,9 +127,9 @@ existing.unshift({
   id: process.env.STALE_SEARCH_ID,
   title: "../private source path",
   query: "../private master drive checksum",
-  view: "../private",
-  collection: "../source",
-  filters: ["portal ready", "../private", "portal ready"],
+  view: "source path board",
+  collection: "master drive set",
+  filters: ["portal ready", "../private", "portal ready", "source path", "master drive", "checksum"],
   sort: "unsafe-sort",
   createdAt: "not-a-date",
   updatedAt: "2030-01-01T00:00:00.000Z",
@@ -171,6 +175,11 @@ if (staleId) {
     console.error(`FAIL: persisted unsafe saved search was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
     process.exit(1);
   }
+}
+const text = JSON.stringify(data.searches);
+if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  console.error(`FAIL: saved search list leaked unsafe labels: ${text.slice(0, 700)}`);
+  process.exit(1);
 }
 ' "$BASE_URL/api/saved-searches?role=Reviewer"
 

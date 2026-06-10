@@ -31,10 +31,14 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function containsPrivateSourceText(value: string) {
+  return /source path|master drive|checksum/i.test(value);
+}
+
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum/i.test(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
 }
 
@@ -44,7 +48,7 @@ function safeId(value: unknown) {
 
 function safeRef(value: unknown) {
   const raw = safeText(value, 100);
-  if (raw.includes("..") || /[\\/]/.test(raw)) {
+  if (raw.includes("..") || /[\\/]/.test(raw) || containsPrivateSourceText(raw)) {
     return "";
   }
   return safeId(raw);
@@ -52,7 +56,7 @@ function safeRef(value: unknown) {
 
 function safeFilter(value: unknown) {
   const label = safeText(value, 80);
-  if (label.includes("..") || /[\\/]/.test(label)) {
+  if (label.includes("..") || /[\\/]/.test(label) || containsPrivateSourceText(label)) {
     return "";
   }
   return label;
