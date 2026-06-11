@@ -10,6 +10,7 @@ const files = {
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
+  reviewEvidence: "frontend/lib/review-evidence.ts",
   catalog: "frontend/lib/catalog.ts",
   catalogLanguage: "frontend/lib/catalog-language.ts",
   searchRoute: "frontend/app/api/assets/search/route.ts",
@@ -28,6 +29,7 @@ const packages = read(files.packages);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
+const reviewEvidence = read(files.reviewEvidence);
 const catalog = read(files.catalog);
 const catalogLanguage = read(files.catalogLanguage);
 const searchRoute = read(files.searchRoute);
@@ -79,10 +81,20 @@ for (const store of [
 if (!pendingReviewWrites.includes("normalizeReviewRoleWithFallback")) {
   failures.push("pending review writes must normalize reviewer roles through normalizeReviewRoleWithFallback");
 }
+if (!pendingReviewWrites.includes("normalizeReviewChecklist")) {
+  failures.push("pending review writes must normalize persisted checklist through normalizeReviewChecklist");
+}
+if (/function\s+safeChecklist\s*\(/.test(pendingReviewWrites) || /raw\.[a-zA-Z0-9_]+\s*===\s*true/.test(pendingReviewWrites)) {
+  failures.push("pending review writes must not hand-roll review checklist boolean normalization");
+}
 
 if (!packages.includes("safeBoolean")) failures.push("package drafts must normalize persisted booleans through safeBoolean");
 if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(packages)) {
   failures.push("package drafts must not hand-roll boolean normalization");
+}
+if (!reviewEvidence.includes("safeBoolean")) failures.push("review evidence must normalize checklist booleans through safeBoolean");
+if (/raw\.[a-zA-Z0-9_]+\s*===\s*true/.test(reviewEvidence)) {
+  failures.push("review evidence must not hand-roll checklist boolean normalization");
 }
 
 if (/betaFeedback(?:Statuses|Severities)\.includes/.test(feedback)) {

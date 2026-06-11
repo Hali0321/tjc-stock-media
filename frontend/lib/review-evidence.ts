@@ -1,4 +1,5 @@
 import type { ReviewActionBackend } from "@/lib/workflow-policy";
+import { safeBoolean } from "@/lib/persisted-record-safety";
 import type { ReviewEvidenceChecklist, StockMediaAsset } from "@/lib/types";
 
 export const reviewChecklistItems: Array<{ field: keyof ReviewEvidenceChecklist; label: string; hint: string }> = [
@@ -36,17 +37,17 @@ export const reviewChecklistLabelByField = Object.fromEntries(
 export function normalizeReviewChecklist(value: unknown): ReviewEvidenceChecklist {
   const raw = typeof value === "object" && value ? (value as Partial<Record<keyof ReviewEvidenceChecklist, unknown>>) : {};
   return {
-    sourceConfirmed: raw.sourceConfirmed === true,
-    rightsConfirmed: raw.rightsConfirmed === true,
-    attributionConfirmed: raw.attributionConfirmed === true,
-    peopleVisibilityConfirmed: raw.peopleVisibilityConfirmed === true,
-    childrenYouthChecked: raw.childrenYouthChecked === true,
-    usageScopeSelected: raw.usageScopeSelected === true,
-    derivativeAvailable: raw.derivativeAvailable === true,
-    sensitiveContextChecked: raw.sensitiveContextChecked === true,
-    creditRequirementChecked: raw.creditRequirementChecked === true,
-    expirationRereviewSet: raw.expirationRereviewSet === true,
-    proofLinkAttached: raw.proofLinkAttached === true
+    sourceConfirmed: safeBoolean(raw.sourceConfirmed),
+    rightsConfirmed: safeBoolean(raw.rightsConfirmed),
+    attributionConfirmed: safeBoolean(raw.attributionConfirmed),
+    peopleVisibilityConfirmed: safeBoolean(raw.peopleVisibilityConfirmed),
+    childrenYouthChecked: safeBoolean(raw.childrenYouthChecked),
+    usageScopeSelected: safeBoolean(raw.usageScopeSelected),
+    derivativeAvailable: safeBoolean(raw.derivativeAvailable),
+    sensitiveContextChecked: safeBoolean(raw.sensitiveContextChecked),
+    creditRequirementChecked: safeBoolean(raw.creditRequirementChecked),
+    expirationRereviewSet: safeBoolean(raw.expirationRereviewSet),
+    proofLinkAttached: safeBoolean(raw.proofLinkAttached)
   };
 }
 

@@ -5,6 +5,7 @@ import { repoRoot } from "@/lib/env";
 import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { normalizeReviewChecklist } from "@/lib/review-evidence";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
 const pendingDirName = "pending-review-writes";
@@ -42,23 +43,6 @@ function safeSyncState(value: unknown): ReviewWriteRecord["syncState"] {
   return safeEnumValue(value, syncStates, "queued");
 }
 
-function safeChecklist(value: unknown): ReviewEvidenceChecklist {
-  const raw = (value || {}) as Partial<ReviewEvidenceChecklist>;
-  return {
-    sourceConfirmed: raw.sourceConfirmed === true,
-    rightsConfirmed: raw.rightsConfirmed === true,
-    attributionConfirmed: raw.attributionConfirmed === true,
-    peopleVisibilityConfirmed: raw.peopleVisibilityConfirmed === true,
-    childrenYouthChecked: raw.childrenYouthChecked === true,
-    usageScopeSelected: raw.usageScopeSelected === true,
-    derivativeAvailable: raw.derivativeAvailable === true,
-    sensitiveContextChecked: raw.sensitiveContextChecked === true,
-    creditRequirementChecked: raw.creditRequirementChecked === true,
-    expirationRereviewSet: raw.expirationRereviewSet === true,
-    proofLinkAttached: raw.proofLinkAttached === true
-  };
-}
-
 function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
   const raw = (input || {}) as Partial<ReviewWriteRecord>;
   const id = safeFilePart(safeText(raw.id, 120));
@@ -75,7 +59,7 @@ function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
     createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
     note: safeDisplayText(raw.note, 1200),
-    checklist: safeChecklist(raw.checklist),
+    checklist: normalizeReviewChecklist(raw.checklist),
     blockers: Array.isArray(raw.blockers) ? raw.blockers.map((item) => safeDisplayText(item, 120)).filter(Boolean).slice(0, 24) : [],
     syncState: safeSyncState(raw.syncState),
     retryCount: safeNonNegativeInt(raw.retryCount),
