@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { assetResourceRef } from "@/lib/asset-refs";
-import { getAssetRecordById } from "@/lib/catalog";
+import { resolveAssetSelection, selectedAssetIds } from "@/lib/asset-selection";
 import { canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetIds, readJsonObject } from "@/lib/request-validation";
+import { readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   }>(request);
   const identity = requestIdentity(request, body.role);
   const role = identity.role;
-  const assetIds = normalizeAssetIds(body.assetIds);
+  const requestedIds = selectedAssetIds(body.assetIds);
 
   if (!canReview(role)) {
     appendAuditEvent({
@@ -27,22 +27,20 @@ export async function POST(request: NextRequest) {
       actor: identity.id,
       status: "denied",
       summary: "Batch governance action denied for role.",
-      details: { action: body.action || null, assetCount: assetIds.length }
+      details: { action: body.action || null, assetCount: requestedIds.length }
     });
     return NextResponse.json({ error: "Bulk review actions require reviewer access." }, { status: 403 });
   }
   if (!body.action || !supportedActions.has(body.action)) {
     return NextResponse.json({ error: "Unsupported batch action." }, { status: 400 });
   }
-  if (!assetIds.length) {
+  if (!requestedIds.length) {
     return NextResponse.json({ error: "Select at least one asset." }, { status: 400 });
   }
 
-  const records = await Promise.all(assetIds.map((id) => getAssetRecordById(id)));
-  const found = records.filter((item) => item.asset).map((item) => item.asset!);
-  const missing = assetIds.filter((id) => !found.some((asset) => asset.id === id));
-  if (missing.length) {
-    return NextResponse.json({ error: "One or more selected assets were not found.", missingCount: missing.length }, { status: 404 });
+  const selection = await resolveAssetSelection(requestedIds);
+  if (selection.missingIds.length) {
+    return NextResponse.json({ error: "One or more selected assets were not found.", missingCount: selection.missingIds.length }, { status: 404 });
   }
 
   const timestamp = new Date().toISOString();
@@ -53,15 +51,15 @@ export async function POST(request: NextRequest) {
     actor: identity.id,
     status: "preview",
     summary: "Batch governance action previewed; no production media-library write performed.",
-    details: { action: body.action, assetCount: found.length }
+    details: { action: body.action, assetCount: selection.assets.length }
   });
 
   return NextResponse.json({
     ok: false,
     mode: "review-preview",
     action: body.action,
-    count: found.length,
-    auditRecords: found.map((asset) => ({
+    count: selection.assets.length,
+    auditRecords: selection.assets.map((asset) => ({
       assetId: asset.id,
       resourceSpaceId: assetResourceRef(asset),
       previousStatus: asset.status,
@@ -69,6 +67,6 @@ export async function POST(request: NextRequest) {
       reviewerRole: role,
       timestamp
     })),
-    message: `Batch action preview ready for ${found.length} asset${found.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. Sharing stays paused until each selected item is reviewed and cleared.`
+    message: `Batch action preview ready for ${selection.assets.length} asset${selection.assets.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. Sharing stays paused until each selected item is reviewed and cleared.`
   });
 }

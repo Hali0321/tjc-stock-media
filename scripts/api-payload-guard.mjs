@@ -84,6 +84,9 @@ if (!mediaDeliverySource.includes("function supportedImageContentType") || !medi
 
 const collectionsRoute = "frontend/app/api/collections/route.ts";
 const collectionsSource = fs.readFileSync(path.join(root, collectionsRoute), "utf8");
+const batchRoute = "frontend/app/api/batch/route.ts";
+const batchSource = fs.readFileSync(path.join(root, batchRoute), "utf8");
+const assetSelectionSource = fs.readFileSync(path.join(root, "frontend/lib/asset-selection.ts"), "utf8");
 if (!collectionsSource.includes("normalizeCollectionDraftAudience")) {
   failures.push(`${collectionsRoute} must derive draft audience through normalizeCollectionDraftAudience`);
 }
@@ -92,6 +95,20 @@ if (!collectionsSource.includes("normalizeCollectionShareSlug")) {
 }
 if (/function\s+slugify\s*\(/.test(collectionsSource) || /allowedAudiences\s*=\s*new Set/.test(collectionsSource)) {
   failures.push(`${collectionsRoute} must not hand-roll collection audience or share slug normalization`);
+}
+if (!assetSelectionSource.includes("normalizeAssetIds") || !assetSelectionSource.includes("getAssetRecordById") || !assetSelectionSource.includes("canSeeAsset")) {
+  failures.push("asset-selection must own selected asset id normalization, record lookup, and optional visibility filtering");
+}
+for (const route of [
+  { name: collectionsRoute, source: collectionsSource },
+  { name: batchRoute, source: batchSource }
+]) {
+  if (!route.source.includes("resolveAssetSelection(")) {
+    failures.push(`${route.name} must resolve selected assets through asset-selection`);
+  }
+  if (route.source.includes("getAssetRecordById") || route.source.includes("normalizeAssetIds")) {
+    failures.push(`${route.name} must not hand-roll selected asset lookup or id normalization`);
+  }
 }
 
 const searchRoute = "frontend/app/api/assets/search/route.ts";
