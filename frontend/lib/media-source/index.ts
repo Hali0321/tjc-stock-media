@@ -1,5 +1,3 @@
-import path from "node:path";
-import { repoRoot } from "@/lib/env";
 import { clearDerivativeFileIndex, findResourceSpaceImageDerivative, type ImageVariant } from "@/lib/images";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { demoFallbackAssets, demoFallbackStatus } from "@/lib/media-source/demo-fallback";
@@ -24,11 +22,10 @@ export async function getActiveMediaSource() {
   const exportAssets = await getAssetsFromExport();
   if (exportAssets?.length) {
     cachedAssets = exportAssets;
-    const exportPath = latestMetadataExportPath();
     cachedStatus = {
       ...exportedMetadataStatus,
-      detail: exportPath
-        ? `Reading ${path.relative(repoRoot(), exportPath)}. Approval writes still require ResourceSpace API field mapping.`
+      detail: latestMetadataExportPath()
+        ? "Reading latest ResourceSpace metadata export. Approval writes still require ResourceSpace API field mapping."
         : exportedMetadataStatus.detail
     };
     return { assets: cachedAssets, status: cachedStatus };

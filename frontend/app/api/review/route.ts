@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
   const envelope = session.rawSourceEnvelope(queue.source);
   return NextResponse.json({
     ...queue,
+    assets: session.assetsPayload(queue.assets),
+    allAssets: session.assetsPayload(queue.allAssets),
     ...envelope,
     pendingWrites: Object.fromEntries(
       queue.assets

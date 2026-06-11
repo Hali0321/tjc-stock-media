@@ -6,6 +6,10 @@ function canSeeOperationalSource(role: DemoRole) {
   return canReview(role);
 }
 
+function canSeePrivateSourceFiles(role: DemoRole) {
+  return role === "DAM Admin";
+}
+
 function safeSavedViewText(value: string) {
   return value
     .replace(/ResourceSpace-approved/gi, "Library-approved")
@@ -65,20 +69,28 @@ export function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaS
 }
 
 export function assetForRolePayload(role: DemoRole, asset: StockMediaAsset): StockMediaAsset {
-  if (canSeeOperationalSource(role)) return asset;
+  if (canSeePrivateSourceFiles(role)) return asset;
   const {
     checksumSha256: _checksumSha256,
     duplicateGroup: _duplicateGroup,
     duplicateRole: _duplicateRole,
-    fileSizeBytes: _fileSizeBytes,
     masterDrivePath: _masterDrivePath,
     originalFilename: _originalFilename,
-    pendingReviewWrite: _pendingReviewWrite,
-    resourceSpaceId: _resourceSpaceId,
-    reuseDecision: _reuseDecision,
     sourceAlbumMemberships: _sourceAlbumMemberships,
     sourceAlbumPath: _sourceAlbumPath,
     sourcePath: _sourcePath,
+    ...roleSafeAsset
+  } = asset;
+
+  if (canSeeOperationalSource(role)) {
+    return roleSafeAsset;
+  }
+
+  const {
+    fileSizeBytes: _fileSizeBytes,
+    pendingReviewWrite: _pendingReviewWrite,
+    resourceSpaceId: _resourceSpaceId,
+    reuseDecision: _reuseDecision,
     sourcePlatform: _sourcePlatform,
     sourceSystem: _sourceSystem,
     workflowState: _workflowState,

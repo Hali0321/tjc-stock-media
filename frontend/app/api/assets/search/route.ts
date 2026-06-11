@@ -24,6 +24,7 @@ function searchResultForRole(session: ReturnType<typeof createDamRouteSession>, 
   if (canReview(role)) {
     return {
       ...result,
+      assets: session.assetsPayload(result.assets),
       ...envelope
     };
   }

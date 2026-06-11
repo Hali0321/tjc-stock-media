@@ -39,6 +39,7 @@ const files = {
   downloadRoute: "frontend/app/api/download/[id]/route.ts",
   reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
   resourceSpaceApi: "frontend/lib/media-source/resourcespace-api.ts",
+  mediaSourceIndex: "frontend/lib/media-source/index.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -81,6 +82,7 @@ const batchRoute = read(files.batchRoute);
 const downloadRoute = read(files.downloadRoute);
 const reviewActionWorkflow = read(files.reviewActionWorkflow);
 const resourceSpaceApi = read(files.resourceSpaceApi);
+const mediaSourceIndex = read(files.mediaSourceIndex);
 const readiness = read(files.readiness);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
@@ -330,6 +332,20 @@ if (!usageAnalytics.includes("function safeUsageFailureReason") || /reason:\s*er
 }
 if (!usageAnalytics.includes("function usageAnalyticsStorageMode") || /\bdbPath\b/.test(usageAnalytics) || /analytics\.dbPath/.test(readiness)) {
   failures.push("usage analytics diagnostics must expose storage mode, not filesystem paths");
+}
+if (/path\.relative\(repoRoot\(\),\s*exportPath\)|\.runtime\/exports|Reading \$\{/.test(mediaSourceIndex)) {
+  failures.push("media source status must not expose metadata export filesystem paths");
+}
+if (!sourceRedaction.includes("function canSeePrivateSourceFiles") || /if \(canSeeOperationalSource\(role\)\) return asset/.test(sourceRedaction)) {
+  failures.push("reviewer payloads must not expose raw private source-file fields");
+}
+if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
+  failures.push("reviewer search/review API payloads must pass assets through role redaction");
+}
+for (const key of ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]) {
+  if (!sourceRedaction.includes(`${key}: _${key}`)) {
+    failures.push(`source redaction must strip ${key} outside DAM Admin payloads`);
+  }
 }
 if (!auditLog.includes("normalizeAssetId")) failures.push("audit log must normalize asset ids through normalizeAssetId");
 if (!auditLog.includes("normalizeResourceSpaceRef")) failures.push("audit log must normalize ResourceSpace ids through normalizeResourceSpaceRef");
