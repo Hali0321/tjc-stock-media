@@ -1,7 +1,27 @@
+import fs from "node:fs";
 import path from "node:path";
 
+let cachedRepoRoot = "";
+
+function looksLikeRepoRoot(dir: string) {
+  return fs.existsSync(path.join(dir, "Makefile")) && fs.existsSync(path.join(dir, "frontend", "package.json"));
+}
+
+function findRepoRoot(start: string) {
+  let current = path.resolve(start);
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (looksLikeRepoRoot(current)) return current;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return path.resolve(start, "..");
+}
+
 export function repoRoot() {
-  return process.env.TJC_STOCK_MEDIA_ROOT || path.resolve(process.cwd(), "..");
+  if (process.env.TJC_STOCK_MEDIA_ROOT) return path.resolve(process.env.TJC_STOCK_MEDIA_ROOT);
+  cachedRepoRoot ||= findRepoRoot(process.cwd());
+  return cachedRepoRoot;
 }
 
 export function resourceSpaceBaseUrl() {

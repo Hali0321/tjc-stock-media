@@ -10,6 +10,7 @@ const files = {
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
+  env: "frontend/lib/env.ts",
   reviewEvidence: "frontend/lib/review-evidence.ts",
   requestValidation: "frontend/lib/request-validation.ts",
   catalog: "frontend/lib/catalog.ts",
@@ -30,6 +31,7 @@ const packages = read(files.packages);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
+const env = read(files.env);
 const reviewEvidence = read(files.reviewEvidence);
 const requestValidation = read(files.requestValidation);
 const catalog = read(files.catalog);
@@ -197,6 +199,9 @@ if (!feedback.includes("normalizeSafeRoutePath")) failures.push("feedback store 
 if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(feedback)) failures.push("feedback store must not hand-roll route path normalization");
 if (/npm --prefix frontend run (build|dev|typecheck)/.test(makefile) || /npm --prefix frontend run (build|typecheck)/.test(frontendCheck)) {
   failures.push("frontend build/dev checks must run from frontend cwd so Next outputFileTracingRoot and production artifacts are correct");
+}
+if (!env.includes("function findRepoRoot") || !env.includes("looksLikeRepoRoot") || /path\.resolve\(process\.cwd\(\),\s*"\.\."\)/.test(env)) {
+  failures.push("env repoRoot must detect repo root from current or frontend cwd without assuming cwd/..");
 }
 
 for (const route of [
