@@ -45,11 +45,11 @@ for required in \
 done
 
 if [ ! -d frontend/node_modules ]; then
-  npm --prefix frontend install
+  (cd frontend && npm install)
 fi
 
-npm --prefix frontend run typecheck
-npm --prefix frontend run build
+(cd frontend && npm run typecheck)
+(cd frontend && npm run build)
 
 if rg -n "RS_API_KEY|RS_API_USER|api_key|private key" frontend/app frontend/components >/tmp/tjc-frontend-secret-scan.txt; then
   echo "FAIL: possible client-side API secret exposure"

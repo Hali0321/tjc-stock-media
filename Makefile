@@ -86,7 +86,7 @@ storage-honesty-guard:
 	./scripts/storage-honesty-guard.mjs
 
 frontend-dev:
-	npm --prefix frontend run dev
+	cd frontend && npm run dev
 
 frontend-check:
 	./scripts/frontend-check.sh

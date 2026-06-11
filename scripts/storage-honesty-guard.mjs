@@ -38,6 +38,8 @@ const searchRoute = read(files.searchRoute);
 const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
 const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const readiness = read(files.readiness);
+const makefile = read("Makefile");
+const frontendCheck = read("scripts/frontend-check.sh");
 const failures = [];
 
 const stores = [
@@ -193,6 +195,9 @@ for (const module of [
 
 if (!feedback.includes("normalizeSafeRoutePath")) failures.push("feedback store must normalize routes through normalizeSafeRoutePath");
 if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(feedback)) failures.push("feedback store must not hand-roll route path normalization");
+if (/npm --prefix frontend run (build|dev|typecheck)/.test(makefile) || /npm --prefix frontend run (build|typecheck)/.test(frontendCheck)) {
+  failures.push("frontend build/dev checks must run from frontend cwd so Next outputFileTracingRoot and production artifacts are correct");
+}
 
 for (const route of [
   { name: "beta feedback update route", source: betaFeedbackUpdateRoute, required: ["normalizeFeedbackStatus", "normalizeFeedbackSeverity"] },
