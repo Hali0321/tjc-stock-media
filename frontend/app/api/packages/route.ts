@@ -3,7 +3,7 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { getMediaSourceSession } from "@/lib/media-source/session";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { resolvePackageSections } from "@/lib/package-drafts";
-import { listStoredPackageDrafts, sanitizePackageDraft, savePackageDraft } from "@/lib/package-store";
+import { listStoredPackageDrafts, packageDraftForRolePayload, sanitizePackageDraft, savePackageDraft } from "@/lib/package-store";
 import { safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canContribute, canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
@@ -93,5 +93,5 @@ export async function POST(request: NextRequest) {
     }
   });
 
-  return NextResponse.json({ ok: true, package: record, governance, storageMode: record.storageMode });
+  return NextResponse.json({ ok: true, package: packageDraftForRolePayload(identity.role, record), governance, storageMode: record.storageMode });
 }

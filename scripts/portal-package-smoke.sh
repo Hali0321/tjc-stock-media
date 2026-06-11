@@ -61,8 +61,12 @@ if (data.ok !== true || data.storageMode !== "local-json" || data.package?.id !=
   console.error(`FAIL: package save shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
 }
-if (!data.package.createdBy || data.package.role !== "Contributor") {
+if (data.package.createdBy !== "Contributor" || data.package.role !== "Contributor") {
   console.error(`FAIL: package save missing actor/role: ${JSON.stringify(data.package).slice(0, 500)}`);
+  process.exit(1);
+}
+if (/local-beta:|sso:|@/i.test(data.package.createdBy || "")) {
+  console.error(`FAIL: package save response leaked creator identity: ${JSON.stringify(data.package).slice(0, 500)}`);
   process.exit(1);
 }
 const sections = data.package.sections || [];

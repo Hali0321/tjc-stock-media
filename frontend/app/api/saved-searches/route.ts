@@ -80,5 +80,5 @@ export async function POST(request: NextRequest) {
     }
   });
 
-  return NextResponse.json({ ok: true, search: record, storageMode: record.storageMode });
+  return NextResponse.json({ ok: true, search: savedSearchForRolePayload(identity.role, record), storageMode: record.storageMode });
 }

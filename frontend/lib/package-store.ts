@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
-import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
+import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePackageRef } from "@/lib/package-refs";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { DamPackage, DemoRole } from "@/lib/types";
@@ -117,6 +117,18 @@ async function writeLocalPackages(records: StoredPackageDraft[]) {
 
 export async function listStoredPackageDrafts() {
   return newestFirst(await readLocalPackages()).slice(0, maxPackageDrafts);
+}
+
+function creatorLabel(role: DemoRole) {
+  return role === "DAM Admin" ? "DAM Admin" : role === "Reviewer" ? "Reviewer" : "Contributor";
+}
+
+export function packageDraftForRolePayload(role: DemoRole, record: StoredPackageDraft): StoredPackageDraft {
+  if (canReview(role)) return record;
+  return {
+    ...record,
+    createdBy: creatorLabel(record.role)
+  };
 }
 
 export async function savePackageDraft(record: Omit<StoredPackageDraft, "storageMode">) {

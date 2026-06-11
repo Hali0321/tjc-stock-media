@@ -356,6 +356,15 @@ if (!savedSearchRoute.includes("savedSearchForRolePayload(identity.role, record)
 if (!read("scripts/portal-saved-search-smoke.sh").includes("saved search contributor list leaked creator identity")) {
   failures.push("saved search smoke must prove Contributor lists do not leak creator identity");
 }
+if (!packages.includes("packageDraftForRolePayload") || !packages.includes("createdBy: creatorLabel(record.role)")) {
+  failures.push("package draft save payloads must scrub creator identity for non-review roles while keeping stored audit actor");
+}
+if (!packageRoute.includes("packageDraftForRolePayload(identity.role, record)")) {
+  failures.push("package route must return role-safe package draft payloads on save");
+}
+if (!portalPackageSmoke.includes("package save response leaked creator identity")) {
+  failures.push("package smoke must prove Contributor package saves do not leak creator identity");
+}
 for (const surface of [
   { name: "catalog search", source: catalog },
   { name: "asset search route", source: searchRoute }

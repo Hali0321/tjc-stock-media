@@ -73,8 +73,12 @@ if (data.ok !== true || data.storageMode !== "local-json" || data.search?.id !==
   console.error(`FAIL: saved search save shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
 }
-if (!data.search.createdBy || data.search.role !== "Contributor") {
+if (data.search.createdBy !== "Contributor" || data.search.role !== "Contributor") {
   console.error(`FAIL: saved search missing actor/role: ${JSON.stringify(data.search).slice(0, 500)}`);
+  process.exit(1);
+}
+if (/local-beta:|sso:|@/i.test(data.search.createdBy || "")) {
+  console.error(`FAIL: saved search save response leaked creator identity: ${JSON.stringify(data.search).slice(0, 500)}`);
   process.exit(1);
 }
 if (data.search.view || data.search.filters.includes("../private") || data.search.filters.some((filter) => /^[a-f0-9]{32,}$/i.test(filter)) || data.search.filters.length !== new Set(data.search.filters).size) {
