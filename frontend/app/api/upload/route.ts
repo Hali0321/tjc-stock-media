@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeDateField, normalizeDisplayTextField, normalizeTextField, normalizeUrlField } from "@/lib/request-validation";
+import { normalizeDateField, normalizeDisplayTextField, normalizeTextField, normalizeUrlField, readFormData } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const form = await request.formData();
+  const form = await readFormData(request);
   const identity = requestIdentity(request, String(form.get("role") || "Viewer"));
   const role = identity.role;
   if (!canUpload(role)) {

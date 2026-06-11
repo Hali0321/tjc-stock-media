@@ -76,11 +76,17 @@ const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/re
 if (!requestValidationSource.includes("function readJsonObject")) {
   failures.push("request validation must expose readJsonObject for API JSON body fallback");
 }
+if (!requestValidationSource.includes("function readFormData")) {
+  failures.push("request validation must expose readFormData for API multipart body fallback");
+}
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");
   if (/request\.json\(\)\.catch/.test(source)) {
     failures.push(`${relativePath} must parse fallback JSON through readJsonObject`);
+  }
+  if (/request\.formData\(\)/.test(source)) {
+    failures.push(`${relativePath} must parse fallback multipart forms through readFormData`);
   }
 }
 
