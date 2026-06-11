@@ -11,6 +11,7 @@ import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSumma
 
 const pendingDirName = "pending-review-writes";
 export const maxPendingReviewWrites = 200;
+const pendingReviewWriteFileReadWindow = maxPendingReviewWrites * 3;
 const syncStates: ReviewWriteRecord["syncState"][] = ["ready_to_sync", "sync_failed", "synced_to_resourcespace", "cancelled", "superseded", "queued"];
 
 function pendingDir() {
@@ -64,7 +65,7 @@ function writeRecord(record: ReviewWriteRecord) {
 }
 
 export function listPendingReviewWrites(): ReviewWriteRecord[] {
-  const records = listRuntimeFiles(pendingDir(), ".json")
+  const records = listRuntimeFiles(pendingDir(), ".json", { maxFilesFromEnd: pendingReviewWriteFileReadWindow })
     .map(readRecord)
     .filter((record): record is ReviewWriteRecord => Boolean(record));
   return newestByTimestamp(records, (record) => record.updatedAt)

@@ -149,11 +149,17 @@ if (!localJsonStore.includes("function normalizeWindow") || !localJsonStore.incl
 if (!runtimeFileStore.includes("writeRuntimeJsonFile") || !runtimeFileStore.includes("appendRuntimeJsonLine") || !runtimeFileStore.includes("readRuntimeJsonLines") || !runtimeFileStore.includes("listRuntimeFiles")) {
   failures.push("shared runtime file module must own JSON file writes, JSONL append/read, and runtime file listing");
 }
+if (!runtimeFileStore.includes("maxFilesFromEnd") || !runtimeFileStore.includes("function fileWindow")) {
+  failures.push("shared runtime file module must own bounded runtime file listing windows for diagnostics");
+}
 if (!runtimeFileStore.includes("maxLinesFromEnd") || !runtimeFileStore.includes("function lineWindow")) {
   failures.push("shared runtime file module must own bounded JSONL read windows for diagnostics");
 }
 if (!auditLog.includes("maxAuditEventsReturned") || !auditLog.includes("maxLinesFromEnd: readWindow")) {
   failures.push("audit log diagnostics must read bounded JSONL windows instead of unbounded monthly files");
+}
+if (!pendingReviewWrites.includes("pendingReviewWriteFileReadWindow") || !pendingReviewWrites.includes("maxFilesFromEnd: pendingReviewWriteFileReadWindow")) {
+  failures.push("pending review diagnostics must read bounded pending-write file windows instead of every queued file");
 }
 for (const store of [
   { name: "pending review writes", source: pendingReviewWrites },

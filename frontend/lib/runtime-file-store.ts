@@ -34,11 +34,21 @@ export function writeRuntimeJsonFile(filePath: string, record: unknown) {
   writeRuntimeFileAtomically(filePath, `${JSON.stringify(record, null, 2)}\n`);
 }
 
-export function listRuntimeFiles(dir: string, extension: string) {
+export type RuntimeFileListOptions = {
+  maxFilesFromEnd?: number;
+};
+
+function fileWindow(files: string[], options?: RuntimeFileListOptions) {
+  const maxFiles = Math.trunc(options?.maxFilesFromEnd || 0);
+  return maxFiles > 0 ? [...files].sort().slice(-maxFiles) : files;
+}
+
+export function listRuntimeFiles(dir: string, extension: string, options?: RuntimeFileListOptions) {
   if (!fs.existsSync(dir)) return [];
-  return fs
+  const files = fs
     .readdirSync(dir)
-    .filter((file) => file.endsWith(extension))
+    .filter((file) => file.endsWith(extension));
+  return fileWindow(files, options)
     .map((file) => path.join(dir, file));
 }
 
