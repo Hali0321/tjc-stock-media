@@ -74,6 +74,7 @@ require_file "scripts/live-dam-surface-guard.mjs"
 require_file "scripts/api-identity-guard.mjs"
 require_file "scripts/api-audit-guard.mjs"
 require_file "scripts/public-env-guard.mjs"
+require_file "scripts/git-hygiene-guard.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
 
@@ -105,11 +106,11 @@ else
   cat /tmp/tjc-public-env-guard.txt
 fi
 
-if git ls-files | rg -i '\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$' | rg -v '^frontend/public/brand/' >/tmp/tjc-launch-media-tracked.txt; then
-  fail "media files are tracked by git"
-  cat /tmp/tjc-launch-media-tracked.txt
+if node scripts/git-hygiene-guard.mjs >/tmp/tjc-git-hygiene-guard.txt 2>&1; then
+  pass "git tracks no church media, env, runtime, or model artifacts"
 else
-  pass "no church media files tracked by git; app brand assets allowed"
+  fail "git hygiene guard failed"
+  cat /tmp/tjc-git-hygiene-guard.txt
 fi
 
 if [ -f .env ]; then
