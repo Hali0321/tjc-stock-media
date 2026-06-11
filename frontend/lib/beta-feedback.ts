@@ -2,10 +2,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, isSafeHttpUrl } from "@/lib/private-source-text";
-import { normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
+import { isSafeHttpUrl } from "@/lib/private-source-text";
+import { normalizePersistedDisplayText, normalizePersistedSlugText, normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -39,9 +39,7 @@ function safeText(value: unknown, maxLength: number) {
 }
 
 function safeId(value: unknown) {
-  const text = safeText(value, 120);
-  if (containsPrivateSourceText(text)) return "";
-  return safeSlugText(text, 120);
+  return normalizePersistedSlugText(value, 120);
 }
 
 export function normalizeFeedbackSeverity(value: unknown, fallback: BetaFeedbackSeverity = "medium"): BetaFeedbackSeverity {

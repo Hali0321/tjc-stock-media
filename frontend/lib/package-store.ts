@@ -2,10 +2,9 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
-import { normalizePersistedDisplayText, normalizeResourceSpaceRef } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizePersistedSlugText, normalizeResourceSpaceRef } from "@/lib/request-validation";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
 export type StoredPackageDraft = {
@@ -38,14 +37,8 @@ function newestFirst(records: StoredPackageDraft[]) {
   return newestByTimestamp(records, (record) => record.updatedAt);
 }
 
-function safeText(value: unknown, maxLength: number) {
-  return safeCompactText(value, maxLength);
-}
-
 function safeIdentifierText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  if (containsUnsafePathText(text) || containsPrivateSourceText(text)) return "";
-  return safeSlugText(text, maxLength);
+  return normalizePersistedSlugText(value, maxLength, { rejectUnsafePath: true });
 }
 
 export function sanitizePackageDraft(input: unknown): DamPackage {

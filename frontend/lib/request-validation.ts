@@ -1,5 +1,5 @@
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
-import { safeCompactText, safeEnumValue, safePathSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safePathSlugText, safeSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
@@ -56,6 +56,13 @@ export function normalizePersistedDisplayText(value: unknown, max = 100) {
   if (containsUnsafePathText(text)) return "";
   if (containsPrivateSourceText(text)) return "";
   return text;
+}
+
+export function normalizePersistedSlugText(value: unknown, max = 100, options: { rejectUnsafePath?: boolean } = {}) {
+  const text = safeCompactText(value, max);
+  if (containsPrivateSourceText(text)) return "";
+  if (options.rejectUnsafePath && containsUnsafePathText(text)) return "";
+  return safeSlugText(text, max);
 }
 
 export function normalizeUrlField(value: unknown, fallback = "", max = 500) {

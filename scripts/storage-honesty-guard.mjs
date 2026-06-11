@@ -64,8 +64,8 @@ const persistedRecordSources = [
 for (const store of persistedRecordSources) {
   if (!store.source.includes("safeIsoTimestamp")) failures.push(`${store.name} must normalize persisted timestamps through safeIsoTimestamp`);
   if (!store.source.includes("newestByTimestamp")) failures.push(`${store.name} must sort persisted records through newestByTimestamp`);
-  if (!store.source.includes("safeCompactText")) failures.push(`${store.name} must normalize persisted text through safeCompactText`);
-  if (!store.source.includes("safeSlugText")) failures.push(`${store.name} must normalize persisted slugs through safeSlugText`);
+  if (!store.source.includes("safeCompactText") && !store.source.includes("normalizePersisted")) failures.push(`${store.name} must normalize persisted text through shared safety helpers`);
+  if (!store.source.includes("safeSlugText") && !store.source.includes("normalizePersistedSlugText")) failures.push(`${store.name} must normalize persisted slugs through normalizePersistedSlugText or safeSlugText`);
   if (!store.source.includes(store.enumHelper || "safeEnumValue")) failures.push(`${store.name} must normalize persisted enums through ${store.enumHelper || "safeEnumValue"}`);
   if (/function\s+safeIso\s*\(/.test(store.source)) failures.push(`${store.name} must not hand-roll Date.parse timestamp guards`);
   if (/Date\.parse/.test(store.source)) failures.push(`${store.name} must not hand-roll timestamp ordering with Date.parse`);
@@ -111,8 +111,20 @@ if (!requestValidation.includes("containsPrivateSourceText(ref)")) {
 if (!requestValidation.includes("function normalizePersistedDisplayText")) {
   failures.push("request validation must expose normalizePersistedDisplayText for persisted display labels");
 }
+if (!requestValidation.includes("function normalizePersistedSlugText")) {
+  failures.push("request validation must expose normalizePersistedSlugText for persisted identifiers");
+}
 if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
   failures.push("request validation must not hand-roll private token detection");
+}
+for (const store of [
+  { name: "feedback", source: feedback },
+  { name: "package drafts", source: packages },
+  { name: "audit log", source: auditLog }
+]) {
+  if (!store.source.includes("normalizePersistedSlugText")) {
+    failures.push(`${store.name} must normalize persisted identifiers through normalizePersistedSlugText`);
+  }
 }
 for (const store of [
   { name: "feedback", source: feedback },

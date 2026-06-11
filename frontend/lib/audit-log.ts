@@ -2,10 +2,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeEnumValue, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText } from "@/lib/private-source-text";
-import { normalizePersistedDisplayText } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
 
 export type AuditEventType =
@@ -91,14 +90,8 @@ function readJsonLine(line: string): AuditEventRecord | null {
   }
 }
 
-function safeText(value: unknown, maxLength: number) {
-  return safeCompactText(value, maxLength);
-}
-
 function safeId(value: unknown) {
-  const text = safeText(value, 120);
-  if (containsPrivateSourceText(text)) return "";
-  return safeSlugText(text, 120);
+  return normalizePersistedSlugText(value, 120);
 }
 
 function safeStatus(value: unknown): AuditEventRecord["status"] {
