@@ -24,6 +24,7 @@ const files = {
   betaFeedbackExportRoute: "frontend/app/api/beta-feedback/export/route.ts",
   savedSearchRoute: "frontend/app/api/saved-searches/route.ts",
   packageRoute: "frontend/app/api/packages/route.ts",
+  packageBuilder: "frontend/components/dam/enterprise/PackageBuilderPage.tsx",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -51,6 +52,7 @@ const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
 const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const savedSearchRoute = read(files.savedSearchRoute);
 const packageRoute = read(files.packageRoute);
+const packageBuilder = read(files.packageBuilder);
 const readiness = read(files.readiness);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
@@ -130,6 +132,9 @@ if (!packageDrafts.includes("function sectionsWithGlobalPackageRefs") || !packag
 }
 if (!packageGovernance.includes("normalizedPackageAssetRef") || /String\(asset\.resourceSpaceId\s*\|\|\s*asset\.id\)/.test(packageGovernance)) {
   failures.push("package governance display refs must normalize through package ref module");
+}
+if (!packageBuilder.includes("packageAssetRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(packageBuilder)) {
+  failures.push("package builder display refs must normalize through package ref module");
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");
