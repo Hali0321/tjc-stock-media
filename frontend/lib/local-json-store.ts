@@ -26,7 +26,7 @@ function memoryWindow<TRecord>(options: LocalJsonStoreOptions<TRecord>) {
 function replaceMemory<TRecord>(records: TRecord[], options: LocalJsonStoreOptions<TRecord>) {
   const store = options.memoryStore?.();
   if (!store) return false;
-  store.splice(0, store.length, ...options.order(records).slice(0, options.maxRecords));
+  store.splice(0, store.length, ...normalizeWindow(records, options));
   return true;
 }
 
@@ -42,7 +42,7 @@ export async function readLocalJsonStore<TRecord>(options: LocalJsonStoreOptions
 }
 
 export async function writeLocalJsonStore<TRecord>(records: TRecord[], options: LocalJsonStoreOptions<TRecord>) {
-  const windowed = options.order(records).slice(0, options.maxRecords);
+  const windowed = normalizeWindow(records, options);
   if (!localFilesEnabled(options)) {
     replaceMemory(windowed, options);
     return;

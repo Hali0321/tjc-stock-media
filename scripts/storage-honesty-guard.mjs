@@ -320,6 +320,9 @@ if (!resourceSpaceClient.includes("function safeApiErrorMessage") || !resourceSp
 if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
   failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");
 }
+if (!localJsonStore.includes("const windowed = normalizeWindow(records, options)") || !localJsonStore.includes("...normalizeWindow(records, options)")) {
+  failures.push("local JSON store must normalize and cap records on write as well as read");
+}
 for (const store of [
   { name: "feedback", source: feedback },
   { name: "saved searches", source: savedSearches },
