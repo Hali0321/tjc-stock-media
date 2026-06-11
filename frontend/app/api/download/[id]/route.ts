@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { decideAccess } from "@/lib/access-decisions";
@@ -6,8 +5,8 @@ import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
+import { approvedCopyFileName, readDeliveredImage } from "@/lib/media-delivery";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
-import { safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeAssetId, normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -64,30 +63,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Approved derivative not available in local filestore.", ...envelope }, { status: 404 });
   }
 
-  try {
-    const bytes = fs.readFileSync(filePath);
-    const safeTitle = safeSlugText(normalizeDisplayTextField(asset.title, "", 80), 80) || `asset-${id}`;
-    const resourceSpaceId = assetResourceRef(asset);
-    appendAuditEvent({
-      type: "approved_download",
-      role,
-      actor: session.identity.id,
-      assetId: asset.id,
-      resourceSpaceId,
-      status: "allowed",
-      summary: "Approved copy downloaded.",
-      details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName: `${safeTitle}-approved-copy.jpg` }
-    });
-    return new NextResponse(bytes, {
-      headers: {
-        "Content-Type": "image/jpeg",
-        "Content-Disposition": `attachment; filename="${safeTitle}-approved-copy.jpg"`,
-        "Cache-Control": "no-store"
-      }
-    });
-  } catch {
+  const image = readDeliveredImage(filePath);
+  if (!image) {
     return NextResponse.json({ error: "Approved derivative is indexed but unavailable.", ...envelope }, { status: 404 });
   }
+  const fileName = approvedCopyFileName(asset.title, id);
+  const resourceSpaceId = assetResourceRef(asset);
+  appendAuditEvent({
+    type: "approved_download",
+    role,
+    actor: session.identity.id,
+    assetId: asset.id,
+    resourceSpaceId,
+    status: "allowed",
+    summary: "Approved copy downloaded.",
+    details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName }
+  });
+  return new NextResponse(image.bytes, {
+    headers: {
+      "Content-Type": image.contentType,
+      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Cache-Control": "no-store"
+    }
+  });
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

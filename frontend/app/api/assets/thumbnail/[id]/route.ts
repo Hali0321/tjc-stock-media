@@ -1,9 +1,9 @@
-import fs from "node:fs";
 import { NextRequest, NextResponse } from "next/server";
 import { decideAccess, type AccessAction } from "@/lib/access-decisions";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
+import { readDeliveredImage } from "@/lib/media-delivery";
 import { normalizeAssetId } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -24,14 +24,6 @@ function placeholderImage(label: string) {
       "Cache-Control": "private, max-age=60"
     }
   });
-}
-
-function supportedImageContentType(bytes: Buffer) {
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
-  if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
-  if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
-  if (bytes.length >= 6 && ["GIF87a", "GIF89a"].includes(bytes.subarray(0, 6).toString("ascii"))) return "image/gif";
-  return null;
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -70,19 +62,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return placeholderImage("Preview pending");
   }
 
-  try {
-    const bytes = fs.readFileSync(filePath);
-    const contentType = supportedImageContentType(bytes);
-    if (!contentType) {
-      return placeholderImage("Preview unavailable");
-    }
-    return new NextResponse(bytes, {
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "private, max-age=300"
-      }
-    });
-  } catch {
+  const image = readDeliveredImage(filePath);
+  if (!image) {
     return placeholderImage("Preview unavailable");
   }
+  return new NextResponse(image.bytes, {
+    headers: {
+      "Content-Type": image.contentType,
+      "Cache-Control": "private, max-age=300"
+    }
+  });
 }

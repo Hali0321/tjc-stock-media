@@ -52,17 +52,34 @@ for (const fullPath of walk(apiRoot)) {
 
 const downloadRoute = "frontend/app/api/download/[id]/route.ts";
 const downloadSource = fs.readFileSync(path.join(root, downloadRoute), "utf8");
+const thumbnailRoute = "frontend/app/api/assets/thumbnail/[id]/route.ts";
+const thumbnailSource = fs.readFileSync(path.join(root, thumbnailRoute), "utf8");
+const mediaDeliverySource = fs.readFileSync(path.join(root, "frontend/lib/media-delivery.ts"), "utf8");
 if (!downloadSource.includes('findFilestoreDerivative(id, "download")')) {
   failures.push(`${downloadRoute} must resolve approved copies through findFilestoreDerivative`);
 }
 if (!downloadSource.includes("Private originals and S3 paths are not exposed.")) {
   failures.push(`${downloadRoute} must keep explicit no-originals response copy`);
 }
-if (!downloadSource.includes("safeSlugText(normalizeDisplayTextField")) {
-  failures.push(`${downloadRoute} must derive download filenames through normalizeDisplayTextField and safeSlugText`);
+if (!downloadSource.includes("approvedCopyFileName(asset.title, id)") || !mediaDeliverySource.includes("safeSlugText(normalizeDisplayTextField")) {
+  failures.push(`${downloadRoute} must derive download filenames through media-delivery approvedCopyFileName`);
 }
 if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi/.test(downloadSource)) {
   failures.push(`${downloadRoute} must not hand-roll approved-copy filename slugging`);
+}
+for (const route of [
+  { name: downloadRoute, source: downloadSource },
+  { name: thumbnailRoute, source: thumbnailSource }
+]) {
+  if (!route.source.includes("readDeliveredImage(")) {
+    failures.push(`${route.name} must read derivative bytes through media-delivery readDeliveredImage`);
+  }
+  if (/from "node:fs"/.test(route.source) || /readFileSync/.test(route.source)) {
+    failures.push(`${route.name} must not hand-roll derivative file reads`);
+  }
+}
+if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function approvedCopyFileName")) {
+  failures.push("media-delivery must own supported image detection, derivative reads, and approved-copy filenames");
 }
 
 const collectionsRoute = "frontend/app/api/collections/route.ts";
