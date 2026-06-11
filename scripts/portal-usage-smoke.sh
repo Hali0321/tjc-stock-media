@@ -4,7 +4,8 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:4868}"
 USAGE_ANALYTICS_DB_PATH="${USAGE_ANALYTICS_DB_PATH:-$(pwd)/.runtime/analytics/portal-usage.sqlite}"
 MARKER="usage-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
-export USAGE_ANALYTICS_DB_PATH MARKER
+SMOKE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+export USAGE_ANALYTICS_DB_PATH MARKER SMOKE_STARTED_AT
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -227,10 +228,10 @@ const db = new DatabaseSync(file, { readOnly: true });
 const rows = db.prepare(`
   SELECT type, role, actor, asset_id AS assetId, route, query, metadata_json AS metadataJson
   FROM usage_events
-  WHERE created_at >= datetime('now', '-15 minutes')
+  WHERE created_at >= ?
   ORDER BY id DESC
   LIMIT 200
-`).all();
+`).all(process.env.SMOKE_STARTED_AT);
 db.close();
 
 const types = new Set(rows.map((row) => row.type));
@@ -251,6 +252,14 @@ const badActor = rows
   .find((row) => typeof row.actor !== "string" || !row.actor.length);
 if (badActor) {
   console.error(`FAIL: usage analytics event missing actor: ${JSON.stringify(badActor)}`);
+  process.exit(1);
+}
+const actorLeak = rows
+  .filter((row) => requiredTypes.includes(row.type))
+  .filter((row) => row.role !== "Root")
+  .find((row) => /local-beta:|sso:|@/i.test(String(row.actor || "")));
+if (actorLeak) {
+  console.error(`FAIL: usage analytics event leaked actor identity: ${JSON.stringify(actorLeak)}`);
   process.exit(1);
 }
 console.log(`PASS: usage analytics recorded ${requiredTypes.join(", ")} at ${file}`);

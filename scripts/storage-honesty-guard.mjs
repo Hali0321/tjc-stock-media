@@ -388,6 +388,9 @@ if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(usageAnalytics)) failur
 if (/\.includes\(value as /.test(usageAnalytics)) failures.push("usage analytics must not hand-roll enum fallback normalization");
 if (/Math\.max\(0,\s*Number/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll nonnegative metric normalization");
 if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll route path normalization");
+if (!usageAnalytics.includes("function usageActorLabel") || /normalizePersistedDisplayText\(event\.actor/.test(usageAnalytics)) {
+  failures.push("usage analytics must store role-level actor labels instead of raw actor identities");
+}
 if (!usageAnalytics.includes("function safeUsageFailureReason") || /reason:\s*error instanceof Error/.test(usageAnalytics)) {
   failures.push("usage analytics write failures must not expose raw storage error messages");
 }

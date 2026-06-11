@@ -103,6 +103,10 @@ function safeUsageFailureReason() {
   return "usage-analytics-write-failed";
 }
 
+function usageActorLabel(role: DemoRole) {
+  return role === "DAM Admin" ? "DAM Admin" : role === "Reviewer" ? "Reviewer" : role === "Contributor" ? "Contributor" : "Viewer";
+}
+
 function usageAnalyticsStorageMode() {
   return usageAnalyticsDbPath() ? "configured-sqlite" : "local-sqlite";
 }
@@ -118,7 +122,7 @@ export function recordUsageEvent(event: UsageEventInput) {
       new Date().toISOString(),
       safeType(event.type),
       normalizeRoleWithFallback(event.role),
-      normalizePersistedDisplayText(event.actor || event.role, 160) || normalizeRoleWithFallback(event.role),
+      usageActorLabel(normalizeRoleWithFallback(event.role)),
       event.assetId ? safeAssetId(event.assetId) || null : null,
       event.resourceSpaceId ? safeResourceSpaceId(event.resourceSpaceId) || null : null,
       event.route ? safeRoute(event.route) || null : null,
