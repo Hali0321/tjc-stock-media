@@ -174,6 +174,19 @@ if (/normalizeFeedback(Route|Text|Url)\(/.test(betaFeedbackRouteSource) || /read
   failures.push(`${betaFeedbackRoute} must not hand-roll feedback submission parsing or field normalization`);
 }
 
+const savedSearchRoute = "frontend/app/api/saved-searches/route.ts";
+const savedSearchRouteSource = fs.readFileSync(path.join(root, savedSearchRoute), "utf8");
+const savedSearchSource = fs.readFileSync(path.join(root, "frontend/lib/saved-search-store.ts"), "utf8");
+if (!savedSearchRouteSource.includes("readSavedSearchDraftInput(request)") || !savedSearchRouteSource.includes("hasSavedSearchCriteria(draft)") || !savedSearchRouteSource.includes("saveSavedSearchDraft(draft, identity)")) {
+  failures.push(`${savedSearchRoute} must delegate draft parsing, criteria checks, and record creation to saved-search-store`);
+}
+if (!savedSearchSource.includes("function readSavedSearchDraftInput") || !savedSearchSource.includes("function hasSavedSearchCriteria") || !savedSearchSource.includes("function saveSavedSearchDraft")) {
+  failures.push("saved-search-store must own saved search draft parsing, criteria checks, and record creation");
+}
+if (/readJsonObject|sanitizeSavedSearch|safeIsoTimestampIdPart|saveSavedSearch\(/.test(savedSearchRouteSource)) {
+  failures.push(`${savedSearchRoute} must not hand-roll saved search body parsing, sanitization, timestamp ids, or persistence record creation`);
+}
+
 for (const route of [
   "frontend/app/api/assets/[id]/route.ts",
   "frontend/app/api/assets/thumbnail/[id]/route.ts",

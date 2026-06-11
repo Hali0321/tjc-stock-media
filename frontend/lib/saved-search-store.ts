@@ -2,9 +2,9 @@ import path from "node:path";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { repoRoot } from "@/lib/env";
 import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
-import { newestByTimestamp, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
-import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizePersistedSlugText, readJsonObject } from "@/lib/request-validation";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
 export type SavedSearchRecord = {
@@ -21,6 +21,7 @@ export type SavedSearchRecord = {
   role: DemoRole;
   storageMode: "local-json";
 };
+export type SavedSearchDraft = Pick<SavedSearchRecord, "id" | "title" | "query" | "view" | "collection" | "filters" | "sort">;
 
 const savedSearchStorePath = () => path.join(repoRoot(), "data", "runtime", "saved-searches.json");
 export const maxSavedSearches = 250;
@@ -45,7 +46,7 @@ function safeSort(value: unknown): CatalogSort {
   return normalizeCatalogSort(value);
 }
 
-export function sanitizeSavedSearch(input: unknown) {
+export function sanitizeSavedSearch(input: unknown): SavedSearchDraft {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const filters = Array.isArray(raw.filters) ? raw.filters : [];
   const query = normalizePersistedDisplayText(raw.query, 200);
@@ -61,6 +62,15 @@ export function sanitizeSavedSearch(input: unknown) {
     filters: safeFilters,
     sort: safeSort(raw.sort)
   };
+}
+
+export async function readSavedSearchDraftInput(request: { json(): Promise<unknown> }) {
+  const body = await readJsonObject(request);
+  return sanitizeSavedSearch((body as { search?: unknown }).search || body);
+}
+
+export function hasSavedSearchCriteria(draft: SavedSearchDraft) {
+  return Boolean(draft.query || draft.view || draft.collection || draft.filters.length);
 }
 
 function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
@@ -117,6 +127,18 @@ export async function saveSavedSearch(record: Omit<SavedSearchRecord, "storageMo
   const next: SavedSearchRecord = { ...record, storageMode: "local-json" };
   await writeLocalSavedSearches([next, ...records.filter((item) => item.id !== next.id)]);
   return next;
+}
+
+export async function saveSavedSearchDraft(draft: SavedSearchDraft, actor: { id: string; role: DemoRole }) {
+  const now = new Date().toISOString();
+  return saveSavedSearch({
+    ...draft,
+    id: draft.id || `search-${safeIsoTimestampIdPart(now)}`,
+    createdAt: now,
+    updatedAt: now,
+    createdBy: actor.id,
+    role: actor.role
+  });
 }
 
 export function savedSearchDiagnostics() {

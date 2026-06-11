@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canContribute } from "@/lib/permissions";
-import { listSavedSearches, sanitizeSavedSearch, savedSearchForRolePayload, saveSavedSearch } from "@/lib/saved-search-store";
+import { hasSavedSearchCriteria, listSavedSearches, readSavedSearchDraftInput, savedSearchForRolePayload, saveSavedSearchDraft } from "@/lib/saved-search-store";
 import { requestIdentity } from "@/lib/request-identity";
-import { readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -47,22 +45,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Saved search save requires Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
   }
 
-  const body = await readJsonObject(request);
-  const draft = sanitizeSavedSearch((body as { search?: unknown }).search || body);
-  if (!draft.query && !draft.view && !draft.collection && !draft.filters.length) {
+  const draft = await readSavedSearchDraftInput(request);
+  if (!hasSavedSearchCriteria(draft)) {
     return NextResponse.json({ error: "Saved search needs a query, saved view, collection, or filter." }, { status: 400 });
   }
 
-  const now = new Date().toISOString();
-  const id = draft.id || `search-${safeIsoTimestampIdPart(now)}`;
-  const record = await saveSavedSearch({
-    ...draft,
-    id,
-    createdAt: now,
-    updatedAt: now,
-    createdBy: identity.id,
-    role: identity.role
-  });
+  const record = await saveSavedSearchDraft(draft, identity);
 
   appendAuditEvent({
     type: "saved_search_saved",
