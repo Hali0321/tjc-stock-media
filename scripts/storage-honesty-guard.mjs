@@ -26,6 +26,7 @@ const files = {
   savedSearchRoute: "frontend/app/api/saved-searches/route.ts",
   packageRoute: "frontend/app/api/packages/route.ts",
   packageBuilder: "frontend/components/dam/enterprise/PackageBuilderPage.tsx",
+  brandKits: "frontend/lib/brand-kits.ts",
   enterpriseDisplay: "frontend/lib/enterprise-display.ts",
   enterpriseShared: "frontend/components/dam/enterprise/EnterpriseShared.tsx",
   enterpriseMetadata: "frontend/lib/enterprise-metadata.ts",
@@ -85,6 +86,7 @@ const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const savedSearchRoute = read(files.savedSearchRoute);
 const packageRoute = read(files.packageRoute);
 const packageBuilder = read(files.packageBuilder);
+const brandKits = read(files.brandKits);
 const enterpriseDisplay = read(files.enterpriseDisplay);
 const enterpriseShared = read(files.enterpriseShared);
 const enterpriseMetadata = read(files.enterpriseMetadata);
@@ -186,6 +188,12 @@ if (!packageGovernance.includes("normalizedPackageAssetRef") || /String\(asset\.
 }
 if (!packageGovernance.includes("assetForRolePayload(role, asset)") || !packageGovernance.includes("@/lib/source-redaction")) {
   failures.push("package governance nested asset payloads must pass through role redaction");
+}
+if (!brandKits.includes("matchedSourceAssets") || !brandKits.includes("assets: matchedSourceAssets")) {
+  failures.push("brand kit governance must run on raw matched source assets so reuse decisions keep source/readiness truth");
+}
+if (!brandKits.includes("const matchedAssets = matchedSourceAssets.map((asset) => assetForRolePayload(role, asset))")) {
+  failures.push("brand kit response assets must pass through role redaction before returning payloads");
 }
 if (!read("scripts/portal-package-smoke.sh").includes("package governance payload leaked private source metadata")) {
   failures.push("package smoke must prove package governance nested assets are role-safe");

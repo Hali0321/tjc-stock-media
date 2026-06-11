@@ -141,13 +141,13 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
   const liveCollection = collectionId ? await getResourceSpaceCollectionAssets(collectionId) : null;
   const sourceAssets = liveCollection?.ok ? liveCollection.assets : assets;
 
-  const matchedAssets = collectionId
+  const matchedSourceAssets = collectionId
     ? sourceAssets
       .filter((asset) => liveCollection?.ok ? true : assetMatchesCollection(asset, collectionId))
       .filter((asset) => canSeeAsset(role, asset))
       .slice(0, 36)
-      .map((asset) => assetForRolePayload(role, asset))
     : [];
+  const matchedAssets = matchedSourceAssets.map((asset) => assetForRolePayload(role, asset));
   const warnings = [...new Set(buildBrandKitWarnings({
     config,
     collectionId,
@@ -177,7 +177,7 @@ export async function buildBrandKitResponse(config: BrandKitConfig, role: DemoRo
     assets: matchedAssets,
     governance: buildBrandKitGovernance({
       configured: Boolean(collectionId),
-      assets: matchedAssets,
+      assets: matchedSourceAssets,
       role,
       missingSectionMappings: sectionMappings.filter((section) => !section.configured).length,
       warnings: governanceWarnings
