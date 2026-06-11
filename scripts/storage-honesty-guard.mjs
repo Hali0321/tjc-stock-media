@@ -125,6 +125,9 @@ if (!/collectionId:\s*raw\.collectionId\s*\?\s*normalizePackageRef\(raw\.collect
 if (!packageDrafts.includes("normalizePackageRefs") || /refs\.map\(\(ref\)\s*=>\s*String\(ref\)\)/.test(packageDrafts)) {
   failures.push("package draft client helpers must normalize package refs through normalizePackageRefs");
 }
+if (!packageDrafts.includes("function sectionsWithGlobalPackageRefs") || !packageDrafts.includes("function draftPackageRefs")) {
+  failures.push("package draft client helpers must keep refs globally deduped before server persistence");
+}
 if (!packageGovernance.includes("normalizedPackageAssetRef") || /String\(asset\.resourceSpaceId\s*\|\|\s*asset\.id\)/.test(packageGovernance)) {
   failures.push("package governance display refs must normalize through package ref module");
 }

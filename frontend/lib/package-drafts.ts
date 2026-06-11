@@ -10,6 +10,10 @@ export type ResolvedPackageSection = DamPackageSection & {
   missingResourceSpaceAssetIds: Array<string | number>;
 };
 
+type NormalizedPackageSection = Omit<DamPackageSection, "resourceSpaceAssetIds"> & {
+  resourceSpaceAssetIds: string[];
+};
+
 export type PackagePublishReadiness = {
   canPublish: boolean;
   canPreview: boolean;
@@ -62,6 +66,22 @@ function sectionWithRefs(section: DamPackageSection, refs: Array<string | number
   };
 }
 
+function sectionsWithGlobalPackageRefs(sections: DamPackageSection[]): NormalizedPackageSection[] {
+  const seen = new Set<string>();
+  return sections.map((section) => ({
+    ...section,
+    resourceSpaceAssetIds: normalizePackageRefs(section.resourceSpaceAssetIds).filter((ref) => {
+      if (seen.has(ref)) return false;
+      seen.add(ref);
+      return true;
+    })
+  }));
+}
+
+function draftPackageRefs(draft: DamPackage) {
+  return new Set(normalizePackageRefs(draft.sections.flatMap((section) => section.resourceSpaceAssetIds)));
+}
+
 export function seedPackageDraft(draft: DamPackage, assets: StockMediaAsset[], statusOf: (asset: StockMediaAsset) => PackageAssetStatus): DamPackage {
   if (packageHasRefs(draft)) return draft;
   const approvedAssets = assets.filter((asset) => statusOf(asset) === "Approved");
@@ -69,7 +89,7 @@ export function seedPackageDraft(draft: DamPackage, assets: StockMediaAsset[], s
 
   return {
     ...draft,
-    sections: draft.sections.map((section) => {
+    sections: sectionsWithGlobalPackageRefs(draft.sections.map((section) => {
       if (section.id === "cover") return sectionWithRefs(section, approvedAssets.slice(0, 1).map(packageResourceRef));
       if (section.id === "hero-assets") return sectionWithRefs(section, approvedAssets.filter((asset) => asset.mediaType === "photo").slice(0, 5).map(packageResourceRef));
       if (section.id === "social-media") return sectionWithRefs(section, approvedAssets.slice(5, 10).map(packageResourceRef));
@@ -83,7 +103,7 @@ export function seedPackageDraft(draft: DamPackage, assets: StockMediaAsset[], s
         );
       }
       return section;
-    })
+    }))
   };
 }
 
@@ -100,8 +120,8 @@ function buildAssetLookup(assets: StockMediaAsset[]) {
 
 export function resolvePackageSections(draft: DamPackage, assets: StockMediaAsset[]): ResolvedPackageSection[] {
   const lookup = buildAssetLookup(assets);
-  return draft.sections.map((section) => {
-    const refs = normalizePackageRefs(section.resourceSpaceAssetIds);
+  return sectionsWithGlobalPackageRefs(draft.sections).map((section) => {
+    const refs = section.resourceSpaceAssetIds;
     const resolved = refs.map((id) => lookup.get(id)).filter((asset): asset is StockMediaAsset => Boolean(asset));
     const missing = refs.filter((id) => !lookup.has(id));
     return {
@@ -115,6 +135,7 @@ export function resolvePackageSections(draft: DamPackage, assets: StockMediaAsse
 
 export function addPackageAssetRef(draft: DamPackage, sectionId: string, asset: StockMediaAsset): DamPackage {
   const ref = packageResourceRef(asset);
+  if (!ref || draftPackageRefs(draft).has(ref)) return draft;
   return {
     ...draft,
     sections: draft.sections.map((section) => (
@@ -150,7 +171,7 @@ export function availableAssetsForSection({
   approvedOnly: boolean;
   statusOf: (asset: StockMediaAsset) => PackageAssetStatus;
 }) {
-  const activeRefs = new Set(normalizePackageRefs(draft.sections.find((section) => section.id === sectionId)?.resourceSpaceAssetIds || []));
+  const activeRefs = draftPackageRefs(draft);
   return assets
     .filter((asset) => Boolean(packageResourceRef(asset)))
     .filter((asset) => !activeRefs.has(packageResourceRef(asset)))
