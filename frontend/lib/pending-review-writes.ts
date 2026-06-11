@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
@@ -42,10 +42,6 @@ function safeSyncState(value: unknown): ReviewWriteRecord["syncState"] {
     : "queued";
 }
 
-function safeCount(value: unknown) {
-  return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
-}
-
 function safeChecklist(value: unknown): ReviewEvidenceChecklist {
   const raw = (value || {}) as Partial<ReviewEvidenceChecklist>;
   return {
@@ -82,7 +78,7 @@ function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
     checklist: safeChecklist(raw.checklist),
     blockers: Array.isArray(raw.blockers) ? raw.blockers.map((item) => safeDisplayText(item, 120)).filter(Boolean).slice(0, 24) : [],
     syncState: safeSyncState(raw.syncState),
-    retryCount: safeCount(raw.retryCount),
+    retryCount: safeNonNegativeInt(raw.retryCount),
     lastError: raw.lastError === undefined ? undefined : safeDisplayText(raw.lastError, 240)
   };
 }

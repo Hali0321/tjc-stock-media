@@ -10,3 +10,7 @@ export function safeIsoTimestamp(value: unknown) {
   const iso = new Date(parsed).toISOString();
   return iso.startsWith(text.slice(0, 10)) ? iso : "";
 }
+
+export function safeNonNegativeInt(value: unknown) {
+  return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
+}

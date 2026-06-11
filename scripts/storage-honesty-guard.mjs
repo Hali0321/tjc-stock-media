@@ -52,6 +52,14 @@ for (const store of persistedRecordSources) {
   if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(store.source)) failures.push(`${store.name} must not hand-roll compact text normalization`);
 }
 
+for (const store of [
+  { name: "package drafts", source: packages },
+  { name: "pending review writes", source: pendingReviewWrites }
+]) {
+  if (!store.source.includes("safeNonNegativeInt")) failures.push(`${store.name} must normalize persisted counters through safeNonNegativeInt`);
+  if (/Math\.max\(0,\s*Number\.isFinite\(Number\(/.test(store.source)) failures.push(`${store.name} must not hand-roll nonnegative counter normalization`);
+}
+
 const readinessRequirements = [
   "Feedback is using",
   "local/private beta rehearsal only, not wider rollout",

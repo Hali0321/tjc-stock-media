@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DamPackage, DemoRole } from "@/lib/types";
@@ -63,10 +63,6 @@ function safeBoolean(value: unknown) {
   return value === true;
 }
 
-function safeCount(value: unknown) {
-  return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
-}
-
 export function sanitizePackageDraft(input: unknown): DamPackage {
   const raw = (input || {}) as Partial<DamPackage>;
   const sections = Array.isArray(raw.sections) ? raw.sections : [];
@@ -114,10 +110,10 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
       canPreview: safeBoolean(governance.canPreview),
       canShare: safeBoolean(governance.canShare),
       canPublish: safeBoolean(governance.canPublish),
-      totalRefs: safeCount(governance.totalRefs),
-      portalReadyRefs: safeCount(governance.portalReadyRefs),
-      blockedRefs: safeCount(governance.blockedRefs),
-      missingRefs: safeCount(governance.missingRefs),
+      totalRefs: safeNonNegativeInt(governance.totalRefs),
+      portalReadyRefs: safeNonNegativeInt(governance.portalReadyRefs),
+      blockedRefs: safeNonNegativeInt(governance.blockedRefs),
+      missingRefs: safeNonNegativeInt(governance.missingRefs),
       reason: safeDisplayText(governance.reason, 240)
     },
     storageMode: "local-json"
