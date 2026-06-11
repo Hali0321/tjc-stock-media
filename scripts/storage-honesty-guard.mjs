@@ -115,6 +115,7 @@ if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
   failures.push("request validation must not hand-roll private token detection");
 }
 for (const store of [
+  { name: "feedback", source: feedback },
   { name: "saved searches", source: savedSearches },
   { name: "package drafts", source: packages },
   { name: "pending review writes", source: pendingReviewWrites },

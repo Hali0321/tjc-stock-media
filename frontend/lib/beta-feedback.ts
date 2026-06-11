@@ -4,8 +4,8 @@ import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText, isSafeHttpUrl } from "@/lib/private-source-text";
-import { normalizeSafeRoutePath } from "@/lib/request-validation";
+import { containsPrivateSourceText, isSafeHttpUrl } from "@/lib/private-source-text";
+import { normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -36,13 +36,6 @@ function memoryFeedback() {
 
 function safeText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength);
-}
-
-function safeFeedbackText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  if (containsUnsafePathText(text)) return "";
-  if (containsPrivateSourceText(text)) return "";
-  return text;
 }
 
 function safeId(value: unknown) {
@@ -103,19 +96,19 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
     updatedAt: safeIsoTimestamp(raw.updatedAt) || createdAt,
     role: normalizeRoleWithFallback(raw.role),
     route: safeRoute(raw.route),
-    task: safeFeedbackText(raw.task, 220) || "Free play",
+    task: normalizePersistedDisplayText(raw.task, 220) || "Free play",
     severity: normalizeFeedbackSeverity(raw.severity),
-    expected: safeFeedbackText(raw.expected, 1200),
-    actual: safeFeedbackText(raw.actual, 1200),
+    expected: normalizePersistedDisplayText(raw.expected, 1200),
+    actual: normalizePersistedDisplayText(raw.actual, 1200),
     status: normalizeFeedbackStatus(raw.status),
-    notes: raw.notes === undefined ? undefined : safeFeedbackText(raw.notes, 1200),
-    reporterName: raw.reporterName === undefined ? undefined : safeFeedbackText(raw.reporterName, 120),
-    browser: raw.browser === undefined ? undefined : safeFeedbackText(raw.browser, 280),
-    device: raw.device === undefined ? undefined : safeFeedbackText(raw.device, 180),
-    viewport: raw.viewport === undefined ? undefined : safeFeedbackText(raw.viewport, 60),
+    notes: raw.notes === undefined ? undefined : normalizePersistedDisplayText(raw.notes, 1200),
+    reporterName: raw.reporterName === undefined ? undefined : normalizePersistedDisplayText(raw.reporterName, 120),
+    browser: raw.browser === undefined ? undefined : normalizePersistedDisplayText(raw.browser, 280),
+    device: raw.device === undefined ? undefined : normalizePersistedDisplayText(raw.device, 180),
+    viewport: raw.viewport === undefined ? undefined : normalizePersistedDisplayText(raw.viewport, 60),
     attachmentUrl: raw.attachmentUrl === undefined ? undefined : safeUrl(raw.attachmentUrl),
     storageMode: safeStorageMode(raw.storageMode),
-    actor: raw.actor === undefined ? undefined : safeFeedbackText(raw.actor, 160)
+    actor: raw.actor === undefined ? undefined : normalizePersistedDisplayText(raw.actor, 160)
   };
 }
 
@@ -301,7 +294,7 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
     ...existing,
     severity: patch.severity ? normalizeFeedbackSeverity(patch.severity, existing.severity) : existing.severity,
     status: patch.status ? normalizeFeedbackStatus(patch.status, existing.status) : existing.status,
-    notes: patch.notes === undefined ? existing.notes : safeFeedbackText(patch.notes, 1200),
+    notes: patch.notes === undefined ? existing.notes : normalizePersistedDisplayText(patch.notes, 1200),
     updatedAt: new Date().toISOString()
   };
   const wroteKv = await writeKvFeedback(next).catch(() => false);
@@ -313,7 +306,7 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
 }
 
 export function normalizeFeedbackText(value: unknown, maxLength = 1200) {
-  return safeFeedbackText(value, maxLength);
+  return normalizePersistedDisplayText(value, maxLength);
 }
 
 export function normalizeFeedbackRoute(value: unknown) {
