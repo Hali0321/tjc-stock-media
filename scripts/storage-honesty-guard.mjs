@@ -43,11 +43,24 @@ const files = {
   readiness: "frontend/lib/dam-readiness-integrations.ts",
   portalApiSmoke: "scripts/portal-api-smoke.sh",
   portalBetaRehearsal: "scripts/portal-beta-rehearsal.sh",
-  portalDeliverySmoke: "scripts/portal-delivery-smoke.sh"
+  portalDeliverySmoke: "scripts/portal-delivery-smoke.sh",
+  portalPackageSmoke: "scripts/portal-package-smoke.sh",
+  apiPayloadGuard: "scripts/api-payload-guard.mjs"
 };
 
 function read(file) {
   return fs.readFileSync(path.join(root, file), "utf8");
+}
+
+function stringArrayConst(source, constName) {
+  const match = source.match(new RegExp(`const\\s+${constName}\\s*=\\s*\\[([\\s\\S]*?)\\]`));
+  return match ? [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1]) : [];
+}
+
+function requireAllStrings(label, source, values) {
+  for (const value of values) {
+    if (!source.includes(`"${value}"`)) failures.push(`${label} must cover ${value}`);
+  }
 }
 
 const feedback = read(files.feedback);
@@ -90,6 +103,8 @@ const readiness = read(files.readiness);
 const portalApiSmoke = read(files.portalApiSmoke);
 const portalBetaRehearsal = read(files.portalBetaRehearsal);
 const portalDeliverySmoke = read(files.portalDeliverySmoke);
+const portalPackageSmoke = read(files.portalPackageSmoke);
+const apiPayloadGuard = read(files.apiPayloadGuard);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
 const viewerVerdict = read("frontend/lib/viewer-verdict.ts");
@@ -357,6 +372,10 @@ if (!sourceRedaction.includes("export const sourceCustodyAssetKeys") || !sourceR
 if (!sourceRedaction.includes("omitAssetKeys(asset, sourceCustodyAssetKeys)") || !sourceRedaction.includes("omitAssetKeys(roleSafeAsset, publicHiddenAssetKeys)")) {
   failures.push("normal-user payload redaction must derive safeAsset from roleSafeAsset through centralized key omission");
 }
+const sourceCustodyAssetKeys = stringArrayConst(sourceRedaction, "sourceCustodyAssetKeys");
+const publicHiddenAssetKeys = stringArrayConst(sourceRedaction, "publicHiddenAssetKeys");
+if (sourceCustodyAssetKeys.length < 8) failures.push("source redaction custody key list must stay explicit and complete");
+if (publicHiddenAssetKeys.length < 8) failures.push("source redaction public-hidden key list must stay explicit and complete");
 if (!portalApiSmoke.includes("reviewer-payload-hides-source-custody") || !portalApiSmoke.includes("dam-admin-payload-keeps-source-custody")) {
   failures.push("portal API smoke must prove Reviewer redaction and DAM Admin source custody visibility");
 }
@@ -368,23 +387,15 @@ for (const guard of [
   { name: "portal beta rehearsal", source: portalBetaRehearsal },
   { name: "portal delivery smoke", source: portalDeliverySmoke }
 ]) {
-  if (!guard.source.includes('"sourceAlbumMemberships"')) {
-    failures.push(`${guard.name} normal-user payload guard must reject sourceAlbumMemberships`);
-  }
+  requireAllStrings(`${guard.name} normal-user payload guard`, guard.source, sourceCustodyAssetKeys);
 }
+requireAllStrings("portal package smoke governance guard", portalPackageSmoke, sourceCustodyAssetKeys);
+requireAllStrings("API payload guard forbidden payload keys", apiPayloadGuard, sourceCustodyAssetKeys);
 if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
 }
-for (const key of ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]) {
-  if (!sourceRedaction.includes(`"${key}"`)) {
-    failures.push(`source redaction custody key list must strip ${key} outside DAM Admin payloads`);
-  }
-}
-for (const key of ["resourceSpaceId", "sourceAccount", "sourcePlatform", "sourceSystem", "workflowState"]) {
-  if (!sourceRedaction.includes(`"${key}"`)) {
-    failures.push(`source redaction public-hidden key list must strip ${key} outside normal-user payloads`);
-  }
-}
+requireAllStrings("source redaction custody key list", sourceRedaction, ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]);
+requireAllStrings("source redaction public-hidden key list", sourceRedaction, ["resourceSpaceId", "sourceAccount", "sourcePlatform", "sourceSystem", "workflowState"]);
 if (!auditLog.includes("normalizeAssetId")) failures.push("audit log must normalize asset ids through normalizeAssetId");
 if (!auditLog.includes("normalizeResourceSpaceRef")) failures.push("audit log must normalize ResourceSpace ids through normalizeResourceSpaceRef");
 for (const module of [

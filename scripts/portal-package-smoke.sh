@@ -80,7 +80,7 @@ if (!data.package.governance || typeof data.package.governance.totalRefs !== "nu
   process.exit(1);
 }
 const governanceText = JSON.stringify(data.governance || {});
-if (!data.governance?.sections?.length || /"sourcePath"|"masterDrivePath"|"sourceAlbumPath"|"sourceAlbumMemberships"|"originalFilename"|"checksumSha256"|"resourceSpaceId"/.test(governanceText) || /source path|master drive|checksum|original filename|ResourceSpace ID|\bRS\s+\d+\b|[a-f0-9]{32,}/i.test(governanceText)) {
+if (!data.governance?.sections?.length || /"sourcePath"|"masterDrivePath"|"sourceAlbumPath"|"sourceAlbumMemberships"|"originalFilename"|"checksumSha256"|"duplicateGroup"|"duplicateRole"|"resourceSpaceId"/.test(governanceText) || /source path|master drive|checksum|original filename|ResourceSpace ID|\bRS\s+\d+\b|[a-f0-9]{32,}/i.test(governanceText)) {
   console.error(`FAIL: package governance payload leaked private source metadata: ${governanceText.slice(0, 700)}`);
   process.exit(1);
 }

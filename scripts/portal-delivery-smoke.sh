@@ -124,6 +124,8 @@ delivery_payload_guard='
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const forbiddenKeys = new Set([
   "checksumSha256",
+  "duplicateGroup",
+  "duplicateRole",
   "fileSizeBytes",
   "masterDrivePath",
   "originalFilename",

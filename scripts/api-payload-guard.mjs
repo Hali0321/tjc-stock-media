@@ -7,6 +7,8 @@ const apiRoot = path.join(root, "frontend/app/api");
 const forbiddenPayloadKeys = [
   "signedUrl",
   "originalUrl",
+  "duplicateGroup",
+  "duplicateRole",
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",

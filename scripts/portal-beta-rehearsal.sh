@@ -139,6 +139,8 @@ const forbiddenKeys = new Set([
   "resourceSpaceId",
   "resourceSpaceUrl",
   "resourceSpaceUrls",
+  "duplicateGroup",
+  "duplicateRole",
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",

@@ -84,6 +84,8 @@ const forbiddenKeys = new Set([
   "resourceSpaceId",
   "resourceSpaceUrl",
   "resourceSpaceUrls",
+  "duplicateGroup",
+  "duplicateRole",
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",
@@ -762,7 +764,7 @@ if (!first?.imageUrls?.card?.includes("role=Reviewer") || !first?.preview?.inclu
 expect_json viewer-payload-hides-original-metadata '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const asset = data.asset;
-const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "originalFilename", "checksumSha256", "fileSizeBytes"].filter((key) => asset && key in asset);
+const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "originalFilename", "checksumSha256", "duplicateGroup", "duplicateRole", "fileSizeBytes"].filter((key) => asset && key in asset);
 if (leaked.length) {
   console.error(`FAIL: Viewer asset payload leaked restricted metadata: ${leaked.join(", ")}`);
   process.exit(1);
@@ -772,7 +774,7 @@ if (leaked.length) {
 expect_json reviewer-payload-hides-source-custody '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const asset = data.asset;
-const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "originalFilename", "checksumSha256"].filter((key) => asset && key in asset);
+const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "originalFilename", "checksumSha256", "duplicateGroup", "duplicateRole"].filter((key) => asset && key in asset);
 if (leaked.length) {
   console.error(`FAIL: Reviewer asset payload leaked source custody metadata: ${leaked.join(", ")}`);
   process.exit(1);
