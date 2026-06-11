@@ -3,18 +3,18 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { getAssetRecordById } from "@/lib/catalog";
 import { canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetIds } from "@/lib/request-validation";
+import { normalizeAssetIds, readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
 const supportedActions = new Set(["request-review", "mark-internal", "archive"]);
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as {
+  const body = await readJsonObject<{
     role?: string;
     action?: string;
     assetIds?: string[];
-  };
+  }>(request);
   const identity = requestIdentity(request, body.role);
   const role = identity.role;
   const assetIds = normalizeAssetIds(body.assetIds);

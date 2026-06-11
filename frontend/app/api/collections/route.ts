@@ -4,19 +4,19 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { assetIsPortalReady, assetNeedsStaleApprovalReview } from "@/lib/asset-governance";
 import { canSeeAsset, canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetIds, normalizeCollectionDraftAudience, normalizeCollectionShareSlug, normalizeDateField, normalizeDisplayTextField } from "@/lib/request-validation";
+import { normalizeAssetIds, normalizeCollectionDraftAudience, normalizeCollectionShareSlug, normalizeDateField, normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as {
+  const body = await readJsonObject<{
     role?: string;
     assetIds?: string[];
     title?: string;
     audience?: string;
     expiry?: string;
     owner?: string;
-  };
+  }>(request);
   const identity = requestIdentity(request, body.role);
   const role = identity.role;
   const assetIds = normalizeAssetIds(body.assetIds);

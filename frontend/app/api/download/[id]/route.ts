@@ -7,7 +7,7 @@ import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
 import { safeSlugText } from "@/lib/persisted-record-safety";
-import { normalizeAssetId, normalizeDisplayTextField } from "@/lib/request-validation";
+import { normalizeAssetId, normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
-  const body = (await request.json().catch(() => ({}))) as DownloadGateBody;
+  const body = await readJsonObject<DownloadGateBody>(request);
   const session = createDamRouteSession(request, body.role);
   const role = session.role;
   if (!id) {

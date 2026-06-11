@@ -6,6 +6,7 @@ import { resolvePackageSections } from "@/lib/package-drafts";
 import { listStoredPackageDrafts, sanitizePackageDraft, savePackageDraft } from "@/lib/package-store";
 import { canContribute, canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
+import { readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Package draft save requires Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readJsonObject(request);
   const draft = sanitizePackageDraft((body as { draft?: unknown }).draft || body);
   const { assets } = await getMediaSourceSession(identity.role);
   const sections = resolvePackageSections(draft, assets);

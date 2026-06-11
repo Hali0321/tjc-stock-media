@@ -6,6 +6,11 @@ const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
 const collectionDraftAudiences = ["Private draft", "Internal ministry", "Public-approved portal"] as const;
 export type CollectionDraftAudience = typeof collectionDraftAudiences[number];
 
+export async function readJsonObject<T extends Record<string, unknown> = Record<string, unknown>>(request: { json(): Promise<unknown> }): Promise<T> {
+  const body = await request.json().catch(() => ({}));
+  return body && typeof body === "object" && !Array.isArray(body) ? body as T : {} as T;
+}
+
 export function normalizeAssetId(value: unknown) {
   if (typeof value !== "string" && typeof value !== "number") return "";
   const id = String(value).trim();

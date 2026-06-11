@@ -72,6 +72,18 @@ if (/function\s+slugify\s*\(/.test(collectionsSource) || /allowedAudiences\s*=\s
   failures.push(`${collectionsRoute} must not hand-roll collection audience or share slug normalization`);
 }
 
+const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/request-validation.ts"), "utf8");
+if (!requestValidationSource.includes("function readJsonObject")) {
+  failures.push("request validation must expose readJsonObject for API JSON body fallback");
+}
+for (const fullPath of walk(apiRoot)) {
+  const relativePath = path.relative(root, fullPath);
+  const source = fs.readFileSync(fullPath, "utf8");
+  if (/request\.json\(\)\.catch/.test(source)) {
+    failures.push(`${relativePath} must parse fallback JSON through readJsonObject`);
+  }
+}
+
 if (failures.length) {
   console.error("API payload guard failed:");
   for (const failure of failures) console.error(`- ${failure}`);

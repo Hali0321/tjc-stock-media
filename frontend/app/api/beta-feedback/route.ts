@@ -4,6 +4,7 @@ import { betaFeedbackEnabled } from "@/lib/env";
 import { createBetaFeedback, listBetaFeedback, normalizeFeedbackRoute, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
 import { canAdmin, isKnownRole } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
+import { readJsonObject } from "@/lib/request-validation";
 import type { BetaFeedbackSeverity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ type FeedbackInput = {
 async function readFeedbackInput(request: NextRequest) {
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.includes("multipart/form-data")) {
-    return { fields: (await request.json().catch(() => ({}))) as FeedbackInput, file: null as File | null };
+    return { fields: await readJsonObject<FeedbackInput>(request), file: null as File | null };
   }
   const form = await request.formData();
   const fileValue = form.get("attachment");

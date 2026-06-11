@@ -3,6 +3,7 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { canContribute } from "@/lib/permissions";
 import { listSavedSearches, sanitizeSavedSearch, saveSavedSearch } from "@/lib/saved-search-store";
 import { requestIdentity } from "@/lib/request-identity";
+import { readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Saved search save requires Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readJsonObject(request);
   const draft = sanitizeSavedSearch((body as { search?: unknown }).search || body);
   if (!draft.query && !draft.view && !draft.collection && !draft.filters.length) {
     return NextResponse.json({ error: "Saved search needs a query, saved view, collection, or filter." }, { status: 400 });

@@ -4,6 +4,7 @@ import { getReviewQueue } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview } from "@/lib/permissions";
+import { readJsonObject } from "@/lib/request-validation";
 import { runReviewActionWorkflow, type ReviewActionRequestBody } from "@/lib/review-action-workflow";
 import { reviewQueues, type ReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as ReviewActionRequestBody;
+  const body = await readJsonObject<ReviewActionRequestBody>(request);
   const result = await runReviewActionWorkflow(request, body);
   return NextResponse.json(result.body, { status: result.status });
 }
