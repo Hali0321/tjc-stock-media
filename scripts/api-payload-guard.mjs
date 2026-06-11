@@ -18,8 +18,6 @@ const forbiddenPayloadKeys = [
   ...sourceCustodyAssetKeys
 ];
 const allowedFilesByKey = new Map([
-  ["sourcePath", new Set(["frontend/app/api/download/[id]/route.ts"])],
-  ["masterDrivePath", new Set(["frontend/app/api/download/[id]/route.ts"])],
   ["resourceSpaceUrl", new Set(["frontend/app/api/assets/[id]/route.ts"])],
   ["resourceSpaceUrls", new Set(["frontend/app/api/review/route.ts"])]
 ]);
