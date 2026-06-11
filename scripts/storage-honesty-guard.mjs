@@ -105,8 +105,11 @@ if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\
 if (!requestValidation.includes("function normalizeResourceSpaceRef")) {
   failures.push("request validation must expose normalizeResourceSpaceRef");
 }
-if (!requestValidation.includes("checksumLikePattern")) {
-  failures.push("request validation ResourceSpace refs must reject checksum-like tokens");
+if (!requestValidation.includes("containsPrivateSourceText(ref)")) {
+  failures.push("request validation ResourceSpace refs must reject private-source tokens through containsPrivateSourceText");
+}
+if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
+  failures.push("request validation must not hand-roll private token detection");
 }
 if (!reviewEvidence.includes("safeBoolean")) failures.push("review evidence must normalize checklist booleans through safeBoolean");
 if (/raw\.[a-zA-Z0-9_]+\s*===\s*true/.test(reviewEvidence)) {

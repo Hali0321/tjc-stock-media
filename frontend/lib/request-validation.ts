@@ -3,7 +3,6 @@ import { safeEnumValue, safePathSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
-const checksumLikePattern = /^[a-f0-9]{32,}$/i;
 const collectionDraftAudiences = ["Private draft", "Internal ministry", "Public-approved portal"] as const;
 export type CollectionDraftAudience = typeof collectionDraftAudiences[number];
 
@@ -22,7 +21,7 @@ export function normalizeAssetIds(value: unknown, max = 120) {
 export function normalizeResourceSpaceRef(value: unknown) {
   if (typeof value !== "string" && typeof value !== "number") return "";
   const ref = String(value).trim();
-  if (containsPrivateSourceText(ref) || containsUnsafePathText(ref) || checksumLikePattern.test(ref)) return "";
+  if (containsPrivateSourceText(ref) || containsUnsafePathText(ref)) return "";
   return resourceSpaceRefPattern.test(ref) ? ref : "";
 }
 

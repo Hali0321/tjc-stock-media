@@ -9,7 +9,8 @@ const forbiddenPatterns = [
   { label: 'ad hoc ".." traversal check', pattern: /\.includes\(["']\.\.["']\)/ },
   { label: "ad hoc slash/backslash path check", pattern: /\/\[\\{1,2}\/\]\// },
   { label: "ad hoc backslash route check", pattern: /\/\[\\{2}\]\// },
-  { label: "ad hoc http URL allowlist", pattern: /\^https\?:\\\/\\\// }
+  { label: "ad hoc http URL allowlist", pattern: /\^https\?:\\\/\\\// },
+  { label: "ad hoc private token regex", pattern: /\[a-f0-9\]\{32,\}/ }
 ];
 
 function walk(relativeDir) {

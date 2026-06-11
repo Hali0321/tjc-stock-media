@@ -34,26 +34,22 @@ function safeText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength);
 }
 
-function isChecksumLike(value: string) {
-  return /^[a-f0-9]{32,}$/i.test(value);
-}
-
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (containsUnsafePathText(text)) return "";
-  if (containsPrivateSourceText(text) || isChecksumLike(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
 }
 
 function safeId(value: unknown) {
   const text = safeText(value, 100);
-  if (containsPrivateSourceText(text) || isChecksumLike(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return safeSlugText(text, 100);
 }
 
 function safeRef(value: unknown) {
   const raw = safeText(value, 100);
-  if (containsUnsafePathText(raw) || containsPrivateSourceText(raw) || isChecksumLike(raw)) {
+  if (containsUnsafePathText(raw) || containsPrivateSourceText(raw)) {
     return "";
   }
   return safeId(raw);
@@ -61,7 +57,7 @@ function safeRef(value: unknown) {
 
 function safeFilter(value: unknown) {
   const label = safeText(value, 80);
-  if (containsUnsafePathText(label) || containsPrivateSourceText(label) || isChecksumLike(label)) {
+  if (containsUnsafePathText(label) || containsPrivateSourceText(label)) {
     return "";
   }
   return label;
