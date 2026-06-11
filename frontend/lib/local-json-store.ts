@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export type LocalJsonStoreOptions<TRecord> = {
@@ -52,12 +52,14 @@ export async function writeLocalJsonStore<TRecord>(records: TRecord[], options: 
     return;
   }
   const filePath = options.filePath();
+  let tmpPath = "";
   try {
     await mkdir(path.dirname(filePath), { recursive: true });
-    const tmpPath = tempFilePath(filePath);
+    tmpPath = tempFilePath(filePath);
     await writeFile(tmpPath, `${JSON.stringify(windowed, null, 2)}\n`);
     await rename(tmpPath, filePath);
   } catch (error) {
+    if (tmpPath) await unlink(tmpPath).catch(() => undefined);
     if (!replaceMemory(windowed, options)) throw error;
   }
 }

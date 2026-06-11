@@ -15,8 +15,17 @@ export function readRuntimeJsonFile<TRecord>(filePath: string, normalize: (input
 
 function writeRuntimeFileAtomically(filePath: string, contents: string) {
   const tmpPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
-  fs.writeFileSync(tmpPath, contents, "utf8");
-  fs.renameSync(tmpPath, filePath);
+  try {
+    fs.writeFileSync(tmpPath, contents, "utf8");
+    fs.renameSync(tmpPath, filePath);
+  } catch (error) {
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      // Best-effort temp cleanup; preserve original write failure.
+    }
+    throw error;
+  }
 }
 
 export function writeRuntimeJsonFile(filePath: string, record: unknown) {
