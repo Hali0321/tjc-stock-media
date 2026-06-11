@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildBrandKitResponse, getBrandKitConfig } from "@/lib/brand-kits";
+import { brandKitUnknownError, buildBrandKitResponse, getBrandKitConfig } from "@/lib/brand-kits";
 import { requestIdentity } from "@/lib/request-identity";
 import { normalizeBrandKitId } from "@/lib/request-validation";
 import { recordUsageEvent } from "@/lib/usage-analytics";
@@ -10,7 +10,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const kitId = normalizeBrandKitId((await params).id);
   const config = getBrandKitConfig(kitId);
   if (!config) {
-    return NextResponse.json({ error: "Unknown brand kit." }, { status: 404 });
+    const error = brandKitUnknownError();
+    return NextResponse.json(error.body, { status: error.status });
   }
 
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));

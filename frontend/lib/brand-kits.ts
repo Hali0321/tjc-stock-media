@@ -36,6 +36,12 @@ export type BrandKitConfig = {
   logoUsage: BrandKitLogoUsage[];
   sections: BrandKitSectionConfig[];
 };
+export type BrandKitRouteError = {
+  body: {
+    error: string;
+  };
+  status: 404;
+};
 
 export type BrandKitSectionMapping = BrandKitSectionConfig & {
   resourceSpaceCollectionId: string;
@@ -78,6 +84,10 @@ export const brandKitConfigs = {
 
 export function getBrandKitConfig(id: string) {
   return brandKitConfigs[id as keyof typeof brandKitConfigs] || null;
+}
+
+export function brandKitUnknownError(): BrandKitRouteError {
+  return { body: { error: "Unknown brand kit." }, status: 404 };
 }
 
 function assetMatchesCollection(asset: StockMediaAsset, collectionId: string) {

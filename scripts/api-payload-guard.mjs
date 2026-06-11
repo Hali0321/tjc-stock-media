@@ -221,8 +221,15 @@ if (/pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canO
 
 const brandKitRoute = "frontend/app/api/brand-kits/[id]/route.ts";
 const brandKitRouteSource = fs.readFileSync(path.join(root, brandKitRoute), "utf8");
+const brandKitSource = fs.readFileSync(path.join(root, "frontend/lib/brand-kits.ts"), "utf8");
 if (!brandKitRouteSource.includes("normalizeBrandKitId((await params).id)")) {
   failures.push(`${brandKitRoute} must normalize path params through normalizeBrandKitId`);
+}
+if (!brandKitRouteSource.includes("brandKitUnknownError()") || !brandKitSource.includes("function brandKitUnknownError")) {
+  failures.push(`${brandKitRoute} must delegate unknown brand kit response copy to brand-kits`);
+}
+if (/Unknown brand kit/.test(brandKitRouteSource)) {
+  failures.push(`${brandKitRoute} must not hand-roll unknown brand kit response copy`);
 }
 if (!brandKitRouteSource.includes("`/api/brand-kits/${encodeURIComponent(kitId)}`")) {
   failures.push(`${brandKitRoute} must record usage route with encoded brand kit id`);
