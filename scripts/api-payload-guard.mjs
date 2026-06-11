@@ -189,14 +189,14 @@ for (const fullPath of walk(apiRoot)) {
 if (!reviewRouteSource.includes("normalizeReviewQueueId(request.nextUrl.searchParams.get(\"queue\"))") || !reviewRouteSource.includes("readReviewActionRequestBody(request)")) {
   failures.push(`${reviewRoute} must delegate queue normalization and action body parsing to review modules`);
 }
-if (!reviewRouteSource.includes("buildReviewQueueResponse(queue, session)") || !reviewQueueResponseSource.includes("function buildReviewQueueResponse") || !reviewQueueResponseSource.includes("pendingReviewWriteSummary") || !reviewQueueResponseSource.includes("resourceSpaceRecordRef")) {
-  failures.push(`${reviewRoute} must delegate review queue payload assembly to review-queue-response`);
+if (!reviewRouteSource.includes("buildReviewQueueResponse(queue, session)") || !reviewRouteSource.includes("reviewQueueDeniedAuditEvent(session)") || !reviewRouteSource.includes("reviewQueueDeniedError()") || !reviewQueueResponseSource.includes("function buildReviewQueueResponse") || !reviewQueueResponseSource.includes("function reviewQueueDeniedAuditEvent") || !reviewQueueResponseSource.includes("pendingReviewWriteSummary") || !reviewQueueResponseSource.includes("resourceSpaceRecordRef")) {
+  failures.push(`${reviewRoute} must delegate review queue payload assembly, denial copy, and audit details to review-queue-response`);
 }
 if (!workflowPolicySource.includes("function normalizeReviewQueueId") || !reviewActionWorkflowSource.includes("function readReviewActionRequestBody") || !reviewActionWorkflowSource.includes("readJsonObject<ReviewActionRequestBody>(request)")) {
   failures.push("review modules must own review queue normalization and action body parsing");
 }
-if (/readJsonObject|function\s+normalizeQueue|reviewQueues|pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace/.test(reviewRouteSource)) {
-  failures.push(`${reviewRoute} must not hand-roll review body parsing, queue normalization, or response payload assembly`);
+if (/readJsonObject|function\s+normalizeQueue|reviewQueues|pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace|role-cannot-review|Review Inbox requires reviewer access/.test(reviewRouteSource)) {
+  failures.push(`${reviewRoute} must not hand-roll review body parsing, queue normalization, response payload assembly, denial copy, or audit details`);
 }
 
 if (!assetDetailRouteSource.includes("buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source })") || !assetDetailResponseSource.includes("function buildAssetDetailResponse") || !assetDetailResponseSource.includes("pendingReviewWriteSummary") || !assetDetailResponseSource.includes("resourceSpaceRecordRef")) {

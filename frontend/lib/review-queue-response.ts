@@ -4,10 +4,18 @@ import type { createDamRouteSession } from "@/lib/dam-route-session";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview } from "@/lib/permissions";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
+import type { AuditEventRecord } from "@/lib/audit-log";
 import type { DemoRole, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
 type ReviewQueueResult = Awaited<ReturnType<typeof getReviewQueue>>;
 type DamRouteSession = ReturnType<typeof createDamRouteSession>;
+type ReviewQueueAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+type ReviewQueueRouteError = {
+  body: {
+    error: string;
+  };
+  status: 403;
+};
 
 function reviewPendingWrites(assets: StockMediaAsset[]) {
   return Object.fromEntries(
@@ -39,5 +47,20 @@ export function buildReviewQueueResponse(queue: ReviewQueueResult, session: DamR
     pendingWrites: reviewPendingWrites(queue.assets),
     resourceSpaceUrls: reviewResourceSpaceUrls(queue.assets, role),
     canReview: canReview(role)
+  };
+}
+
+export function reviewQueueDeniedError(): ReviewQueueRouteError {
+  return { body: { error: "Review Inbox requires reviewer access." }, status: 403 };
+}
+
+export function reviewQueueDeniedAuditEvent(session: DamRouteSession): ReviewQueueAuditEvent {
+  return {
+    type: "review_denied",
+    role: session.role,
+    actor: session.identity.id,
+    status: "denied",
+    summary: "Review queue access denied for role.",
+    details: { reason: "role-cannot-review" }
   };
 }
