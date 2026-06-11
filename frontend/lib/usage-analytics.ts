@@ -99,6 +99,10 @@ function safeMetadata(value: UsageEventInput["metadata"]) {
   return entries.length ? JSON.stringify(Object.fromEntries(entries)) : null;
 }
 
+function safeUsageFailureReason() {
+  return "usage-analytics-write-failed";
+}
+
 export function recordUsageEvent(event: UsageEventInput) {
   if (!usageAnalyticsEnabled()) return { recorded: false, reason: "usage-analytics-disabled" };
   try {
@@ -118,8 +122,8 @@ export function recordUsageEvent(event: UsageEventInput) {
       safeMetadata(event.metadata)
     );
     return { recorded: true };
-  } catch (error) {
-    return { recorded: false, reason: error instanceof Error ? error.message : "usage-analytics-failed" };
+  } catch {
+    return { recorded: false, reason: safeUsageFailureReason() };
   }
 }
 
