@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
-import { containsPrivateSourceText } from "@/lib/private-source-text";
+import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
 
 export type UsageEventType =
@@ -72,12 +72,12 @@ function safeText(value: unknown, maxLength: number) {
 
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  return text.includes("..") || /[\\/]/.test(text) || containsPrivateSourceText(text) ? "" : text;
+  return containsUnsafePathText(text) || containsPrivateSourceText(text) ? "" : text;
 }
 
 function safeRoute(value: unknown) {
   const text = safeText(value, 240);
-  if (!text.startsWith("/") || text.includes("..") || /[\\]/.test(text) || containsPrivateSourceText(text)) return "";
+  if (!text.startsWith("/") || containsUnsafeRouteText(text) || containsPrivateSourceText(text)) return "";
   return text;
 }
 

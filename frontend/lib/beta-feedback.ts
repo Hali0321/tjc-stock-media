@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -69,16 +69,14 @@ function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
 
 function safeRoute(value: unknown) {
   const route = safeText(value, 240);
-  if (!route.startsWith("/") || route.includes("..") || /[\\]/.test(route)) return "/";
+  if (!route.startsWith("/") || containsUnsafeRouteText(route)) return "/";
   if (containsPrivateSourceText(route)) return "/";
   return route;
 }
 
 function safeUrl(value: unknown) {
   const url = safeText(value, 500);
-  if (url.includes("..") || /[\\]/.test(url)) return "";
-  if (containsPrivateSourceText(url)) return "";
-  return /^https?:\/\//i.test(url) ? url : "";
+  return isSafeHttpUrl(url) ? url : "";
 }
 
 function feedbackKey(id: string) {

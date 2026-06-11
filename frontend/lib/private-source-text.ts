@@ -7,3 +7,11 @@ export function containsPrivateSourceText(value: string) {
 export function containsUnsafePathText(value: string) {
   return value.includes("..") || /[\\/]/.test(value);
 }
+
+export function containsUnsafeRouteText(value: string) {
+  return value.includes("..") || /[\\]/.test(value);
+}
+
+export function isSafeHttpUrl(value: string) {
+  return /^https?:\/\//i.test(value) && !containsUnsafeRouteText(value) && !containsPrivateSourceText(value);
+}

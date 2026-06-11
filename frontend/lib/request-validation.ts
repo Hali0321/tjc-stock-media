@@ -1,4 +1,4 @@
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { containsPrivateSourceText, containsUnsafePathText, isSafeHttpUrl } from "@/lib/private-source-text";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 
@@ -29,9 +29,7 @@ export function normalizeDisplayTextField(value: unknown, fallback: string, max 
 export function normalizeUrlField(value: unknown, fallback = "", max = 500) {
   const text = normalizeTextField(value, fallback, max);
   if (!text) return fallback.slice(0, max);
-  if (text.includes("..") || /[\\]/.test(text)) return fallback.slice(0, max);
-  if (containsPrivateSourceText(text)) return fallback.slice(0, max);
-  return /^https?:\/\//i.test(text) ? text : fallback.slice(0, max);
+  return isSafeHttpUrl(text) ? text : fallback.slice(0, max);
 }
 
 export function normalizeDateField(value: unknown) {

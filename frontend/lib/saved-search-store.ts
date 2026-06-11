@@ -59,7 +59,7 @@ function safeRef(value: unknown) {
 
 function safeFilter(value: unknown) {
   const label = safeText(value, 80);
-  if (label.includes("..") || /[\\/]/.test(label) || containsPrivateSourceText(label) || isChecksumLike(label)) {
+  if (containsUnsafePathText(label) || containsPrivateSourceText(label) || isChecksumLike(label)) {
     return "";
   }
   return label;
