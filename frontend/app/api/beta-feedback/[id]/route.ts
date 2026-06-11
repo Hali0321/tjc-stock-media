@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackSeverities, betaFeedbackStatuses, normalizeFeedbackText, patchBetaFeedback } from "@/lib/beta-feedback";
+import { canAdmin } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/lib/types";
 
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  if (identity.role !== "DAM Admin") {
+  if (!canAdmin(identity.role)) {
     appendAuditEvent({
       type: "admin_denied",
       role: identity.role,

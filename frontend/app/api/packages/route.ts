@@ -4,21 +4,14 @@ import { getMediaSourceSession } from "@/lib/media-source/session";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { listStoredPackageDrafts, sanitizePackageDraft, savePackageDraft } from "@/lib/package-store";
+import { canContribute, canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 
 export const dynamic = "force-dynamic";
 
-function canWritePackage(role: string) {
-  return role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
-}
-
-function canListPackages(role: string) {
-  return role === "Reviewer" || role === "DAM Admin";
-}
-
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  if (!canListPackages(identity.role)) {
+  if (!canReview(identity.role)) {
     appendAuditEvent({
       type: "package_draft_denied",
       role: identity.role,
@@ -43,7 +36,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  if (!canWritePackage(identity.role)) {
+  if (!canContribute(identity.role)) {
     appendAuditEvent({
       type: "package_draft_denied",
       role: identity.role,

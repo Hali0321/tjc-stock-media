@@ -14,6 +14,14 @@ export function canReview(role: DemoRole) {
   return decideAccess(role, "reviewAsset").allowed;
 }
 
+export function canContribute(role: DemoRole) {
+  return role === "Contributor" || canReview(role);
+}
+
+export function canAdmin(role: DemoRole) {
+  return role === "DAM Admin";
+}
+
 export function canUpload(role: DemoRole) {
   return decideAccess(role, "uploadAsset").allowed;
 }

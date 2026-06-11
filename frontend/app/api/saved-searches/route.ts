@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
+import { canContribute } from "@/lib/permissions";
 import { listSavedSearches, sanitizeSavedSearch, saveSavedSearch } from "@/lib/saved-search-store";
 import { requestIdentity } from "@/lib/request-identity";
 
 export const dynamic = "force-dynamic";
 
-function canSaveSearch(role: string) {
-  return role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
-}
-
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  if (!canSaveSearch(identity.role)) {
+  if (!canContribute(identity.role)) {
     appendAuditEvent({
       type: "saved_search_denied",
       role: identity.role,
@@ -36,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  if (!canSaveSearch(identity.role)) {
+  if (!canContribute(identity.role)) {
     appendAuditEvent({
       type: "saved_search_denied",
       role: identity.role,

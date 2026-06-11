@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackSeverities, betaFeedbackStatuses, buildBetaFeedbackExport, listBetaFeedback, normalizeFeedbackText } from "@/lib/beta-feedback";
-import { roles } from "@/lib/permissions";
+import { canAdmin, roles } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
@@ -21,7 +21,7 @@ function normalizeFeedbackRole(value: string): DemoRole | "all" {
 
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
-  if (identity.role !== "DAM Admin") {
+  if (!canAdmin(identity.role)) {
     appendAuditEvent({
       type: "admin_denied",
       role: identity.role,

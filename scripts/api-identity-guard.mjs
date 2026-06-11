@@ -63,6 +63,9 @@ for (const fullPath of routeFiles) {
   if (/\bnormalizeRole\b/.test(source)) {
     failures.push(`${relativePath} must not normalize roles directly; use requestIdentity/createDamRouteSession`);
   }
+  if (/function\s+can[A-Za-z0-9_]*\s*\(\s*role\s*:\s*(string|DemoRole)\s*\)/.test(source)) {
+    failures.push(`${relativePath} must not define route-local role gates; add named capability helpers in frontend/lib/permissions.ts`);
+  }
 }
 
 if (failures.length) {

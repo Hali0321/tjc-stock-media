@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { catalogSortOptions } from "@/lib/catalog-language";
 import { createDamRouteSession } from "@/lib/dam-route-session";
+import { canReview } from "@/lib/permissions";
 import { normalizeTextField } from "@/lib/request-validation";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
-import type { DemoRole, SearchResult } from "@/lib/types";
+import type { SearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -18,14 +19,10 @@ function normalizeOffset(value: string | null) {
   return Number.isFinite(parsed) ? Math.max(Math.trunc(parsed), 0) : 0;
 }
 
-function canSeeOperationalSearch(role: DemoRole) {
-  return role === "Reviewer" || role === "DAM Admin";
-}
-
 function searchResultForRole(session: ReturnType<typeof createDamRouteSession>, result: SearchResult) {
   const role = session.role;
   const envelope = session.sourceEnvelope(result.source);
-  if (canSeeOperationalSearch(role)) {
+  if (canReview(role)) {
     return {
       ...result,
       ...envelope
@@ -77,7 +74,7 @@ export async function GET(request: NextRequest) {
   }
   const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
   const usageAnalytics = usageAnalyticsDiagnostics();
-  if (canSeeOperationalSearch(role)) {
+  if (canReview(role)) {
     result.usageAnalytics = {
       enabled: usageAnalytics.enabled,
       totalEvents: usageAnalytics.totalEvents,
