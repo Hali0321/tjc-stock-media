@@ -117,7 +117,9 @@ if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
 for (const store of [
   { name: "saved searches", source: savedSearches },
   { name: "package drafts", source: packages },
-  { name: "pending review writes", source: pendingReviewWrites }
+  { name: "pending review writes", source: pendingReviewWrites },
+  { name: "audit log", source: auditLog },
+  { name: "usage analytics", source: usageAnalytics }
 ]) {
   if (!store.source.includes("normalizePersistedDisplayText")) {
     failures.push(`${store.name} must normalize persisted display labels through normalizePersistedDisplayText`);
@@ -151,7 +153,7 @@ for (const surface of [
   if (/catalogSortOptions\.includes/.test(surface.source)) failures.push(`${surface.name} must not hand-roll catalog sort normalization`);
 }
 
-if (!usageAnalytics.includes("safeCompactText")) failures.push("usage analytics must normalize usage labels through safeCompactText");
+if (!usageAnalytics.includes("normalizePersistedDisplayText")) failures.push("usage analytics must normalize usage labels through normalizePersistedDisplayText");
 if (!usageAnalytics.includes("safeEnumValue")) failures.push("usage analytics must normalize event types through safeEnumValue");
 if (!usageAnalytics.includes("safeNonNegativeInt")) failures.push("usage analytics must normalize metric counters through safeNonNegativeInt");
 if (!usageAnalytics.includes("normalizeSafeRoutePath")) failures.push("usage analytics must normalize routes through normalizeSafeRoutePath");

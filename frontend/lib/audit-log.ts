@@ -4,7 +4,8 @@ import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { containsPrivateSourceText } from "@/lib/private-source-text";
+import { normalizePersistedDisplayText } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
 
 export type AuditEventType =
@@ -94,11 +95,6 @@ function safeText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength);
 }
 
-function safeDisplayText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  return containsUnsafePathText(text) || containsPrivateSourceText(text) ? "" : text;
-}
-
 function safeId(value: unknown) {
   const text = safeText(value, 120);
   if (containsPrivateSourceText(text)) return "";
@@ -120,13 +116,13 @@ function safeDetails(value: unknown): AuditEventRecord["details"] {
     const safeKey = safeId(key).slice(0, 80);
     if (!safeKey) continue;
     if (Array.isArray(item)) {
-      entries.push([safeKey, item.map((entry) => safeDisplayText(entry, 120)).filter(Boolean).slice(0, 24)]);
+      entries.push([safeKey, item.map((entry) => normalizePersistedDisplayText(entry, 120)).filter(Boolean).slice(0, 24)]);
     } else if (typeof item === "number") {
       entries.push([safeKey, Number.isFinite(item) ? item : 0]);
     } else if (typeof item === "boolean" || item === null) {
       entries.push([safeKey, item]);
     } else {
-      entries.push([safeKey, safeDisplayText(item, 240)]);
+      entries.push([safeKey, normalizePersistedDisplayText(item, 240)]);
     }
   }
   return Object.fromEntries(entries);
@@ -142,12 +138,12 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
     type: safeType(raw.type),
     createdAt,
     role: normalizeRoleWithFallback(raw.role),
-    actor: safeDisplayText(raw.actor, 160) || "local-beta:unknown",
+    actor: normalizePersistedDisplayText(raw.actor, 160) || "local-beta:unknown",
     assetId: raw.assetId === undefined ? undefined : safeId(raw.assetId),
     resourceSpaceId: raw.resourceSpaceId === undefined ? undefined : safeId(raw.resourceSpaceId),
     packageId: raw.packageId === undefined ? undefined : safeId(raw.packageId),
     status: safeStatus(raw.status),
-    summary: safeDisplayText(raw.summary, 240) || "Audit event",
+    summary: normalizePersistedDisplayText(raw.summary, 240) || "Audit event",
     details: safeDetails(raw.details)
   };
 }

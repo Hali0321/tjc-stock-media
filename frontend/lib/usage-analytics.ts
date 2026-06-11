@@ -2,10 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
+import { safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
-import { normalizeSafeRoutePath } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
 
 export type UsageEventType =
@@ -69,15 +68,6 @@ function database() {
   return db;
 }
 
-function safeText(value: unknown, maxLength: number) {
-  return safeCompactText(value, maxLength);
-}
-
-function safeDisplayText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  return containsUnsafePathText(text) || containsPrivateSourceText(text) ? "" : text;
-}
-
 function safeRoute(value: unknown) {
   return normalizeSafeRoutePath(value);
 }
@@ -91,11 +81,11 @@ function safeMetadata(value: UsageEventInput["metadata"]) {
   const entries = Object.entries(value)
     .slice(0, 24)
     .map(([key, item]) => {
-      const safeKey = safeDisplayText(key, 80);
+      const safeKey = normalizePersistedDisplayText(key, 80);
       if (!safeKey || item === undefined) return null;
       if (typeof item === "number") return [safeKey, Number.isFinite(item) ? item : 0] as const;
       if (typeof item === "boolean" || item === null) return [safeKey, item] as const;
-      return [safeKey, safeDisplayText(item, 240)] as const;
+      return [safeKey, normalizePersistedDisplayText(item, 240)] as const;
     })
     .filter((entry): entry is readonly [string, string | number | boolean | null] => Boolean(entry));
   return entries.length ? JSON.stringify(Object.fromEntries(entries)) : null;
@@ -112,11 +102,11 @@ export function recordUsageEvent(event: UsageEventInput) {
       new Date().toISOString(),
       safeType(event.type),
       normalizeRoleWithFallback(event.role),
-      safeDisplayText(event.actor || event.role, 160) || normalizeRoleWithFallback(event.role),
-      event.assetId ? safeDisplayText(event.assetId, 120) || null : null,
-      event.resourceSpaceId ? safeDisplayText(event.resourceSpaceId, 120) || null : null,
+      normalizePersistedDisplayText(event.actor || event.role, 160) || normalizeRoleWithFallback(event.role),
+      event.assetId ? normalizePersistedDisplayText(event.assetId, 120) || null : null,
+      event.resourceSpaceId ? normalizePersistedDisplayText(event.resourceSpaceId, 120) || null : null,
       event.route ? safeRoute(event.route) || null : null,
-      event.query ? safeDisplayText(event.query, 200) || null : null,
+      event.query ? normalizePersistedDisplayText(event.query, 200) || null : null,
       safeMetadata(event.metadata)
     );
     return { recorded: true };
@@ -140,7 +130,7 @@ function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 
       .all(type, limit) as Array<{ label?: string; value?: number }>;
     return rows
       .filter((row): row is { label: string; value: number } => Boolean(row.label))
-      .map((row) => ({ label: safeDisplayText(row.label, 200), value: safeNonNegativeInt(row.value) }))
+      .map((row) => ({ label: normalizePersistedDisplayText(row.label, 200), value: safeNonNegativeInt(row.value) }))
       .filter((row) => Boolean(row.label));
   } catch {
     return [];
