@@ -317,6 +317,9 @@ if (/url\??:\s*string/.test(resourceSpaceClient) || /,\s*url\s*}/.test(resourceS
 if (!resourceSpaceClient.includes("function safeApiErrorMessage") || !resourceSpaceClient.includes("sign=|user=")) {
   failures.push("ResourceSpace API errors must redact signed query details before leaving the client");
 }
+if (!resourceSpaceClient.includes("function timeoutSignal") || !resourceSpaceClient.includes("new AbortController()") || !resourceSpaceClient.includes("cache: \"no-store\", signal") || !resourceSpaceClient.includes("clearTimeout(timer)")) {
+  failures.push("ResourceSpace API client must bound live DAM requests with an abort timeout");
+}
 if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
   failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");
 }

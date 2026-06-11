@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import { normalizedResourceSpaceBaseUrl, resourceSpaceApiKey, resourceSpaceApiUser } from "@/lib/env";
 
+const resourceSpaceApiTimeoutMs = 8000;
+
 export type ResourceSpaceApiResult<T = unknown> = {
   ok: boolean;
   status: number;
@@ -43,6 +45,12 @@ function safeApiErrorMessage(error: unknown) {
   return message.slice(0, 240);
 }
 
+function timeoutSignal(timeoutMs = resourceSpaceApiTimeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return { signal: controller.signal, timer };
+}
+
 export async function resourceSpaceApiRequest<T = unknown>(params: Record<string, string | number | boolean | undefined>): Promise<ResourceSpaceApiResult<T>> {
   const baseUrl = normalizeBaseUrl();
   if (!baseUrl || !resourceSpaceApiUser() || !resourceSpaceApiKey()) {
@@ -50,8 +58,9 @@ export async function resourceSpaceApiRequest<T = unknown>(params: Record<string
   }
 
   const url = `${baseUrl}/api/?${signedQuery(params)}`;
+  const { signal, timer } = timeoutSignal();
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, { cache: "no-store", signal });
     const text = await response.text();
     const data = text ? JSON.parse(text) : null;
     if (!response.ok) {
@@ -64,6 +73,8 @@ export async function resourceSpaceApiRequest<T = unknown>(params: Record<string
       status: 502,
       error: safeApiErrorMessage(error)
     };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
