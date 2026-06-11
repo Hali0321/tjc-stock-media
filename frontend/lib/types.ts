@@ -420,7 +420,7 @@ export type BetaReadinessFact = {
   ready: boolean;
   state: "pass" | "warn" | "block";
   detail: string;
-  source: "integration" | "qa-report" | "environment" | "launch-readiness" | "catalog";
+  source: "integration" | "qa-report" | "environment" | "launch-readiness" | "git-hygiene" | "catalog";
 };
 
 export type BetaReadinessResult = {

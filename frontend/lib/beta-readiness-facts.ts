@@ -109,8 +109,8 @@ function envFact(): BetaReadinessFact {
 }
 
 function allowlistFact(): BetaReadinessFact {
-  const script = safeRead(path.join(repoRoot(), "scripts", "launch-readiness.sh"));
-  const ready = /frontend\/public\/brand\//.test(script);
+  const guard = safeRead(path.join(repoRoot(), "scripts", "git-hygiene-guard.mjs"));
+  const ready = /allowedMediaPattern/.test(guard) && /frontend\\\/public\\\/brand\\\/\[\^\/\]\+\\\.png/.test(guard);
   return fact({
     id: "brand-asset-allowlist",
     label: "Brand PNG allowlist",
@@ -118,8 +118,8 @@ function allowlistFact(): BetaReadinessFact {
     state: ready ? "pass" : "block",
     detail: ready
       ? "Launch readiness allows tracked app brand assets while still blocking church media files."
-      : "Launch readiness does not show the app-brand media allowlist.",
-    source: "launch-readiness"
+      : "Git hygiene guard does not show the app-brand PNG media allowlist.",
+    source: "git-hygiene"
   });
 }
 

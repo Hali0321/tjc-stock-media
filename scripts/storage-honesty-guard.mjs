@@ -49,6 +49,7 @@ const readiness = read(files.readiness);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
 const viewerVerdict = read("frontend/lib/viewer-verdict.ts");
+const betaReadinessFacts = read("frontend/lib/beta-readiness-facts.ts");
 const makefile = read("Makefile");
 const frontendCheck = read("scripts/frontend-check.sh");
 const failures = [];
@@ -229,6 +230,13 @@ if (!env.includes("function findRepoRoot") || !env.includes("looksLikeRepoRoot")
 }
 if (!nextConfig.includes("fileURLToPath(import.meta.url)") || !nextConfig.includes("outputFileTracingRoot: repoRoot") || /outputFileTracingRoot:\s*path\.resolve\(process\.cwd\(\)/.test(nextConfig)) {
   failures.push("Next config must derive outputFileTracingRoot from its file location, not process.cwd()");
+}
+
+if (!betaReadinessFacts.includes('scripts", "git-hygiene-guard.mjs"') || !betaReadinessFacts.includes('source: "git-hygiene"')) {
+  failures.push("beta readiness brand PNG allowlist fact must use git hygiene guard as source of truth");
+}
+if (/function allowlistFact\(\)[\s\S]*launch-readiness\.sh/.test(betaReadinessFacts)) {
+  failures.push("beta readiness brand PNG allowlist fact must not infer media allowlist from launch-readiness.sh copy");
 }
 
 if (!publicTextSafety.includes("function containsOperationalText") || !publicTextSafety.includes("function containsScaffoldText") || !publicTextSafety.includes("function safePublicList")) {
