@@ -103,7 +103,7 @@ export function assetForRolePayload(role: DemoRole, asset: StockMediaAsset): Sto
     tjcTerms,
     usageTerms,
     ...safeAsset
-  } = asset;
+  } = roleSafeAsset;
 
   return {
     ...safeAsset,

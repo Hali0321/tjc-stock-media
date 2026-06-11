@@ -3,6 +3,7 @@ import type { ResolvedPackageSection } from "@/lib/package-drafts";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { canContribute, canReview } from "@/lib/permissions";
 import { packageAssetRef as normalizedPackageAssetRef } from "@/lib/package-refs";
+import { assetForRolePayload } from "@/lib/source-redaction";
 
 export type PackageGovernanceAsset = {
   ref: string;
@@ -87,7 +88,7 @@ function classifyAsset(sectionId: string, sectionTitle: string, asset: StockMedi
     ref,
     sectionId,
     sectionTitle,
-    asset,
+    asset: assetForRolePayload(role, asset),
     reuseState: packet.reuse.state,
     reuseLabel: packet.reuse.label,
     canPreview: packet.access.viewDetailPreview.allowed,

@@ -165,6 +165,12 @@ if (!packageDrafts.includes("function sectionsWithGlobalPackageRefs") || !packag
 if (!packageGovernance.includes("normalizedPackageAssetRef") || /String\(asset\.resourceSpaceId\s*\|\|\s*asset\.id\)/.test(packageGovernance)) {
   failures.push("package governance display refs must normalize through package ref module");
 }
+if (!packageGovernance.includes("assetForRolePayload(role, asset)") || !packageGovernance.includes("@/lib/source-redaction")) {
+  failures.push("package governance nested asset payloads must pass through role redaction");
+}
+if (!read("scripts/portal-package-smoke.sh").includes("package governance payload leaked private source metadata")) {
+  failures.push("package smoke must prove package governance nested assets are role-safe");
+}
 if (!packageBuilder.includes("packageAssetRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(packageBuilder)) {
   failures.push("package builder display refs must normalize through package ref module");
 }
@@ -340,6 +346,9 @@ if (/path\.relative\(repoRoot\(\),\s*exportPath\)|\.runtime\/exports|Reading \$\
 }
 if (!sourceRedaction.includes("function canSeePrivateSourceFiles") || /if \(canSeeOperationalSource\(role\)\) return asset/.test(sourceRedaction)) {
   failures.push("reviewer payloads must not expose raw private source-file fields");
+}
+if (!/const\s*{[\s\S]*fileSizeBytes:[\s\S]*\.\.\.safeAsset[\s\S]*}\s*=\s*roleSafeAsset;/.test(sourceRedaction)) {
+  failures.push("normal-user payload redaction must derive safeAsset from roleSafeAsset, not raw asset");
 }
 if (!portalApiSmoke.includes("reviewer-payload-hides-source-custody") || !portalApiSmoke.includes("dam-admin-payload-keeps-source-custody")) {
   failures.push("portal API smoke must prove Reviewer redaction and DAM Admin source custody visibility");

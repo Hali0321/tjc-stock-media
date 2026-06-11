@@ -79,6 +79,11 @@ if (!data.package.governance || typeof data.package.governance.totalRefs !== "nu
   console.error(`FAIL: package governance missing: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
 }
+const governanceText = JSON.stringify(data.governance || {});
+if (!data.governance?.sections?.length || /"sourcePath"|"masterDrivePath"|"sourceAlbumPath"|"sourceAlbumMemberships"|"originalFilename"|"checksumSha256"|"resourceSpaceId"/.test(governanceText) || /source path|master drive|checksum|original filename|ResourceSpace ID|\bRS\s+\d+\b|[a-f0-9]{32,}/i.test(governanceText)) {
+  console.error(`FAIL: package governance payload leaked private source metadata: ${governanceText.slice(0, 700)}`);
+  process.exit(1);
+}
 const text = JSON.stringify(data.package);
 if (text.includes("../private") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: package display fields echoed unsafe text: ${text.slice(0, 700)}`);
