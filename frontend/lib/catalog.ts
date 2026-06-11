@@ -25,6 +25,7 @@ import {
 } from "@/lib/catalog-summaries";
 import { buildCatalogDiscovery, discoveryScore, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { getActiveMediaSource } from "@/lib/media-source";
+import { safeBoundedInt } from "@/lib/persisted-record-safety";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { assetMatchesReviewQueue, missingReviewFields, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { DemoRole, SearchResult, StockMediaAsset } from "@/lib/types";
@@ -160,8 +161,8 @@ export async function searchAssets({
   offset?: number;
 }): Promise<SearchResult> {
   const { assets, status } = await getActiveMediaSource();
-  const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 120) : 72;
-  const safeOffset = Number.isFinite(offset) ? Math.max(Math.trunc(offset), 0) : 0;
+  const safeLimit = safeBoundedInt(limit, { min: 1, max: 120, fallback: 72 });
+  const safeOffset = safeBoundedInt(offset, { min: 0, max: Number.MAX_SAFE_INTEGER, fallback: 0 });
   const roleVisible = assets.filter((asset) => decideAccess(role, "viewAsset", asset).allowed);
   const intent = !view && !collection ? matchSearchIntent(query) : undefined;
   const selectedViewId = normalizeSavedViewId(view) || intent?.matchedView;

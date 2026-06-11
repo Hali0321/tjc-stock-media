@@ -167,6 +167,13 @@ for (const surface of [
   if (!surface.source.includes("normalizeCatalogSort")) failures.push(`${surface.name} must normalize catalog sort through normalizeCatalogSort`);
   if (/catalogSortOptions\.includes/.test(surface.source)) failures.push(`${surface.name} must not hand-roll catalog sort normalization`);
 }
+for (const surface of [
+  { name: "catalog search", source: catalog },
+  { name: "asset search route", source: searchRoute }
+]) {
+  if (!surface.source.includes("safeBoundedInt")) failures.push(`${surface.name} must normalize pagination bounds through safeBoundedInt`);
+  if (/Number\.isFinite\([^)]*(limit|offset|parsed)/.test(surface.source)) failures.push(`${surface.name} must not hand-roll pagination number bounds`);
+}
 
 if (!usageAnalytics.includes("normalizePersistedDisplayText")) failures.push("usage analytics must normalize usage labels through normalizePersistedDisplayText");
 if (!usageAnalytics.includes("safeEnumValue")) failures.push("usage analytics must normalize event types through safeEnumValue");

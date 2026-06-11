@@ -36,6 +36,14 @@ export function safeNonNegativeInt(value: unknown) {
   return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
 }
 
+export function safeBoundedInt(value: unknown, { fallback, min, max }: { fallback: number; min: number; max: number }) {
+  const raw = typeof value === "string" ? value.trim() : value;
+  if (raw === "" || raw === null || raw === undefined) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(Math.trunc(parsed), min), max);
+}
+
 export function safeFiniteNumber(value: unknown) {
   return Number.isFinite(value) ? value as number : 0;
 }

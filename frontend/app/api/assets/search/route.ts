@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { createDamRouteSession } from "@/lib/dam-route-session";
+import { safeBoundedInt } from "@/lib/persisted-record-safety";
 import { canReview } from "@/lib/permissions";
 import { normalizeTextField } from "@/lib/request-validation";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
@@ -10,13 +11,11 @@ import type { SearchResult } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 function normalizeLimit(value: string | null) {
-  const parsed = Number(value || 72);
-  return Number.isFinite(parsed) ? Math.min(Math.max(Math.trunc(parsed), 1), 120) : 72;
+  return safeBoundedInt(value, { min: 1, max: 120, fallback: 72 });
 }
 
 function normalizeOffset(value: string | null) {
-  const parsed = Number(value || 0);
-  return Number.isFinite(parsed) ? Math.max(Math.trunc(parsed), 0) : 0;
+  return safeBoundedInt(value, { min: 0, max: Number.MAX_SAFE_INTEGER, fallback: 0 });
 }
 
 function searchResultForRole(session: ReturnType<typeof createDamRouteSession>, result: SearchResult) {
