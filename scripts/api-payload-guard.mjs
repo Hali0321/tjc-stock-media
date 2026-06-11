@@ -84,17 +84,21 @@ if (!mediaDeliverySource.includes("function supportedImageContentType") || !medi
 
 const collectionsRoute = "frontend/app/api/collections/route.ts";
 const collectionsSource = fs.readFileSync(path.join(root, collectionsRoute), "utf8");
+const collectionDraftSource = fs.readFileSync(path.join(root, "frontend/lib/collection-drafts.ts"), "utf8");
 const batchRoute = "frontend/app/api/batch/route.ts";
 const batchSource = fs.readFileSync(path.join(root, batchRoute), "utf8");
 const assetSelectionSource = fs.readFileSync(path.join(root, "frontend/lib/asset-selection.ts"), "utf8");
-if (!collectionsSource.includes("normalizeCollectionDraftAudience")) {
-  failures.push(`${collectionsRoute} must derive draft audience through normalizeCollectionDraftAudience`);
+if (!collectionsSource.includes("readCollectionDraftInput(request)") || !collectionsSource.includes("collectionDraftPublicBlockedAssets(input.audience, selection.assets)") || !collectionsSource.includes("buildCollectionDraftPreviewPayload(input, selection.assets, portalBlockedAssets)")) {
+  failures.push(`${collectionsRoute} must delegate collection draft parsing, public gate checks, and preview payload assembly to collection-drafts`);
 }
-if (!collectionsSource.includes("normalizeCollectionShareSlug")) {
-  failures.push(`${collectionsRoute} must derive share paths through normalizeCollectionShareSlug`);
+if (!collectionDraftSource.includes("normalizeCollectionDraftAudience") || !collectionDraftSource.includes("normalizeCollectionShareSlug") || !collectionDraftSource.includes("normalizeDateField") || !collectionDraftSource.includes("selectedAssetIds")) {
+  failures.push("collection-drafts must own draft audience, share slug, expiry, and selected asset id normalization");
 }
-if (/function\s+slugify\s*\(/.test(collectionsSource) || /allowedAudiences\s*=\s*new Set/.test(collectionsSource)) {
-  failures.push(`${collectionsRoute} must not hand-roll collection audience or share slug normalization`);
+if (/readJsonObject|normalizeCollectionDraftAudience|normalizeCollectionShareSlug|normalizeDateField|normalizeDisplayTextField|selectedAssetIds|assetIsPortalReady|assetNeedsStaleApprovalReview/.test(collectionsSource)) {
+  failures.push(`${collectionsRoute} must not hand-roll collection draft parsing, field normalization, selected ids, or public gate checks`);
+}
+if (/function\s+slugify\s*\(/.test(collectionsSource) || /function\s+slugify\s*\(/.test(collectionDraftSource) || /allowedAudiences\s*=\s*new Set/.test(collectionsSource) || /allowedAudiences\s*=\s*new Set/.test(collectionDraftSource)) {
+  failures.push("collection draft code must not hand-roll collection audience or share slug normalization");
 }
 if (!assetSelectionSource.includes("normalizeAssetIds") || !assetSelectionSource.includes("getAssetRecordById") || !assetSelectionSource.includes("canSeeAsset")) {
   failures.push("asset-selection must own selected asset id normalization, record lookup, and optional visibility filtering");
