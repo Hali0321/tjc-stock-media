@@ -391,8 +391,8 @@ if (!read("scripts/portal-saved-search-smoke.sh").includes("saved search contrib
 if (!packages.includes("packageDraftForRolePayload") || !packages.includes("createdBy: creatorLabel(record.role)")) {
   failures.push("package draft save payloads must scrub creator identity for non-review roles while keeping stored audit actor");
 }
-if (!packageRoute.includes("packageDraftForRolePayload(identity.role, record)")) {
-  failures.push("package route must return role-safe package draft payloads on save");
+if (!packageRoute.includes("buildPackageDraftSaveResponse(identity.role, record, governance)") || !packages.includes("packageDraftForRolePayload(role, record)")) {
+  failures.push("package route must return role-safe package draft payloads on save through package-store");
 }
 if (!portalPackageSmoke.includes("package save response leaked creator identity")) {
   failures.push("package smoke must prove Contributor package saves do not leak creator identity");

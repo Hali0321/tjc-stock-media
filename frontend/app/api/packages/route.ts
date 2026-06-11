@@ -3,7 +3,19 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { getMediaSourceSession } from "@/lib/media-source/session";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { resolvePackageSections } from "@/lib/package-drafts";
-import { listStoredPackageDrafts, packageDraftForRolePayload, readPackageDraftInput, savePackageDraftSubmission } from "@/lib/package-store";
+import {
+  buildPackageDraftListResponse,
+  buildPackageDraftSaveResponse,
+  listStoredPackageDrafts,
+  packageDraftListDeniedAuditEvent,
+  packageDraftListDeniedError,
+  packageDraftListViewedAuditEvent,
+  packageDraftSaveDeniedAuditEvent,
+  packageDraftSaveDeniedError,
+  packageDraftSavedAuditEvent,
+  readPackageDraftInput,
+  savePackageDraftSubmission
+} from "@/lib/package-store";
 import { canContribute, canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 
@@ -12,40 +24,21 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
   if (!canReview(identity.role)) {
-    appendAuditEvent({
-      type: "package_draft_denied",
-      role: identity.role,
-      actor: identity.id,
-      status: "denied",
-      summary: "Package draft list denied for non-review role.",
-      details: { reason: "role-cannot-list-packages" }
-    });
-    return NextResponse.json({ error: "Package draft list requires Reviewer or DAM Admin role." }, { status: 403 });
+    appendAuditEvent(packageDraftListDeniedAuditEvent(identity.role, identity.id));
+    const denied = packageDraftListDeniedError();
+    return NextResponse.json(denied.body, { status: denied.status });
   }
   const packages = await listStoredPackageDrafts();
-  appendAuditEvent({
-    type: "package_draft_listed",
-    role: identity.role,
-    actor: identity.id,
-    status: "preview",
-    summary: "Package draft list viewed.",
-    details: { count: packages.length }
-  });
-  return NextResponse.json({ packages, count: packages.length, storageMode: "local-json" });
+  appendAuditEvent(packageDraftListViewedAuditEvent(packages, identity.role, identity.id));
+  return NextResponse.json(buildPackageDraftListResponse(packages));
 }
 
 export async function POST(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
   if (!canContribute(identity.role)) {
-    appendAuditEvent({
-      type: "package_draft_denied",
-      role: identity.role,
-      actor: identity.id,
-      status: "denied",
-      summary: "Package draft save denied for Viewer role.",
-      details: { reason: "role-cannot-save-package" }
-    });
-    return NextResponse.json({ error: "Package draft save requires Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
+    appendAuditEvent(packageDraftSaveDeniedAuditEvent(identity.role, identity.id));
+    const denied = packageDraftSaveDeniedError();
+    return NextResponse.json(denied.body, { status: denied.status });
   }
 
   const draft = await readPackageDraftInput(request);
@@ -54,20 +47,7 @@ export async function POST(request: NextRequest) {
   const governance = buildPackageGovernance(draft, sections, identity.role);
   const record = await savePackageDraftSubmission(draft, identity, governance);
 
-  appendAuditEvent({
-    type: "package_draft_saved",
-    role: identity.role,
-    actor: identity.id,
-    packageId: record.id,
-    status: governance.canPublish ? "queued" : "preview",
-    summary: `Package draft saved: ${record.title}.`,
-    details: {
-      totalRefs: governance.totalRefs,
-      portalReadyRefs: governance.portalReadyRefs,
-      blockedRefs: governance.blockedRefs,
-      storageMode: record.storageMode
-    }
-  });
+  appendAuditEvent(packageDraftSavedAuditEvent(record, governance, identity.role, identity.id));
 
-  return NextResponse.json({ ok: true, package: packageDraftForRolePayload(identity.role, record), governance, storageMode: record.storageMode });
+  return NextResponse.json(buildPackageDraftSaveResponse(identity.role, record, governance));
 }

@@ -269,14 +269,14 @@ if (/readJsonObject|sanitizeSavedSearch|safeIsoTimestampIdPart|saveSavedSearch\(
 const packageRoute = "frontend/app/api/packages/route.ts";
 const packageRouteSource = fs.readFileSync(path.join(root, packageRoute), "utf8");
 const packageSource = fs.readFileSync(path.join(root, "frontend/lib/package-store.ts"), "utf8");
-if (!packageRouteSource.includes("readPackageDraftInput(request)") || !packageRouteSource.includes("savePackageDraftSubmission(draft, identity, governance)")) {
-  failures.push(`${packageRoute} must delegate draft parsing and stored record creation to package-store`);
+if (!packageRouteSource.includes("readPackageDraftInput(request)") || !packageRouteSource.includes("savePackageDraftSubmission(draft, identity, governance)") || !packageRouteSource.includes("buildPackageDraftListResponse(packages)") || !packageRouteSource.includes("buildPackageDraftSaveResponse(identity.role, record, governance)") || !packageRouteSource.includes("packageDraftSavedAuditEvent(record, governance, identity.role, identity.id)")) {
+  failures.push(`${packageRoute} must delegate draft parsing, stored record creation, response payloads, and audit details to package-store`);
 }
-if (!packageSource.includes("function readPackageDraftInput") || !packageSource.includes("function savePackageDraftSubmission") || !packageSource.includes("function storedGovernanceSnapshot")) {
-  failures.push("package-store must own package draft parsing, stored governance snapshots, and record creation");
+if (!packageSource.includes("function readPackageDraftInput") || !packageSource.includes("function savePackageDraftSubmission") || !packageSource.includes("function storedGovernanceSnapshot") || !packageSource.includes("function buildPackageDraftListResponse") || !packageSource.includes("function buildPackageDraftSaveResponse") || !packageSource.includes("function packageDraftSavedAuditEvent")) {
+  failures.push("package-store must own package draft parsing, stored governance snapshots, record creation, response payloads, and audit details");
 }
-if (/readJsonObject|sanitizePackageDraft|safeIsoTimestampIdPart|savePackageDraft\(/.test(packageRouteSource)) {
-  failures.push(`${packageRoute} must not hand-roll package draft body parsing, sanitization, timestamp ids, or persistence record creation`);
+if (/readJsonObject|sanitizePackageDraft|safeIsoTimestampIdPart|savePackageDraft\(|packageDraftForRolePayload|storageMode:\s*record\.storageMode|totalRefs|portalReadyRefs|blockedRefs|role-cannot-(list|save)-packages/.test(packageRouteSource)) {
+  failures.push(`${packageRoute} must not hand-roll package draft body parsing, sanitization, timestamp ids, persistence record creation, role payloads, response payloads, or audit details`);
 }
 
 for (const route of [

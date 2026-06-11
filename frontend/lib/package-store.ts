@@ -5,6 +5,7 @@ import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeIs
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePackageRef } from "@/lib/package-refs";
 import { normalizePersistedDisplayText, normalizePersistedSlugText, readJsonObject } from "@/lib/request-validation";
+import type { AuditEventRecord } from "@/lib/audit-log";
 import type { PackageGovernancePacket } from "@/lib/package-governance";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
@@ -33,6 +34,13 @@ export type StoredPackageDraft = {
 const packageStorePath = () => path.join(repoRoot(), "data", "runtime", "package-drafts.json");
 export const maxPackageDrafts = 200;
 const packageStatuses: DamPackage["status"][] = ["draft", "pending-review", "approved", "archived"];
+type PackageDraftAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+type PackageDraftRouteError = {
+  body: {
+    error: string;
+  };
+  status: 403;
+};
 
 function newestFirst(records: StoredPackageDraft[]) {
   return newestByTimestamp(records, (record) => record.updatedAt);
@@ -135,6 +143,85 @@ export function packageDraftForRolePayload(role: DemoRole, record: StoredPackage
   return {
     ...record,
     createdBy: creatorLabel(record.role)
+  };
+}
+
+export function packageDraftListDeniedError(): PackageDraftRouteError {
+  return { body: { error: "Package draft list requires Reviewer or DAM Admin role." }, status: 403 };
+}
+
+export function packageDraftSaveDeniedError(): PackageDraftRouteError {
+  return { body: { error: "Package draft save requires Contributor, Reviewer, or DAM Admin role." }, status: 403 };
+}
+
+export function buildPackageDraftListResponse(packages: StoredPackageDraft[]) {
+  return { packages, count: packages.length, storageMode: "local-json" as const };
+}
+
+export function buildPackageDraftSaveResponse(
+  role: DemoRole,
+  record: StoredPackageDraft,
+  governance: PackageGovernancePacket
+) {
+  return { ok: true, package: packageDraftForRolePayload(role, record), governance, storageMode: record.storageMode };
+}
+
+export function packageDraftListDeniedAuditEvent(role: DemoRole, actor: string): PackageDraftAuditEvent {
+  return {
+    type: "package_draft_denied",
+    role,
+    actor,
+    status: "denied",
+    summary: "Package draft list denied for non-review role.",
+    details: { reason: "role-cannot-list-packages" }
+  };
+}
+
+export function packageDraftSaveDeniedAuditEvent(role: DemoRole, actor: string): PackageDraftAuditEvent {
+  return {
+    type: "package_draft_denied",
+    role,
+    actor,
+    status: "denied",
+    summary: "Package draft save denied for Viewer role.",
+    details: { reason: "role-cannot-save-package" }
+  };
+}
+
+export function packageDraftListViewedAuditEvent(
+  packages: StoredPackageDraft[],
+  role: DemoRole,
+  actor: string
+): PackageDraftAuditEvent {
+  return {
+    type: "package_draft_listed",
+    role,
+    actor,
+    status: "preview",
+    summary: "Package draft list viewed.",
+    details: { count: packages.length }
+  };
+}
+
+export function packageDraftSavedAuditEvent(
+  record: StoredPackageDraft,
+  governance: PackageGovernancePacket,
+  role: DemoRole,
+  actor: string
+): PackageDraftAuditEvent {
+  return {
+    type: "package_draft_saved",
+    role,
+    actor,
+    packageId: record.id,
+    status: governance.canPublish ? "queued" : "preview",
+    summary: `Package draft saved: ${record.title}.`,
+    details: {
+      totalRefs: governance.totalRefs,
+      portalReadyRefs: governance.portalReadyRefs,
+      blockedRefs: governance.blockedRefs,
+      storageMode: record.storageMode
+    }
   };
 }
 
