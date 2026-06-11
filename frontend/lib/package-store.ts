@@ -56,6 +56,7 @@ function safeIdentifierText(value: unknown, maxLength: number) {
 
 function safeResourceSpaceRef(value: unknown) {
   const ref = String(value || "").trim().slice(0, 80);
+  if (containsPrivateSourceText(ref) || /^[a-f0-9]{32,}$/i.test(ref)) return "";
   return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
 }
 
