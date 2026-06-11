@@ -4,7 +4,7 @@ import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { normalizePersistedDisplayText } from "@/lib/request-validation";
 import { normalizeReviewChecklist } from "@/lib/review-evidence";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
@@ -28,13 +28,6 @@ function safeText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength);
 }
 
-function safeDisplayText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  if (containsUnsafePathText(text)) return "";
-  if (containsPrivateSourceText(text)) return "";
-  return text;
-}
-
 function safeRole(value: unknown): ReviewWriteRecord["reviewerRole"] {
   return normalizeReviewRoleWithFallback(value);
 }
@@ -52,18 +45,18 @@ function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
   return {
     id,
     resourceId,
-    oldStatus: safeDisplayText(raw.oldStatus, 120) || "Unknown",
-    requestedStatus: safeDisplayText(raw.requestedStatus, 120) || "Needs Review",
+    oldStatus: normalizePersistedDisplayText(raw.oldStatus, 120) || "Unknown",
+    requestedStatus: normalizePersistedDisplayText(raw.requestedStatus, 120) || "Needs Review",
     reviewerRole: safeRole(raw.reviewerRole),
-    reviewerName: raw.reviewerName === undefined ? undefined : safeDisplayText(raw.reviewerName, 120),
+    reviewerName: raw.reviewerName === undefined ? undefined : normalizePersistedDisplayText(raw.reviewerName, 120),
     createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
-    note: safeDisplayText(raw.note, 1200),
+    note: normalizePersistedDisplayText(raw.note, 1200),
     checklist: normalizeReviewChecklist(raw.checklist),
-    blockers: Array.isArray(raw.blockers) ? raw.blockers.map((item) => safeDisplayText(item, 120)).filter(Boolean).slice(0, 24) : [],
+    blockers: Array.isArray(raw.blockers) ? raw.blockers.map((item) => normalizePersistedDisplayText(item, 120)).filter(Boolean).slice(0, 24) : [],
     syncState: safeSyncState(raw.syncState),
     retryCount: safeNonNegativeInt(raw.retryCount),
-    lastError: raw.lastError === undefined ? undefined : safeDisplayText(raw.lastError, 240)
+    lastError: raw.lastError === undefined ? undefined : normalizePersistedDisplayText(raw.lastError, 240)
   };
 }
 
@@ -137,15 +130,15 @@ export function createPendingReviewWrite({
   const record: ReviewWriteRecord = {
     id,
     resourceId: asset.resourceSpaceId || asset.id,
-    oldStatus: safeDisplayText(asset.status, 120) || "Unknown",
-    requestedStatus: safeDisplayText(requestedStatus, 120) || "Needs Review",
+    oldStatus: normalizePersistedDisplayText(asset.status, 120) || "Unknown",
+    requestedStatus: normalizePersistedDisplayText(requestedStatus, 120) || "Needs Review",
     reviewerRole,
-    reviewerName: reviewerName === undefined ? undefined : safeDisplayText(reviewerName, 120),
+    reviewerName: reviewerName === undefined ? undefined : normalizePersistedDisplayText(reviewerName, 120),
     createdAt: now,
     updatedAt: now,
-    note: safeDisplayText(note, 1200),
+    note: normalizePersistedDisplayText(note, 1200),
     checklist,
-    blockers: blockers.map((item) => safeDisplayText(item, 120)).filter(Boolean).slice(0, 24),
+    blockers: blockers.map((item) => normalizePersistedDisplayText(item, 120)).filter(Boolean).slice(0, 24),
     syncState: "queued",
     retryCount: 0
   };

@@ -1,5 +1,5 @@
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
-import { safeEnumValue, safePathSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safePathSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
@@ -48,6 +48,13 @@ export function normalizeDisplayTextField(value: unknown, fallback: string, max 
   const text = normalizeTextField(value, fallback, max).replace(/\s+/g, " ").trim();
   if (containsUnsafePathText(text)) return fallback.slice(0, max);
   if (containsPrivateSourceText(text)) return fallback.slice(0, max);
+  return text;
+}
+
+export function normalizePersistedDisplayText(value: unknown, max = 100) {
+  const text = safeCompactText(value, max);
+  if (containsUnsafePathText(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
 }
 

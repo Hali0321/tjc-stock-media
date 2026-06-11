@@ -108,8 +108,23 @@ if (!requestValidation.includes("function normalizeResourceSpaceRef")) {
 if (!requestValidation.includes("containsPrivateSourceText(ref)")) {
   failures.push("request validation ResourceSpace refs must reject private-source tokens through containsPrivateSourceText");
 }
+if (!requestValidation.includes("function normalizePersistedDisplayText")) {
+  failures.push("request validation must expose normalizePersistedDisplayText for persisted display labels");
+}
 if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
   failures.push("request validation must not hand-roll private token detection");
+}
+for (const store of [
+  { name: "saved searches", source: savedSearches },
+  { name: "package drafts", source: packages },
+  { name: "pending review writes", source: pendingReviewWrites }
+]) {
+  if (!store.source.includes("normalizePersistedDisplayText")) {
+    failures.push(`${store.name} must normalize persisted display labels through normalizePersistedDisplayText`);
+  }
+  if (/function\s+safeDisplayText\s*\(/.test(store.source)) {
+    failures.push(`${store.name} must not hand-roll persisted display label normalization`);
+  }
 }
 if (!reviewEvidence.includes("safeBoolean")) failures.push("review evidence must normalize checklist booleans through safeBoolean");
 if (/raw\.[a-zA-Z0-9_]+\s*===\s*true/.test(reviewEvidence)) {

@@ -6,6 +6,7 @@ import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { normalizePersistedDisplayText } from "@/lib/request-validation";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
 export type SavedSearchRecord = {
@@ -32,13 +33,6 @@ function newestFirst(records: SavedSearchRecord[]) {
 
 function safeText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength);
-}
-
-function safeDisplayText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  if (containsUnsafePathText(text)) return "";
-  if (containsPrivateSourceText(text)) return "";
-  return text;
 }
 
 function safeId(value: unknown) {
@@ -70,13 +64,13 @@ function safeSort(value: unknown): CatalogSort {
 export function sanitizeSavedSearch(input: unknown) {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const filters = Array.isArray(raw.filters) ? raw.filters : [];
-  const query = safeDisplayText(raw.query, 200);
+  const query = normalizePersistedDisplayText(raw.query, 200);
   const view = safeRef(raw.view);
   const collection = safeRef(raw.collection);
   const safeFilters = [...new Set(filters.map(safeFilter).filter(Boolean))].slice(0, 24);
   return {
     id: safeId(raw.id) || "",
-    title: safeDisplayText(raw.title, 120) || query || view || collection || safeFilters[0] || "Saved search",
+    title: normalizePersistedDisplayText(raw.title, 120) || query || view || collection || safeFilters[0] || "Saved search",
     query,
     view: view || undefined,
     collection: collection || undefined,
@@ -94,7 +88,7 @@ function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
     ...draft,
     createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
-    createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
+    createdBy: normalizePersistedDisplayText(raw.createdBy, 120) || "local-beta:unknown",
     role: normalizeContributingRoleWithFallback(raw.role, "Contributor"),
     storageMode: "local-json"
   };

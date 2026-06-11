@@ -5,7 +5,7 @@ import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
-import { normalizeResourceSpaceRef } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizeResourceSpaceRef } from "@/lib/request-validation";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
 export type StoredPackageDraft = {
@@ -42,13 +42,6 @@ function safeText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength);
 }
 
-function safeDisplayText(value: unknown, maxLength: number) {
-  const text = safeText(value, maxLength);
-  if (containsUnsafePathText(text)) return "";
-  if (containsPrivateSourceText(text)) return "";
-  return text;
-}
-
 function safeIdentifierText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (containsUnsafePathText(text) || containsPrivateSourceText(text)) return "";
@@ -61,13 +54,13 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
   const seenRefs = new Set<string>();
   return {
     id: safeIdentifierText(raw.id, 120) || "portal-local-draft",
-    title: safeDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
-    description: safeDisplayText(raw.description, 500) || undefined,
+    title: normalizePersistedDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
+    description: normalizePersistedDisplayText(raw.description, 500) || undefined,
     status: safeEnumValue(raw.status, packageStatuses, "draft"),
-    collectionId: raw.collectionId ? safeDisplayText(raw.collectionId, 120) : undefined,
+    collectionId: raw.collectionId ? normalizePersistedDisplayText(raw.collectionId, 120) : undefined,
     sections: sections.slice(0, 12).map((section, index) => ({
       id: safeIdentifierText(section?.id, 80) || `section-${index + 1}`,
-      title: safeDisplayText(section?.title, 120) || `Section ${index + 1}`,
+      title: normalizePersistedDisplayText(section?.title, 120) || `Section ${index + 1}`,
       resourceSpaceAssetIds: Array.isArray(section?.resourceSpaceAssetIds)
         ? section.resourceSpaceAssetIds
             .map((ref) => normalizeResourceSpaceRef(ref))
@@ -96,7 +89,7 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
     sections: draft.sections,
     createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
-    createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
+    createdBy: normalizePersistedDisplayText(raw.createdBy, 120) || "local-beta:unknown",
     role: normalizeContributingRoleWithFallback(raw.role, "Contributor"),
     governance: {
       canPreview: safeBoolean(governance.canPreview),
@@ -106,7 +99,7 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
       portalReadyRefs: safeNonNegativeInt(governance.portalReadyRefs),
       blockedRefs: safeNonNegativeInt(governance.blockedRefs),
       missingRefs: safeNonNegativeInt(governance.missingRefs),
-      reason: safeDisplayText(governance.reason, 240)
+      reason: normalizePersistedDisplayText(governance.reason, 240)
     },
     storageMode: "local-json"
   };
