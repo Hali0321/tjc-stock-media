@@ -55,6 +55,14 @@ for (const [routePath, exportName] of enterpriseRoutes) {
   }
 }
 
+const assetDetailPage = read("frontend/app/assets/[id]/page.tsx");
+if (!assetDetailPage.includes("normalizeAssetId((await params).id)")) {
+  failures.push("asset detail page must normalize path params through normalizeAssetId before rendering the client DAM shell");
+}
+if (!assetDetailPage.includes("notFound()")) {
+  failures.push("asset detail page must render Next 404 for malformed asset ids");
+}
+
 const legacyImportPattern = new RegExp(`@/components/(${legacyModules.join("|")})(?:\\b|["'])`);
 for (const file of walk("frontend")) {
   if (file.startsWith("frontend/components/dam/enterprise/")) continue;
