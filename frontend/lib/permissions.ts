@@ -5,6 +5,12 @@ export const roles: DemoRole[] = ["Viewer", "Contributor", "Reviewer", "DAM Admi
 export type ReviewRole = "Reviewer" | "DAM Admin";
 export type RoleFilter = DemoRole | "all";
 
+export function strongestRole(current: DemoRole | null, next: DemoRole | null) {
+  if (!next) return current;
+  if (!current) return next;
+  return roles.indexOf(next) > roles.indexOf(current) ? next : current;
+}
+
 export function isKnownRole(value: unknown): value is DemoRole {
   return roles.includes(value as DemoRole);
 }

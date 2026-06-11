@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server";
-import { normalizeRole } from "@/lib/permissions";
+import { normalizeRole, strongestRole } from "@/lib/permissions";
 import { trustedSsoHeadersEnabled } from "@/lib/env";
 import type { DamUser, DemoRole } from "@/lib/types";
-
-const roleRank: DemoRole[] = ["Viewer", "Contributor", "Reviewer", "DAM Admin"];
 
 function roleFromTrustedValue(value?: string | null): DemoRole | null {
   if (!value) return null;
@@ -22,9 +20,7 @@ function roleFromTrustedValue(value?: string | null): DemoRole | null {
 function highestRole(values: string[]) {
   return values.reduce<DemoRole | null>((best, value) => {
     const next = roleFromTrustedValue(value);
-    if (!next) return best;
-    if (!best) return next;
-    return roleRank.indexOf(next) > roleRank.indexOf(best) ? next : best;
+    return strongestRole(best, next);
   }, null);
 }
 
@@ -45,20 +41,14 @@ function parseRoleMap() {
 }
 
 function highestTrustedRole(...roles: Array<DemoRole | null>) {
-  return roles.reduce<DemoRole | null>((best, next) => {
-    if (!next) return best;
-    if (!best) return next;
-    return roleRank.indexOf(next) > roleRank.indexOf(best) ? next : best;
-  }, null);
+  return roles.reduce<DemoRole | null>((best, next) => strongestRole(best, next), null);
 }
 
 function mappedRole(groups: string[]) {
   const map = parseRoleMap();
   return groups.reduce<DemoRole | null>((best, group) => {
     const next = map[group.toLowerCase()];
-    if (!next) return best;
-    if (!best) return next;
-    return roleRank.indexOf(next) > roleRank.indexOf(best) ? next : best;
+    return strongestRole(best, next || null);
   }, null);
 }
 

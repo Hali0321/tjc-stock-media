@@ -48,6 +48,8 @@ function functionBodyAt(source, startIndex) {
 
 const failures = [];
 const routeFiles = walk(apiRoot);
+const requestIdentitySource = fs.readFileSync(path.join(root, "frontend/lib/request-identity.ts"), "utf8");
+const permissionsSource = fs.readFileSync(path.join(root, "frontend/lib/permissions.ts"), "utf8");
 
 for (const fullPath of routeFiles) {
   const relativePath = path.relative(root, fullPath);
@@ -90,6 +92,16 @@ for (const entry of rolePersistenceFiles) {
     || /raw\.role\s*===\s*"Contributor"\s*\|\|\s*raw\.role\s*===\s*"Reviewer"\s*\|\|\s*raw\.role\s*===\s*"DAM Admin"/.test(source)) {
     failures.push(`${relativePath} must not hand-roll persisted role allowlists`);
   }
+}
+
+if (!permissionsSource.includes("function strongestRole")) {
+  failures.push("frontend/lib/permissions.ts must expose strongestRole for role precedence");
+}
+if (!requestIdentitySource.includes("strongestRole")) {
+  failures.push("frontend/lib/request-identity.ts must resolve SSO role precedence through strongestRole");
+}
+if (/roleRank|\.indexOf\(next\)\s*>\s*.*\.indexOf\(best\)/.test(requestIdentitySource)) {
+  failures.push("frontend/lib/request-identity.ts must not hand-roll SSO role precedence ranking");
 }
 
 if (failures.length) {
