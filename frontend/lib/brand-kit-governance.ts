@@ -1,4 +1,5 @@
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
+import { canContribute } from "@/lib/permissions";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
 export type BrandKitGovernance = {
@@ -29,7 +30,7 @@ function command(label: string, ready: boolean, detail: string, review = false):
 }
 
 function roleCanShareInternal(role: DemoRole) {
-  return role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
+  return canContribute(role);
 }
 
 export function buildBrandKitGovernance({

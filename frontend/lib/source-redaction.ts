@@ -1,7 +1,8 @@
+import { canReview } from "@/lib/permissions";
 import type { DemoRole, MediaSourceStatus, SavedViewSummary, StockMediaAsset } from "@/lib/types";
 
 function canSeeOperationalSource(role: DemoRole) {
-  return role === "Reviewer" || role === "DAM Admin";
+  return canReview(role);
 }
 
 const operationalTextPattern = /ResourceSpace|Shared Drive|pending writes?|API mapping|launch gate|diagnostics?|metadata health|raw totals?|source[- ]of[- ]truth|field refs?|source path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|[a-f0-9]{32,}/i;

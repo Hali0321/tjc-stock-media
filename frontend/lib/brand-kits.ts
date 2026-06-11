@@ -2,7 +2,7 @@ import { brandKitCollectionId } from "@/lib/env";
 import { buildBrandKitGovernance } from "@/lib/brand-kit-governance";
 import { getResourceSpaceCollectionAssets } from "@/lib/media-source/resourcespace-api";
 import { getMediaSourceSession } from "@/lib/media-source/session";
-import { canSeeAsset } from "@/lib/permissions";
+import { canReview, canSeeAsset } from "@/lib/permissions";
 import { assetForRolePayload } from "@/lib/source-redaction";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
@@ -123,7 +123,7 @@ function buildBrandKitWarnings({
 }
 
 function canSeeBrandKitOperations(role: DemoRole) {
-  return role === "Reviewer" || role === "DAM Admin";
+  return canReview(role);
 }
 
 function publicSectionMappings(sectionMappings: BrandKitSectionMapping[]) {

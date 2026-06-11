@@ -1,6 +1,7 @@
 import type { DemoRole, DamPackage, ReuseBlocker, ReuseState, StockMediaAsset } from "@/lib/types";
 import type { ResolvedPackageSection } from "@/lib/package-drafts";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
+import { canContribute, canReview } from "@/lib/permissions";
 
 export type PackageGovernanceAsset = {
   ref: string;
@@ -58,11 +59,11 @@ function uniqueStrings(values: string[]) {
 }
 
 function roleCanShareInternal(role: DemoRole) {
-  return role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
+  return canContribute(role);
 }
 
 function opsView(role: DemoRole) {
-  return role === "Reviewer" || role === "DAM Admin";
+  return canReview(role);
 }
 
 function assetReason(asset: StockMediaAsset, blockers: ReuseBlocker[]) {
