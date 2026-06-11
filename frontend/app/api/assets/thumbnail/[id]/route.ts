@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decideAccess, type AccessAction } from "@/lib/access-decisions";
+import { decideAccess } from "@/lib/access-decisions";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
-import { readDeliveredImage } from "@/lib/media-delivery";
+import { readDeliveredImage, readThumbnailDeliveryInput } from "@/lib/media-delivery";
 import { normalizeAssetId } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -33,30 +33,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!id) {
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
-  const variantParam = request.nextUrl.searchParams.get("variant");
-  const variant =
-    variantParam === "download"
-      ? "download"
-      : variantParam === "detail" || variantParam === "preview"
-        ? "detail"
-        : variantParam === "collection"
-          ? "collection"
-          : variantParam === "card"
-            ? "card"
-            : "small";
+  const deliveryInput = readThumbnailDeliveryInput(request.nextUrl.searchParams);
   const { asset, source } = await getAssetRecordById(id);
   const envelope = session.sourceEnvelope(source);
   if (!asset) {
     return NextResponse.json({ error: "Asset not found.", ...envelope }, { status: 404 });
   }
 
-  const action: AccessAction = variant === "download" ? "downloadApprovedCopy" : variant === "detail" ? "viewDetailPreview" : "viewThumbnail";
-  const access = decideAccess(role, action, asset);
+  const access = decideAccess(role, deliveryInput.action, asset);
   if (!access.allowed) {
     return NextResponse.json({ error: access.reason || "Preview restricted.", ...envelope }, { status: 403 });
   }
 
-  const filePath = findFilestoreDerivative(id, variant);
+  const filePath = findFilestoreDerivative(id, deliveryInput.variant);
 
   if (!filePath) {
     return placeholderImage("Preview pending");

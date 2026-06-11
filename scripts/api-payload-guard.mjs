@@ -84,8 +84,14 @@ for (const route of [
     failures.push(`${route.name} must not hand-roll derivative file reads`);
   }
 }
-if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function approvedCopyFileName")) {
-  failures.push("media-delivery must own supported image detection, derivative reads, and approved-copy filenames");
+if (!thumbnailSource.includes("readThumbnailDeliveryInput(request.nextUrl.searchParams)") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput") || !mediaDeliverySource.includes("function normalizeThumbnailVariant")) {
+  failures.push(`${thumbnailRoute} must delegate thumbnail variant and access-action normalization to media-delivery`);
+}
+if (/variantParam|viewDetailPreview|viewThumbnail|downloadApprovedCopy/.test(thumbnailSource)) {
+  failures.push(`${thumbnailRoute} must not hand-roll thumbnail variant or access-action mapping`);
+}
+if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput")) {
+  failures.push("media-delivery must own supported image detection, derivative reads, thumbnail delivery input, and approved-copy filenames");
 }
 
 const collectionsRoute = "frontend/app/api/collections/route.ts";

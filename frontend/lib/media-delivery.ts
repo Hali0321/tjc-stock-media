@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import type { AccessAction } from "@/lib/access-decisions";
+import type { ImageVariant } from "@/lib/images";
 import { safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 
@@ -19,6 +21,10 @@ export type DownloadGateInput = {
   usageChannel: string | null;
   reason: string | null;
   termsAccepted: boolean;
+};
+export type ThumbnailDeliveryInput = {
+  variant: ImageVariant;
+  action: AccessAction;
 };
 
 export function supportedImageContentType(bytes: Buffer): DeliveredImage["contentType"] | null {
@@ -49,6 +55,22 @@ export function approvedCopyFileName(title: unknown, id: string) {
 
 function normalizeDownloadVariant(_value: unknown): DownloadGateInput["variant"] {
   return "download";
+}
+
+function normalizeThumbnailVariant(value: unknown): ImageVariant {
+  if (value === "download") return "download";
+  if (value === "detail" || value === "preview") return "detail";
+  if (value === "collection") return "collection";
+  if (value === "card") return "card";
+  return "small";
+}
+
+export function readThumbnailDeliveryInput(search: Pick<URLSearchParams, "get">): ThumbnailDeliveryInput {
+  const variant = normalizeThumbnailVariant(search.get("variant"));
+  return {
+    variant,
+    action: variant === "download" ? "downloadApprovedCopy" : variant === "detail" ? "viewDetailPreview" : "viewThumbnail"
+  };
 }
 
 export async function readDownloadGateInput(request: { json(): Promise<unknown> }): Promise<DownloadGateInput> {
