@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
+import { safeCompactText, safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
@@ -68,7 +69,7 @@ function database() {
 }
 
 function safeText(value: unknown, maxLength: number) {
-  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+  return safeCompactText(value, maxLength);
 }
 
 function safeDisplayText(value: unknown, maxLength: number) {
@@ -83,7 +84,7 @@ function safeRoute(value: unknown) {
 }
 
 function safeType(value: unknown): UsageEventType {
-  return usageEventTypes.includes(value as UsageEventType) ? value as UsageEventType : "search";
+  return safeEnumValue(value, usageEventTypes, "search");
 }
 
 function safeMetadata(value: UsageEventInput["metadata"]) {
@@ -140,7 +141,7 @@ function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 
       .all(type, limit) as Array<{ label?: string; value?: number }>;
     return rows
       .filter((row): row is { label: string; value: number } => Boolean(row.label))
-      .map((row) => ({ label: safeDisplayText(row.label, 200), value: Math.max(0, Number(row.value || 0)) }))
+      .map((row) => ({ label: safeDisplayText(row.label, 200), value: safeNonNegativeInt(row.value) }))
       .filter((row) => Boolean(row.label));
   } catch {
     return [];
@@ -161,7 +162,7 @@ function dailyEventRows(limit = 14): DailyUsageMetricRow[] {
       .all(limit) as Array<{ label?: string; value?: number }>;
     return rows
       .filter((row): row is { label: string; value: number } => Boolean(row.label))
-      .map((row) => ({ date: /^\d{4}-\d{2}-\d{2}$/.test(row.label) ? row.label : "1970-01-01", value: Math.max(0, Number(row.value || 0)) }))
+      .map((row) => ({ date: /^\d{4}-\d{2}-\d{2}$/.test(row.label) ? row.label : "1970-01-01", value: safeNonNegativeInt(row.value) }))
       .reverse();
   } catch {
     return [];

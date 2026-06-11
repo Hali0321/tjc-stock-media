@@ -9,6 +9,7 @@ const files = {
   packages: "frontend/lib/package-store.ts",
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
+  usageAnalytics: "frontend/lib/usage-analytics.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -21,6 +22,7 @@ const savedSearches = read(files.savedSearches);
 const packages = read(files.packages);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
+const usageAnalytics = read(files.usageAnalytics);
 const readiness = read(files.readiness);
 const failures = [];
 
@@ -68,6 +70,13 @@ if (!packages.includes("safeBoolean")) failures.push("package drafts must normal
 if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(packages)) {
   failures.push("package drafts must not hand-roll boolean normalization");
 }
+
+if (!usageAnalytics.includes("safeCompactText")) failures.push("usage analytics must normalize usage labels through safeCompactText");
+if (!usageAnalytics.includes("safeEnumValue")) failures.push("usage analytics must normalize event types through safeEnumValue");
+if (!usageAnalytics.includes("safeNonNegativeInt")) failures.push("usage analytics must normalize metric counters through safeNonNegativeInt");
+if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll compact text normalization");
+if (/\.includes\(value as /.test(usageAnalytics)) failures.push("usage analytics must not hand-roll enum fallback normalization");
+if (/Math\.max\(0,\s*Number/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll nonnegative metric normalization");
 
 const readinessRequirements = [
   "Feedback is using",
