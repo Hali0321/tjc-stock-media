@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       actor: identity.id,
       status: "blocked",
       summary: "Large-media intake routed away from browser upload.",
-      details: { eventName, fileCount: files.length, largeFileCount: largeFiles.length, sourceLink: sourceLink || null }
+      details: { eventName, fileCount: files.length, largeFileCount: largeFiles.length, sourceLinkCaptured: Boolean(sourceLink) }
     });
     return NextResponse.json({
       status: "large-media-intake",
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     actor: identity.id,
     status: "preview",
     summary: "Intake validated for DAM review; no media-library write performed.",
-    details: { eventName, fileCount: files.length, sourceLink: sourceLink || null, reviewWarnings }
+    details: { eventName, fileCount: files.length, sourceLinkCaptured: Boolean(sourceLink), reviewWarnings }
   });
 
   return NextResponse.json({

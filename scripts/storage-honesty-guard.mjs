@@ -35,6 +35,7 @@ const files = {
   enterpriseBrandHub: "frontend/components/dam/enterprise/BrandHubPage.tsx",
   enterpriseInsights: "frontend/components/dam/enterprise/InsightsPage.tsx",
   assetRoute: "frontend/app/api/assets/[id]/route.ts",
+  uploadRoute: "frontend/app/api/upload/route.ts",
   reviewRoute: "frontend/app/api/review/route.ts",
   batchRoute: "frontend/app/api/batch/route.ts",
   downloadRoute: "frontend/app/api/download/[id]/route.ts",
@@ -95,6 +96,7 @@ const enterpriseReview = read(files.enterpriseReview);
 const enterpriseBrandHub = read(files.enterpriseBrandHub);
 const enterpriseInsights = read(files.enterpriseInsights);
 const assetRoute = read(files.assetRoute);
+const uploadRoute = read(files.uploadRoute);
 const reviewRoute = read(files.reviewRoute);
 const batchRoute = read(files.batchRoute);
 const downloadRoute = read(files.downloadRoute);
@@ -253,6 +255,9 @@ if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\
 }
 if (!requestValidation.includes("function normalizeResourceSpaceRef")) {
   failures.push("request validation must expose normalizeResourceSpaceRef");
+}
+if (!uploadRoute.includes("sourceLinkCaptured: Boolean(sourceLink)") || /details:\s*\{[^}]*sourceLink:\s*sourceLink/s.test(uploadRoute)) {
+  failures.push("upload audit details must persist sourceLinkCaptured instead of raw sourceLink URLs");
 }
 if (!requestValidation.includes("containsPrivateSourceText(ref)")) {
   failures.push("request validation ResourceSpace refs must reject private-source tokens through containsPrivateSourceText");
