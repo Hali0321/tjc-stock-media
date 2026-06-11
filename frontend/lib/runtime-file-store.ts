@@ -13,9 +13,15 @@ export function readRuntimeJsonFile<TRecord>(filePath: string, normalize: (input
   }
 }
 
+function writeRuntimeFileAtomically(filePath: string, contents: string) {
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  fs.writeFileSync(tmpPath, contents, "utf8");
+  fs.renameSync(tmpPath, filePath);
+}
+
 export function writeRuntimeJsonFile(filePath: string, record: unknown) {
   ensureRuntimeDir(path.dirname(filePath));
-  fs.writeFileSync(filePath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  writeRuntimeFileAtomically(filePath, `${JSON.stringify(record, null, 2)}\n`);
 }
 
 export function listRuntimeFiles(dir: string, extension: string) {

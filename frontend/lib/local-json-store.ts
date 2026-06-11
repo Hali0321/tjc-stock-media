@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export type LocalJsonStoreOptions<TRecord> = {
@@ -30,6 +30,10 @@ function replaceMemory<TRecord>(records: TRecord[], options: LocalJsonStoreOptio
   return true;
 }
 
+function tempFilePath(filePath: string) {
+  return `${filePath}.${process.pid}.${Date.now()}.tmp`;
+}
+
 export async function readLocalJsonStore<TRecord>(options: LocalJsonStoreOptions<TRecord>) {
   if (!localFilesEnabled(options)) return memoryWindow(options);
   try {
@@ -50,7 +54,9 @@ export async function writeLocalJsonStore<TRecord>(records: TRecord[], options: 
   const filePath = options.filePath();
   try {
     await mkdir(path.dirname(filePath), { recursive: true });
-    await writeFile(filePath, `${JSON.stringify(windowed, null, 2)}\n`);
+    const tmpPath = tempFilePath(filePath);
+    await writeFile(tmpPath, `${JSON.stringify(windowed, null, 2)}\n`);
+    await rename(tmpPath, filePath);
   } catch (error) {
     if (!replaceMemory(windowed, options)) throw error;
   }
