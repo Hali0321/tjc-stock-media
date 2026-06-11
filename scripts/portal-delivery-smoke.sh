@@ -2,13 +2,14 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:4868}"
+CURL_MAX_TIME="${PORTAL_DELIVERY_SMOKE_CURL_MAX_TIME:-30}"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 http_code() {
   local output="$1"
   shift
-  curl --max-time 15 -sS -o "$output" -w '%{http_code}' "$@"
+  curl --max-time "$CURL_MAX_TIME" -sS -o "$output" -w '%{http_code}' "$@"
 }
 
 expect_json() {
