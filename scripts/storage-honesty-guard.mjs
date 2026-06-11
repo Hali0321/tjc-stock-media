@@ -14,6 +14,7 @@ const files = {
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
+  localJsonStore: "frontend/lib/local-json-store.ts",
   env: "frontend/lib/env.ts",
   nextConfig: "frontend/next.config.mjs",
   reviewEvidence: "frontend/lib/review-evidence.ts",
@@ -75,6 +76,7 @@ const assetRefs = read(files.assetRefs);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
+const localJsonStore = read(files.localJsonStore);
 const env = read(files.env);
 const nextConfig = read(files.nextConfig);
 const reviewEvidence = read(files.reviewEvidence);
@@ -128,6 +130,11 @@ for (const store of stores) {
   if (!store.source.includes(store.cap)) failures.push(`${store.name} store must keep explicit record cap: ${store.cap}`);
   if (!store.source.includes(store.diagnostic)) failures.push(`${store.name} diagnostics must report durable storage honestly`);
   if (!store.source.includes("storageMode")) failures.push(`${store.name} records must expose storageMode`);
+  if (!store.source.includes("@/lib/local-json-store")) failures.push(`${store.name} store must use shared local-json persistence module`);
+  if (/from "node:fs\/promises"/.test(store.source) || /from "node:fs"/.test(store.source)) failures.push(`${store.name} store must not hand-roll local-json file IO`);
+}
+if (!localJsonStore.includes("function normalizeWindow") || !localJsonStore.includes("writeLocalJsonStore") || !localJsonStore.includes("readLocalJsonStoreSync") || !localJsonStore.includes("memoryStore")) {
+  failures.push("shared local-json persistence module must own normalization window, writes, diagnostics reads, and memory fallback");
 }
 
 const persistedRecordSources = [

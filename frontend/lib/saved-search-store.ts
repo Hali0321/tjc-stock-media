@@ -1,8 +1,7 @@
-import fs from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { repoRoot } from "@/lib/env";
+import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
@@ -80,19 +79,21 @@ function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
 }
 
 async function readLocalSavedSearches() {
-  try {
-    const raw = await readFile(savedSearchStorePath(), "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.map(normalizeStoredSavedSearch).filter(Boolean) as SavedSearchRecord[] : [];
-  } catch {
-    return [];
-  }
+  return readLocalJsonStore({
+    filePath: savedSearchStorePath,
+    maxRecords: maxSavedSearches,
+    normalize: normalizeStoredSavedSearch,
+    order: newestFirst
+  });
 }
 
 async function writeLocalSavedSearches(records: SavedSearchRecord[]) {
-  const filePath = savedSearchStorePath();
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(newestFirst(records).slice(0, maxSavedSearches), null, 2)}\n`);
+  await writeLocalJsonStore(records, {
+    filePath: savedSearchStorePath,
+    maxRecords: maxSavedSearches,
+    normalize: normalizeStoredSavedSearch,
+    order: newestFirst
+  });
 }
 
 export async function listSavedSearches() {
@@ -120,23 +121,17 @@ export async function saveSavedSearch(record: Omit<SavedSearchRecord, "storageMo
 
 export function savedSearchDiagnostics() {
   const filePath = savedSearchStorePath();
-  try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
-    const records = Array.isArray(parsed) ? newestFirst(parsed.map(normalizeStoredSavedSearch).filter(Boolean) as SavedSearchRecord[]).slice(0, maxSavedSearches) : [];
-    return {
-      storageMode: "local-json" as const,
-      durableStorageConfigured: false,
-      count: records.length,
-      latestAt: records[0]?.updatedAt || "",
-      filePath
-    };
-  } catch {
-    return {
-      storageMode: "local-json" as const,
-      durableStorageConfigured: false,
-      count: 0,
-      latestAt: "",
-      filePath
-    };
-  }
+  const records = readLocalJsonStoreSync({
+    filePath: savedSearchStorePath,
+    maxRecords: maxSavedSearches,
+    normalize: normalizeStoredSavedSearch,
+    order: newestFirst
+  });
+  return {
+    storageMode: "local-json" as const,
+    durableStorageConfigured: false,
+    count: records.length,
+    latestAt: records[0]?.updatedAt || "",
+    filePath
+  };
 }

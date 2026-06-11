@@ -1,7 +1,6 @@
-import fs from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePackageRef } from "@/lib/package-refs";
@@ -100,19 +99,21 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
 }
 
 async function readLocalPackages() {
-  try {
-    const raw = await readFile(packageStorePath(), "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.map(normalizeStoredPackageDraft).filter(Boolean) as StoredPackageDraft[] : [];
-  } catch {
-    return [];
-  }
+  return readLocalJsonStore({
+    filePath: packageStorePath,
+    maxRecords: maxPackageDrafts,
+    normalize: normalizeStoredPackageDraft,
+    order: newestFirst
+  });
 }
 
 async function writeLocalPackages(records: StoredPackageDraft[]) {
-  const filePath = packageStorePath();
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, `${JSON.stringify(newestFirst(records).slice(0, maxPackageDrafts), null, 2)}\n`);
+  await writeLocalJsonStore(records, {
+    filePath: packageStorePath,
+    maxRecords: maxPackageDrafts,
+    normalize: normalizeStoredPackageDraft,
+    order: newestFirst
+  });
 }
 
 export async function listStoredPackageDrafts() {
@@ -140,29 +141,21 @@ export async function savePackageDraft(record: Omit<StoredPackageDraft, "storage
 
 export function packageDraftDiagnostics() {
   const filePath = packageStorePath();
-  try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
-    const records = Array.isArray(parsed) ? newestFirst(parsed.map(normalizeStoredPackageDraft).filter(Boolean) as StoredPackageDraft[]).slice(0, maxPackageDrafts) : [];
-    const openDrafts = records.filter((record) => record.status !== "archived");
-    const blockedRefs = records.reduce((sum, record) => sum + (record.governance?.blockedRefs || 0), 0);
-    return {
-      storageMode: "local-json" as const,
-      durableStorageConfigured: false,
-      count: records.length,
-      openCount: openDrafts.length,
-      blockedRefs,
-      latestAt: records[0]?.updatedAt || "",
-      filePath
-    };
-  } catch {
-    return {
-      storageMode: "local-json" as const,
-      durableStorageConfigured: false,
-      count: 0,
-      openCount: 0,
-      blockedRefs: 0,
-      latestAt: "",
-      filePath
-    };
-  }
+  const records = readLocalJsonStoreSync({
+    filePath: packageStorePath,
+    maxRecords: maxPackageDrafts,
+    normalize: normalizeStoredPackageDraft,
+    order: newestFirst
+  });
+  const openDrafts = records.filter((record) => record.status !== "archived");
+  const blockedRefs = records.reduce((sum, record) => sum + (record.governance?.blockedRefs || 0), 0);
+  return {
+    storageMode: "local-json" as const,
+    durableStorageConfigured: false,
+    count: records.length,
+    openCount: openDrafts.length,
+    blockedRefs,
+    latestAt: records[0]?.updatedAt || "",
+    filePath
+  };
 }

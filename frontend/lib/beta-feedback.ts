@@ -1,7 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
+import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { isSafeHttpUrl } from "@/lib/private-source-text";
@@ -111,30 +110,25 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
 }
 
 async function readLocalFeedback() {
-  if (!localFileFeedbackEnabled()) return newestFeedbackWindow(memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
-  try {
-    const raw = await readFile(localFeedbackPath(), "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? newestFeedbackWindow(parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]) : [];
-  } catch {
-    return [];
-  }
+  return readLocalJsonStore({
+    filePath: localFeedbackPath,
+    maxRecords: maxBetaFeedbackRecords,
+    normalize: normalizeStoredFeedback,
+    order: newestFirst,
+    memoryStore: memoryFeedback,
+    localFileEnabled: localFileFeedbackEnabled
+  });
 }
 
 async function writeLocalFeedback(records: BetaFeedbackRecord[]) {
-  if (!localFileFeedbackEnabled()) {
-    const store = memoryFeedback();
-    store.splice(0, store.length, ...newestFeedbackWindow(records));
-    return;
-  }
-  const filePath = localFeedbackPath();
-  try {
-    await mkdir(path.dirname(filePath), { recursive: true });
-    await writeFile(filePath, `${JSON.stringify(newestFeedbackWindow(records), null, 2)}\n`);
-  } catch {
-    const store = memoryFeedback();
-    store.splice(0, store.length, ...newestFeedbackWindow(records));
-  }
+  await writeLocalJsonStore(records, {
+    filePath: localFeedbackPath,
+    maxRecords: maxBetaFeedbackRecords,
+    normalize: normalizeStoredFeedback,
+    order: newestFirst,
+    memoryStore: memoryFeedback,
+    localFileEnabled: localFileFeedbackEnabled
+  });
 }
 
 async function getKvClient() {
@@ -178,15 +172,14 @@ export async function putBetaFeedbackAttachment(id: string, file: File | null) {
 export function betaFeedbackDiagnostics() {
   const kvConfigured = hasVercelKvConfig();
   const blobConfigured = hasVercelBlobConfig();
-  const records = (() => {
-    if (!localFileFeedbackEnabled()) return memoryFeedback();
-    try {
-      const parsed = JSON.parse(readFileSync(localFeedbackPath(), "utf8")) as unknown;
-      return Array.isArray(parsed) ? newestFeedbackWindow(parsed.map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]) : [];
-    } catch {
-      return newestFeedbackWindow(memoryFeedback().map(normalizeStoredFeedback).filter(Boolean) as BetaFeedbackRecord[]);
-    }
-  })();
+  const records = readLocalJsonStoreSync({
+    filePath: localFeedbackPath,
+    maxRecords: maxBetaFeedbackRecords,
+    normalize: normalizeStoredFeedback,
+    order: newestFirst,
+    memoryStore: memoryFeedback,
+    localFileEnabled: localFileFeedbackEnabled
+  });
   const storageModes = Array.from(new Set(records.map((record) => record.storageMode))).sort();
   const openRecords = records.filter((record) => !["fixed", "wont-fix"].includes(record.status));
   const criticalOpen = openRecords.filter((record) => record.severity === "critical");
