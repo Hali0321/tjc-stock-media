@@ -103,6 +103,10 @@ function safeUsageFailureReason() {
   return "usage-analytics-write-failed";
 }
 
+function usageAnalyticsStorageMode() {
+  return usageAnalyticsDbPath() ? "configured-sqlite" : "local-sqlite";
+}
+
 export function recordUsageEvent(event: UsageEventInput) {
   if (!usageAnalyticsEnabled()) return { recorded: false, reason: "usage-analytics-disabled" };
   try {
@@ -177,7 +181,7 @@ export function usageAnalyticsDiagnostics() {
   if (!usageAnalyticsEnabled()) {
     return {
       enabled: false,
-      dbPath: dbFile(),
+      storageMode: usageAnalyticsStorageMode(),
       totalEvents: 0,
       topSearches: [] as UsageMetricRow[],
       topAssets: [] as UsageMetricRow[],
@@ -188,7 +192,7 @@ export function usageAnalyticsDiagnostics() {
     const total = database().prepare("SELECT COUNT(*) AS count FROM usage_events").get() as { count?: number };
     return {
       enabled: true,
-      dbPath: dbFile(),
+      storageMode: usageAnalyticsStorageMode(),
       totalEvents: Number(total.count || 0),
       topSearches: metricRows("search", "query"),
       topAssets: metricRows("asset_view", "asset_id"),
@@ -197,7 +201,7 @@ export function usageAnalyticsDiagnostics() {
   } catch {
     return {
       enabled: true,
-      dbPath: dbFile(),
+      storageMode: usageAnalyticsStorageMode(),
       totalEvents: 0,
       topSearches: [] as UsageMetricRow[],
       topAssets: [] as UsageMetricRow[],

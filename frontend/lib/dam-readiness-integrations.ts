@@ -179,7 +179,7 @@ export function buildIntegrationReadiness({
       owner: "Portal",
       state: analytics.enabled ? (analytics.totalEvents > 0 ? "Operational" : "Degraded") : "Pending setup",
       detail: analytics.enabled
-        ? `SQLite usage analytics is enabled at ${analytics.dbPath}. Recorded events: ${analytics.totalEvents.toLocaleString()}.`
+        ? `Usage analytics is enabled with ${analytics.storageMode}. Recorded events: ${analytics.totalEvents.toLocaleString()}.`
         : "Insights uses real ResourceSpace counts plus clearly labeled sample trend/package charts until portal event logging is connected."
     },
     {

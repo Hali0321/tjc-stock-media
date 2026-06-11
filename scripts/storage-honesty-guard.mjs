@@ -328,6 +328,9 @@ if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(usageAnalytics)) failures.
 if (!usageAnalytics.includes("function safeUsageFailureReason") || /reason:\s*error instanceof Error/.test(usageAnalytics)) {
   failures.push("usage analytics write failures must not expose raw storage error messages");
 }
+if (!usageAnalytics.includes("function usageAnalyticsStorageMode") || /\bdbPath\b/.test(usageAnalytics) || /analytics\.dbPath/.test(readiness)) {
+  failures.push("usage analytics diagnostics must expose storage mode, not filesystem paths");
+}
 if (!auditLog.includes("normalizeAssetId")) failures.push("audit log must normalize asset ids through normalizeAssetId");
 if (!auditLog.includes("normalizeResourceSpaceRef")) failures.push("audit log must normalize ResourceSpace ids through normalizeResourceSpaceRef");
 for (const module of [
