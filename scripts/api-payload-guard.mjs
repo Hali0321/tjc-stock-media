@@ -187,6 +187,19 @@ if (/readJsonObject|sanitizeSavedSearch|safeIsoTimestampIdPart|saveSavedSearch\(
   failures.push(`${savedSearchRoute} must not hand-roll saved search body parsing, sanitization, timestamp ids, or persistence record creation`);
 }
 
+const packageRoute = "frontend/app/api/packages/route.ts";
+const packageRouteSource = fs.readFileSync(path.join(root, packageRoute), "utf8");
+const packageSource = fs.readFileSync(path.join(root, "frontend/lib/package-store.ts"), "utf8");
+if (!packageRouteSource.includes("readPackageDraftInput(request)") || !packageRouteSource.includes("savePackageDraftSubmission(draft, identity, governance)")) {
+  failures.push(`${packageRoute} must delegate draft parsing and stored record creation to package-store`);
+}
+if (!packageSource.includes("function readPackageDraftInput") || !packageSource.includes("function savePackageDraftSubmission") || !packageSource.includes("function storedGovernanceSnapshot")) {
+  failures.push("package-store must own package draft parsing, stored governance snapshots, and record creation");
+}
+if (/readJsonObject|sanitizePackageDraft|safeIsoTimestampIdPart|savePackageDraft\(/.test(packageRouteSource)) {
+  failures.push(`${packageRoute} must not hand-roll package draft body parsing, sanitization, timestamp ids, or persistence record creation`);
+}
+
 for (const route of [
   "frontend/app/api/assets/[id]/route.ts",
   "frontend/app/api/assets/thumbnail/[id]/route.ts",

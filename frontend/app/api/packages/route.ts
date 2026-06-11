@@ -3,11 +3,9 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { getMediaSourceSession } from "@/lib/media-source/session";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { resolvePackageSections } from "@/lib/package-drafts";
-import { listStoredPackageDrafts, packageDraftForRolePayload, sanitizePackageDraft, savePackageDraft } from "@/lib/package-store";
-import { safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
+import { listStoredPackageDrafts, packageDraftForRolePayload, readPackageDraftInput, savePackageDraftSubmission } from "@/lib/package-store";
 import { canContribute, canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { readJsonObject } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -50,33 +48,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Package draft save requires Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
   }
 
-  const body = await readJsonObject(request);
-  const draft = sanitizePackageDraft((body as { draft?: unknown }).draft || body);
+  const draft = await readPackageDraftInput(request);
   const { assets } = await getMediaSourceSession(identity.role);
   const sections = resolvePackageSections(draft, assets);
   const governance = buildPackageGovernance(draft, sections, identity.role);
-  const now = new Date().toISOString();
-  const id = draft.id === "portal-local-draft" ? `pkg-${safeIsoTimestampIdPart(now)}` : draft.id;
-  const record = await savePackageDraft({
-    id,
-    title: draft.title,
-    status: draft.status,
-    sections: draft.sections,
-    createdAt: now,
-    updatedAt: now,
-    createdBy: identity.id,
-    role: identity.role,
-    governance: {
-      canPreview: governance.canPreview,
-      canShare: governance.canShare,
-      canPublish: governance.canPublish,
-      totalRefs: governance.totalRefs,
-      portalReadyRefs: governance.portalReadyRefs,
-      blockedRefs: governance.blockedRefs,
-      missingRefs: governance.missingRefs,
-      reason: governance.reason
-    }
-  });
+  const record = await savePackageDraftSubmission(draft, identity, governance);
 
   appendAuditEvent({
     type: "package_draft_saved",

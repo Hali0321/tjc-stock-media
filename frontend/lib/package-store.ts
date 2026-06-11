@@ -1,10 +1,11 @@
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
-import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeIsoTimestampIdPart, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePackageRef } from "@/lib/package-refs";
-import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizePersistedSlugText, readJsonObject } from "@/lib/request-validation";
+import type { PackageGovernancePacket } from "@/lib/package-governance";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
 export type StoredPackageDraft = {
@@ -67,6 +68,11 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
     })),
     updatedAt: new Date().toISOString()
   };
+}
+
+export async function readPackageDraftInput(request: { json(): Promise<unknown> }) {
+  const body = await readJsonObject(request);
+  return sanitizePackageDraft((body as { draft?: unknown }).draft || body);
 }
 
 function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null {
@@ -137,6 +143,34 @@ export async function savePackageDraft(record: Omit<StoredPackageDraft, "storage
   const next: StoredPackageDraft = { ...record, storageMode: "local-json" };
   await writeLocalPackages([next, ...records.filter((item) => item.id !== next.id)]);
   return next;
+}
+
+function storedGovernanceSnapshot(governance: PackageGovernancePacket): StoredPackageDraft["governance"] {
+  return {
+    canPreview: governance.canPreview,
+    canShare: governance.canShare,
+    canPublish: governance.canPublish,
+    totalRefs: governance.totalRefs,
+    portalReadyRefs: governance.portalReadyRefs,
+    blockedRefs: governance.blockedRefs,
+    missingRefs: governance.missingRefs,
+    reason: governance.reason
+  };
+}
+
+export async function savePackageDraftSubmission(draft: DamPackage, actor: { id: string; role: DemoRole }, governance: PackageGovernancePacket) {
+  const now = new Date().toISOString();
+  return savePackageDraft({
+    id: draft.id === "portal-local-draft" ? `pkg-${safeIsoTimestampIdPart(now)}` : draft.id,
+    title: draft.title,
+    status: draft.status,
+    sections: draft.sections,
+    createdAt: now,
+    updatedAt: now,
+    createdBy: actor.id,
+    role: actor.role,
+    governance: storedGovernanceSnapshot(governance)
+  });
 }
 
 export function packageDraftDiagnostics() {

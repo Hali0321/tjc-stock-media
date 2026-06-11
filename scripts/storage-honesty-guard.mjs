@@ -342,7 +342,7 @@ for (const store of [
 }
 for (const writer of [
   { name: "saved searches", source: savedSearches },
-  { name: "package route", source: packageRoute },
+  { name: "package drafts", source: packages },
   { name: "pending review writes", source: pendingReviewWrites },
   { name: "audit log", source: auditLog }
 ]) {
