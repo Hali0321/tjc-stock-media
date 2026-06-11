@@ -10,6 +10,7 @@ const forbiddenPayloadKeys = [
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",
+  "sourceAlbumMemberships",
   "checksumSha256",
   "originalFilename"
 ];

@@ -87,6 +87,7 @@ const forbiddenKeys = new Set([
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",
+  "sourceAlbumMemberships",
   "sourceLink",
   "originalFilename",
   "checksumSha256",
@@ -761,7 +762,7 @@ if (!first?.imageUrls?.card?.includes("role=Reviewer") || !first?.preview?.inclu
 expect_json viewer-payload-hides-original-metadata '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const asset = data.asset;
-const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "originalFilename", "checksumSha256", "fileSizeBytes"].filter((key) => asset && key in asset);
+const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "originalFilename", "checksumSha256", "fileSizeBytes"].filter((key) => asset && key in asset);
 if (leaked.length) {
   console.error(`FAIL: Viewer asset payload leaked restricted metadata: ${leaked.join(", ")}`);
   process.exit(1);

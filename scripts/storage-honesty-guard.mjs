@@ -41,7 +41,9 @@ const files = {
   resourceSpaceApi: "frontend/lib/media-source/resourcespace-api.ts",
   mediaSourceIndex: "frontend/lib/media-source/index.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts",
-  portalApiSmoke: "scripts/portal-api-smoke.sh"
+  portalApiSmoke: "scripts/portal-api-smoke.sh",
+  portalBetaRehearsal: "scripts/portal-beta-rehearsal.sh",
+  portalDeliverySmoke: "scripts/portal-delivery-smoke.sh"
 };
 
 function read(file) {
@@ -86,6 +88,8 @@ const resourceSpaceApi = read(files.resourceSpaceApi);
 const mediaSourceIndex = read(files.mediaSourceIndex);
 const readiness = read(files.readiness);
 const portalApiSmoke = read(files.portalApiSmoke);
+const portalBetaRehearsal = read(files.portalBetaRehearsal);
+const portalDeliverySmoke = read(files.portalDeliverySmoke);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
 const viewerVerdict = read("frontend/lib/viewer-verdict.ts");
@@ -355,6 +359,15 @@ if (!portalApiSmoke.includes("reviewer-payload-hides-source-custody") || !portal
 }
 if (/reviewer-payload-keeps-original-metadata|Reviewer asset payload lost audit\/source metadata/.test(portalApiSmoke)) {
   failures.push("portal API smoke must not expect Reviewer payloads to keep original source-file metadata");
+}
+for (const guard of [
+  { name: "portal API smoke", source: portalApiSmoke },
+  { name: "portal beta rehearsal", source: portalBetaRehearsal },
+  { name: "portal delivery smoke", source: portalDeliverySmoke }
+]) {
+  if (!guard.source.includes('"sourceAlbumMemberships"')) {
+    failures.push(`${guard.name} normal-user payload guard must reject sourceAlbumMemberships`);
+  }
 }
 if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");

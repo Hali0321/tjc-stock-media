@@ -130,6 +130,7 @@ const forbiddenKeys = new Set([
   "resourceSpaceUrl",
   "resourceSpaceUrls",
   "sourceAlbumPath",
+  "sourceAlbumMemberships",
   "sourceLink",
   "sourcePath"
 ]);

@@ -142,6 +142,7 @@ const forbiddenKeys = new Set([
   "sourcePath",
   "masterDrivePath",
   "sourceAlbumPath",
+  "sourceAlbumMemberships",
   "sourceLink",
   "originalFilename",
   "checksumSha256",
