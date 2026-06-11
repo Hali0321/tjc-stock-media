@@ -4,17 +4,18 @@ import path from "node:path";
 
 const root = process.cwd();
 const apiRoot = path.join(root, "frontend/app/api");
+const sourceRedactionSource = fs.readFileSync(path.join(root, "frontend/lib/source-redaction.ts"), "utf8");
+
+function stringArrayConst(source, constName) {
+  const match = source.match(new RegExp(`const\\s+${constName}\\s*=\\s*\\[([\\s\\S]*?)\\]`));
+  return match ? [...match[1].matchAll(/"([^"]+)"/g)].map((item) => item[1]) : [];
+}
+
+const sourceCustodyAssetKeys = stringArrayConst(sourceRedactionSource, "sourceCustodyAssetKeys");
 const forbiddenPayloadKeys = [
   "signedUrl",
   "originalUrl",
-  "duplicateGroup",
-  "duplicateRole",
-  "sourcePath",
-  "masterDrivePath",
-  "sourceAlbumPath",
-  "sourceAlbumMemberships",
-  "checksumSha256",
-  "originalFilename"
+  ...sourceCustodyAssetKeys
 ];
 const allowedFilesByKey = new Map([
   ["sourcePath", new Set(["frontend/app/api/download/[id]/route.ts"])],
@@ -32,6 +33,9 @@ function walk(dir) {
 }
 
 const failures = [];
+if (sourceCustodyAssetKeys.length < 8) {
+  failures.push("API payload guard could not read canonical sourceCustodyAssetKeys");
+}
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");

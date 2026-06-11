@@ -390,7 +390,10 @@ for (const guard of [
   requireAllStrings(`${guard.name} normal-user payload guard`, guard.source, sourceCustodyAssetKeys);
 }
 requireAllStrings("portal package smoke governance guard", portalPackageSmoke, sourceCustodyAssetKeys);
-requireAllStrings("API payload guard forbidden payload keys", apiPayloadGuard, sourceCustodyAssetKeys);
+if (!apiPayloadGuard.includes('stringArrayConst(sourceRedactionSource, "sourceCustodyAssetKeys")') || !apiPayloadGuard.includes("...sourceCustodyAssetKeys")) {
+  failures.push("API payload guard must derive forbidden custody keys from source redaction");
+}
+requireAllStrings("API payload guard direct URL keys", apiPayloadGuard, ["signedUrl", "originalUrl"]);
 if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
 }
