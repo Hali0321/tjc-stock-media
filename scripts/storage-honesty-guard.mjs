@@ -75,6 +75,10 @@ if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(pa
   failures.push("package drafts must not hand-roll boolean normalization");
 }
 
+if (/betaFeedback(?:Statuses|Severities)\.includes/.test(feedback)) {
+  failures.push("feedback store must not hand-roll status/severity normalization");
+}
+
 if (!usageAnalytics.includes("safeCompactText")) failures.push("usage analytics must normalize usage labels through safeCompactText");
 if (!usageAnalytics.includes("safeEnumValue")) failures.push("usage analytics must normalize event types through safeEnumValue");
 if (!usageAnalytics.includes("safeNonNegativeInt")) failures.push("usage analytics must normalize metric counters through safeNonNegativeInt");
@@ -83,10 +87,12 @@ if (/\.includes\(value as /.test(usageAnalytics)) failures.push("usage analytics
 if (/Math\.max\(0,\s*Number/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll nonnegative metric normalization");
 
 for (const route of [
-  { name: "beta feedback update route", source: betaFeedbackUpdateRoute },
-  { name: "beta feedback export route", source: betaFeedbackExportRoute }
+  { name: "beta feedback update route", source: betaFeedbackUpdateRoute, required: ["normalizeFeedbackStatus", "normalizeFeedbackSeverity"] },
+  { name: "beta feedback export route", source: betaFeedbackExportRoute, required: ["normalizeFeedbackStatusFilter", "normalizeFeedbackSeverityFilter"] }
 ]) {
-  if (!route.source.includes("safeEnumValue")) failures.push(`${route.name} must normalize API enum filters through safeEnumValue`);
+  for (const helper of route.required) {
+    if (!route.source.includes(helper)) failures.push(`${route.name} must normalize API enum filters through ${helper}`);
+  }
   if (/\.includes\([^)]* as /.test(route.source)) failures.push(`${route.name} must not hand-roll enum filter normalization`);
 }
 

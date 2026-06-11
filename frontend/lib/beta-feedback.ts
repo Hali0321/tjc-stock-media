@@ -15,6 +15,8 @@ export const maxBetaFeedbackRecords = 500;
 
 export const betaFeedbackSeverities: BetaFeedbackSeverity[] = ["low", "medium", "high", "critical"];
 export const betaFeedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "agent-ready", "fixed", "wont-fix"];
+export const betaFeedbackSeverityFilters = [...betaFeedbackSeverities, "all"] as const;
+export const betaFeedbackStatusFilters = [...betaFeedbackStatuses, "all"] as const;
 
 type FeedbackPatch = Partial<Pick<BetaFeedbackRecord, "severity" | "status" | "notes">>;
 type FeedbackGlobal = typeof globalThis & { __tjcStockMediaBetaFeedback?: BetaFeedbackRecord[] };
@@ -48,12 +50,20 @@ function safeId(value: unknown) {
   return safeSlugText(text, 120);
 }
 
-function safeSeverity(value: unknown): BetaFeedbackSeverity {
-  return safeEnumValue(value, betaFeedbackSeverities, "medium");
+export function normalizeFeedbackSeverity(value: unknown, fallback: BetaFeedbackSeverity = "medium"): BetaFeedbackSeverity {
+  return safeEnumValue(value, betaFeedbackSeverities, fallback);
 }
 
-function safeStatus(value: unknown): BetaFeedbackStatus {
-  return safeEnumValue(value, betaFeedbackStatuses, "new");
+export function normalizeFeedbackStatus(value: unknown, fallback: BetaFeedbackStatus = "new"): BetaFeedbackStatus {
+  return safeEnumValue(value, betaFeedbackStatuses, fallback);
+}
+
+export function normalizeFeedbackSeverityFilter(value: unknown): BetaFeedbackSeverity | "all" {
+  return safeEnumValue(value, betaFeedbackSeverityFilters, "all");
+}
+
+export function normalizeFeedbackStatusFilter(value: unknown): BetaFeedbackStatus | "all" {
+  return safeEnumValue(value, betaFeedbackStatusFilters, "all");
 }
 
 function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
@@ -96,10 +106,10 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
     role: normalizeRoleWithFallback(raw.role),
     route: safeRoute(raw.route),
     task: safeFeedbackText(raw.task, 220) || "Free play",
-    severity: safeSeverity(raw.severity),
+    severity: normalizeFeedbackSeverity(raw.severity),
     expected: safeFeedbackText(raw.expected, 1200),
     actual: safeFeedbackText(raw.actual, 1200),
-    status: safeStatus(raw.status),
+    status: normalizeFeedbackStatus(raw.status),
     notes: raw.notes === undefined ? undefined : safeFeedbackText(raw.notes, 1200),
     reporterName: raw.reporterName === undefined ? undefined : safeFeedbackText(raw.reporterName, 120),
     browser: raw.browser === undefined ? undefined : safeFeedbackText(raw.browser, 280),
@@ -216,7 +226,7 @@ export function validateFeedbackPayload(payload: {
   const errors = [
     !payload.role && "role",
     !payload.route && "route",
-    !betaFeedbackSeverities.includes(payload.severity as BetaFeedbackSeverity) && "severity",
+    normalizeFeedbackSeverity(payload.severity) !== payload.severity && "severity",
     !payload.expected && "expected",
     !payload.actual && "actual"
   ].filter((item): item is string => Boolean(item));
@@ -291,8 +301,8 @@ export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
   if (!existing) return null;
   const next: BetaFeedbackRecord = {
     ...existing,
-    severity: patch.severity && betaFeedbackSeverities.includes(patch.severity) ? patch.severity : existing.severity,
-    status: patch.status && betaFeedbackStatuses.includes(patch.status) ? patch.status : existing.status,
+    severity: patch.severity ? normalizeFeedbackSeverity(patch.severity, existing.severity) : existing.severity,
+    status: patch.status ? normalizeFeedbackStatus(patch.status, existing.status) : existing.status,
     notes: patch.notes === undefined ? existing.notes : safeFeedbackText(patch.notes, 1200),
     updatedAt: new Date().toISOString()
   };
