@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
@@ -173,7 +173,7 @@ export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt
 export function listAuditEvents(limit = 20): AuditEventRecord[] {
   const dir = auditDir();
   if (!fs.existsSync(dir)) return [];
-  return fs
+  const events = fs
     .readdirSync(dir)
     .filter((file) => file.endsWith(".jsonl"))
     .sort()
@@ -186,8 +186,8 @@ export function listAuditEvents(limit = 20): AuditEventRecord[] {
         .filter(Boolean)
         .map(readJsonLine)
         .filter((event): event is AuditEventRecord => Boolean(event));
-    })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    });
+  return newestByTimestamp(events, (event) => event.createdAt)
     .slice(0, limit);
 }
 

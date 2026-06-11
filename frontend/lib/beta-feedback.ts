@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -87,7 +87,7 @@ function feedbackKey(id: string) {
 }
 
 function newestFirst(records: BetaFeedbackRecord[]) {
-  return [...records].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  return newestByTimestamp(records, (record) => record.createdAt);
 }
 
 function newestFeedbackWindow(records: BetaFeedbackRecord[]) {

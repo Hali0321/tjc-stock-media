@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import { normalizeReviewChecklist } from "@/lib/review-evidence";
@@ -78,12 +78,12 @@ function readRecord(filePath: string): ReviewWriteRecord | null {
 export function listPendingReviewWrites(): ReviewWriteRecord[] {
   const dir = pendingDir();
   if (!fs.existsSync(dir)) return [];
-  return fs
+  const records = fs
     .readdirSync(dir)
     .filter((file) => file.endsWith(".json"))
     .map((file) => readRecord(path.join(dir, file)))
-    .filter((record): record is ReviewWriteRecord => Boolean(record))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .filter((record): record is ReviewWriteRecord => Boolean(record));
+  return newestByTimestamp(records, (record) => record.updatedAt)
     .slice(0, maxPendingReviewWrites);
 }
 

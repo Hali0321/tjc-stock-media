@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
@@ -27,7 +27,7 @@ const savedSearchStorePath = () => path.join(repoRoot(), "data", "runtime", "sav
 export const maxSavedSearches = 250;
 
 function newestFirst(records: SavedSearchRecord[]) {
-  return [...records].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  return newestByTimestamp(records, (record) => record.updatedAt);
 }
 
 function safeText(value: unknown, maxLength: number) {

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import { normalizeResourceSpaceRef } from "@/lib/request-validation";
@@ -35,7 +35,7 @@ export const maxPackageDrafts = 200;
 const packageStatuses: DamPackage["status"][] = ["draft", "pending-review", "approved", "archived"];
 
 function newestFirst(records: StoredPackageDraft[]) {
-  return [...records].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  return newestByTimestamp(records, (record) => record.updatedAt);
 }
 
 function safeText(value: unknown, maxLength: number) {

@@ -23,6 +23,15 @@ export function safeIsoTimestamp(value: unknown) {
   return iso.startsWith(text.slice(0, 10)) ? iso : "";
 }
 
+export function safeTimestampMs(value: unknown) {
+  const iso = safeIsoTimestamp(value);
+  return iso ? Date.parse(iso) : 0;
+}
+
+export function newestByTimestamp<T>(records: T[], timestamp: (record: T) => unknown) {
+  return [...records].sort((a, b) => safeTimestampMs(timestamp(b)) - safeTimestampMs(timestamp(a)));
+}
+
 export function safeNonNegativeInt(value: unknown) {
   return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
 }
