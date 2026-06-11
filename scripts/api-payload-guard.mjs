@@ -64,6 +64,12 @@ if (!downloadSource.includes("Private originals and S3 paths are not exposed."))
 if (!downloadSource.includes("approvedCopyFileName(asset.title, id)") || !mediaDeliverySource.includes("safeSlugText(normalizeDisplayTextField")) {
   failures.push(`${downloadRoute} must derive download filenames through media-delivery approvedCopyFileName`);
 }
+if (!downloadSource.includes("readDownloadGateInput(request)") || !mediaDeliverySource.includes("function readDownloadGateInput") || !mediaDeliverySource.includes("function normalizeDownloadVariant")) {
+  failures.push(`${downloadRoute} must delegate download gate body parsing and metadata normalization to media-delivery`);
+}
+if (/readJsonObject|normalizeDisplayTextField|function\s+normalizeDownloadVariant/.test(downloadSource)) {
+  failures.push(`${downloadRoute} must not hand-roll download gate body parsing, usage metadata, or variant normalization`);
+}
 if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi/.test(downloadSource)) {
   failures.push(`${downloadRoute} must not hand-roll approved-copy filename slugging`);
 }

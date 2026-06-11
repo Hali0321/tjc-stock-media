@@ -1,10 +1,24 @@
 import fs from "node:fs";
 import { safeSlugText } from "@/lib/persisted-record-safety";
-import { normalizeDisplayTextField } from "@/lib/request-validation";
+import { normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 
 export type DeliveredImage = {
   bytes: ArrayBuffer;
   contentType: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+};
+type DownloadGateBody = {
+  role?: unknown;
+  variant?: unknown;
+  usageChannel?: unknown;
+  reason?: unknown;
+  termsAccepted?: unknown;
+};
+export type DownloadGateInput = {
+  role?: string;
+  variant: "download";
+  usageChannel: string | null;
+  reason: string | null;
+  termsAccepted: boolean;
 };
 
 export function supportedImageContentType(bytes: Buffer): DeliveredImage["contentType"] | null {
@@ -31,4 +45,19 @@ export function readDeliveredImage(filePath: string): DeliveredImage | null {
 export function approvedCopyFileName(title: unknown, id: string) {
   const safeTitle = safeSlugText(normalizeDisplayTextField(title, "", 80), 80) || `asset-${id}`;
   return `${safeTitle}-approved-copy.jpg`;
+}
+
+function normalizeDownloadVariant(_value: unknown): DownloadGateInput["variant"] {
+  return "download";
+}
+
+export async function readDownloadGateInput(request: { json(): Promise<unknown> }): Promise<DownloadGateInput> {
+  const body = await readJsonObject<DownloadGateBody>(request);
+  return {
+    role: typeof body.role === "string" ? body.role : undefined,
+    variant: normalizeDownloadVariant(body.variant),
+    usageChannel: normalizeDisplayTextField(body.usageChannel, "", 80) || null,
+    reason: normalizeDisplayTextField(body.reason, "", 240) || null,
+    termsAccepted: body.termsAccepted === true
+  };
 }
