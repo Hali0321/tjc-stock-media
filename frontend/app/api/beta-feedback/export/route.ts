@@ -2,21 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackSeverities, betaFeedbackStatuses, buildBetaFeedbackExport, listBetaFeedback, normalizeFeedbackText } from "@/lib/beta-feedback";
 import { canAdmin, roles } from "@/lib/permissions";
+import { safeEnumValue } from "@/lib/persisted-record-safety";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+const statusFilters = [...betaFeedbackStatuses, "all"] as const;
+const severityFilters = [...betaFeedbackSeverities, "all"] as const;
+const roleFilters = [...roles, "all"] as const;
+
 function normalizeStatus(value: string): BetaFeedbackStatus | "all" {
-  return betaFeedbackStatuses.includes(value as BetaFeedbackStatus) ? value as BetaFeedbackStatus : "all";
+  return safeEnumValue(value, statusFilters, "all");
 }
 
 function normalizeSeverity(value: string): BetaFeedbackSeverity | "all" {
-  return betaFeedbackSeverities.includes(value as BetaFeedbackSeverity) ? value as BetaFeedbackSeverity : "all";
+  return safeEnumValue(value, severityFilters, "all");
 }
 
 function normalizeFeedbackRole(value: string): DemoRole | "all" {
-  return roles.includes(value as DemoRole) ? value as DemoRole : "all";
+  return safeEnumValue(value, roleFilters, "all");
 }
 
 export async function GET(request: NextRequest) {

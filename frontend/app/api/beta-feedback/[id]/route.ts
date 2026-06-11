@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackSeverities, betaFeedbackStatuses, normalizeFeedbackText, patchBetaFeedback } from "@/lib/beta-feedback";
 import { canAdmin } from "@/lib/permissions";
+import { safeEnumValue } from "@/lib/persisted-record-safety";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+const optionalStatuses = [...betaFeedbackStatuses, ""] as const;
+const optionalSeverities = [...betaFeedbackSeverities, ""] as const;
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
@@ -25,16 +29,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const body = (await request.json().catch(() => ({}))) as { status?: string; severity?: string; notes?: string };
   const status = normalizeFeedbackText(body.status, 40);
   const severity = normalizeFeedbackText(body.severity, 40);
-  if (status && !betaFeedbackStatuses.includes(status as BetaFeedbackStatus)) {
+  const normalizedStatus = safeEnumValue(status, optionalStatuses, "");
+  const normalizedSeverity = safeEnumValue(severity, optionalSeverities, "");
+  if (status && !normalizedStatus) {
     return NextResponse.json({ error: "Feedback status is invalid." }, { status: 400 });
   }
-  if (severity && !betaFeedbackSeverities.includes(severity as BetaFeedbackSeverity)) {
+  if (severity && !normalizedSeverity) {
     return NextResponse.json({ error: "Feedback severity is invalid." }, { status: 400 });
   }
 
   const record = await patchBetaFeedback(id, {
-    status: status ? status as BetaFeedbackStatus : undefined,
-    severity: severity ? severity as BetaFeedbackSeverity : undefined,
+    status: normalizedStatus ? normalizedStatus as BetaFeedbackStatus : undefined,
+    severity: normalizedSeverity ? normalizedSeverity as BetaFeedbackSeverity : undefined,
     notes: body.notes
   });
   if (!record) return NextResponse.json({ error: "Feedback record not found." }, { status: 404 });

@@ -10,6 +10,8 @@ const files = {
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
+  betaFeedbackUpdateRoute: "frontend/app/api/beta-feedback/[id]/route.ts",
+  betaFeedbackExportRoute: "frontend/app/api/beta-feedback/export/route.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -23,6 +25,8 @@ const packages = read(files.packages);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
+const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
+const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const readiness = read(files.readiness);
 const failures = [];
 
@@ -77,6 +81,14 @@ if (!usageAnalytics.includes("safeNonNegativeInt")) failures.push("usage analyti
 if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll compact text normalization");
 if (/\.includes\(value as /.test(usageAnalytics)) failures.push("usage analytics must not hand-roll enum fallback normalization");
 if (/Math\.max\(0,\s*Number/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll nonnegative metric normalization");
+
+for (const route of [
+  { name: "beta feedback update route", source: betaFeedbackUpdateRoute },
+  { name: "beta feedback export route", source: betaFeedbackExportRoute }
+]) {
+  if (!route.source.includes("safeEnumValue")) failures.push(`${route.name} must normalize API enum filters through safeEnumValue`);
+  if (/\.includes\([^)]* as /.test(route.source)) failures.push(`${route.name} must not hand-roll enum filter normalization`);
+}
 
 const readinessRequirements = [
   "Feedback is using",
