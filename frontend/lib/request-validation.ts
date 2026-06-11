@@ -1,6 +1,8 @@
 import { containsPrivateSourceText, containsUnsafePathText, isSafeHttpUrl } from "@/lib/private-source-text";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
+const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
+const checksumLikePattern = /^[a-f0-9]{32,}$/i;
 
 export function normalizeAssetId(value: unknown) {
   if (typeof value !== "string" && typeof value !== "number") return "";
@@ -12,6 +14,13 @@ export function normalizeAssetId(value: unknown) {
 export function normalizeAssetIds(value: unknown, max = 120) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.map(normalizeAssetId).filter(Boolean))].slice(0, max);
+}
+
+export function normalizeResourceSpaceRef(value: unknown) {
+  if (typeof value !== "string" && typeof value !== "number") return "";
+  const ref = String(value).trim();
+  if (containsPrivateSourceText(ref) || containsUnsafePathText(ref) || checksumLikePattern.test(ref)) return "";
+  return resourceSpaceRefPattern.test(ref) ? ref : "";
 }
 
 export function normalizeTextField(value: unknown, fallback: string, max = 100) {

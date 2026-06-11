@@ -5,6 +5,7 @@ import { repoRoot } from "@/lib/env";
 import { safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { normalizeResourceSpaceRef } from "@/lib/request-validation";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
 export type StoredPackageDraft = {
@@ -54,12 +55,6 @@ function safeIdentifierText(value: unknown, maxLength: number) {
   return safeSlugText(text, maxLength);
 }
 
-function safeResourceSpaceRef(value: unknown) {
-  const ref = String(value || "").trim().slice(0, 80);
-  if (containsPrivateSourceText(ref) || /^[a-f0-9]{32,}$/i.test(ref)) return "";
-  return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
-}
-
 export function sanitizePackageDraft(input: unknown): DamPackage {
   const raw = (input || {}) as Partial<DamPackage>;
   const sections = Array.isArray(raw.sections) ? raw.sections : [];
@@ -75,7 +70,7 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
       title: safeDisplayText(section?.title, 120) || `Section ${index + 1}`,
       resourceSpaceAssetIds: Array.isArray(section?.resourceSpaceAssetIds)
         ? section.resourceSpaceAssetIds
-            .map((ref) => safeResourceSpaceRef(ref))
+            .map((ref) => normalizeResourceSpaceRef(ref))
             .filter((ref) => {
               if (!ref || seenRefs.has(ref)) return false;
               seenRefs.add(ref);

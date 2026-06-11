@@ -11,6 +11,7 @@ const files = {
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
   reviewEvidence: "frontend/lib/review-evidence.ts",
+  requestValidation: "frontend/lib/request-validation.ts",
   catalog: "frontend/lib/catalog.ts",
   catalogLanguage: "frontend/lib/catalog-language.ts",
   searchRoute: "frontend/app/api/assets/search/route.ts",
@@ -30,6 +31,7 @@ const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
 const reviewEvidence = read(files.reviewEvidence);
+const requestValidation = read(files.requestValidation);
 const catalog = read(files.catalog);
 const catalogLanguage = read(files.catalogLanguage);
 const searchRoute = read(files.searchRoute);
@@ -91,6 +93,18 @@ if (/function\s+safeChecklist\s*\(/.test(pendingReviewWrites) || /raw\.[a-zA-Z0-
 if (!packages.includes("safeBoolean")) failures.push("package drafts must normalize persisted booleans through safeBoolean");
 if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(packages)) {
   failures.push("package drafts must not hand-roll boolean normalization");
+}
+if (!packages.includes("normalizeResourceSpaceRef")) {
+  failures.push("package drafts must normalize ResourceSpace refs through normalizeResourceSpaceRef");
+}
+if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
+  failures.push("package drafts must not hand-roll ResourceSpace ref normalization");
+}
+if (!requestValidation.includes("function normalizeResourceSpaceRef")) {
+  failures.push("request validation must expose normalizeResourceSpaceRef");
+}
+if (!requestValidation.includes("checksumLikePattern")) {
+  failures.push("request validation ResourceSpace refs must reject checksum-like tokens");
 }
 if (!reviewEvidence.includes("safeBoolean")) failures.push("review evidence must normalize checklist booleans through safeBoolean");
 if (/raw\.[a-zA-Z0-9_]+\s*===\s*true/.test(reviewEvidence)) {
