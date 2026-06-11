@@ -1,6 +1,6 @@
 import { normalizeDateField, normalizeDisplayTextField, normalizePublicTextField, normalizeUrlField } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
-import { LARGE_MEDIA_BYTES } from "@/lib/workflow-policy";
+import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 export type UploadIntakePacket = {
   files: File[];
@@ -22,6 +22,17 @@ export type UploadIntakePacket = {
   largeFiles: File[];
   reviewWarnings: string[];
 };
+export type UploadIntakeValidationError = {
+  body: {
+    error: string;
+    missingRequired?: string[];
+    invalidTags?: string[];
+    guidance?: string;
+  };
+  status: 400;
+};
+type UploadIntakeAuditPacket = Pick<UploadIntakePacket, "eventName" | "files" | "sourceLink"> &
+  Partial<Pick<UploadIntakePacket, "largeFiles" | "reviewWarnings">>;
 
 export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
   const files = form.getAll("files").filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0);
@@ -83,10 +94,64 @@ export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
   };
 }
 
-export function uploadIntakeAuditDetails(intake: Pick<UploadIntakePacket, "eventName" | "files" | "sourceLink">) {
+export function uploadIntakeAuditDetails(intake: UploadIntakeAuditPacket) {
   return {
     eventName: intake.eventName,
     fileCount: intake.files.length,
-    sourceLinkCaptured: Boolean(intake.sourceLink)
+    sourceLinkCaptured: Boolean(intake.sourceLink),
+    largeFileCount: intake.largeFiles?.length || 0,
+    reviewWarnings: intake.reviewWarnings || []
+  };
+}
+
+export function uploadIntakeValidationError(intake: UploadIntakePacket): UploadIntakeValidationError | null {
+  if (intake.missingRequired.length) {
+    return { body: { error: "Intake is missing required review context.", missingRequired: intake.missingRequired }, status: 400 };
+  }
+  if (intake.invalidTags.length) {
+    return {
+      body: {
+        error: "Suggested tags must use the current media-library taxonomy.",
+        invalidTags: intake.invalidTags,
+        guidance: "Add new wording to intake notes for reviewer consideration."
+      },
+      status: 400
+    };
+  }
+  if (!intake.files.length && !intake.sourceLink) {
+    return { body: { error: "Add at least one file or existing media link before submitting intake." }, status: 400 };
+  }
+  return null;
+}
+
+export function uploadIntakeAuditStatus(intake: UploadIntakePacket) {
+  return intake.largeFiles.length ? "blocked" as const : "preview" as const;
+}
+
+export function uploadIntakeAuditSummary(intake: UploadIntakePacket) {
+  return intake.largeFiles.length
+    ? "Large-media intake routed away from browser upload."
+    : "Intake validated for DAM review; no media-library write performed.";
+}
+
+export function buildUploadIntakeResponse(intake: UploadIntakePacket) {
+  if (intake.largeFiles.length) {
+    return {
+      status: "large-media-intake",
+      message: uploadDefaultState.largeMediaMessage,
+      defaultReviewState: uploadDefaultState.status,
+      fileCount: intake.files.length,
+      largeFileCount: intake.largeFiles.length,
+      sourceLinkCaptured: Boolean(intake.sourceLink)
+    };
+  }
+  return {
+    status: "validated",
+    defaultReviewState: uploadDefaultState.status,
+    message: "Upload intake validated. New media remains Needs Review / Do Not Publish until a reviewer clears the record.",
+    eventName: intake.eventName,
+    fileCount: intake.files.length,
+    sourceLinkCaptured: Boolean(intake.sourceLink),
+    reviewWarnings: intake.reviewWarnings
   };
 }
