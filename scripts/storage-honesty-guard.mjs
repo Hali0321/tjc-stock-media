@@ -119,7 +119,9 @@ if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
 }
 for (const store of [
   { name: "feedback", source: feedback },
+  { name: "saved searches", source: savedSearches },
   { name: "package drafts", source: packages },
+  { name: "pending review writes", source: pendingReviewWrites },
   { name: "audit log", source: auditLog }
 ]) {
   if (!store.source.includes("normalizePersistedSlugText")) {

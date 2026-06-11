@@ -3,10 +3,9 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
-import { normalizePersistedDisplayText } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
 export type SavedSearchRecord = {
@@ -31,30 +30,16 @@ function newestFirst(records: SavedSearchRecord[]) {
   return newestByTimestamp(records, (record) => record.updatedAt);
 }
 
-function safeText(value: unknown, maxLength: number) {
-  return safeCompactText(value, maxLength);
-}
-
 function safeId(value: unknown) {
-  const text = safeText(value, 100);
-  if (containsPrivateSourceText(text)) return "";
-  return safeSlugText(text, 100);
+  return normalizePersistedSlugText(value, 100);
 }
 
 function safeRef(value: unknown) {
-  const raw = safeText(value, 100);
-  if (containsUnsafePathText(raw) || containsPrivateSourceText(raw)) {
-    return "";
-  }
-  return safeId(raw);
+  return normalizePersistedSlugText(value, 100, { rejectUnsafePath: true });
 }
 
 function safeFilter(value: unknown) {
-  const label = safeText(value, 80);
-  if (containsUnsafePathText(label) || containsPrivateSourceText(label)) {
-    return "";
-  }
-  return label;
+  return normalizePersistedDisplayText(value, 80);
 }
 
 function safeSort(value: unknown): CatalogSort {

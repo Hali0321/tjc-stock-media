@@ -2,9 +2,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
-import { normalizePersistedDisplayText } from "@/lib/request-validation";
+import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import { normalizeReviewChecklist } from "@/lib/review-evidence";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
@@ -20,12 +20,8 @@ function ensurePendingDir() {
   fs.mkdirSync(pendingDir(), { recursive: true });
 }
 
-function safeFilePart(value: string) {
-  return safeSlugText(value, 80) || "review-write";
-}
-
-function safeText(value: unknown, maxLength: number) {
-  return safeCompactText(value, maxLength);
+function safeFilePart(value: unknown) {
+  return normalizePersistedSlugText(value, 80) || "review-write";
 }
 
 function safeRole(value: unknown): ReviewWriteRecord["reviewerRole"] {
@@ -38,8 +34,8 @@ function safeSyncState(value: unknown): ReviewWriteRecord["syncState"] {
 
 function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
   const raw = (input || {}) as Partial<ReviewWriteRecord>;
-  const id = safeFilePart(safeText(raw.id, 120));
-  const resourceId = safeFilePart(safeText(raw.resourceId, 120));
+  const id = safeFilePart(raw.id);
+  const resourceId = safeFilePart(raw.resourceId);
   if (!id || !resourceId) return null;
   const updatedAt = safeIsoTimestamp(raw.updatedAt) || safeIsoTimestamp(raw.createdAt) || new Date(0).toISOString();
   return {
