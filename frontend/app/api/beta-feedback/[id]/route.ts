@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { normalizeFeedbackSeverity, normalizeFeedbackStatus, normalizeFeedbackText, patchBetaFeedback } from "@/lib/beta-feedback";
+import { patchBetaFeedback, readBetaFeedbackPatchInput } from "@/lib/beta-feedback";
 import { canAdmin } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeFeedbackId, readJsonObject } from "@/lib/request-validation";
-import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/lib/types";
+import { normalizeFeedbackId } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -23,23 +22,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const id = normalizeFeedbackId((await params).id);
-  const body = await readJsonObject<{ status?: string; severity?: string; notes?: string }>(request);
-  const status = normalizeFeedbackText(body.status, 40);
-  const severity = normalizeFeedbackText(body.severity, 40);
-  const normalizedStatus = status ? normalizeFeedbackStatus(status) : "";
-  const normalizedSeverity = severity ? normalizeFeedbackSeverity(severity) : "";
-  if (status && normalizedStatus !== status) {
+  const input = await readBetaFeedbackPatchInput(request);
+  if (input.invalidField === "status") {
     return NextResponse.json({ error: "Feedback status is invalid." }, { status: 400 });
   }
-  if (severity && normalizedSeverity !== severity) {
+  if (input.invalidField === "severity") {
     return NextResponse.json({ error: "Feedback severity is invalid." }, { status: 400 });
   }
 
-  const record = await patchBetaFeedback(id, {
-    status: normalizedStatus ? normalizedStatus as BetaFeedbackStatus : undefined,
-    severity: normalizedSeverity ? normalizedSeverity as BetaFeedbackSeverity : undefined,
-    notes: body.notes
-  });
+  const record = await patchBetaFeedback(id, input.patch);
   if (!record) return NextResponse.json({ error: "Feedback record not found." }, { status: 404 });
 
   appendAuditEvent({

@@ -520,7 +520,7 @@ if (!viewerVerdict.includes("containsOperationalText") || /ResourceSpace\|Shared
 }
 
 for (const route of [
-  { name: "beta feedback update route", source: betaFeedbackUpdateRoute, required: ["normalizeFeedbackStatus", "normalizeFeedbackSeverity"] },
+  { name: "beta feedback", source: feedback, required: ["normalizeFeedbackStatus", "normalizeFeedbackSeverity"] },
   { name: "beta feedback export route", source: betaFeedbackExportRoute, required: ["normalizeFeedbackStatusFilter", "normalizeFeedbackSeverityFilter"] }
 ]) {
   for (const helper of route.required) {

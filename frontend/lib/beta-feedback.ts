@@ -20,11 +20,20 @@ export const betaFeedbackStatusFilters = [...betaFeedbackStatuses, "all"] as con
 
 type FeedbackPatch = Partial<Pick<BetaFeedbackRecord, "severity" | "status" | "notes">>;
 type FeedbackGlobal = typeof globalThis & { __tjcStockMediaBetaFeedback?: BetaFeedbackRecord[] };
+type BetaFeedbackPatchBody = {
+  status?: unknown;
+  severity?: unknown;
+  notes?: unknown;
+};
 export type BetaFeedbackExportFilters = {
   status?: BetaFeedbackStatus | "all";
   severity?: BetaFeedbackSeverity | "all";
   role?: DemoRole | "all";
   route?: string;
+};
+export type BetaFeedbackPatchInput = {
+  patch: FeedbackPatch;
+  invalidField?: "status" | "severity";
 };
 export type BetaFeedbackInput = {
   role?: unknown;
@@ -225,6 +234,23 @@ export function normalizeBetaFeedbackSubmission(fields: BetaFeedbackInput, userA
     device: normalizeFeedbackText(fields.device, 180) || undefined,
     viewport: normalizeFeedbackText(fields.viewport, 60) || undefined,
     screenshotUrl: normalizeFeedbackUrl(fields.screenshotLink) || undefined
+  };
+}
+
+export async function readBetaFeedbackPatchInput(request: { json(): Promise<unknown> }): Promise<BetaFeedbackPatchInput> {
+  const body = await readJsonObject<BetaFeedbackPatchBody>(request);
+  const status = normalizeFeedbackText(body.status, 40);
+  const severity = normalizeFeedbackText(body.severity, 40);
+  const normalizedStatus = status ? normalizeFeedbackStatus(status) : "";
+  const normalizedSeverity = severity ? normalizeFeedbackSeverity(severity) : "";
+  if (status && normalizedStatus !== status) return { patch: {}, invalidField: "status" };
+  if (severity && normalizedSeverity !== severity) return { patch: {}, invalidField: "severity" };
+  return {
+    patch: {
+      status: normalizedStatus ? normalizedStatus as BetaFeedbackStatus : undefined,
+      severity: normalizedSeverity ? normalizedSeverity as BetaFeedbackSeverity : undefined,
+      notes: body.notes === undefined ? undefined : normalizePersistedDisplayText(body.notes, 1200)
+    }
   };
 }
 
