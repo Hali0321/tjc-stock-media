@@ -50,7 +50,7 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
     title: normalizePersistedDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
     description: normalizePersistedDisplayText(raw.description, 500) || undefined,
     status: safeEnumValue(raw.status, packageStatuses, "draft"),
-    collectionId: raw.collectionId ? normalizePersistedDisplayText(raw.collectionId, 120) : undefined,
+    collectionId: raw.collectionId ? normalizeResourceSpaceRef(raw.collectionId) || undefined : undefined,
     sections: sections.slice(0, 12).map((section, index) => ({
       id: safeIdentifierText(section?.id, 80) || `section-${index + 1}`,
       title: normalizePersistedDisplayText(section?.title, 120) || `Section ${index + 1}`,

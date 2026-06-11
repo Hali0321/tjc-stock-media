@@ -113,6 +113,9 @@ if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(pa
 if (!packages.includes("normalizeResourceSpaceRef")) {
   failures.push("package drafts must normalize ResourceSpace refs through normalizeResourceSpaceRef");
 }
+if (!/collectionId:\s*raw\.collectionId\s*\?\s*normalizeResourceSpaceRef\(raw\.collectionId\)\s*\|\|\s*undefined\s*:\s*undefined/.test(packages)) {
+  failures.push("package draft collectionId must normalize through normalizeResourceSpaceRef and drop unsafe refs");
+}
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");
 }
