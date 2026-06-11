@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
@@ -48,7 +48,7 @@ function safeDisplayText(value: unknown, maxLength: number) {
 function safeId(value: unknown) {
   const text = safeText(value, 100);
   if (containsPrivateSourceText(text) || isChecksumLike(text)) return "";
-  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+  return safeSlugText(text, 100);
 }
 
 function safeRef(value: unknown) {

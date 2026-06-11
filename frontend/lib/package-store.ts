@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DamPackage, DemoRole } from "@/lib/types";
@@ -50,7 +50,7 @@ function safeDisplayText(value: unknown, maxLength: number) {
 function safeIdentifierText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (containsUnsafePathText(text) || containsPrivateSourceText(text)) return "";
-  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+  return safeSlugText(text, maxLength);
 }
 
 function safeResourceSpaceRef(value: unknown) {

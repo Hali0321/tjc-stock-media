@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
@@ -18,7 +18,7 @@ function ensurePendingDir() {
 }
 
 function safeFilePart(value: string) {
-  return value.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 80) || "review-write";
+  return safeSlugText(value, 80) || "review-write";
 }
 
 function safeText(value: unknown, maxLength: number) {

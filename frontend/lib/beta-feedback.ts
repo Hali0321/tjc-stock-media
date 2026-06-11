@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -45,7 +45,7 @@ function safeFeedbackText(value: unknown, maxLength: number) {
 function safeId(value: unknown) {
   const text = safeText(value, 120);
   if (containsPrivateSourceText(text)) return "";
-  return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+  return safeSlugText(text, 120);
 }
 
 function safeSeverity(value: unknown): BetaFeedbackSeverity {
