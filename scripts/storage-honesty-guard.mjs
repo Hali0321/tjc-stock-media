@@ -41,6 +41,7 @@ const files = {
   uploadIntake: "frontend/lib/upload-intake.ts",
   reviewRoute: "frontend/app/api/review/route.ts",
   reviewQueueResponse: "frontend/lib/review-queue-response.ts",
+  batchActions: "frontend/lib/batch-actions.ts",
   batchRoute: "frontend/app/api/batch/route.ts",
   downloadRoute: "frontend/app/api/download/[id]/route.ts",
   reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
@@ -106,6 +107,7 @@ const uploadRoute = read(files.uploadRoute);
 const uploadIntake = read(files.uploadIntake);
 const reviewRoute = read(files.reviewRoute);
 const reviewQueueResponse = read(files.reviewQueueResponse);
+const batchActions = read(files.batchActions);
 const batchRoute = read(files.batchRoute);
 const downloadRoute = read(files.downloadRoute);
 const reviewActionWorkflow = read(files.reviewActionWorkflow);
@@ -253,7 +255,7 @@ for (const surface of [
   { name: "pending review writes", source: pendingReviewWrites },
   { name: "asset route", source: assetRoute },
   { name: "review queue response", source: reviewQueueResponse },
-  { name: "batch route", source: batchRoute },
+  { name: "batch actions", source: batchActions },
   { name: "download route", source: downloadRoute },
   { name: "review action workflow", source: reviewActionWorkflow },
   { name: "ResourceSpace API adapter", source: resourceSpaceApi }
