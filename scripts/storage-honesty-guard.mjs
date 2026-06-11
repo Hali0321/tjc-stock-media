@@ -406,6 +406,9 @@ requireAllStrings("source redaction custody key list", sourceRedaction, ["source
 requireAllStrings("source redaction public-hidden key list", sourceRedaction, publicHiddenAssetKeys);
 if (!auditLog.includes("normalizeAssetId")) failures.push("audit log must normalize asset ids through normalizeAssetId");
 if (!auditLog.includes("normalizeResourceSpaceRef")) failures.push("audit log must normalize ResourceSpace ids through normalizeResourceSpaceRef");
+if (/recent:\s*events\.slice\(0,\s*25\)\.map[\s\S]*details:/.test(auditLog)) {
+  failures.push("audit log diagnostics must not expose raw audit details");
+}
 for (const module of [
   { name: "audit log", source: auditLog },
   { name: "usage analytics", source: usageAnalytics }
