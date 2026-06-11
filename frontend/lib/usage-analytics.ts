@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
+import { containsPrivateSourceText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
 
 export type UsageEventType =
@@ -67,10 +68,6 @@ function database() {
 
 function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
-}
-
-function containsPrivateSourceText(value: string) {
-  return /source path|master drive|checksum/i.test(value) || /[a-f0-9]{32,}/i.test(value);
 }
 
 function safeDisplayText(value: unknown, maxLength: number) {

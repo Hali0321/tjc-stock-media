@@ -1,4 +1,5 @@
 import { assetDisplayTitle } from "@/lib/presentation";
+import { containsPrivateSourceText } from "@/lib/private-source-text";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
 export {
@@ -21,14 +22,14 @@ function canExposeOpsReference(role: DemoRole) {
 
 function safeRequestTitle(asset: StockMediaAsset) {
   const title = assetDisplayTitle(asset).replace(/\s+/g, " ").trim();
-  if (!title || unsafeRequestTextPattern.test(title)) return "Media asset";
+  if (!title || unsafeRequestTextPattern.test(title) || containsPrivateSourceText(title)) return "Media asset";
   return title.slice(0, 120);
 }
 
 function safeRequestReference(asset: StockMediaAsset, role: DemoRole) {
   const raw = String(canExposeOpsReference(role) ? asset.resourceSpaceId || asset.id : asset.id);
   const cleaned = raw.replace(/[^\w:-]/g, "").slice(0, 80);
-  if (!cleaned || unsafeRequestTextPattern.test(cleaned)) return String(asset.id).replace(/[^\w:-]/g, "").slice(0, 80) || "media-record";
+  if (!cleaned || unsafeRequestTextPattern.test(cleaned) || containsPrivateSourceText(cleaned)) return String(asset.id).replace(/[^\w:-]/g, "").slice(0, 80) || "media-record";
   return cleaned;
 }
 

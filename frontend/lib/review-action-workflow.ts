@@ -3,6 +3,7 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { sourceEnvelope } from "@/lib/media-source/session";
 import { updateResourceReviewStatus } from "@/lib/media-source/resourcespace-api";
 import { canReview } from "@/lib/permissions";
+import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import { requestIdentity } from "@/lib/request-identity";
 import { normalizeAssetId } from "@/lib/request-validation";
 import { missingReviewEvidence, normalizeReviewChecklist, queuePendingReviewDecision } from "@/lib/review-decision";
@@ -28,8 +29,8 @@ export type ReviewActionWorkflowResult = {
 
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
-  if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) return "";
+  if (containsUnsafePathText(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
 }
 

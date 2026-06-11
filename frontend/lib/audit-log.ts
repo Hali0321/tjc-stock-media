@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
 
 export type AuditEventType =
@@ -64,13 +65,9 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
-function containsPrivateSourceText(value: string) {
-  return /source path|master drive|checksum/i.test(value) || /[a-f0-9]{32,}/i.test(value);
-}
-
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  return text.includes("..") || /[\\/]/.test(text) || containsPrivateSourceText(text) ? "" : text;
+  return containsUnsafePathText(text) || containsPrivateSourceText(text) ? "" : text;
 }
 
 function safeId(value: unknown) {

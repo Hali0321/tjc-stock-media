@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
 const pendingDirName = "pending-review-writes";
@@ -25,8 +26,8 @@ function safeText(value: unknown, maxLength: number) {
 
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) return "";
+  if (containsUnsafePathText(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
 }
 

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
+import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -32,20 +33,16 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
-function isPrivateText(value: string) {
-  return /source path|master drive|checksum/i.test(value) || /[a-f0-9]{32,}/i.test(value);
-}
-
 function safeFeedbackText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (isPrivateText(text)) return "";
+  if (containsUnsafePathText(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text;
 }
 
 function safeId(value: unknown) {
   const text = safeText(value, 120);
-  if (isPrivateText(text)) return "";
+  if (containsPrivateSourceText(text)) return "";
   return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
@@ -73,14 +70,14 @@ function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
 function safeRoute(value: unknown) {
   const route = safeText(value, 240);
   if (!route.startsWith("/") || route.includes("..") || /[\\]/.test(route)) return "/";
-  if (isPrivateText(route)) return "/";
+  if (containsPrivateSourceText(route)) return "/";
   return route;
 }
 
 function safeUrl(value: unknown) {
   const url = safeText(value, 500);
   if (url.includes("..") || /[\\]/.test(url)) return "";
-  if (isPrivateText(url)) return "";
+  if (containsPrivateSourceText(url)) return "";
   return /^https?:\/\//i.test(url) ? url : "";
 }
 

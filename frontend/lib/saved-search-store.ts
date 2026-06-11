@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
 export type SavedSearchRecord = {
@@ -31,17 +32,13 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
-function containsPrivateSourceText(value: string) {
-  return /source path|master drive|checksum/i.test(value);
-}
-
 function isChecksumLike(value: string) {
   return /^[a-f0-9]{32,}$/i.test(value);
 }
 
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
-  if (text.includes("..") || /[\\/]/.test(text)) return "";
+  if (containsUnsafePathText(text)) return "";
   if (containsPrivateSourceText(text) || isChecksumLike(text)) return "";
   return text;
 }
@@ -54,7 +51,7 @@ function safeId(value: unknown) {
 
 function safeRef(value: unknown) {
   const raw = safeText(value, 100);
-  if (raw.includes("..") || /[\\/]/.test(raw) || containsPrivateSourceText(raw) || isChecksumLike(raw)) {
+  if (containsUnsafePathText(raw) || containsPrivateSourceText(raw) || isChecksumLike(raw)) {
     return "";
   }
   return safeId(raw);
