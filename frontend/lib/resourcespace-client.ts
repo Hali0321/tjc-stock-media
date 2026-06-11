@@ -6,7 +6,6 @@ export type ResourceSpaceApiResult<T = unknown> = {
   status: number;
   data?: T;
   error?: string;
-  url?: string;
 };
 
 function normalizeBaseUrl() {
@@ -38,6 +37,12 @@ function normalizeApiResponse<T>(data: unknown): ResourceSpaceApiResult<T> {
   return { ok: true, status: 200, data: data as T };
 }
 
+function safeApiErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  if (!message || /\/api\/\?|sign=|user=/i.test(message)) return "ResourceSpace API request failed.";
+  return message.slice(0, 240);
+}
+
 export async function resourceSpaceApiRequest<T = unknown>(params: Record<string, string | number | boolean | undefined>): Promise<ResourceSpaceApiResult<T>> {
   const baseUrl = normalizeBaseUrl();
   if (!baseUrl || !resourceSpaceApiUser() || !resourceSpaceApiKey()) {
@@ -50,15 +55,14 @@ export async function resourceSpaceApiRequest<T = unknown>(params: Record<string
     const text = await response.text();
     const data = text ? JSON.parse(text) : null;
     if (!response.ok) {
-      return { ok: false, status: response.status, error: `ResourceSpace API returned ${response.status}.`, url };
+      return { ok: false, status: response.status, error: `ResourceSpace API returned ${response.status}.` };
     }
-    return { ...normalizeApiResponse<T>(data), url };
+    return normalizeApiResponse<T>(data);
   } catch (error) {
     return {
       ok: false,
       status: 502,
-      error: error instanceof Error ? error.message : "ResourceSpace API request failed.",
-      url
+      error: safeApiErrorMessage(error)
     };
   }
 }

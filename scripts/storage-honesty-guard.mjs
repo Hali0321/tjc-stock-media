@@ -238,6 +238,13 @@ if (!env.includes("normalizedResourceSpaceBaseUrl()") || /resourceSpaceBaseUrl\(
 if (!read("frontend/lib/resourcespace-client.ts").includes("normalizedResourceSpaceBaseUrl") || /[^A-Za-z]resourceSpaceBaseUrl\(/.test(read("frontend/lib/resourcespace-client.ts"))) {
   failures.push("ResourceSpace client must build API/admin links from normalizedResourceSpaceBaseUrl only");
 }
+const resourceSpaceClient = read("frontend/lib/resourcespace-client.ts");
+if (/url\??:\s*string/.test(resourceSpaceClient) || /,\s*url\s*}/.test(resourceSpaceClient) || /url\s*}/.test(resourceSpaceClient)) {
+  failures.push("ResourceSpace API results must not expose signed request URLs");
+}
+if (!resourceSpaceClient.includes("function safeApiErrorMessage") || !resourceSpaceClient.includes("sign=|user=")) {
+  failures.push("ResourceSpace API errors must redact signed query details before leaving the client");
+}
 if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
   failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");
 }
