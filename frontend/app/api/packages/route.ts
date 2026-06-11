@@ -4,6 +4,7 @@ import { getMediaSourceSession } from "@/lib/media-source/session";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { listStoredPackageDrafts, sanitizePackageDraft, savePackageDraft } from "@/lib/package-store";
+import { safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canContribute, canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import { readJsonObject } from "@/lib/request-validation";
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
   const sections = resolvePackageSections(draft, assets);
   const governance = buildPackageGovernance(draft, sections, identity.role);
   const now = new Date().toISOString();
-  const id = draft.id === "portal-local-draft" ? `pkg-${now.replace(/[:.]/g, "-")}` : draft.id;
+  const id = draft.id === "portal-local-draft" ? `pkg-${safeIsoTimestampIdPart(now)}` : draft.id;
   const record = await savePackageDraft({
     id,
     title: draft.title,

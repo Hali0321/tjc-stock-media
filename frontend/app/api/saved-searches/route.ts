@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
+import { safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canContribute } from "@/lib/permissions";
 import { listSavedSearches, sanitizeSavedSearch, saveSavedSearch } from "@/lib/saved-search-store";
 import { requestIdentity } from "@/lib/request-identity";
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 
   const now = new Date().toISOString();
-  const id = draft.id || `search-${now.replace(/[:.]/g, "-")}`;
+  const id = draft.id || `search-${safeIsoTimestampIdPart(now)}`;
   const record = await saveSavedSearch({
     ...draft,
     id,

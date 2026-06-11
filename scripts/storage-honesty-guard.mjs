@@ -19,6 +19,8 @@ const files = {
   searchRoute: "frontend/app/api/assets/search/route.ts",
   betaFeedbackUpdateRoute: "frontend/app/api/beta-feedback/[id]/route.ts",
   betaFeedbackExportRoute: "frontend/app/api/beta-feedback/export/route.ts",
+  savedSearchRoute: "frontend/app/api/saved-searches/route.ts",
+  packageRoute: "frontend/app/api/packages/route.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -41,6 +43,8 @@ const catalogLanguage = read(files.catalogLanguage);
 const searchRoute = read(files.searchRoute);
 const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
 const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
+const savedSearchRoute = read(files.savedSearchRoute);
+const packageRoute = read(files.packageRoute);
 const readiness = read(files.readiness);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
@@ -126,6 +130,12 @@ if (!requestValidation.includes("function normalizePersistedSlugText")) {
 if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
   failures.push("request validation must not hand-roll private token detection");
 }
+if (!requestValidation.includes("function readJsonObject")) {
+  failures.push("request validation must expose readJsonObject for API JSON body fallback");
+}
+if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
+  failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");
+}
 for (const store of [
   { name: "feedback", source: feedback },
   { name: "saved searches", source: savedSearches },
@@ -151,6 +161,15 @@ for (const store of [
   if (/function\s+safeDisplayText\s*\(/.test(store.source)) {
     failures.push(`${store.name} must not hand-roll persisted display label normalization`);
   }
+}
+for (const writer of [
+  { name: "saved search route", source: savedSearchRoute },
+  { name: "package route", source: packageRoute },
+  { name: "pending review writes", source: pendingReviewWrites },
+  { name: "audit log", source: auditLog }
+]) {
+  if (!writer.source.includes("safeIsoTimestampIdPart")) failures.push(`${writer.name} must derive record id timestamps through safeIsoTimestampIdPart`);
+  if (/\.replace\(\/\[:\\\.\]\/g,\s*"-"\)/.test(writer.source)) failures.push(`${writer.name} must not hand-roll timestamp id slugging`);
 }
 if (!reviewEvidence.includes("safeBoolean")) failures.push("review evidence must normalize checklist booleans through safeBoolean");
 if (/raw\.[a-zA-Z0-9_]+\s*===\s*true/.test(reviewEvidence)) {

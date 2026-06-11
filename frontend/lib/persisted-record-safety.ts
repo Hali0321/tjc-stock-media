@@ -23,6 +23,11 @@ export function safeIsoTimestamp(value: unknown) {
   return iso.startsWith(text.slice(0, 10)) ? iso : "";
 }
 
+export function safeIsoTimestampIdPart(value: unknown) {
+  const iso = value instanceof Date && !Number.isNaN(value.getTime()) ? value.toISOString() : safeIsoTimestamp(value);
+  return (iso || new Date(0).toISOString()).replace(/[:.]/g, "-");
+}
+
 export function safeTimestampMs(value: unknown) {
   const iso = safeIsoTimestamp(value);
   return iso ? Date.parse(iso) : 0;

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeEnumValue, safeFiniteNumber, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeEnumValue, safeFiniteNumber, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
@@ -144,7 +144,7 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
 export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string }) {
   const createdAt = new Date();
   const draft: AuditEventRecord = {
-    id: `${createdAt.toISOString().replace(/[:.]/g, "-")}-${crypto.randomUUID().slice(0, 8)}`,
+    id: `${safeIsoTimestampIdPart(createdAt)}-${crypto.randomUUID().slice(0, 8)}`,
     createdAt: createdAt.toISOString(),
     actor: event.actor || event.role,
     ...event

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeEnumValue, safeIsoTimestamp, safeIsoTimestampIdPart, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import { normalizeReviewChecklist } from "@/lib/review-evidence";
@@ -122,7 +122,7 @@ export function createPendingReviewWrite({
 }) {
   ensurePendingDir();
   const now = new Date().toISOString();
-  const id = `${now.replace(/[:.]/g, "-")}-${safeFilePart(asset.resourceSpaceId || asset.id)}-${crypto.randomUUID().slice(0, 8)}`;
+  const id = `${safeIsoTimestampIdPart(now)}-${safeFilePart(asset.resourceSpaceId || asset.id)}-${crypto.randomUUID().slice(0, 8)}`;
   const record: ReviewWriteRecord = {
     id,
     resourceId: asset.resourceSpaceId || asset.id,
