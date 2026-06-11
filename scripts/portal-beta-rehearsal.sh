@@ -2,6 +2,7 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:4868}"
+CURL_MAX_TIME="${PORTAL_BETA_REHEARSAL_CURL_MAX_TIME:-30}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 RUN_DIR="$ROOT/.runtime/beta-rehearsals/$RUN_ID"
@@ -16,7 +17,7 @@ export BASE_URL RUN_ID RUN_DIR RESULTS_JSONL SUMMARY_JSON
 http_code() {
   local output="$1"
   shift
-  curl --max-time 15 -sS -o "$output" -w '%{http_code}' "$@"
+  curl --max-time "$CURL_MAX_TIME" -sS -o "$output" -w '%{http_code}' "$@"
 }
 
 record_pass() {
