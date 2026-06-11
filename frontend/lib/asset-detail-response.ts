@@ -8,6 +8,24 @@ import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 
 type AssetDetailResult = Awaited<ReturnType<typeof getAssetById>>;
 type DamRouteSession = ReturnType<typeof createDamRouteSession>;
+type AssetDetailRouteError = {
+  body: {
+    error: string;
+  } & Record<string, unknown>;
+  status: 400 | 403 | 404;
+};
+
+export function assetDetailMalformedIdError(): AssetDetailRouteError {
+  return { body: { error: "Malformed asset id." }, status: 400 };
+}
+
+export function assetDetailNotFoundError(session: DamRouteSession, source: AssetDetailResult["source"]): AssetDetailRouteError {
+  return { body: { error: "Asset not found", ...session.sourceEnvelope(source) }, status: 404 };
+}
+
+export function assetDetailRoleDeniedError(session: DamRouteSession, source: AssetDetailResult["source"]): AssetDetailRouteError {
+  return { body: { error: "This role cannot view this asset.", ...session.sourceEnvelope(source) }, status: 403 };
+}
 
 export function buildAssetDetailResponse({
   asset,

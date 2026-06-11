@@ -212,11 +212,11 @@ if (/role-cannot-admin|DAM readiness is available to DAM Admin role|admin_readin
   failures.push(`${adminReadinessRoute} must not hand-roll readiness denial copy or audit details`);
 }
 
-if (!assetDetailRouteSource.includes("buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source })") || !assetDetailResponseSource.includes("function buildAssetDetailResponse") || !assetDetailResponseSource.includes("pendingReviewWriteSummary") || !assetDetailResponseSource.includes("resourceSpaceRecordRef")) {
-  failures.push(`${assetDetailRoute} must delegate asset detail payload assembly to asset-detail-response`);
+if (!assetDetailRouteSource.includes("buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source })") || !assetDetailRouteSource.includes("assetDetailMalformedIdError()") || !assetDetailRouteSource.includes("assetDetailNotFoundError(session, source)") || !assetDetailRouteSource.includes("assetDetailRoleDeniedError(session, source)") || !assetDetailResponseSource.includes("function buildAssetDetailResponse") || !assetDetailResponseSource.includes("function assetDetailMalformedIdError") || !assetDetailResponseSource.includes("function assetDetailNotFoundError") || !assetDetailResponseSource.includes("function assetDetailRoleDeniedError") || !assetDetailResponseSource.includes("pendingReviewWriteSummary") || !assetDetailResponseSource.includes("resourceSpaceRecordRef")) {
+  failures.push(`${assetDetailRoute} must delegate asset detail errors and payload assembly to asset-detail-response`);
 }
-if (/pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace|assetWithRoleImageUrls/.test(assetDetailRouteSource)) {
-  failures.push(`${assetDetailRoute} must not hand-roll asset detail response payload assembly`);
+if (/pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace|assetWithRoleImageUrls|Malformed asset id|Asset not found|This role cannot view this asset|session\.sourceEnvelope/.test(assetDetailRouteSource)) {
+  failures.push(`${assetDetailRoute} must not hand-roll asset detail errors or response payload assembly`);
 }
 
 const brandKitRoute = "frontend/app/api/brand-kits/[id]/route.ts";

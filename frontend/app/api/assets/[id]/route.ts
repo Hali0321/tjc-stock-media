@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assetResourceRef } from "@/lib/asset-refs";
-import { buildAssetDetailResponse } from "@/lib/asset-detail-response";
+import {
+  assetDetailMalformedIdError,
+  assetDetailNotFoundError,
+  assetDetailRoleDeniedError,
+  buildAssetDetailResponse
+} from "@/lib/asset-detail-response";
 import { getAssetById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { canSeeAsset } from "@/lib/permissions";
@@ -13,15 +18,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
   const role = session.role;
   if (!id) {
-    return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
+    const error = assetDetailMalformedIdError();
+    return NextResponse.json(error.body, { status: error.status });
   }
   const { asset, source, related } = await getAssetById(id);
-  const envelope = session.sourceEnvelope(source);
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found", ...envelope }, { status: 404 });
+    const error = assetDetailNotFoundError(session, source);
+    return NextResponse.json(error.body, { status: error.status });
   }
   if (!canSeeAsset(role, asset)) {
-    return NextResponse.json({ error: "This role cannot view this asset.", ...envelope }, { status: 403 });
+    const error = assetDetailRoleDeniedError(session, source);
+    return NextResponse.json(error.body, { status: error.status });
   }
   const resourceSpaceId = assetResourceRef(asset);
   session.recordUsage({
