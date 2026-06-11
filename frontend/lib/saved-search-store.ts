@@ -35,22 +35,26 @@ function containsPrivateSourceText(value: string) {
   return /source path|master drive|checksum/i.test(value);
 }
 
+function isChecksumLike(value: string) {
+  return /^[a-f0-9]{32,}$/i.test(value);
+}
+
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (containsPrivateSourceText(text)) return "";
+  if (containsPrivateSourceText(text) || isChecksumLike(text)) return "";
   return text;
 }
 
 function safeId(value: unknown) {
   const text = safeText(value, 100);
-  if (containsPrivateSourceText(text)) return "";
+  if (containsPrivateSourceText(text) || isChecksumLike(text)) return "";
   return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
 function safeRef(value: unknown) {
   const raw = safeText(value, 100);
-  if (raw.includes("..") || /[\\/]/.test(raw) || containsPrivateSourceText(raw)) {
+  if (raw.includes("..") || /[\\/]/.test(raw) || containsPrivateSourceText(raw) || isChecksumLike(raw)) {
     return "";
   }
   return safeId(raw);
@@ -58,7 +62,7 @@ function safeRef(value: unknown) {
 
 function safeFilter(value: unknown) {
   const label = safeText(value, 80);
-  if (label.includes("..") || /[\\/]/.test(label) || containsPrivateSourceText(label)) {
+  if (label.includes("..") || /[\\/]/.test(label) || containsPrivateSourceText(label) || isChecksumLike(label)) {
     return "";
   }
   return label;

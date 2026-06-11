@@ -76,7 +76,7 @@ if (!data.search.createdBy || data.search.role !== "Contributor") {
   console.error(`FAIL: saved search missing actor/role: ${JSON.stringify(data.search).slice(0, 500)}`);
   process.exit(1);
 }
-if (data.search.view || data.search.filters.includes("../private") || data.search.filters.length !== new Set(data.search.filters).size) {
+if (data.search.view || data.search.filters.includes("../private") || data.search.filters.some((filter) => /^[a-f0-9]{32,}$/i.test(filter)) || data.search.filters.length !== new Set(data.search.filters).size) {
   console.error(`FAIL: saved search fields were not sanitized/deduped: ${JSON.stringify(data.search).slice(0, 500)}`);
   process.exit(1);
 }
@@ -85,7 +85,7 @@ if (JSON.stringify(data.search).includes("../private") || /source path|master dr
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"id\":\"$search_id\",\"title\":\"$MARKER Bible search\",\"query\":\"Bible\",\"view\":\"source path board\",\"collection\":\"master drive set\",\"filters\":[\"portal ready\",\"portal ready\",\"../private\",\"source path\",\"master drive\",\"checksum\"],\"sort\":\"A-Z\"}" \
+  -d "{\"id\":\"$search_id\",\"title\":\"$MARKER Bible search\",\"query\":\"Bible\",\"view\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"collection\":\"master drive set\",\"filters\":[\"portal ready\",\"portal ready\",\"../private\",\"source path\",\"master drive\",\"checksum\",\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"],\"sort\":\"A-Z\"}" \
   "$BASE_URL/api/saved-searches?role=Contributor"
 
 UNSAFE_QUERY_SEARCH_ID="$unsafe_query_search_id" expect_json_status 200 saved-search-query-title-sanitized '
@@ -96,12 +96,12 @@ if (data.ok !== true || data.search?.id !== id || data.search?.query || data.sea
   console.error(`FAIL: unsafe saved search query/title were not sanitized into safe filter fallback: ${text.slice(0, 700)}`);
   process.exit(1);
 }
-if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+if (text.includes("../private") || /source path|master drive|checksum/i.test(text) || /[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: saved search echoed unsafe query/title: ${text.slice(0, 700)}`);
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"id\":\"$unsafe_query_search_id\",\"title\":\"../private source path\",\"query\":\"../private master drive checksum\",\"filters\":[\"portal ready\"]}" \
+  -d "{\"id\":\"$unsafe_query_search_id\",\"title\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"query\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"filters\":[\"portal ready\"]}" \
   "$BASE_URL/api/saved-searches?role=Contributor"
 
 if [ "$local_runtime_probe" = "1" ]; then
@@ -137,10 +137,10 @@ existing.unshift({
 }, {
   id: process.env.STALE_SEARCH_ID,
   title: "../private source path",
-  query: "../private master drive checksum",
-  view: "source path board",
+  query: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  view: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
   collection: "master drive set",
-  filters: ["portal ready", "../private", "portal ready", "source path", "master drive", "checksum"],
+  filters: ["portal ready", "../private", "portal ready", "source path", "master drive", "checksum", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"],
   sort: "unsafe-sort",
   createdAt: "not-a-date",
   updatedAt: "2030-01-01T00:00:00.000Z",
@@ -182,13 +182,13 @@ if (!unsafeQueryRecord || unsafeQueryRecord.query || unsafeQueryRecord.title !==
 }
 if (staleId) {
   const stale = data.searches.find((item) => item.id === staleId);
-  if (!stale || stale.query || stale.title !== "portal ready" || stale.createdBy !== "local-beta:unknown" || stale.view || stale.collection || stale.filters.includes("../private") || stale.filters.length !== new Set(stale.filters).size || stale.sort !== "Approved first" || stale.role === "Viewer") {
+  if (!stale || stale.query || stale.title !== "portal ready" || stale.createdBy !== "local-beta:unknown" || stale.view || stale.collection || stale.filters.includes("../private") || stale.filters.some((filter) => /^[a-f0-9]{32,}$/i.test(filter)) || stale.filters.length !== new Set(stale.filters).size || stale.sort !== "Approved first" || stale.role === "Viewer") {
     console.error(`FAIL: persisted unsafe saved search was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
     process.exit(1);
   }
 }
 const text = JSON.stringify(data.searches);
-if (text.includes("../private") || /source[- ]path|master[- ]drive|checksum/i.test(text)) {
+if (text.includes("../private") || /source[- ]path|master[- ]drive|checksum/i.test(text) || /[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: saved search list leaked unsafe labels: ${text.slice(0, 700)}`);
   process.exit(1);
 }
