@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
@@ -46,6 +46,33 @@ export type AuditEventRecord = {
   details?: Record<string, string | number | boolean | string[] | null>;
 };
 
+const auditEventStatuses: AuditEventRecord["status"][] = ["allowed", "denied", "blocked", "queued", "preview"];
+const auditEventTypes: AuditEventType[] = [
+  "admin_readiness_denied",
+  "admin_readiness_viewed",
+  "download_gate_checked",
+  "approved_download",
+  "denied_download",
+  "upload_denied",
+  "upload_submitted",
+  "review_denied",
+  "review_evidence_incomplete",
+  "review_pending_write_queued",
+  "collection_draft_denied",
+  "collection_draft_previewed",
+  "saved_search_denied",
+  "saved_search_saved",
+  "saved_search_listed",
+  "package_draft_denied",
+  "package_draft_saved",
+  "package_draft_listed",
+  "batch_action_denied",
+  "batch_action_previewed",
+  "admin_denied",
+  "beta_feedback_submitted",
+  "beta_feedback_triaged"
+];
+
 function auditDir() {
   return path.join(repoRoot(), ".runtime", "audit-log");
 }
@@ -79,38 +106,11 @@ function safeId(value: unknown) {
 }
 
 function safeStatus(value: unknown): AuditEventRecord["status"] {
-  return value === "allowed" || value === "denied" || value === "blocked" || value === "queued" || value === "preview"
-    ? value
-    : "preview";
+  return safeEnumValue(value, auditEventStatuses, "preview");
 }
 
 function safeType(value: unknown): AuditEventType {
-  const allowed: AuditEventType[] = [
-    "admin_readiness_denied",
-    "admin_readiness_viewed",
-    "download_gate_checked",
-    "approved_download",
-    "denied_download",
-    "upload_denied",
-    "upload_submitted",
-    "review_denied",
-    "review_evidence_incomplete",
-    "review_pending_write_queued",
-    "collection_draft_denied",
-    "collection_draft_previewed",
-    "saved_search_denied",
-    "saved_search_saved",
-    "saved_search_listed",
-    "package_draft_denied",
-    "package_draft_saved",
-    "package_draft_listed",
-    "batch_action_denied",
-    "batch_action_previewed",
-    "admin_denied",
-    "beta_feedback_submitted",
-    "beta_feedback_triaged"
-  ];
-  return allowed.includes(value as AuditEventType) ? value as AuditEventType : "admin_denied";
+  return safeEnumValue(value, auditEventTypes, "admin_denied");
 }
 
 function safeDetails(value: unknown): AuditEventRecord["details"] {

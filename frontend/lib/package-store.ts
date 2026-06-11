@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DamPackage, DemoRole } from "@/lib/types";
@@ -31,6 +31,7 @@ export type StoredPackageDraft = {
 
 const packageStorePath = () => path.join(repoRoot(), "data", "runtime", "package-drafts.json");
 export const maxPackageDrafts = 200;
+const packageStatuses: DamPackage["status"][] = ["draft", "pending-review", "approved", "archived"];
 
 function newestFirst(records: StoredPackageDraft[]) {
   return [...records].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
@@ -71,7 +72,7 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
     id: safeIdentifierText(raw.id, 120) || "portal-local-draft",
     title: safeDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
     description: safeDisplayText(raw.description, 500) || undefined,
-    status: raw.status === "pending-review" || raw.status === "approved" || raw.status === "archived" ? raw.status : "draft",
+    status: safeEnumValue(raw.status, packageStatuses, "draft"),
     collectionId: raw.collectionId ? safeDisplayText(raw.collectionId, 120) : undefined,
     sections: sections.slice(0, 12).map((section, index) => ({
       id: safeIdentifierText(section?.id, 80) || `section-${index + 1}`,

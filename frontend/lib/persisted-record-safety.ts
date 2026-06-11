@@ -18,3 +18,7 @@ export function safeIsoTimestamp(value: unknown) {
 export function safeNonNegativeInt(value: unknown) {
   return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
 }
+
+export function safeEnumValue<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? value as T : fallback;
+}

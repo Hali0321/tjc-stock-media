@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -49,15 +49,15 @@ function safeId(value: unknown) {
 }
 
 function safeSeverity(value: unknown): BetaFeedbackSeverity {
-  return betaFeedbackSeverities.includes(value as BetaFeedbackSeverity) ? value as BetaFeedbackSeverity : "medium";
+  return safeEnumValue(value, betaFeedbackSeverities, "medium");
 }
 
 function safeStatus(value: unknown): BetaFeedbackStatus {
-  return betaFeedbackStatuses.includes(value as BetaFeedbackStatus) ? value as BetaFeedbackStatus : "new";
+  return safeEnumValue(value, betaFeedbackStatuses, "new");
 }
 
 function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
-  return value === "vercel-kv" ? "vercel-kv" : "local-json";
+  return safeEnumValue(value, ["vercel-kv", "local-json"], "local-json");
 }
 
 function safeRoute(value: unknown) {

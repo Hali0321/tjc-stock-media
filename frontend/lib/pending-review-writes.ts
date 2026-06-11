@@ -2,12 +2,13 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
 const pendingDirName = "pending-review-writes";
 export const maxPendingReviewWrites = 200;
+const syncStates: ReviewWriteRecord["syncState"][] = ["ready_to_sync", "sync_failed", "synced_to_resourcespace", "cancelled", "superseded", "queued"];
 
 function pendingDir() {
   return path.join(repoRoot(), ".runtime", pendingDirName);
@@ -37,9 +38,7 @@ function safeRole(value: unknown): ReviewWriteRecord["reviewerRole"] {
 }
 
 function safeSyncState(value: unknown): ReviewWriteRecord["syncState"] {
-  return value === "ready_to_sync" || value === "sync_failed" || value === "synced_to_resourcespace" || value === "cancelled" || value === "superseded"
-    ? value
-    : "queued";
+  return safeEnumValue(value, syncStates, "queued");
 }
 
 function safeChecklist(value: unknown): ReviewEvidenceChecklist {

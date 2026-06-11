@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
@@ -68,7 +68,7 @@ function safeFilter(value: unknown) {
 }
 
 function safeSort(value: unknown): CatalogSort {
-  return sortOptions.includes(value as CatalogSort) ? value as CatalogSort : "Approved first";
+  return safeEnumValue(value, sortOptions, "Approved first");
 }
 
 export function sanitizeSavedSearch(input: unknown) {
