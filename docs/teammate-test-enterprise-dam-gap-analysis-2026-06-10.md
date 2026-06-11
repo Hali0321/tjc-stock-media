@@ -19,7 +19,7 @@ For an enterprise-level DAM target, the remaining gaps are mostly production tru
 - `make frontend-check`: passed typecheck and production Next build.
 - `make launch-readiness`: now passes after allowing app brand assets under `frontend/public/brand/`; remaining warning is `.env` placeholder values.
 - `BASE_URL=http://localhost:4868 make portal-api-smoke`: passed.
-- `BASE_URL=http://localhost:4868 make portal-browser-qa`: passed with 16 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, and zero network failures.
+- `BASE_URL=http://localhost:4868 make portal-browser-qa`: passed with 17 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, and zero network failures.
 
 ## Ready Enough For Teammate Test
 

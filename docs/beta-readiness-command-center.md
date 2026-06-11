@@ -69,7 +69,7 @@ Checks:
 - `BASE_URL=http://localhost:4868 make portal-saved-search-smoke`: pass for saved search role gates, sanitization, and local-json readiness.
 - `BASE_URL=http://localhost:4880 make portal-beta-rehearsal`: pass; evidence JSON written under `.runtime/beta-rehearsals/`.
 - `BASE_URL=https://tjc-stock-media.vercel.app make portal-hosted-smoke`: pass against stable Vercel alias.
-- `BASE_URL=http://localhost:4868 make portal-browser-qa`: pass; 16 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, zero network failures.
+- `BASE_URL=http://localhost:4868 make portal-browser-qa`: pass; 17 pages, six viewport widths, 23 screenshots, zero failures, zero warnings, zero console errors, zero network failures.
 - Explicit Viewer probe: `Bible` search returned assets, Viewer source payload stayed redacted as `media-library`, asset `368` opened, blocked download returned `403`, Viewer review action returned `403`.
 - Explicit Reviewer probe: incomplete evidence returned `400` with evidence blockers; complete evidence returned `202` queued pending-write truth.
 
