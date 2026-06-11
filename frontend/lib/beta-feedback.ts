@@ -2,7 +2,7 @@ import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
 import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
-import { normalizeRoleWithFallback } from "@/lib/permissions";
+import { normalizeRoleFilter, normalizeRoleWithFallback } from "@/lib/permissions";
 import { isSafeHttpUrl } from "@/lib/private-source-text";
 import { normalizeFeedbackId, normalizePersistedDisplayText, normalizeSafeRoutePath, readFormData, readJsonObject } from "@/lib/request-validation";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -335,6 +335,15 @@ export function filterBetaFeedback(records: BetaFeedbackRecord[], filters: BetaF
     && (!filters.role || filters.role === "all" || record.role === filters.role)
     && (!route || route === "all" || record.route.startsWith(route))
   ));
+}
+
+export function readBetaFeedbackExportFilters(search: Pick<URLSearchParams, "get">): Required<BetaFeedbackExportFilters> {
+  return {
+    status: normalizeFeedbackStatusFilter(normalizeFeedbackText(search.get("status"), 40)),
+    severity: normalizeFeedbackSeverityFilter(normalizeFeedbackText(search.get("severity"), 40)),
+    role: normalizeRoleFilter(normalizeFeedbackText(search.get("feedbackRole"), 80)),
+    route: normalizeFeedbackText(search.get("route"), 240) || "all"
+  };
 }
 
 export function buildBetaFeedbackExport(records: BetaFeedbackRecord[], filters: BetaFeedbackExportFilters) {

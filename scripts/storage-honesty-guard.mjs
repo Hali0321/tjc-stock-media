@@ -25,7 +25,6 @@ const files = {
   catalogLanguage: "frontend/lib/catalog-language.ts",
   searchRoute: "frontend/app/api/assets/search/route.ts",
   betaFeedbackUpdateRoute: "frontend/app/api/beta-feedback/[id]/route.ts",
-  betaFeedbackExportRoute: "frontend/app/api/beta-feedback/export/route.ts",
   savedSearchRoute: "frontend/app/api/saved-searches/route.ts",
   packageRoute: "frontend/app/api/packages/route.ts",
   packageBuilder: "frontend/components/dam/enterprise/PackageBuilderPage.tsx",
@@ -90,7 +89,6 @@ const catalogSearchRequest = read(files.catalogSearchRequest);
 const catalogLanguage = read(files.catalogLanguage);
 const searchRoute = read(files.searchRoute);
 const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
-const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const savedSearchRoute = read(files.savedSearchRoute);
 const packageRoute = read(files.packageRoute);
 const packageBuilder = read(files.packageBuilder);
@@ -523,7 +521,7 @@ if (!viewerVerdict.includes("containsOperationalText") || /ResourceSpace\|Shared
 
 for (const route of [
   { name: "beta feedback", source: feedback, required: ["normalizeFeedbackStatus", "normalizeFeedbackSeverity"] },
-  { name: "beta feedback export route", source: betaFeedbackExportRoute, required: ["normalizeFeedbackStatusFilter", "normalizeFeedbackSeverityFilter"] }
+  { name: "beta feedback export filters", source: feedback, required: ["normalizeFeedbackStatusFilter", "normalizeFeedbackSeverityFilter", "normalizeRoleFilter"] }
 ]) {
   for (const helper of route.required) {
     if (!route.source.includes(helper)) failures.push(`${route.name} must normalize API enum filters through ${helper}`);

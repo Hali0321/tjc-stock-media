@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { buildBetaFeedbackExport, listBetaFeedback, normalizeFeedbackSeverityFilter, normalizeFeedbackStatusFilter, normalizeFeedbackText } from "@/lib/beta-feedback";
-import { canAdmin, normalizeRoleFilter } from "@/lib/permissions";
+import { buildBetaFeedbackExport, listBetaFeedback, readBetaFeedbackExportFilters } from "@/lib/beta-feedback";
+import { canAdmin } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import type { BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-function normalizeStatus(value: string): BetaFeedbackStatus | "all" {
-  return normalizeFeedbackStatusFilter(value);
-}
-
-function normalizeSeverity(value: string): BetaFeedbackSeverity | "all" {
-  return normalizeFeedbackSeverityFilter(value);
-}
-
-function normalizeFeedbackRole(value: string): DemoRole | "all" {
-  return normalizeRoleFilter(value);
-}
 
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
@@ -33,13 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Beta feedback export requires DAM Admin role." }, { status: 403 });
   }
 
-  const search = request.nextUrl.searchParams;
-  const filters = {
-    status: normalizeStatus(normalizeFeedbackText(search.get("status"), 40)),
-    severity: normalizeSeverity(normalizeFeedbackText(search.get("severity"), 40)),
-    role: normalizeFeedbackRole(normalizeFeedbackText(search.get("feedbackRole"), 80)),
-    route: normalizeFeedbackText(search.get("route"), 240) || "all"
-  };
+  const filters = readBetaFeedbackExportFilters(request.nextUrl.searchParams);
   const records = await listBetaFeedback();
   const packet = buildBetaFeedbackExport(records, filters);
   appendAuditEvent({
