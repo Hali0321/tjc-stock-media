@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -31,7 +32,7 @@ function replaceMemory<TRecord>(records: TRecord[], options: LocalJsonStoreOptio
 }
 
 function tempFilePath(filePath: string) {
-  return `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  return `${filePath}.${process.pid}.${Date.now()}.${randomUUID().slice(0, 8)}.tmp`;
 }
 
 export async function readLocalJsonStore<TRecord>(options: LocalJsonStoreOptions<TRecord>) {

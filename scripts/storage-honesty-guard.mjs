@@ -323,11 +323,11 @@ if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoT
 if (!localJsonStore.includes("const windowed = normalizeWindow(records, options)") || !localJsonStore.includes("...normalizeWindow(records, options)")) {
   failures.push("local JSON store must normalize and cap records on write as well as read");
 }
-if (!localJsonStore.includes("await rename(tmpPath, filePath)") || !localJsonStore.includes("function tempFilePath") || !localJsonStore.includes("await unlink(tmpPath).catch")) {
-  failures.push("local JSON store must write via temp file, atomic rename, and temp cleanup to avoid corrupt beta JSON");
+if (!localJsonStore.includes("await rename(tmpPath, filePath)") || !localJsonStore.includes("function tempFilePath") || !localJsonStore.includes("randomUUID().slice(0, 8)") || !localJsonStore.includes("await unlink(tmpPath).catch")) {
+  failures.push("local JSON store must write via unique temp file, atomic rename, and temp cleanup to avoid corrupt beta JSON");
 }
-if (!runtimeFileStore.includes("function writeRuntimeFileAtomically") || !runtimeFileStore.includes("fs.renameSync(tmpPath, filePath)") || !runtimeFileStore.includes("fs.unlinkSync(tmpPath)") || !runtimeFileStore.includes("writeRuntimeFileAtomically(filePath")) {
-  failures.push("runtime JSON evidence files must write via temp file, atomic rename, and temp cleanup");
+if (!runtimeFileStore.includes("function writeRuntimeFileAtomically") || !runtimeFileStore.includes("randomUUID().slice(0, 8)") || !runtimeFileStore.includes("fs.renameSync(tmpPath, filePath)") || !runtimeFileStore.includes("fs.unlinkSync(tmpPath)") || !runtimeFileStore.includes("writeRuntimeFileAtomically(filePath")) {
+  failures.push("runtime JSON evidence files must write via unique temp file, atomic rename, and temp cleanup");
 }
 if (!pendingReviewWrites.includes("const safeRecord = normalizePendingReviewWrite(record) || record") || !pendingReviewWrites.includes("writeRuntimeJsonFile(path.join(pendingDir(), `${safeRecord.id}.json`), safeRecord)")) {
   failures.push("pending review writes must normalize records before writing runtime JSON evidence");

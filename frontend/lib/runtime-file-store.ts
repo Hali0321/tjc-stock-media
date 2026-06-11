@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -14,7 +15,7 @@ export function readRuntimeJsonFile<TRecord>(filePath: string, normalize: (input
 }
 
 function writeRuntimeFileAtomically(filePath: string, contents: string) {
-  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${randomUUID().slice(0, 8)}.tmp`;
   try {
     fs.writeFileSync(tmpPath, contents, "utf8");
     fs.renameSync(tmpPath, filePath);
