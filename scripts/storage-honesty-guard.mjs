@@ -47,7 +47,9 @@ const persistedRecordSources = [
 
 for (const store of persistedRecordSources) {
   if (!store.source.includes("safeIsoTimestamp")) failures.push(`${store.name} must normalize persisted timestamps through safeIsoTimestamp`);
+  if (!store.source.includes("safeCompactText")) failures.push(`${store.name} must normalize persisted text through safeCompactText`);
   if (/function\s+safeIso\s*\(/.test(store.source)) failures.push(`${store.name} must not hand-roll Date.parse timestamp guards`);
+  if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(store.source)) failures.push(`${store.name} must not hand-roll compact text normalization`);
 }
 
 const readinessRequirements = [

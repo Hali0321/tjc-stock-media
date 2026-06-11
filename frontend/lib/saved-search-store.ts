@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
@@ -31,7 +31,7 @@ function newestFirst(records: SavedSearchRecord[]) {
 }
 
 function safeText(value: unknown, maxLength: number) {
-  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+  return safeCompactText(value, maxLength);
 }
 
 function isChecksumLike(value: string) {

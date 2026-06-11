@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -32,7 +32,7 @@ function memoryFeedback() {
 }
 
 function safeText(value: unknown, maxLength: number) {
-  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+  return safeCompactText(value, maxLength);
 }
 
 function safeFeedbackText(value: unknown, maxLength: number) {

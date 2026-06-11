@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
@@ -64,7 +64,7 @@ function readJsonLine(line: string): AuditEventRecord | null {
 }
 
 function safeText(value: unknown, maxLength: number) {
-  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+  return safeCompactText(value, maxLength);
 }
 
 function safeDisplayText(value: unknown, maxLength: number) {
