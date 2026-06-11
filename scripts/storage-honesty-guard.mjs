@@ -7,6 +7,7 @@ const files = {
   feedback: "frontend/lib/beta-feedback.ts",
   savedSearches: "frontend/lib/saved-search-store.ts",
   packages: "frontend/lib/package-store.ts",
+  packageDrafts: "frontend/lib/package-drafts.ts",
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
@@ -31,6 +32,7 @@ function read(file) {
 const feedback = read(files.feedback);
 const savedSearches = read(files.savedSearches);
 const packages = read(files.packages);
+const packageDrafts = read(files.packageDrafts);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
@@ -115,6 +117,9 @@ if (!packages.includes("normalizeResourceSpaceRef")) {
 }
 if (!/collectionId:\s*raw\.collectionId\s*\?\s*normalizeResourceSpaceRef\(raw\.collectionId\)\s*\|\|\s*undefined\s*:\s*undefined/.test(packages)) {
   failures.push("package draft collectionId must normalize through normalizeResourceSpaceRef and drop unsafe refs");
+}
+if (!packageDrafts.includes("normalizeResourceSpaceRef") || /refs\.map\(\(ref\)\s*=>\s*String\(ref\)\)/.test(packageDrafts)) {
+  failures.push("package draft client helpers must normalize package refs through normalizeResourceSpaceRef");
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");

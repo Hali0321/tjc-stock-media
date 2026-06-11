@@ -1,6 +1,7 @@
 import type { EnterpriseStatus } from "@/lib/enterprise-status";
 import type { DamPackage, DamPackageSection, DemoRole, StockMediaAsset } from "@/lib/types";
 import { buildPackageGovernance } from "@/lib/package-governance";
+import { normalizeResourceSpaceRef } from "@/lib/request-validation";
 
 export type PackageAssetStatus = EnterpriseStatus;
 
@@ -31,7 +32,7 @@ export const defaultPackageSections: DamPackageSection[] = [
 ];
 
 export function packageResourceRef(asset: StockMediaAsset): string {
-  return String(asset.resourceSpaceId || asset.id);
+  return normalizeResourceSpaceRef(asset.resourceSpaceId) || normalizeResourceSpaceRef(asset.id);
 }
 
 export function createPackageDraft(title = "ResourceSpace Toolkit Draft"): DamPackage {
@@ -57,7 +58,7 @@ export function updatePackageTitle(draft: DamPackage, title: string): DamPackage
 function sectionWithRefs(section: DamPackageSection, refs: Array<string | number>): DamPackageSection {
   return {
     ...section,
-    resourceSpaceAssetIds: [...new Set(refs.map((ref) => String(ref)))]
+    resourceSpaceAssetIds: [...new Set(refs.map((ref) => normalizeResourceSpaceRef(ref)).filter(Boolean))]
   };
 }
 
@@ -89,8 +90,10 @@ export function seedPackageDraft(draft: DamPackage, assets: StockMediaAsset[], s
 function buildAssetLookup(assets: StockMediaAsset[]) {
   const lookup = new Map<string, StockMediaAsset>();
   assets.forEach((asset) => {
-    lookup.set(asset.id, asset);
-    if (asset.resourceSpaceId) lookup.set(String(asset.resourceSpaceId), asset);
+    const id = normalizeResourceSpaceRef(asset.id);
+    const resourceSpaceId = normalizeResourceSpaceRef(asset.resourceSpaceId);
+    if (id) lookup.set(id, asset);
+    if (resourceSpaceId) lookup.set(resourceSpaceId, asset);
   });
   return lookup;
 }
@@ -98,10 +101,12 @@ function buildAssetLookup(assets: StockMediaAsset[]) {
 export function resolvePackageSections(draft: DamPackage, assets: StockMediaAsset[]): ResolvedPackageSection[] {
   const lookup = buildAssetLookup(assets);
   return draft.sections.map((section) => {
-    const resolved = section.resourceSpaceAssetIds.map((id) => lookup.get(String(id))).filter((asset): asset is StockMediaAsset => Boolean(asset));
-    const missing = section.resourceSpaceAssetIds.filter((id) => !lookup.has(String(id)));
+    const refs = section.resourceSpaceAssetIds.map((id) => normalizeResourceSpaceRef(id)).filter(Boolean);
+    const resolved = refs.map((id) => lookup.get(id)).filter((asset): asset is StockMediaAsset => Boolean(asset));
+    const missing = refs.filter((id) => !lookup.has(id));
     return {
       ...section,
+      resourceSpaceAssetIds: refs,
       assets: resolved,
       missingResourceSpaceAssetIds: missing
     };
@@ -126,7 +131,7 @@ export function removePackageAssetRef(draft: DamPackage, sectionId: string, asse
     ...draft,
     sections: draft.sections.map((section) => (
       section.id === sectionId
-        ? sectionWithRefs(section, section.resourceSpaceAssetIds.filter((id) => String(id) !== ref))
+        ? sectionWithRefs(section, section.resourceSpaceAssetIds.filter((id) => normalizeResourceSpaceRef(id) !== ref))
         : section
     ))
   };
@@ -145,8 +150,9 @@ export function availableAssetsForSection({
   approvedOnly: boolean;
   statusOf: (asset: StockMediaAsset) => PackageAssetStatus;
 }) {
-  const activeRefs = new Set(draft.sections.find((section) => section.id === sectionId)?.resourceSpaceAssetIds.map((id) => String(id)) || []);
+  const activeRefs = new Set(draft.sections.find((section) => section.id === sectionId)?.resourceSpaceAssetIds.map((id) => normalizeResourceSpaceRef(id)).filter(Boolean) || []);
   return assets
+    .filter((asset) => Boolean(packageResourceRef(asset)))
     .filter((asset) => !activeRefs.has(packageResourceRef(asset)))
     .filter((asset) => !approvedOnly || statusOf(asset) === "Approved")
     .slice(0, 6);
