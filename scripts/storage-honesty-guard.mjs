@@ -48,6 +48,7 @@ const files = {
   reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
   resourceSpaceApi: "frontend/lib/media-source/resourcespace-api.ts",
   resourceSpaceFieldMap: "frontend/lib/resourcespace-field-map.ts",
+  resourceSpaceSchema: "frontend/lib/resourcespace-schema.ts",
   mediaSourceIndex: "frontend/lib/media-source/index.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts",
   portalApiSmoke: "scripts/portal-api-smoke.sh",
@@ -116,6 +117,7 @@ const downloadRoute = read(files.downloadRoute);
 const reviewActionWorkflow = read(files.reviewActionWorkflow);
 const resourceSpaceApi = read(files.resourceSpaceApi);
 const resourceSpaceFieldMap = read(files.resourceSpaceFieldMap);
+const resourceSpaceSchema = read(files.resourceSpaceSchema);
 const mediaSourceIndex = read(files.mediaSourceIndex);
 const readiness = read(files.readiness);
 const portalApiSmoke = read(files.portalApiSmoke);
@@ -339,6 +341,9 @@ if (!resourceSpaceClient.includes("function timeoutSignal") || !resourceSpaceCli
 }
 if (!resourceSpaceFieldMap.includes("function normalizeFieldMapValue") || !resourceSpaceFieldMap.includes("value.trim()") || !resourceSpaceFieldMap.includes("entry[1] !== null")) {
   failures.push("ResourceSpace field map config must drop blank/non-scalar values before merging with beta defaults");
+}
+if (!resourceSpaceSchema.includes("safeNonNegativeInt") || /fileSizeBytes\s*=\s*Number\(/.test(resourceSpaceSchema)) {
+  failures.push("ResourceSpace schema must normalize file size metadata through safeNonNegativeInt");
 }
 if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
   failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");

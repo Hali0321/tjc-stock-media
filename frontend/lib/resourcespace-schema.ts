@@ -1,3 +1,4 @@
+import { safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import type { PublishStatus, StockMediaAsset, UsageScope } from "@/lib/types";
 
 export type ResourceSpaceRecord = Record<string, string | number | null | undefined>;
@@ -190,7 +191,7 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
   const collection = value(row, "source_album", "import_batch", "event_or_topic", "event_name") || "ResourceSpace export";
   const checksumSha256 = value(row, "checksum_sha256") || undefined;
   const imageUrls = imageUrlsForResource(id, checksumSha256 || value(row, "reviewed_date") || id);
-  const fileSizeBytes = Number(value(row, "file_size", "original_file_size_bytes")) || undefined;
+  const fileSizeBytes = safeNonNegativeInt(value(row, "file_size", "original_file_size_bytes")) || undefined;
   const peopleRisk = normalizePeopleRisk(row);
 
   return {
