@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
@@ -70,11 +71,6 @@ function safeSort(value: unknown): CatalogSort {
   return sortOptions.includes(value as CatalogSort) ? value as CatalogSort : "Approved first";
 }
 
-function safeIso(value: unknown) {
-  const text = safeText(value, 40);
-  return Number.isNaN(Date.parse(text)) ? "" : text;
-}
-
 export function sanitizeSavedSearch(input: unknown) {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const filters = Array.isArray(raw.filters) ? raw.filters : [];
@@ -97,10 +93,10 @@ function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const draft = sanitizeSavedSearch(raw);
   if (!draft.id) return null;
-  const updatedAt = safeIso(raw.updatedAt) || safeIso(raw.createdAt) || new Date(0).toISOString();
+  const updatedAt = safeIsoTimestamp(raw.updatedAt) || safeIsoTimestamp(raw.createdAt) || new Date(0).toISOString();
   return {
     ...draft,
-    createdAt: safeIso(raw.createdAt) || updatedAt,
+    createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
     createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
     role: normalizeRoleWithFallback(raw.role, "Contributor"),

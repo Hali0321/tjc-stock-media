@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DamPackage, DemoRole } from "@/lib/types";
@@ -58,11 +59,6 @@ function safeResourceSpaceRef(value: unknown) {
   return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
 }
 
-function safeIso(value: unknown) {
-  const text = safeText(value, 40);
-  return Number.isNaN(Date.parse(text)) ? "" : text;
-}
-
 function safeBoolean(value: unknown) {
   return value === true;
 }
@@ -103,14 +99,14 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
   const raw = (input || {}) as Partial<StoredPackageDraft>;
   const draft = sanitizePackageDraft(raw);
   if (!draft.id) return null;
-  const updatedAt = safeIso(raw.updatedAt) || safeIso(raw.createdAt) || new Date(0).toISOString();
+  const updatedAt = safeIsoTimestamp(raw.updatedAt) || safeIsoTimestamp(raw.createdAt) || new Date(0).toISOString();
   const governance = (raw.governance || {}) as Partial<StoredPackageDraft["governance"]>;
   return {
     id: draft.id,
     title: draft.title,
     status: draft.status,
     sections: draft.sections,
-    createdAt: safeIso(raw.createdAt) || updatedAt,
+    createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
     createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
     role: normalizeRoleWithFallback(raw.role, "Contributor"),

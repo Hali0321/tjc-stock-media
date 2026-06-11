@@ -7,6 +7,8 @@ const files = {
   feedback: "frontend/lib/beta-feedback.ts",
   savedSearches: "frontend/lib/saved-search-store.ts",
   packages: "frontend/lib/package-store.ts",
+  pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
+  auditLog: "frontend/lib/audit-log.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -17,6 +19,8 @@ function read(file) {
 const feedback = read(files.feedback);
 const savedSearches = read(files.savedSearches);
 const packages = read(files.packages);
+const pendingReviewWrites = read(files.pendingReviewWrites);
+const auditLog = read(files.auditLog);
 const readiness = read(files.readiness);
 const failures = [];
 
@@ -31,6 +35,19 @@ for (const store of stores) {
   if (!store.source.includes(store.cap)) failures.push(`${store.name} store must keep explicit record cap: ${store.cap}`);
   if (!store.source.includes(store.diagnostic)) failures.push(`${store.name} diagnostics must report durable storage honestly`);
   if (!store.source.includes("storageMode")) failures.push(`${store.name} records must expose storageMode`);
+}
+
+const persistedRecordSources = [
+  { name: "feedback", source: feedback },
+  { name: "saved searches", source: savedSearches },
+  { name: "package drafts", source: packages },
+  { name: "pending review writes", source: pendingReviewWrites },
+  { name: "audit log", source: auditLog }
+];
+
+for (const store of persistedRecordSources) {
+  if (!store.source.includes("safeIsoTimestamp")) failures.push(`${store.name} must normalize persisted timestamps through safeIsoTimestamp`);
+  if (/function\s+safeIso\s*\(/.test(store.source)) failures.push(`${store.name} must not hand-roll Date.parse timestamp guards`);
 }
 
 const readinessRequirements = [

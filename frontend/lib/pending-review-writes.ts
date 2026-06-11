@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
@@ -29,11 +30,6 @@ function safeDisplayText(value: unknown, maxLength: number) {
   if (containsUnsafePathText(text)) return "";
   if (containsPrivateSourceText(text)) return "";
   return text;
-}
-
-function safeIso(value: unknown) {
-  const text = safeText(value, 40);
-  return Number.isNaN(Date.parse(text)) ? "" : text;
 }
 
 function safeRole(value: unknown): ReviewWriteRecord["reviewerRole"] {
@@ -72,7 +68,7 @@ function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
   const id = safeFilePart(safeText(raw.id, 120));
   const resourceId = safeFilePart(safeText(raw.resourceId, 120));
   if (!id || !resourceId) return null;
-  const updatedAt = safeIso(raw.updatedAt) || safeIso(raw.createdAt) || new Date(0).toISOString();
+  const updatedAt = safeIsoTimestamp(raw.updatedAt) || safeIsoTimestamp(raw.createdAt) || new Date(0).toISOString();
   return {
     id,
     resourceId,
@@ -80,7 +76,7 @@ function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
     requestedStatus: safeDisplayText(raw.requestedStatus, 120) || "Needs Review",
     reviewerRole: safeRole(raw.reviewerRole),
     reviewerName: raw.reviewerName === undefined ? undefined : safeDisplayText(raw.reviewerName, 120),
-    createdAt: safeIso(raw.createdAt) || updatedAt,
+    createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
     note: safeDisplayText(raw.note, 1200),
     checklist: safeChecklist(raw.checklist),

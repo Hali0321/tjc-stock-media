@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
@@ -77,11 +78,6 @@ function safeId(value: unknown) {
   return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
-function safeIso(value: unknown) {
-  const text = safeText(value, 40);
-  return Number.isNaN(Date.parse(text)) ? "" : text;
-}
-
 function safeStatus(value: unknown): AuditEventRecord["status"] {
   return value === "allowed" || value === "denied" || value === "blocked" || value === "queued" || value === "preview"
     ? value
@@ -140,7 +136,7 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
   const raw = (input || {}) as Partial<AuditEventRecord>;
   const id = safeId(raw.id);
   if (!id) return null;
-  const createdAt = safeIso(raw.createdAt) || new Date(0).toISOString();
+  const createdAt = safeIsoTimestamp(raw.createdAt) || new Date(0).toISOString();
   return {
     id,
     type: safeType(raw.type),

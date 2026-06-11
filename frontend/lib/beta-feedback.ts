@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
+import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -47,11 +48,6 @@ function safeId(value: unknown) {
   return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
-function safeIso(value: unknown) {
-  const text = safeText(value, 40);
-  return Number.isNaN(Date.parse(text)) ? "" : text;
-}
-
 function safeSeverity(value: unknown): BetaFeedbackSeverity {
   return betaFeedbackSeverities.includes(value as BetaFeedbackSeverity) ? value as BetaFeedbackSeverity : "medium";
 }
@@ -92,11 +88,11 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
   const raw = (input || {}) as Partial<BetaFeedbackRecord>;
   const id = safeId(raw.id);
   if (!id) return null;
-  const createdAt = safeIso(raw.createdAt) || safeIso(raw.updatedAt) || new Date(0).toISOString();
+  const createdAt = safeIsoTimestamp(raw.createdAt) || safeIsoTimestamp(raw.updatedAt) || new Date(0).toISOString();
   return {
     id,
     createdAt,
-    updatedAt: safeIso(raw.updatedAt) || createdAt,
+    updatedAt: safeIsoTimestamp(raw.updatedAt) || createdAt,
     role: normalizeRoleWithFallback(raw.role),
     route: safeRoute(raw.route),
     task: safeFeedbackText(raw.task, 220) || "Free play",
