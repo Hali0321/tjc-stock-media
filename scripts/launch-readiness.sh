@@ -74,6 +74,7 @@ require_file "scripts/live-dam-surface-guard.mjs"
 require_file "scripts/api-identity-guard.mjs"
 require_file "scripts/api-audit-guard.mjs"
 require_file "scripts/api-payload-guard.mjs"
+require_file "scripts/private-source-guard.mjs"
 require_file "scripts/public-env-guard.mjs"
 require_file "scripts/git-hygiene-guard.mjs"
 require_file "scripts/storage-honesty-guard.mjs"
@@ -106,6 +107,13 @@ if node scripts/api-payload-guard.mjs >/tmp/tjc-api-payload-guard.txt 2>&1; then
 else
   fail "API payload guard failed"
   cat /tmp/tjc-api-payload-guard.txt
+fi
+
+if node scripts/private-source-guard.mjs >/tmp/tjc-private-source-guard.txt 2>&1; then
+  pass "frontend private-source and URL safety checks stay centralized"
+else
+  fail "private source guard failed"
+  cat /tmp/tjc-private-source-guard.txt
 fi
 
 if node scripts/public-env-guard.mjs >/tmp/tjc-public-env-guard.txt 2>&1; then
