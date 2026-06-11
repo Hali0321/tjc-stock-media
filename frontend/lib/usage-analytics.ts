@@ -4,7 +4,8 @@ import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
 import { safeCompactText, safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText } from "@/lib/private-source-text";
+import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
+import { normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
 
 export type UsageEventType =
@@ -78,9 +79,7 @@ function safeDisplayText(value: unknown, maxLength: number) {
 }
 
 function safeRoute(value: unknown) {
-  const text = safeText(value, 240);
-  if (!text.startsWith("/") || containsUnsafeRouteText(text) || containsPrivateSourceText(text)) return "";
-  return text;
+  return normalizeSafeRoutePath(value);
 }
 
 function safeType(value: unknown): UsageEventType {

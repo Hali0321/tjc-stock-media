@@ -4,7 +4,8 @@ import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
+import { containsPrivateSourceText, containsUnsafePathText, isSafeHttpUrl } from "@/lib/private-source-text";
+import { normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -71,10 +72,7 @@ function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
 }
 
 function safeRoute(value: unknown) {
-  const route = safeText(value, 240);
-  if (!route.startsWith("/") || containsUnsafeRouteText(route)) return "/";
-  if (containsPrivateSourceText(route)) return "/";
-  return route;
+  return normalizeSafeRoutePath(value, "/");
 }
 
 function safeUrl(value: unknown) {

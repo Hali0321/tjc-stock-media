@@ -1,4 +1,4 @@
-import { containsPrivateSourceText, containsUnsafePathText, isSafeHttpUrl } from "@/lib/private-source-text";
+import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import { safeEnumValue, safePathSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
@@ -23,6 +23,12 @@ export function normalizeResourceSpaceRef(value: unknown) {
   const ref = String(value).trim();
   if (containsPrivateSourceText(ref) || containsUnsafePathText(ref)) return "";
   return resourceSpaceRefPattern.test(ref) ? ref : "";
+}
+
+export function normalizeSafeRoutePath(value: unknown, fallback = "") {
+  const route = typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, 240) : "";
+  if (!route.startsWith("/") || containsUnsafeRouteText(route) || containsPrivateSourceText(route)) return fallback;
+  return route;
 }
 
 export function normalizeCollectionDraftAudience(value: unknown): CollectionDraftAudience {
