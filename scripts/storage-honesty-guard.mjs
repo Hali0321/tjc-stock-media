@@ -21,6 +21,7 @@ const files = {
   reviewEvidence: "frontend/lib/review-evidence.ts",
   requestValidation: "frontend/lib/request-validation.ts",
   catalog: "frontend/lib/catalog.ts",
+  catalogSearchRequest: "frontend/lib/catalog-search-request.ts",
   catalogLanguage: "frontend/lib/catalog-language.ts",
   searchRoute: "frontend/app/api/assets/search/route.ts",
   betaFeedbackUpdateRoute: "frontend/app/api/beta-feedback/[id]/route.ts",
@@ -85,6 +86,7 @@ const nextConfig = read(files.nextConfig);
 const reviewEvidence = read(files.reviewEvidence);
 const requestValidation = read(files.requestValidation);
 const catalog = read(files.catalog);
+const catalogSearchRequest = read(files.catalogSearchRequest);
 const catalogLanguage = read(files.catalogLanguage);
 const searchRoute = read(files.searchRoute);
 const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
@@ -367,7 +369,7 @@ if (/\.replace\(\/\[\^a-z0-9\._-\]\+\/gi,\s*"-"\)/.test(feedback)) {
 if (!catalogLanguage.includes("function normalizeCatalogSort")) failures.push("catalog language must expose normalizeCatalogSort");
 for (const surface of [
   { name: "catalog search", source: catalog },
-  { name: "asset search route", source: searchRoute },
+  { name: "catalog search request", source: catalogSearchRequest },
   { name: "saved searches", source: savedSearches }
 ]) {
   if (!surface.source.includes("normalizeCatalogSort")) failures.push(`${surface.name} must normalize catalog sort through normalizeCatalogSort`);
@@ -393,7 +395,7 @@ if (!portalPackageSmoke.includes("package save response leaked creator identity"
 }
 for (const surface of [
   { name: "catalog search", source: catalog },
-  { name: "asset search route", source: searchRoute }
+  { name: "catalog search request", source: catalogSearchRequest }
 ]) {
   if (!surface.source.includes("safeBoundedInt")) failures.push(`${surface.name} must normalize pagination bounds through safeBoundedInt`);
   if (/Number\.isFinite\([^)]*(limit|offset|parsed)/.test(surface.source)) failures.push(`${surface.name} must not hand-roll pagination number bounds`);

@@ -123,11 +123,15 @@ for (const route of [
 
 const searchRoute = "frontend/app/api/assets/search/route.ts";
 const searchRouteSource = fs.readFileSync(path.join(root, searchRoute), "utf8");
-if (!searchRouteSource.includes('const query = normalizePublicTextField(params.get("q"), "", 200)')) {
-  failures.push(`${searchRoute} must normalize public search query through normalizePublicTextField`);
+const catalogSearchRequestSource = fs.readFileSync(path.join(root, "frontend/lib/catalog-search-request.ts"), "utf8");
+if (!searchRouteSource.includes("readCatalogSearchRequest(params)") || !searchRouteSource.includes("searchAssets({ role, ...input })")) {
+  failures.push(`${searchRoute} must delegate search parameter parsing and validation to catalog-search-request`);
 }
-if (!searchRouteSource.includes('normalizePublicTextField(value, "", 80)')) {
-  failures.push(`${searchRoute} must normalize public search filters through normalizePublicTextField`);
+if (!catalogSearchRequestSource.includes('normalizePublicTextField(params.get("q"), "", 200)') || !catalogSearchRequestSource.includes('normalizePublicTextField(value, "", 80)') || !catalogSearchRequestSource.includes("normalizeCatalogSort(sort)") || !catalogSearchRequestSource.includes("safeBoundedInt(value")) {
+  failures.push("catalog-search-request must own public query/filter, sort, limit, and offset normalization");
+}
+if (/normalizePublicTextField|normalizeTextField|normalizeCatalogSort|safeBoundedInt|function\s+normalize(Limit|Offset)|isKnown(SavedView|Collection)Id/.test(searchRouteSource)) {
+  failures.push(`${searchRoute} must not hand-roll search parameter normalization or validation`);
 }
 
 const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/request-validation.ts"), "utf8");

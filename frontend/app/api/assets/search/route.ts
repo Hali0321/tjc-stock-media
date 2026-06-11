@@ -1,22 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isKnownCollectionId, isKnownSavedViewId, searchAssets } from "@/lib/catalog";
-import { normalizeCatalogSort } from "@/lib/catalog-language";
+import { searchAssets } from "@/lib/catalog";
+import { readCatalogSearchRequest } from "@/lib/catalog-search-request";
 import { createDamRouteSession } from "@/lib/dam-route-session";
-import { safeBoundedInt } from "@/lib/persisted-record-safety";
 import { canReview } from "@/lib/permissions";
-import { normalizePublicTextField, normalizeTextField } from "@/lib/request-validation";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { SearchResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-function normalizeLimit(value: string | null) {
-  return safeBoundedInt(value, { min: 1, max: 120, fallback: 72 });
-}
-
-function normalizeOffset(value: string | null) {
-  return safeBoundedInt(value, { min: 0, max: Number.MAX_SAFE_INTEGER, fallback: 0 });
-}
 
 function searchResultForRole(session: ReturnType<typeof createDamRouteSession>, result: SearchResult) {
   const role = session.role;
@@ -51,28 +41,12 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const session = createDamRouteSession(request, params.get("role"));
   const role = session.role;
-  const query = normalizePublicTextField(params.get("q"), "", 200);
-  const filters = params
-    .getAll("filter")
-    .flatMap((value) => value.split("|"))
-    .map((value) => normalizePublicTextField(value, "", 80))
-    .filter(Boolean)
-    .slice(0, 40);
-  const view = normalizeTextField(params.get("view"), "", 80) || undefined;
-  const collection = normalizeTextField(params.get("collection"), "", 80) || undefined;
-  const sort = normalizeTextField(params.get("sort"), "", 40) || undefined;
-  const limit = normalizeLimit(params.get("limit"));
-  const offset = normalizeOffset(params.get("offset"));
-  if (view && !isKnownSavedViewId(view)) {
-    return NextResponse.json({ error: "Unknown saved view." }, { status: 400 });
+  const searchRequest = readCatalogSearchRequest(params);
+  if (searchRequest.error) {
+    return NextResponse.json({ error: searchRequest.error.message }, { status: searchRequest.error.status });
   }
-  if (collection && !isKnownCollectionId(collection)) {
-    return NextResponse.json({ error: "Unknown collection." }, { status: 400 });
-  }
-  if (sort && normalizeCatalogSort(sort) !== sort) {
-    return NextResponse.json({ error: "Unknown sort option." }, { status: 400 });
-  }
-  const result = await searchAssets({ role, query, filters, view, collection, sort, limit, offset });
+  const input = searchRequest.input;
+  const result = await searchAssets({ role, ...input });
   const usageAnalytics = usageAnalyticsDiagnostics();
   if (canReview(role)) {
     result.usageAnalytics = {
@@ -86,7 +60,7 @@ export async function GET(request: NextRequest) {
   session.recordUsage({
     type: "search",
     route: "/api/assets/search",
-    query: query || view || collection || "default",
+    query: input.query || input.view || input.collection || "default",
     metadata: { rendered: result.pagination.rangeEnd - result.pagination.rangeStart + (result.pagination.rangeStart ? 1 : 0), total: result.total }
   });
   return NextResponse.json(searchResultForRole(session, result));
