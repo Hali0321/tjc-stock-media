@@ -4,7 +4,7 @@ import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { safeBoundedInt } from "@/lib/persisted-record-safety";
 import { canReview } from "@/lib/permissions";
-import { normalizeTextField } from "@/lib/request-validation";
+import { normalizePublicTextField, normalizeTextField } from "@/lib/request-validation";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { SearchResult } from "@/lib/types";
 
@@ -50,11 +50,11 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const session = createDamRouteSession(request, params.get("role"));
   const role = session.role;
-  const query = normalizeTextField(params.get("q"), "", 200);
+  const query = normalizePublicTextField(params.get("q"), "", 200);
   const filters = params
     .getAll("filter")
     .flatMap((value) => value.split("|"))
-    .map((value) => normalizeTextField(value, "", 80))
+    .map((value) => normalizePublicTextField(value, "", 80))
     .filter(Boolean)
     .slice(0, 40);
   const view = normalizeTextField(params.get("view"), "", 80) || undefined;

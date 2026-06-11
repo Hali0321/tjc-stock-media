@@ -72,6 +72,15 @@ if (/function\s+slugify\s*\(/.test(collectionsSource) || /allowedAudiences\s*=\s
   failures.push(`${collectionsRoute} must not hand-roll collection audience or share slug normalization`);
 }
 
+const searchRoute = "frontend/app/api/assets/search/route.ts";
+const searchRouteSource = fs.readFileSync(path.join(root, searchRoute), "utf8");
+if (!searchRouteSource.includes('const query = normalizePublicTextField(params.get("q"), "", 200)')) {
+  failures.push(`${searchRoute} must normalize public search query through normalizePublicTextField`);
+}
+if (!searchRouteSource.includes('normalizePublicTextField(value, "", 80)')) {
+  failures.push(`${searchRoute} must normalize public search filters through normalizePublicTextField`);
+}
+
 const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/request-validation.ts"), "utf8");
 if (!requestValidationSource.includes("function readJsonObject")) {
   failures.push("request validation must expose readJsonObject for API JSON body fallback");

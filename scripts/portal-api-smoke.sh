@@ -205,6 +205,15 @@ if (Object.prototype.hasOwnProperty.call(data, "sort") || text.includes("../") |
 }
 ' "$BASE_URL/api/assets/search?role=Viewer&sort=../private-source-path"
 
+expect_json_status 200 unsafe-search-query-filter-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.appliedIntent?.rawQuery || text.includes("../private") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
+  console.error(`FAIL: unsafe search query/filter leaked into response: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&q=source%20path%20master%20drive&filter=checksum%7CBible&limit=1"
+
 expect_code 400 bad-review-action \
   -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","id":"644","action":"Made Up"}' \
