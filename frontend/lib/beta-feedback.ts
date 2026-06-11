@@ -4,7 +4,7 @@ import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from 
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { isSafeHttpUrl } from "@/lib/private-source-text";
-import { normalizeFeedbackId, normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
+import { normalizeFeedbackId, normalizePersistedDisplayText, normalizeSafeRoutePath, readFormData, readJsonObject } from "@/lib/request-validation";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -25,6 +25,36 @@ export type BetaFeedbackExportFilters = {
   severity?: BetaFeedbackSeverity | "all";
   role?: DemoRole | "all";
   route?: string;
+};
+export type BetaFeedbackInput = {
+  role?: unknown;
+  route?: unknown;
+  task?: unknown;
+  severity?: unknown;
+  expected?: unknown;
+  actual?: unknown;
+  reporterName?: unknown;
+  browser?: unknown;
+  device?: unknown;
+  viewport?: unknown;
+  screenshotLink?: unknown;
+};
+export type BetaFeedbackRequestInput = {
+  fields: BetaFeedbackInput;
+  file: File | null;
+};
+export type NormalizedBetaFeedbackSubmission = {
+  rawRole: string;
+  route: string;
+  task: string;
+  severity: string;
+  expected: string;
+  actual: string;
+  reporterName?: string;
+  browser?: string;
+  device?: string;
+  viewport?: string;
+  screenshotUrl?: string;
 };
 
 function memoryFeedback() {
@@ -167,6 +197,35 @@ export async function putBetaFeedbackAttachment(id: string, file: File | null) {
     addRandomSuffix: true
   });
   return blob.url;
+}
+
+export async function readBetaFeedbackRequestInput(request: { headers: Headers; json(): Promise<unknown>; formData(): Promise<FormData> }): Promise<BetaFeedbackRequestInput> {
+  const contentType = request.headers.get("content-type") || "";
+  if (!contentType.includes("multipart/form-data")) {
+    return { fields: await readJsonObject<BetaFeedbackInput>(request), file: null };
+  }
+  const form = await readFormData(request);
+  const fileValue = form.get("attachment");
+  return {
+    fields: Object.fromEntries(form.entries()) as BetaFeedbackInput,
+    file: fileValue instanceof File && fileValue.size > 0 ? fileValue : null
+  };
+}
+
+export function normalizeBetaFeedbackSubmission(fields: BetaFeedbackInput, userAgent?: string | null): NormalizedBetaFeedbackSubmission {
+  return {
+    rawRole: normalizeFeedbackText(fields.role, 80),
+    route: normalizeFeedbackRoute(fields.route),
+    task: normalizeFeedbackText(fields.task, 220) || "Free play",
+    severity: normalizeFeedbackText(fields.severity, 20),
+    expected: normalizeFeedbackText(fields.expected, 1200),
+    actual: normalizeFeedbackText(fields.actual, 1200),
+    reporterName: normalizeFeedbackText(fields.reporterName, 120) || undefined,
+    browser: normalizeFeedbackText(fields.browser, 280) || userAgent || undefined,
+    device: normalizeFeedbackText(fields.device, 180) || undefined,
+    viewport: normalizeFeedbackText(fields.viewport, 60) || undefined,
+    screenshotUrl: normalizeFeedbackUrl(fields.screenshotLink) || undefined
+  };
 }
 
 export function betaFeedbackDiagnostics() {

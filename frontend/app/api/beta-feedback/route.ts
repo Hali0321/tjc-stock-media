@@ -1,40 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackEnabled } from "@/lib/env";
-import { createBetaFeedback, listBetaFeedback, normalizeFeedbackRoute, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
+import { createBetaFeedback, listBetaFeedback, normalizeBetaFeedbackSubmission, putBetaFeedbackAttachment, readBetaFeedbackRequestInput, validateFeedbackPayload } from "@/lib/beta-feedback";
 import { canAdmin, isKnownRole } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { readFormData, readJsonObject } from "@/lib/request-validation";
 import type { BetaFeedbackSeverity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-type FeedbackInput = {
-  role?: unknown;
-  route?: unknown;
-  task?: unknown;
-  severity?: unknown;
-  expected?: unknown;
-  actual?: unknown;
-  reporterName?: unknown;
-  browser?: unknown;
-  device?: unknown;
-  viewport?: unknown;
-  screenshotLink?: unknown;
-};
-
-async function readFeedbackInput(request: NextRequest) {
-  const contentType = request.headers.get("content-type") || "";
-  if (!contentType.includes("multipart/form-data")) {
-    return { fields: await readJsonObject<FeedbackInput>(request), file: null as File | null };
-  }
-  const form = await readFormData(request);
-  const fileValue = form.get("attachment");
-  return {
-    fields: Object.fromEntries(form.entries()) as FeedbackInput,
-    file: fileValue instanceof File && fileValue.size > 0 ? fileValue : null
-  };
-}
 
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
@@ -57,18 +29,14 @@ export async function POST(request: NextRequest) {
   if (!betaFeedbackEnabled()) {
     return NextResponse.json({ error: "Beta feedback capture is disabled." }, { status: 503 });
   }
-  const { fields, file } = await readFeedbackInput(request);
-  const rawRole = normalizeFeedbackText(fields.role, 80);
-  if (!isKnownRole(rawRole)) {
+  const { fields, file } = await readBetaFeedbackRequestInput(request);
+  const submission = normalizeBetaFeedbackSubmission(fields, request.headers.get("user-agent"));
+  if (!isKnownRole(submission.rawRole)) {
     return NextResponse.json({ error: "Feedback role is invalid.", missing: ["role"] }, { status: 400 });
   }
-  const identity = requestIdentity(request, rawRole);
+  const identity = requestIdentity(request, submission.rawRole);
   const role = identity.role;
-  const route = normalizeFeedbackRoute(fields.route);
-  const severity = normalizeFeedbackText(fields.severity, 20);
-  const expected = normalizeFeedbackText(fields.expected, 1200);
-  const actual = normalizeFeedbackText(fields.actual, 1200);
-  const missing = validateFeedbackPayload({ role, route, severity, expected, actual });
+  const missing = validateFeedbackPayload({ role, route: submission.route, severity: submission.severity, expected: submission.expected, actual: submission.actual });
   if (missing.length) {
     return NextResponse.json({ error: "Feedback is missing required fields.", missing }, { status: 400 });
   }
@@ -78,16 +46,16 @@ export async function POST(request: NextRequest) {
   const record = await createBetaFeedback({
     id,
     role,
-    route,
-    task: normalizeFeedbackText(fields.task, 220) || "Free play",
-    severity: severity as BetaFeedbackSeverity,
-    expected,
-    actual,
-    reporterName: normalizeFeedbackText(fields.reporterName, 120) || undefined,
-    browser: normalizeFeedbackText(fields.browser, 280) || request.headers.get("user-agent") || undefined,
-    device: normalizeFeedbackText(fields.device, 180) || undefined,
-    viewport: normalizeFeedbackText(fields.viewport, 60) || undefined,
-    attachmentUrl: attachmentUrl || normalizeFeedbackUrl(fields.screenshotLink) || undefined,
+    route: submission.route,
+    task: submission.task,
+    severity: submission.severity as BetaFeedbackSeverity,
+    expected: submission.expected,
+    actual: submission.actual,
+    reporterName: submission.reporterName,
+    browser: submission.browser,
+    device: submission.device,
+    viewport: submission.viewport,
+    attachmentUrl: attachmentUrl || submission.screenshotUrl,
     actor: identity.id
   });
 
@@ -96,7 +64,7 @@ export async function POST(request: NextRequest) {
     role,
     actor: identity.id,
     status: "preview",
-    summary: `Beta feedback submitted for ${route}.`,
+    summary: `Beta feedback submitted for ${submission.route}.`,
     details: { feedbackId: record.id, task: record.task, severity: record.severity, storageMode: record.storageMode }
   });
 

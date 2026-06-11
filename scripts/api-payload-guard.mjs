@@ -161,6 +161,18 @@ const betaFeedbackItemRouteSource = fs.readFileSync(path.join(root, betaFeedback
 if (!betaFeedbackItemRouteSource.includes("normalizeFeedbackId((await params).id)")) {
   failures.push(`${betaFeedbackItemRoute} must normalize path params through normalizeFeedbackId`);
 }
+const betaFeedbackRoute = "frontend/app/api/beta-feedback/route.ts";
+const betaFeedbackRouteSource = fs.readFileSync(path.join(root, betaFeedbackRoute), "utf8");
+const betaFeedbackSource = fs.readFileSync(path.join(root, "frontend/lib/beta-feedback.ts"), "utf8");
+if (!betaFeedbackRouteSource.includes("readBetaFeedbackRequestInput(request)") || !betaFeedbackRouteSource.includes("normalizeBetaFeedbackSubmission(")) {
+  failures.push(`${betaFeedbackRoute} must delegate submission parsing and field normalization to beta-feedback module`);
+}
+if (!betaFeedbackSource.includes("function normalizeBetaFeedbackSubmission") || !betaFeedbackSource.includes("normalizeFeedbackUrl(fields.screenshotLink)") || !betaFeedbackSource.includes("readBetaFeedbackRequestInput")) {
+  failures.push("beta-feedback module must own feedback submission normalization, screenshot URL sanitization, and multipart parsing");
+}
+if (/normalizeFeedback(Route|Text|Url)\(/.test(betaFeedbackRouteSource) || /readFormData|readJsonObject/.test(betaFeedbackRouteSource)) {
+  failures.push(`${betaFeedbackRoute} must not hand-roll feedback submission parsing or field normalization`);
+}
 
 for (const route of [
   "frontend/app/api/assets/[id]/route.ts",
