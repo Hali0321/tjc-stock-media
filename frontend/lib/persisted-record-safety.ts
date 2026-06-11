@@ -6,6 +6,10 @@ export function safeSlugText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
+export function safeFileNameText(value: unknown, maxLength: number) {
+  return safeCompactText(value, maxLength).replace(/[^a-z0-9._-]+/gi, "-").replace(/^[.-]+|[.-]+$/g, "");
+}
+
 export function safeIsoTimestamp(value: unknown) {
   const text = safeCompactText(value, 40);
   if (!/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(text)) return "";

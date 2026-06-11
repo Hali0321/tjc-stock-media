@@ -88,6 +88,12 @@ if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(pa
 if (/betaFeedback(?:Statuses|Severities)\.includes/.test(feedback)) {
   failures.push("feedback store must not hand-roll status/severity normalization");
 }
+if (!feedback.includes("safeFileNameText")) {
+  failures.push("feedback attachments must derive blob filenames through safeFileNameText");
+}
+if (/\.replace\(\/\[\^a-z0-9\._-\]\+\/gi,\s*"-"\)/.test(feedback)) {
+  failures.push("feedback attachments must not hand-roll attachment filename normalization");
+}
 
 if (!catalogLanguage.includes("function normalizeCatalogSort")) failures.push("catalog language must expose normalizeCatalogSort");
 for (const surface of [

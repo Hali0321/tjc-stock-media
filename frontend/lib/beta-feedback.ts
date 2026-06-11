@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
@@ -178,7 +178,7 @@ async function writeKvFeedback(record: BetaFeedbackRecord) {
 export async function putBetaFeedbackAttachment(id: string, file: File | null) {
   if (!file || !file.size || !hasVercelBlobConfig()) return "";
   const { put } = await import("@vercel/blob");
-  const safeName = file.name.replace(/[^a-z0-9._-]+/gi, "-").slice(0, 120) || "attachment";
+  const safeName = safeFileNameText(file.name, 120) || "attachment";
   const blob = await put(`beta-feedback/${id}/${safeName}`, file, {
     access: "public",
     addRandomSuffix: true
