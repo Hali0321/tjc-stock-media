@@ -1,6 +1,6 @@
 import { assetDisplayTitle } from "@/lib/presentation";
 import { canReview } from "@/lib/permissions";
-import { containsPrivateSourceText } from "@/lib/private-source-text";
+import { containsOperationalText } from "@/lib/public-text-safety";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
 export {
@@ -15,7 +15,7 @@ export type {
 
 export type RequestMailtoKind = "original" | "review" | "coworker";
 
-const unsafeRequestTextPattern = /ResourceSpace|Shared Drive|source[- ]path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|\.\.\/private|javascript:/i;
+const unsafeRequestTextPattern = /\.\.\/private|javascript:/i;
 
 function canExposeOpsReference(role: DemoRole) {
   return canReview(role);
@@ -23,14 +23,14 @@ function canExposeOpsReference(role: DemoRole) {
 
 function safeRequestTitle(asset: StockMediaAsset) {
   const title = assetDisplayTitle(asset).replace(/\s+/g, " ").trim();
-  if (!title || unsafeRequestTextPattern.test(title) || containsPrivateSourceText(title)) return "Media asset";
+  if (!title || unsafeRequestTextPattern.test(title) || containsOperationalText(title)) return "Media asset";
   return title.slice(0, 120);
 }
 
 function safeRequestReference(asset: StockMediaAsset, role: DemoRole) {
   const raw = String(canExposeOpsReference(role) ? asset.resourceSpaceId || asset.id : asset.id);
   const cleaned = raw.replace(/[^\w:-]/g, "").slice(0, 80);
-  if (!cleaned || unsafeRequestTextPattern.test(cleaned) || containsPrivateSourceText(cleaned)) return String(asset.id).replace(/[^\w:-]/g, "").slice(0, 80) || "media-record";
+  if (!cleaned || unsafeRequestTextPattern.test(cleaned) || containsOperationalText(cleaned)) return String(asset.id).replace(/[^\w:-]/g, "").slice(0, 80) || "media-record";
   return cleaned;
 }
 

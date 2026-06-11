@@ -42,6 +42,9 @@ const searchRoute = read(files.searchRoute);
 const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
 const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const readiness = read(files.readiness);
+const publicTextSafety = read("frontend/lib/public-text-safety.ts");
+const sourceRedaction = read("frontend/lib/source-redaction.ts");
+const viewerVerdict = read("frontend/lib/viewer-verdict.ts");
 const makefile = read("Makefile");
 const frontendCheck = read("scripts/frontend-check.sh");
 const failures = [];
@@ -207,6 +210,16 @@ if (!env.includes("function findRepoRoot") || !env.includes("looksLikeRepoRoot")
 }
 if (!nextConfig.includes("fileURLToPath(import.meta.url)") || !nextConfig.includes("outputFileTracingRoot: repoRoot") || /outputFileTracingRoot:\s*path\.resolve\(process\.cwd\(\)/.test(nextConfig)) {
   failures.push("Next config must derive outputFileTracingRoot from its file location, not process.cwd()");
+}
+
+if (!publicTextSafety.includes("function containsOperationalText") || !publicTextSafety.includes("function containsScaffoldText") || !publicTextSafety.includes("function safePublicList")) {
+  failures.push("public text safety must expose shared operational/scaffold redaction helpers");
+}
+if (!sourceRedaction.includes("@/lib/public-text-safety") || /const operationalTextPattern|function hasOperationalText|function hasScaffoldText|function safePublicList/.test(sourceRedaction)) {
+  failures.push("source redaction must use shared public text safety helpers");
+}
+if (!viewerVerdict.includes("containsOperationalText") || /ResourceSpace\|Shared Drive|source\[- \]path|master drive\|master/.test(viewerVerdict)) {
+  failures.push("request mailto safety must reuse shared operational text detection");
 }
 
 for (const route of [
