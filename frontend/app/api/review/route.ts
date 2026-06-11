@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { assetResourceRef } from "@/lib/asset-refs";
+import { assetResourceRef, resourceSpaceRecordRef } from "@/lib/asset-refs";
 import { getReviewQueue } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
@@ -47,8 +47,9 @@ export async function GET(request: NextRequest) {
     ),
     resourceSpaceUrls: Object.fromEntries(
       queue.assets
-        .filter((asset) => asset.resourceSpaceId && canOpenResourceSpace(role))
-        .map((asset) => [asset.id, resourceSpaceAssetUrl(assetResourceRef(asset))])
+        .map((asset) => [asset.id, resourceSpaceRecordRef(asset)] as const)
+        .filter((entry): entry is readonly [string, string] => Boolean(entry[1]) && canOpenResourceSpace(role))
+        .map(([assetId, resourceSpaceRef]) => [assetId, resourceSpaceAssetUrl(resourceSpaceRef)])
     ),
     canReview: canReview(role)
   });

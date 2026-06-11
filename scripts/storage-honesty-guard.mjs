@@ -167,6 +167,9 @@ if (!packageBuilder.includes("packageAssetRef") || /asset\.resourceSpaceId\s*\|\
 if (!assetRefs.includes("function assetResourceRef") || !assetRefs.includes("normalizeResourceSpaceRef") || !assetRefs.includes("normalizeAssetId")) {
   failures.push("asset ref module must expose assetResourceRef through normalized ResourceSpace/id fallback");
 }
+if (!assetRefs.includes("function resourceSpaceRecordRef") || !assetRefs.includes("normalizeResourceSpaceRef(asset?.resourceSpaceId)")) {
+  failures.push("asset ref module must expose resourceSpaceRecordRef without portal-id fallback");
+}
 if (!enterpriseDisplay.includes("function assetRecordRef") || !enterpriseDisplay.includes("assetResourceRef")) {
   failures.push("enterprise display must expose normalized assetRecordRef through assetResourceRef");
 }
@@ -195,6 +198,14 @@ for (const surface of [
 ]) {
   if (!surface.source.includes("assetResourceRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(surface.source)) {
     failures.push(`${surface.name} operational refs must normalize through assetResourceRef`);
+  }
+}
+for (const surface of [
+  { name: "asset route", source: assetRoute },
+  { name: "review route", source: reviewRoute }
+]) {
+  if (!surface.source.includes("resourceSpaceRecordRef") || /resourceSpaceAssetUrl\(asset(Resource|\.resourceSpaceId)/.test(surface.source)) {
+    failures.push(`${surface.name} ResourceSpace URLs must use strict resourceSpaceRecordRef`);
   }
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {

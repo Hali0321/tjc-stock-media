@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assetResourceRef } from "@/lib/asset-refs";
+import { assetResourceRef, resourceSpaceRecordRef } from "@/lib/asset-refs";
 import { getAssetById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { canOpenResourceSpace, canReview, canSeeAsset } from "@/lib/permissions";
@@ -35,6 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   });
   const isReviewerOrAdmin = canReview(role);
   const assetPayload = assetWithRoleImageUrls(asset, role);
+  const resourceSpaceRef = resourceSpaceRecordRef(asset);
   return NextResponse.json({
     asset: {
       ...session.assetPayload(assetPayload),
@@ -42,6 +43,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     },
     ...envelope,
     related: related.filter((item) => canSeeAsset(role, item)).map((item) => session.assetPayload(assetWithRoleImageUrls(item, role))),
-    resourceSpaceUrl: isReviewerOrAdmin && asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : undefined
+    resourceSpaceUrl: isReviewerOrAdmin && resourceSpaceRef && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(resourceSpaceRef) : undefined
   });
 }
