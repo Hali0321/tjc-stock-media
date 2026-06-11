@@ -73,6 +73,7 @@ require_file "scripts/portal-hosted-smoke.sh"
 require_file "scripts/live-dam-surface-guard.mjs"
 require_file "scripts/api-identity-guard.mjs"
 require_file "scripts/api-audit-guard.mjs"
+require_file "scripts/api-payload-guard.mjs"
 require_file "scripts/public-env-guard.mjs"
 require_file "scripts/git-hygiene-guard.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
@@ -97,6 +98,13 @@ if node scripts/api-audit-guard.mjs >/tmp/tjc-api-audit-guard.txt 2>&1; then
 else
   fail "API audit guard failed"
   cat /tmp/tjc-api-audit-guard.txt
+fi
+
+if node scripts/api-payload-guard.mjs >/tmp/tjc-api-payload-guard.txt 2>&1; then
+  pass "API payloads keep private originals and storage URLs gated"
+else
+  fail "API payload guard failed"
+  cat /tmp/tjc-api-payload-guard.txt
 fi
 
 if node scripts/public-env-guard.mjs >/tmp/tjc-public-env-guard.txt 2>&1; then
