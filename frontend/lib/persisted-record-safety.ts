@@ -36,6 +36,10 @@ export function safeNonNegativeInt(value: unknown) {
   return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
 }
 
+export function safeFiniteNumber(value: unknown) {
+  return Number.isFinite(value) ? value as number : 0;
+}
+
 export function safeBoolean(value: unknown) {
   return value === true;
 }

@@ -176,6 +176,13 @@ if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(usageAnalytics)) failur
 if (/\.includes\(value as /.test(usageAnalytics)) failures.push("usage analytics must not hand-roll enum fallback normalization");
 if (/Math\.max\(0,\s*Number/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll nonnegative metric normalization");
 if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll route path normalization");
+for (const module of [
+  { name: "audit log", source: auditLog },
+  { name: "usage analytics", source: usageAnalytics }
+]) {
+  if (!module.source.includes("safeFiniteNumber")) failures.push(`${module.name} must normalize finite metadata numbers through safeFiniteNumber`);
+  if (/Number\.isFinite\(item\)/.test(module.source)) failures.push(`${module.name} must not hand-roll finite metadata number normalization`);
+}
 
 if (!feedback.includes("normalizeSafeRoutePath")) failures.push("feedback store must normalize routes through normalizeSafeRoutePath");
 if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(feedback)) failures.push("feedback store must not hand-roll route path normalization");

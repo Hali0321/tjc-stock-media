@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { newestByTimestamp, safeEnumValue, safeIsoTimestamp } from "@/lib/persisted-record-safety";
+import { newestByTimestamp, safeEnumValue, safeFiniteNumber, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
@@ -111,7 +111,7 @@ function safeDetails(value: unknown): AuditEventRecord["details"] {
     if (Array.isArray(item)) {
       entries.push([safeKey, item.map((entry) => normalizePersistedDisplayText(entry, 120)).filter(Boolean).slice(0, 24)]);
     } else if (typeof item === "number") {
-      entries.push([safeKey, Number.isFinite(item) ? item : 0]);
+      entries.push([safeKey, safeFiniteNumber(item)]);
     } else if (typeof item === "boolean" || item === null) {
       entries.push([safeKey, item]);
     } else {

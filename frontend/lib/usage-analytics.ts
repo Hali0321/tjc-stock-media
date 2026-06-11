@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
-import { safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
+import { safeEnumValue, safeFiniteNumber, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
@@ -83,7 +83,7 @@ function safeMetadata(value: UsageEventInput["metadata"]) {
     .map(([key, item]) => {
       const safeKey = normalizePersistedDisplayText(key, 80);
       if (!safeKey || item === undefined) return null;
-      if (typeof item === "number") return [safeKey, Number.isFinite(item) ? item : 0] as const;
+      if (typeof item === "number") return [safeKey, safeFiniteNumber(item)] as const;
       if (typeof item === "boolean" || item === null) return [safeKey, item] as const;
       return [safeKey, normalizePersistedDisplayText(item, 240)] as const;
     })
