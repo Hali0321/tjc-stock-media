@@ -32,6 +32,7 @@ expect_json_status() {
 search_id="search-$MARKER"
 unsafe_query_search_id="search-unsafe-query-$MARKER"
 stale_search_id="stale-search-$MARKER"
+private_creator_search_id="private-creator-search-$MARKER"
 local_runtime_probe=0
 case "$BASE_URL" in
   http://localhost:*|http://127.0.0.1:*) local_runtime_probe=1 ;;
@@ -105,7 +106,7 @@ if (text.includes("../private") || /source path|master drive|checksum/i.test(tex
   "$BASE_URL/api/saved-searches?role=Contributor"
 
 if [ "$local_runtime_probe" = "1" ]; then
-  STALE_SEARCH_ID="$stale_search_id" node <<'NODE'
+  STALE_SEARCH_ID="$stale_search_id" PRIVATE_CREATOR_SEARCH_ID="$private_creator_search_id" node <<'NODE'
 const fs = require("fs");
 const path = require("path");
 const filePath = path.join(process.cwd(), "data", "runtime", "saved-searches.json");
@@ -124,6 +125,17 @@ const filler = Array.from({ length: 260 }, (_, index) => ({
   storageMode: "local-json"
 }));
 existing.unshift({
+  id: process.env.PRIVATE_CREATOR_SEARCH_ID,
+  title: "Reviewer beta pick",
+  query: "Bible",
+  filters: ["portal ready"],
+  sort: "Newest",
+  createdAt: "2030-01-02T00:00:00.000Z",
+  updatedAt: "2030-01-02T00:00:00.000Z",
+  createdBy: "sso:reviewer@example.org",
+  role: "Reviewer",
+  storageMode: "local-json"
+}, {
   id: "source path stale id",
   title: "portal ready",
   query: "Bible",
@@ -153,15 +165,35 @@ NODE
 fi
 
 stale_search_probe_id=""
+private_creator_probe_id=""
 if [ "$local_runtime_probe" = "1" ]; then
   stale_search_probe_id="$stale_search_id"
+  private_creator_probe_id="$private_creator_search_id"
 fi
 
-SEARCH_ID="$search_id" UNSAFE_QUERY_SEARCH_ID="$unsafe_query_search_id" STALE_SEARCH_ID="$stale_search_probe_id" expect_json_status 200 saved-search-reviewer-list-visible '
+if [ "$local_runtime_probe" = "1" ]; then
+  PRIVATE_CREATOR_SEARCH_ID="$private_creator_search_id" expect_json_status 200 saved-search-contributor-list-scrubs-creator '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const id = process.env.PRIVATE_CREATOR_SEARCH_ID;
+const record = (data.searches || []).find((item) => item.id === id);
+if (!record) {
+  console.error(`FAIL: seeded private creator saved search missing from Contributor list: ${JSON.stringify({ id, count: data.count }).slice(0, 500)}`);
+  process.exit(1);
+}
+const text = JSON.stringify(record);
+if (record.createdBy !== "Reviewer" || /sso:|reviewer@example\.org|@example\.org/i.test(text)) {
+  console.error(`FAIL: saved search contributor list leaked creator identity: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/saved-searches?role=Contributor"
+fi
+
+SEARCH_ID="$search_id" UNSAFE_QUERY_SEARCH_ID="$unsafe_query_search_id" STALE_SEARCH_ID="$stale_search_probe_id" PRIVATE_CREATOR_SEARCH_ID="$private_creator_probe_id" expect_json_status 200 saved-search-reviewer-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.SEARCH_ID;
 const unsafeQueryId = process.env.UNSAFE_QUERY_SEARCH_ID;
 const staleId = process.env.STALE_SEARCH_ID;
+const privateCreatorId = process.env.PRIVATE_CREATOR_SEARCH_ID;
 if (!Array.isArray(data.searches) || data.storageMode !== "local-json") {
   console.error(`FAIL: saved search list shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
   process.exit(1);
@@ -184,6 +216,13 @@ if (staleId) {
   const stale = data.searches.find((item) => item.id === staleId);
   if (!stale || stale.query || stale.title !== "portal ready" || stale.createdBy !== "local-beta:unknown" || stale.view || stale.collection || stale.filters.includes("../private") || stale.filters.some((filter) => /^[a-f0-9]{32,}$/i.test(filter)) || stale.filters.length !== new Set(stale.filters).size || stale.sort !== "Approved first" || stale.role === "Viewer") {
     console.error(`FAIL: persisted unsafe saved search was not normalized: ${JSON.stringify(stale).slice(0, 500)}`);
+    process.exit(1);
+  }
+}
+if (privateCreatorId) {
+  const privateCreator = data.searches.find((item) => item.id === privateCreatorId);
+  if (!privateCreator || privateCreator.createdBy !== "sso:reviewer@example.org") {
+    console.error(`FAIL: Reviewer saved search list lost creator audit identity: ${JSON.stringify(privateCreator).slice(0, 500)}`);
     process.exit(1);
   }
 }

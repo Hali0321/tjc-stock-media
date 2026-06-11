@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canContribute } from "@/lib/permissions";
-import { listSavedSearches, sanitizeSavedSearch, saveSavedSearch } from "@/lib/saved-search-store";
+import { listSavedSearches, sanitizeSavedSearch, savedSearchForRolePayload, saveSavedSearch } from "@/lib/saved-search-store";
 import { requestIdentity } from "@/lib/request-identity";
 import { readJsonObject } from "@/lib/request-validation";
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: "Saved search list requires Contributor, Reviewer, or DAM Admin role." }, { status: 403 });
   }
-  const searches = await listSavedSearches();
+  const searches = (await listSavedSearches()).map((record) => savedSearchForRolePayload(identity.role, record));
   appendAuditEvent({
     type: "saved_search_listed",
     role: identity.role,

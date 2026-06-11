@@ -4,7 +4,7 @@ import path from "node:path";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeIsoTimestamp } from "@/lib/persisted-record-safety";
-import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
+import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
@@ -97,6 +97,18 @@ async function writeLocalSavedSearches(records: SavedSearchRecord[]) {
 
 export async function listSavedSearches() {
   return newestFirst(await readLocalSavedSearches()).slice(0, maxSavedSearches);
+}
+
+function creatorLabel(role: DemoRole) {
+  return role === "DAM Admin" ? "DAM Admin" : role === "Reviewer" ? "Reviewer" : "Contributor";
+}
+
+export function savedSearchForRolePayload(role: DemoRole, record: SavedSearchRecord): SavedSearchRecord {
+  if (canReview(role)) return record;
+  return {
+    ...record,
+    createdBy: creatorLabel(record.role)
+  };
 }
 
 export async function saveSavedSearch(record: Omit<SavedSearchRecord, "storageMode">) {

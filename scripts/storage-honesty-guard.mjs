@@ -347,6 +347,15 @@ for (const surface of [
   if (!surface.source.includes("normalizeCatalogSort")) failures.push(`${surface.name} must normalize catalog sort through normalizeCatalogSort`);
   if (/catalogSortOptions\.includes/.test(surface.source)) failures.push(`${surface.name} must not hand-roll catalog sort normalization`);
 }
+if (!savedSearches.includes("savedSearchForRolePayload") || !savedSearches.includes("createdBy: creatorLabel(record.role)")) {
+  failures.push("saved search list payloads must scrub creator identity for non-review roles while keeping stored audit actor");
+}
+if (!savedSearchRoute.includes("savedSearchForRolePayload(identity.role, record)")) {
+  failures.push("saved search route must return role-safe saved search payloads");
+}
+if (!read("scripts/portal-saved-search-smoke.sh").includes("saved search contributor list leaked creator identity")) {
+  failures.push("saved search smoke must prove Contributor lists do not leak creator identity");
+}
 for (const surface of [
   { name: "catalog search", source: catalog },
   { name: "asset search route", source: searchRoute }
