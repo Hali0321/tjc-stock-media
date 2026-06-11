@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeEnumValue, safeFiniteNumber, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { normalizeAssetId, normalizePersistedDisplayText, normalizePersistedSlugText, normalizeResourceSpaceRef } from "@/lib/request-validation";
+import { appendRuntimeJsonLine, listRuntimeFiles, readRuntimeJsonLines } from "@/lib/runtime-file-store";
 import type { DemoRole } from "@/lib/types";
 
 export type AuditEventType =
@@ -82,14 +82,6 @@ function auditFile(createdAt = new Date()) {
   return path.join(auditDir(), `${month}.jsonl`);
 }
 
-function readJsonLine(line: string): AuditEventRecord | null {
-  try {
-    return normalizeAuditEvent(JSON.parse(line));
-  } catch {
-    return null;
-  }
-}
-
 function safeId(value: unknown) {
   return normalizePersistedSlugText(value, 120);
 }
@@ -159,8 +151,7 @@ export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt
   };
   const record = normalizeAuditEvent(draft) || draft;
   try {
-    fs.mkdirSync(auditDir(), { recursive: true });
-    fs.appendFileSync(auditFile(createdAt), `${JSON.stringify(record)}\n`, "utf8");
+    appendRuntimeJsonLine(auditFile(createdAt), record);
   } catch {
     // Audit logging must not break safe read/deny/write route behavior in local runtime.
   }
@@ -168,22 +159,10 @@ export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt
 }
 
 export function listAuditEvents(limit = 20): AuditEventRecord[] {
-  const dir = auditDir();
-  if (!fs.existsSync(dir)) return [];
-  const events = fs
-    .readdirSync(dir)
-    .filter((file) => file.endsWith(".jsonl"))
+  const events = listRuntimeFiles(auditDir(), ".jsonl")
     .sort()
     .reverse()
-    .flatMap((file) => {
-      const filePath = path.join(dir, file);
-      return fs
-        .readFileSync(filePath, "utf8")
-        .split("\n")
-        .filter(Boolean)
-        .map(readJsonLine)
-        .filter((event): event is AuditEventRecord => Boolean(event));
-    });
+    .flatMap((filePath) => readRuntimeJsonLines(filePath, normalizeAuditEvent));
   return newestByTimestamp(events, (event) => event.createdAt)
     .slice(0, limit);
 }

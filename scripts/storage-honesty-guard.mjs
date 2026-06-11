@@ -15,6 +15,7 @@ const files = {
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
   localJsonStore: "frontend/lib/local-json-store.ts",
+  runtimeFileStore: "frontend/lib/runtime-file-store.ts",
   env: "frontend/lib/env.ts",
   nextConfig: "frontend/next.config.mjs",
   reviewEvidence: "frontend/lib/review-evidence.ts",
@@ -77,6 +78,7 @@ const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
 const localJsonStore = read(files.localJsonStore);
+const runtimeFileStore = read(files.runtimeFileStore);
 const env = read(files.env);
 const nextConfig = read(files.nextConfig);
 const reviewEvidence = read(files.reviewEvidence);
@@ -135,6 +137,16 @@ for (const store of stores) {
 }
 if (!localJsonStore.includes("function normalizeWindow") || !localJsonStore.includes("writeLocalJsonStore") || !localJsonStore.includes("readLocalJsonStoreSync") || !localJsonStore.includes("memoryStore")) {
   failures.push("shared local-json persistence module must own normalization window, writes, diagnostics reads, and memory fallback");
+}
+if (!runtimeFileStore.includes("writeRuntimeJsonFile") || !runtimeFileStore.includes("appendRuntimeJsonLine") || !runtimeFileStore.includes("readRuntimeJsonLines") || !runtimeFileStore.includes("listRuntimeFiles")) {
+  failures.push("shared runtime file module must own JSON file writes, JSONL append/read, and runtime file listing");
+}
+for (const store of [
+  { name: "pending review writes", source: pendingReviewWrites },
+  { name: "audit log", source: auditLog }
+]) {
+  if (!store.source.includes("@/lib/runtime-file-store")) failures.push(`${store.name} must use shared runtime file persistence module`);
+  if (/from "node:fs"/.test(store.source)) failures.push(`${store.name} must not hand-roll runtime file IO`);
 }
 
 const persistedRecordSources = [

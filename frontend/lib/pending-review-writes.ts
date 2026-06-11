@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
 import { assetResourceRef } from "@/lib/asset-refs";
 import { repoRoot } from "@/lib/env";
@@ -7,6 +6,7 @@ import { newestByTimestamp, safeEnumValue, safeIsoTimestamp, safeIsoTimestampIdP
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import { normalizeReviewChecklist } from "@/lib/review-evidence";
+import { listRuntimeFiles, readRuntimeJsonFile, writeRuntimeJsonFile } from "@/lib/runtime-file-store";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
 const pendingDirName = "pending-review-writes";
@@ -15,10 +15,6 @@ const syncStates: ReviewWriteRecord["syncState"][] = ["ready_to_sync", "sync_fai
 
 function pendingDir() {
   return path.join(repoRoot(), ".runtime", pendingDirName);
-}
-
-function ensurePendingDir() {
-  fs.mkdirSync(pendingDir(), { recursive: true });
 }
 
 function safeFilePart(value: unknown) {
@@ -58,20 +54,12 @@ function normalizePendingReviewWrite(input: unknown): ReviewWriteRecord | null {
 }
 
 function readRecord(filePath: string): ReviewWriteRecord | null {
-  try {
-    return normalizePendingReviewWrite(JSON.parse(fs.readFileSync(filePath, "utf8")));
-  } catch {
-    return null;
-  }
+  return readRuntimeJsonFile(filePath, normalizePendingReviewWrite);
 }
 
 export function listPendingReviewWrites(): ReviewWriteRecord[] {
-  const dir = pendingDir();
-  if (!fs.existsSync(dir)) return [];
-  const records = fs
-    .readdirSync(dir)
-    .filter((file) => file.endsWith(".json"))
-    .map((file) => readRecord(path.join(dir, file)))
+  const records = listRuntimeFiles(pendingDir(), ".json")
+    .map(readRecord)
     .filter((record): record is ReviewWriteRecord => Boolean(record));
   return newestByTimestamp(records, (record) => record.updatedAt)
     .slice(0, maxPendingReviewWrites);
@@ -121,7 +109,6 @@ export function createPendingReviewWrite({
   checklist: ReviewEvidenceChecklist;
   blockers: string[];
 }) {
-  ensurePendingDir();
   const now = new Date().toISOString();
   const resourceId = assetResourceRef(asset);
   const id = `${safeIsoTimestampIdPart(now)}-${safeFilePart(resourceId)}-${crypto.randomUUID().slice(0, 8)}`;
@@ -140,13 +127,12 @@ export function createPendingReviewWrite({
     syncState: "queued",
     retryCount: 0
   };
-  fs.writeFileSync(path.join(pendingDir(), `${id}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  writeRuntimeJsonFile(path.join(pendingDir(), `${id}.json`), record);
   return record;
 }
 
 function writeRecord(record: ReviewWriteRecord) {
-  ensurePendingDir();
-  fs.writeFileSync(path.join(pendingDir(), `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  writeRuntimeJsonFile(path.join(pendingDir(), `${record.id}.json`), record);
   return record;
 }
 
