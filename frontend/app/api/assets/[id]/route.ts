@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assetResourceRef, resourceSpaceRecordRef } from "@/lib/asset-refs";
+import { assetResourceRef } from "@/lib/asset-refs";
+import { buildAssetDetailResponse } from "@/lib/asset-detail-response";
 import { getAssetById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
-import { canOpenResourceSpace, canReview, canSeeAsset } from "@/lib/permissions";
-import { assetWithRoleImageUrls } from "@/lib/presentation";
+import { canSeeAsset } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
-import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
-import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 
 export const dynamic = "force-dynamic";
 
@@ -26,23 +24,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "This role cannot view this asset.", ...envelope }, { status: 403 });
   }
   const resourceSpaceId = assetResourceRef(asset);
-  const pending = latestPendingWriteForResource(resourceSpaceId);
   session.recordUsage({
     type: "asset_view",
     assetId: asset.id,
     resourceSpaceId,
     route: `/api/assets/${asset.id}`
   });
-  const isReviewerOrAdmin = canReview(role);
-  const assetPayload = assetWithRoleImageUrls(asset, role);
-  const resourceSpaceRef = resourceSpaceRecordRef(asset);
-  return NextResponse.json({
-    asset: {
-      ...session.assetPayload(assetPayload),
-      pendingReviewWrite: isReviewerOrAdmin && pending ? pendingReviewWriteSummary(pending) : undefined
-    },
-    ...envelope,
-    related: related.filter((item) => canSeeAsset(role, item)).map((item) => session.assetPayload(assetWithRoleImageUrls(item, role))),
-    resourceSpaceUrl: isReviewerOrAdmin && resourceSpaceRef && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(resourceSpaceRef) : undefined
-  });
+  return NextResponse.json(buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source }));
 }

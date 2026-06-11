@@ -37,6 +37,7 @@ const files = {
   enterpriseBrandHub: "frontend/components/dam/enterprise/BrandHubPage.tsx",
   enterpriseInsights: "frontend/components/dam/enterprise/InsightsPage.tsx",
   assetRoute: "frontend/app/api/assets/[id]/route.ts",
+  assetDetailResponse: "frontend/lib/asset-detail-response.ts",
   uploadRoute: "frontend/app/api/upload/route.ts",
   uploadIntake: "frontend/lib/upload-intake.ts",
   reviewRoute: "frontend/app/api/review/route.ts",
@@ -103,6 +104,7 @@ const enterpriseReview = read(files.enterpriseReview);
 const enterpriseBrandHub = read(files.enterpriseBrandHub);
 const enterpriseInsights = read(files.enterpriseInsights);
 const assetRoute = read(files.assetRoute);
+const assetDetailResponse = read(files.assetDetailResponse);
 const uploadRoute = read(files.uploadRoute);
 const uploadIntake = read(files.uploadIntake);
 const reviewRoute = read(files.reviewRoute);
@@ -265,7 +267,7 @@ for (const surface of [
   }
 }
 for (const surface of [
-  { name: "asset route", source: assetRoute },
+  { name: "asset detail response", source: assetDetailResponse },
   { name: "review queue response", source: reviewQueueResponse }
 ]) {
   if (!surface.source.includes("resourceSpaceRecordRef") || /resourceSpaceAssetUrl\(asset(Resource|\.resourceSpaceId)/.test(surface.source)) {
@@ -476,7 +478,7 @@ if (!downloadRoute.includes("const auditSource = envelope.source") || /source:\s
   failures.push("download audit details must derive source labels/details from role-safe envelope source");
 }
 requireAllStrings("API payload guard direct URL keys", apiPayloadGuard, ["signedUrl", "originalUrl"]);
-if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewQueueResponse.includes("assets: session.assetsPayload(queue.assets)") || !reviewQueueResponse.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
+if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewQueueResponse.includes("assets: session.assetsPayload(queue.assets)") || !reviewQueueResponse.includes("allAssets: session.assetsPayload(queue.allAssets)") || !assetDetailResponse.includes("session.assetPayload(assetPayload)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
 }
 requireAllStrings("source redaction custody key list", sourceRedaction, ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]);

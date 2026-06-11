@@ -18,8 +18,8 @@ const forbiddenPayloadKeys = [
   ...sourceCustodyAssetKeys
 ];
 const allowedFilesByKey = new Map([
-  ["resourceSpaceUrl", new Set(["frontend/app/api/assets/[id]/route.ts"])],
-  ["resourceSpaceUrls", new Set(["frontend/app/api/review/route.ts"])]
+  ["resourceSpaceUrl", new Set([])],
+  ["resourceSpaceUrls", new Set([])]
 ]);
 
 function walk(dir) {
@@ -150,6 +150,9 @@ if (/normalizePublicTextField|normalizeTextField|normalizeCatalogSort|safeBounde
 }
 
 const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/request-validation.ts"), "utf8");
+const assetDetailRoute = "frontend/app/api/assets/[id]/route.ts";
+const assetDetailRouteSource = fs.readFileSync(path.join(root, assetDetailRoute), "utf8");
+const assetDetailResponseSource = fs.readFileSync(path.join(root, "frontend/lib/asset-detail-response.ts"), "utf8");
 const reviewRoute = "frontend/app/api/review/route.ts";
 const reviewRouteSource = fs.readFileSync(path.join(root, reviewRoute), "utf8");
 const reviewActionWorkflowSource = fs.readFileSync(path.join(root, "frontend/lib/review-action-workflow.ts"), "utf8");
@@ -191,6 +194,13 @@ if (!workflowPolicySource.includes("function normalizeReviewQueueId") || !review
 }
 if (/readJsonObject|function\s+normalizeQueue|reviewQueues|pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace/.test(reviewRouteSource)) {
   failures.push(`${reviewRoute} must not hand-roll review body parsing, queue normalization, or response payload assembly`);
+}
+
+if (!assetDetailRouteSource.includes("buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source })") || !assetDetailResponseSource.includes("function buildAssetDetailResponse") || !assetDetailResponseSource.includes("pendingReviewWriteSummary") || !assetDetailResponseSource.includes("resourceSpaceRecordRef")) {
+  failures.push(`${assetDetailRoute} must delegate asset detail payload assembly to asset-detail-response`);
+}
+if (/pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace|assetWithRoleImageUrls/.test(assetDetailRouteSource)) {
+  failures.push(`${assetDetailRoute} must not hand-roll asset detail response payload assembly`);
 }
 
 const brandKitRoute = "frontend/app/api/brand-kits/[id]/route.ts";
@@ -261,7 +271,7 @@ if (/readJsonObject|sanitizePackageDraft|safeIsoTimestampIdPart|savePackageDraft
 }
 
 for (const route of [
-  "frontend/app/api/assets/[id]/route.ts",
+  assetDetailRoute,
   "frontend/app/api/assets/thumbnail/[id]/route.ts",
   "frontend/app/api/download/[id]/route.ts"
 ]) {
