@@ -115,11 +115,14 @@ if (/function\s+slugify\s*\(/.test(collectionsSource) || /function\s+slugify\s*\
 if (!assetSelectionSource.includes("normalizeAssetIds") || !assetSelectionSource.includes("getAssetRecordById") || !assetSelectionSource.includes("canSeeAsset")) {
   failures.push("asset-selection must own selected asset id normalization, record lookup, and optional visibility filtering");
 }
-if (!batchSource.includes("readBatchActionInput(request)") || !batchSource.includes("buildBatchActionPreviewPayload({ action: input.action, assets: selection.assets, role, timestamp })")) {
-  failures.push(`${batchRoute} must delegate batch action parsing and preview payload assembly to batch-actions`);
+if (!batchSource.includes("readBatchActionInput(request)") || !batchSource.includes("batchActionForPreview(input)") || !batchSource.includes("buildBatchActionPreviewPayload({ action, assets: selection.assets, role, timestamp })") || !batchSource.includes("batchActionInputValidationError(input)") || !batchSource.includes("batchActionSelectionValidationError(selection)") || !batchSource.includes("batchActionPreviewAuditEvent(action, selection.assets.length, role, identity.id)")) {
+  failures.push(`${batchRoute} must delegate batch action parsing, validation, audit details, and preview payload assembly to batch-actions`);
 }
-if (!batchActionSource.includes("function normalizeBatchAction") || !batchActionSource.includes("selectedAssetIds(body.assetIds)") || !batchActionSource.includes("assetResourceRef(asset)")) {
-  failures.push("batch-actions must own batch action normalization, selected id intake, and preview ResourceSpace refs");
+if (!batchActionSource.includes("function normalizeBatchAction") || !batchActionSource.includes("selectedAssetIds(body.assetIds)") || !batchActionSource.includes("assetResourceRef(asset)") || !batchActionSource.includes("function batchActionInputValidationError") || !batchActionSource.includes("function batchActionSelectionValidationError") || !batchActionSource.includes("function batchActionForPreview") || !batchActionSource.includes("function batchActionPreviewAuditEvent")) {
+  failures.push("batch-actions must own batch action normalization, selected id intake, validation, action narrowing, audit details, and preview ResourceSpace refs");
+}
+if (/requestedAction\s*\|\|\s*null|missingIds|missingCount|assetCount:\s*selection\.assets\.length|Bulk review actions require reviewer access|Unsupported batch action|Select at least one asset/.test(batchSource)) {
+  failures.push(`${batchRoute} must not hand-roll batch action validation, denial copy, selection errors, or audit details`);
 }
 for (const route of [
   { name: collectionsRoute, source: collectionsSource },
