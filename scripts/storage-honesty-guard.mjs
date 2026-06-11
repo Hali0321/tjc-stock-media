@@ -205,6 +205,8 @@ for (const surface of [
 }
 
 if (!usageAnalytics.includes("normalizePersistedDisplayText")) failures.push("usage analytics must normalize usage labels through normalizePersistedDisplayText");
+if (!usageAnalytics.includes("normalizeAssetId")) failures.push("usage analytics must normalize asset ids through normalizeAssetId");
+if (!usageAnalytics.includes("normalizeResourceSpaceRef")) failures.push("usage analytics must normalize ResourceSpace ids through normalizeResourceSpaceRef");
 if (!usageAnalytics.includes("safeEnumValue")) failures.push("usage analytics must normalize event types through safeEnumValue");
 if (!usageAnalytics.includes("safeNonNegativeInt")) failures.push("usage analytics must normalize metric counters through safeNonNegativeInt");
 if (!usageAnalytics.includes("normalizeSafeRoutePath")) failures.push("usage analytics must normalize routes through normalizeSafeRoutePath");

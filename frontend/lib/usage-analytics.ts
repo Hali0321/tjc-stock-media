@@ -4,7 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
 import { safeEnumValue, safeFiniteNumber, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
+import { normalizeAssetId, normalizePersistedDisplayText, normalizeResourceSpaceRef, normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
 
 export type UsageEventType =
@@ -72,6 +72,14 @@ function safeRoute(value: unknown) {
   return normalizeSafeRoutePath(value);
 }
 
+function safeAssetId(value: unknown) {
+  return normalizeAssetId(value);
+}
+
+function safeResourceSpaceId(value: unknown) {
+  return normalizeResourceSpaceRef(value);
+}
+
 function safeType(value: unknown): UsageEventType {
   return safeEnumValue(value, usageEventTypes, "search");
 }
@@ -103,8 +111,8 @@ export function recordUsageEvent(event: UsageEventInput) {
       safeType(event.type),
       normalizeRoleWithFallback(event.role),
       normalizePersistedDisplayText(event.actor || event.role, 160) || normalizeRoleWithFallback(event.role),
-      event.assetId ? normalizePersistedDisplayText(event.assetId, 120) || null : null,
-      event.resourceSpaceId ? normalizePersistedDisplayText(event.resourceSpaceId, 120) || null : null,
+      event.assetId ? safeAssetId(event.assetId) || null : null,
+      event.resourceSpaceId ? safeResourceSpaceId(event.resourceSpaceId) || null : null,
       event.route ? safeRoute(event.route) || null : null,
       event.query ? normalizePersistedDisplayText(event.query, 200) || null : null,
       safeMetadata(event.metadata)
@@ -130,7 +138,10 @@ function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 
       .all(type, limit) as Array<{ label?: string; value?: number }>;
     return rows
       .filter((row): row is { label: string; value: number } => Boolean(row.label))
-      .map((row) => ({ label: normalizePersistedDisplayText(row.label, 200), value: safeNonNegativeInt(row.value) }))
+      .map((row) => ({
+        label: column === "asset_id" ? safeAssetId(row.label) : normalizePersistedDisplayText(row.label, 200),
+        value: safeNonNegativeInt(row.value)
+      }))
       .filter((row) => Boolean(row.label));
   } catch {
     return [];
