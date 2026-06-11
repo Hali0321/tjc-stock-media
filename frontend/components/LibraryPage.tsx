@@ -6,6 +6,7 @@ import { CheckCircle2, Database, Filter, FolderOpen, LayoutGrid, List, Mail, Pac
 import { Dialog } from "@/components/Dialog";
 import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamMediaCard as MediaCard, DamPrimaryAction as PrimaryAction, DamTrustSignalStrip as TrustSignalStrip, DamUseCaseCard as UseCaseCard, findUseCases } from "@/components/dam/DamWorkspace";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { GatedDownloadButton } from "@/components/GatedDownloadButton";
 import { LibraryPagination } from "@/components/LibraryPagination";
 import { useDemoRole } from "@/components/RoleProvider";
 import { RawStatusBadge, UsageBadge } from "@/components/StatusBadge";
@@ -667,7 +668,7 @@ export function LibraryPage() {
               ))}
             </dl>
             {selectedAssetVerdict.canDownload ? (
-              <a className="dam-action-button" href={selectedAssetVerdict.downloadHref}>Download Approved Copy</a>
+              <GatedDownloadButton className="dam-action-button" href={selectedAssetVerdict.downloadHref} reason={`Library inspector approved-copy request for ${inspectorAsset.title}`}>Download Approved Copy</GatedDownloadButton>
             ) : (
               <Link className="dam-action-button" href={`/assets/${inspectorAsset.id}`}>View usage guidance</Link>
             )}

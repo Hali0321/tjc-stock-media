@@ -1,5 +1,6 @@
+import { collectionDefinitions, includesAny } from "@/lib/catalog-language";
 import type { EnterpriseStatus } from "@/lib/enterprise-status";
-import type { DamPackage, DamPackageSection, DemoRole, StockMediaAsset } from "@/lib/types";
+import type { CatalogCollection, DamPackage, DamPackageSection, DemoRole, StockMediaAsset } from "@/lib/types";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { normalizePackageRef, normalizePackageRefs, packageAssetRef } from "@/lib/package-refs";
 
@@ -105,6 +106,49 @@ export function seedPackageDraft(draft: DamPackage, assets: StockMediaAsset[], s
       return section;
     }))
   };
+}
+
+export function packageAssetsForCollection(
+  collection: CatalogCollection | undefined,
+  assets: StockMediaAsset[],
+  statusOf: (asset: StockMediaAsset) => PackageAssetStatus
+) {
+  if (!collection) return assets;
+  const definition = collectionDefinitions.find((item) => item.id === collection.id);
+  const matchesDefinition = definition
+    ? (asset: StockMediaAsset) => includesAny(asset, definition.terms)
+    : (asset: StockMediaAsset) => asset.collection === collection.id || asset.collection === collection.name;
+
+  return assets.filter((asset) => matchesDefinition(asset) && statusOf(asset) === "Approved");
+}
+
+export function seedPackageDraftFromCollection(
+  draft: DamPackage,
+  collection: CatalogCollection,
+  assets: StockMediaAsset[],
+  statusOf: (asset: StockMediaAsset) => PackageAssetStatus
+): DamPackage {
+  if (packageHasRefs(draft)) return draft;
+  const collectionAssets = packageAssetsForCollection(collection, assets, statusOf);
+  if (!collectionAssets.length) {
+    return {
+      ...draft,
+      title: `${collection.name} Toolkit Draft`,
+      description: `Started from ${collection.name}. No visible Portal Ready refs were available in this role.`,
+      collectionId: collection.id
+    };
+  }
+
+  return seedPackageDraft(
+    {
+      ...draft,
+      title: `${collection.name} Toolkit Draft`,
+      description: `Started from ${collection.name}. Contains visible Portal Ready refs only; full archive membership remains in the DAM.`,
+      collectionId: collection.id
+    },
+    collectionAssets,
+    statusOf
+  );
 }
 
 function buildAssetLookup(assets: StockMediaAsset[]) {

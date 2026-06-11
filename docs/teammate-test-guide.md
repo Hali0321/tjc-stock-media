@@ -1,6 +1,6 @@
 # TJC DAM Beta Teammate Test Guide
 
-Last updated: 2026-06-10
+Last updated: 2026-06-11
 
 ## Test URL
 
@@ -11,7 +11,9 @@ Last updated: 2026-06-10
 
 This is a beta test deployment, not a production launch. ResourceSpace remains the source of truth. Review decisions may queue as portal pending-write evidence unless live writeback is explicitly enabled. Do not upload sensitive, private, unreleased, youth-identifiable, or copyrighted media for this test round.
 
-Before inviting teammates, clear the Go / No-Go checklist in `docs/beta-readiness-command-center.md`. A local dry run can proceed before hosted smoke passes. External teammate invites should use only the stable unlisted Vercel URL and safe seed data.
+Before inviting teammates, clear the Team Beta ops runbook in `docs/beta-readiness-command-center.md`. A local dry run can proceed because the local code/test gate is GO. Do not send Team Beta invites until seed scrub, hosted writeback/access policy, and feedback triager confirmation are complete.
+
+Use `docs/team-beta-rights-playbook.md` as the rights-state script for Viewer, Contributor, Reviewer, and DAM Admin testing.
 
 ## Roles
 
@@ -45,14 +47,57 @@ Task Mode opens an in-app checklist, quick links, beta limits, and a Report issu
 9. DAM Admin: open Admin modules and verify each module heading/content changes.
 10. Any role: test Brand Hub actions, Help Guide clarity, and one mobile pass around 390px width.
 
+## Search Quality Tasks
+
+Run these as Viewer first, then repeat any confusing cases as Reviewer. Grade each task as pass, partial, or fail in the issue report.
+
+1. Search `scripture`, then `Bible`. Confirm both return similar useful results and the asset detail stays honest about reuse.
+2. Search `sermon slides`, `website hero`, and `newsletter`. Confirm each returns a useful set or explains why metadata/review is missing.
+3. Search `fellowship`, `baptism`, and `communion`. Confirm sensitive or sacrament-related results do not imply public reuse without reviewer evidence.
+4. Search `children`, `youth`, `no people`, and `people unknown`. Confirm children/youth routes toward review and unknown/no-people states are not treated as public-safe.
+5. Search an event/date/person phrase you expect from church memory. Confirm zero-result help suggests saved views, broader ministry terms, or review request instead of sounding empty or broken.
+6. Apply `Approved public`, `No people`, `Landscape`, and `Portal ready` filters where available. Confirm counts, empty states, and download gates stay consistent.
+
+Search beta success target:
+
+- 90% of seeded use-case searches produce either useful results or useful recovery guidance.
+- 0 unsafe downloads from search results.
+- 0 cases where unknown people/minors, unknown rights, or missing reviewer/date reads as public-safe.
+- 80% of testers can find one usable approved asset or understand why none is ready in under 3 minutes.
+- Every failed search report includes query, role, expected asset/use case, actual count, and whether suggested filters helped.
+
+## TJC-Native Search Smoke Appendix
+
+Grounding: `/Users/halim4pro/Downloads/deep-research-report.md` identifies native TJC language and risk gates for Sabbath Service, Religious Education/RE, Evangelical Service, Testimony, Hymns of Praise, doctrine/sacrament themes, church/region/language hierarchy, reuse tiers, minors, and hymn rights.
+
+Run these probes as Viewer, then repeat failed or confusing probes as Reviewer.
+
+| Probe | Expected honest behavior | Failure threshold |
+|---|---|---|
+| `Sabbath Service` | Matches worship/service media or gives a saved-view/taxonomy recovery path. Does not treat generic weekend media as TJC-safe. | P1 if no recovery guidance. P0 if non-Sabbath content appears public-safe without review. |
+| `Religious Education`, `RE` | `RE` behaves as an alias for Religious Education and flags minors/class context as restricted until consent is clear. | P1 if alias misses. P0 if RE/minor media can be downloaded publicly without consent/review. |
+| `Evangelical Service` | Finds evangelism/service assets or routes to evangelism/public collection guidance. | P2 if only generic campaign language appears. P1 if zero state gives no TJC-native recovery. |
+| `Testimony` | Results show pastoral/context caution and avoid broad stock-safe reuse unless explicitly approved. | P0 if sensitive testimony is presented as stock-safe. P1 if no pastoral-sensitivity cue. |
+| `Hymns of Praise`, `hymn rights`, `projection-ready` | Music/hymn results require channel, territory, and notice clarity before public/livestream/projection use. | P0 if hymn download/export appears cleared without rights basis. P1 if rights state is invisible. |
+| `baptism` | Routes to doctrine/sacrament review when approval is not explicit. | P0 if baptism media reads stock-safe without doctrine review. |
+| `Holy Spirit`, `speaking in tongues` | Terms cross-link and keep prayer-in-the-Spirit clips context-safe unless senior review clears public reuse. | P1 if aliases do not connect. P0 if casual public reuse is implied. |
+| `footwashing`, `Holy Communion` | Shows sacrament-sensitive handling, not generic symbolism. | P0 if stock-safe/public-safe is implied without doctrine review. |
+| `church`, `region`, `language`, plus one real local church or language phrase | Results or facets separate church, region/country, and language instead of mixing them as loose keywords. | P1 if church/region/language are indistinguishable. P2 if recovery copy is generic. |
+| `stock-safe`, `context-safe`, `archive-only` | Reuse tier language is clear; archive-only never looks like reusable stock. | P0 if archive-only can be downloaded as approved reuse. P1 if tiers are unclear. |
+| `children`, `youth`, `minors`, `RE class` | Results default to review/restricted states unless consent and usage scope are explicit. | P0 if public download is allowed for unresolved minors. |
+| `choir`, `livestream`, `hymn 470`, `hymn 525` | Hymn/channel probes require rights steward or reviewer clearance for livestream/choir use. | P0 if channel-specific hymn rights are bypassed. |
+
 ## Known Limits
 
-- Deployment-specific Vercel preview URLs may require Vercel login. Share `https://tjc-stock-media.vercel.app` for teammate testing.
-- ResourceSpace writeback should remain disabled unless explicitly approved.
-- Vercel env should include `BETA_FEEDBACK_ENABLED=1`, `BETA_TASK_MODE_ENABLED=1`, `RESOURCESPACE_ENABLE_WRITEBACK=0`, and `RESOURCESPACE_WRITEBACK_MODE=queued`.
+- Deployment-specific Vercel preview URLs may require Vercel login. After the Team Beta ops runbook is complete, share `https://tjc-stock-media.vercel.app` for teammate testing.
+- ResourceSpace writeback should remain queued/disabled unless explicitly approved.
+- Hosted beta env should keep `BETA_FEEDBACK_ENABLED` and `BETA_TASK_MODE_ENABLED` enabled, either by omitting them or setting each to `1`; setting either to `0` disables that beta feature.
+- Hosted beta env should include `RESOURCESPACE_ENABLE_WRITEBACK=0` and `RESOURCESPACE_WRITEBACK_MODE=queued` unless live ResourceSpace writeback has explicit approval and proof.
+- Keep `DOWNLOAD_GATE_ALLOW_DEMO_ROLES=0` for this preview-only hosted batch. If approved-copy download testing is added before SSO, set it to `1` only as a recorded temporary Team Beta exception.
 - Vercel KV/Blob env comes from Vercel storage integrations; local development falls back to `data/runtime/beta-feedback.json`.
-- Package drafts, saved views, favorites, and invites are local beta affordances unless backend storage is connected.
+- Package drafts, saved views, favorites, and invite links are beta affordances unless backend storage is connected.
 - SSO is not live; beta role switch simulates access.
+- Current seed has zero portal-ready/downloadable assets, so Team Beta is preview-only workflow testing until a rights reviewer approves reusable seed media.
 - Static S3-only hosting is not enough for this app because Next API routes are required.
 
 ## Feedback Format

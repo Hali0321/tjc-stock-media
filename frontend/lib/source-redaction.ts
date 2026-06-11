@@ -41,6 +41,12 @@ function omitAssetKeys(asset: StockMediaAsset, keys: ReadonlyArray<keyof StockMe
   return payload;
 }
 
+function omitDownloadImageUrl(asset: StockMediaAsset): StockMediaAsset {
+  if (!asset.imageUrls || !("download" in asset.imageUrls)) return asset;
+  const { download: _download, ...imageUrls } = asset.imageUrls;
+  return { ...asset, imageUrls };
+}
+
 function safeSavedViewText(value: string) {
   return value
     .replace(/ResourceSpace-approved/gi, "Library-approved")
@@ -100,8 +106,9 @@ export function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaS
 }
 
 export function assetForRolePayload(role: DemoRole, asset: StockMediaAsset): StockMediaAsset {
-  if (canSeePrivateSourceFiles(role)) return asset;
-  const roleSafeAsset = omitAssetKeys(asset, sourceCustodyAssetKeys);
+  const downloadSafeAsset = omitDownloadImageUrl(asset);
+  if (canSeePrivateSourceFiles(role)) return downloadSafeAsset;
+  const roleSafeAsset = omitAssetKeys(downloadSafeAsset, sourceCustodyAssetKeys);
 
   if (canSeeOperationalSource(role)) {
     return roleSafeAsset;

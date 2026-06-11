@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
 import { safeEnumValue, safeFiniteNumber, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
@@ -36,16 +35,45 @@ type DailyUsageMetricRow = {
   value: number;
 };
 
+type SqliteStatement = {
+  run: (...params: Array<string | number | null>) => unknown;
+  all: (...params: Array<string | number | null>) => unknown[];
+  get: (...params: Array<string | number | null>) => unknown;
+};
+
+type UsageDatabase = {
+  exec: (sql: string) => unknown;
+  prepare: (sql: string) => SqliteStatement;
+};
+
+type DatabaseSyncConstructor = new (file: string) => UsageDatabase;
+
 const usageEventTypes: UsageEventType[] = ["search", "asset_view", "download_gate", "review_action", "brand_kit_view", "package_action"];
 
-let db: DatabaseSync | null = null;
+let db: UsageDatabase | null = null;
+let sqliteUnavailable = false;
 
 function dbFile() {
   return usageAnalyticsDbPath() || path.join(repoRoot(), ".runtime", "analytics", "portal-usage.sqlite");
 }
 
+function databaseConstructor(): DatabaseSyncConstructor | null {
+  if (sqliteUnavailable) return null;
+  try {
+    const nativeRequire = eval("require") as (id: string) => { DatabaseSync?: DatabaseSyncConstructor };
+    const sqlite = nativeRequire("node:sqlite");
+    if (!sqlite.DatabaseSync) throw new Error("node:sqlite DatabaseSync unavailable");
+    return sqlite.DatabaseSync;
+  } catch {
+    sqliteUnavailable = true;
+    return null;
+  }
+}
+
 function database() {
   if (db) return db;
+  const DatabaseSync = databaseConstructor();
+  if (!DatabaseSync) return null;
   const file = dbFile();
   fs.mkdirSync(path.dirname(file), { recursive: true });
   db = new DatabaseSync(file);
@@ -116,7 +144,9 @@ function usageAnalyticsStorageMode() {
 export function recordUsageEvent(event: UsageEventInput) {
   if (!usageAnalyticsEnabled()) return { recorded: false, reason: "usage-analytics-disabled" };
   try {
-    const stmt = database().prepare(`
+    const connection = database();
+    if (!connection) return { recorded: false, reason: safeUsageFailureReason() };
+    const stmt = connection.prepare(`
       INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
@@ -140,7 +170,9 @@ export function recordUsageEvent(event: UsageEventInput) {
 function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 5): UsageMetricRow[] {
   if (!usageAnalyticsEnabled()) return [];
   try {
-    const rows = database()
+    const connection = database();
+    if (!connection) return [];
+    const rows = connection
       .prepare(`
         SELECT ${column} AS label, COUNT(*) AS value
         FROM usage_events
@@ -165,7 +197,9 @@ function metricRows(type: UsageEventType, column: "query" | "asset_id", limit = 
 function dailyEventRows(limit = 14): DailyUsageMetricRow[] {
   if (!usageAnalyticsEnabled()) return [];
   try {
-    const rows = database()
+    const connection = database();
+    if (!connection) return [];
+    const rows = connection
       .prepare(`
         SELECT substr(created_at, 1, 10) AS label, COUNT(*) AS value
         FROM usage_events
@@ -195,7 +229,18 @@ export function usageAnalyticsDiagnostics() {
     };
   }
   try {
-    const total = database().prepare("SELECT COUNT(*) AS count FROM usage_events").get() as { count?: number };
+    const connection = database();
+    if (!connection) {
+      return {
+        enabled: true,
+        storageMode: usageAnalyticsStorageMode(),
+        totalEvents: 0,
+        topSearches: [] as UsageMetricRow[],
+        topAssets: [] as UsageMetricRow[],
+        dailyEvents: [] as DailyUsageMetricRow[]
+      };
+    }
+    const total = connection.prepare("SELECT COUNT(*) AS count FROM usage_events").get() as { count?: number };
     return {
       enabled: true,
       storageMode: usageAnalyticsStorageMode(),

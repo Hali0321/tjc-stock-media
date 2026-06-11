@@ -6,6 +6,7 @@ import { FolderOpen, Package, Search, ShieldCheck } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
 import { sourceLabel, sourceNoun } from "@/lib/enterprise-display";
+import { routeWithRole } from "@/lib/role-routes";
 import type { CatalogCollection } from "@/lib/types";
 import { ActionButton, ErrorCard, LoadingCard, PageHeader, SourcePill, StatusBadge } from "./EnterpriseShared";
 
@@ -27,9 +28,13 @@ function matchesCollection(collection: CatalogCollection, query: string) {
 function packageReadiness(collection: CatalogCollection) {
   const readyMatch = collection.approvalSummary.match(/\d+/);
   const readyCount = readyMatch ? Number(readyMatch[0]) : collection.count;
+  const reviewNeeded = Math.max(0, collection.count - readyCount);
+  const score = collection.count ? Math.round((readyCount / collection.count) * 100) : 0;
   return {
     readyCount,
-    reviewNeeded: Math.max(0, collection.count - readyCount),
+    reviewNeeded,
+    score,
+    label: reviewNeeded ? `${score}% package-ready` : "Ready set",
     bestUse: collection.searchQuery || `${collection.ministry} media`
   };
 }
@@ -65,7 +70,11 @@ export function EnterpriseCollectionsPage() {
   }
 
   function openCollection(collection: CatalogCollection) {
-    router.push(`/?collection=${encodeURIComponent(collection.id)}`);
+    router.push(routeWithRole(`/?collection=${encodeURIComponent(collection.id)}`, role));
+  }
+
+  function startToolkit(collection: CatalogCollection) {
+    router.push(routeWithRole(`/packages?collection=${encodeURIComponent(collection.id)}`, role));
   }
 
   return (
@@ -74,7 +83,7 @@ export function EnterpriseCollectionsPage() {
         title="Collections"
         subtitle="Package cabinet for ministry kits. Collections organize assets; each record keeps its own reuse decision."
         count={`${collections.length.toLocaleString()} packages`}
-        actions={<><ActionButton icon={FolderOpen} onClick={() => selectedCollection && openCollection(selectedCollection)}>Open selected</ActionButton><ActionButton icon={ShieldCheck}>Item-level checks</ActionButton></>}
+        actions={<><ActionButton icon={FolderOpen} onClick={() => selectedCollection && openCollection(selectedCollection)}>Open selected</ActionButton><ActionButton icon={Package} onClick={() => selectedCollection && startToolkit(selectedCollection)}>Start toolkit draft</ActionButton><ActionButton icon={ShieldCheck}>Item-level checks</ActionButton></>}
       />
       <section className="ed-approved-banner">
         <Package size={22} />
@@ -110,12 +119,13 @@ export function EnterpriseCollectionsPage() {
                   const readiness = packageReadiness(collection);
                   const active = selectedCollection?.id === collection.id;
                   return (
-                    <p key={collection.id}>
+                    <p className="ed-collection-package-row" key={collection.id}>
                       <strong>{collection.name}</strong>
-                      <span>{collection.ministry} · {collection.countLabel}</span>
+                      <span>{collection.ministry} · {collection.countLabel} · {readiness.label}</span>
                       <StatusBadge status={readiness.reviewNeeded ? "Needs Review" : "Approved"} />
                       <button type="button" onClick={() => setSelectedCollectionId(collection.id)}>{active ? "Selected" : "Inspect"}</button>
                       <button type="button" onClick={() => openCollection(collection)}>Open media</button>
+                      <button type="button" onClick={() => startToolkit(collection)}>Build toolkit</button>
                     </p>
                   );
                 })}
@@ -129,6 +139,10 @@ export function EnterpriseCollectionsPage() {
               <>
                 <div className="ed-panel-title"><h3>{selectedCollection.name}</h3><StatusBadge status={packageReadiness(selectedCollection).reviewNeeded ? "Needs Review" : "Approved"} /></div>
                 <p>{selectedCollection.description}</p>
+                <section className="ed-collection-toolkit-callout">
+                  <strong>{packageReadiness(selectedCollection).score}% ready for package planning</strong>
+                  <span>Toolkit builder will add visible Portal Ready refs only. It will not create a ZIP, copy originals, or bypass item-level approval.</span>
+                </section>
                 <dl className="ed-metadata">
                   <div><dt>Ministry</dt><dd>{selectedCollection.ministry}</dd></div>
                   <div><dt>Best use</dt><dd>{packageReadiness(selectedCollection).bestUse}</dd></div>
@@ -138,6 +152,7 @@ export function EnterpriseCollectionsPage() {
                 </dl>
                 {selectedCollection.peopleWarning ? <p className="ed-setup-note">{selectedCollection.peopleWarning}</p> : null}
                 <ActionButton tone="primary" icon={FolderOpen} onClick={() => openCollection(selectedCollection)}>Open collection media</ActionButton>
+                <ActionButton icon={Package} onClick={() => startToolkit(selectedCollection)}>Start governed toolkit</ActionButton>
               </>
             ) : (
               <section className="ed-empty-state"><Package size={24} /><h2>Select a collection</h2><p>Pick a package to inspect readiness and reuse rules.</p></section>

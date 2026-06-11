@@ -38,10 +38,18 @@ require_dir() {
 }
 
 if command -v docker >/dev/null 2>&1; then
-  if docker compose config >/dev/null 2>&1; then
+  compose_env=".env"
+  compose_file="docker-compose.yml"
+  if [ ! -f "$compose_env" ] && [ -f ".env.example" ]; then
+    compose_env="$ROOT/.env.example"
+    compose_file="/tmp/tjc-docker-compose-config.yml"
+    sed "s|- \.env$|- $ROOT/.env.example|" docker-compose.yml > "$compose_file"
+  fi
+  if docker compose --env-file "$compose_env" -f "$compose_file" config >/tmp/tjc-docker-compose-config.txt 2>&1; then
     pass "docker compose config valid"
   else
     fail "docker compose config failed"
+    cat /tmp/tjc-docker-compose-config.txt
   fi
 else
   fail "docker not installed or not on PATH"
@@ -58,6 +66,15 @@ require_file "docs/reviewer-guide.md"
 require_file "docs/rights-workflow.md"
 require_file "docs/shared-drive-structure.md"
 require_file "docs/beta-readiness-command-center.md"
+require_file "docs/team-beta-go-no-go-packet.md"
+require_file "docs/team-beta-signoff-record.md"
+require_file "docs/team-beta-internal-test-packet.md"
+require_file "docs/team-beta-seed-media-signoff.md"
+require_file "docs/team-beta-hosted-access-proof.md"
+require_file "docs/team-beta-feedback-incident-runbook.md"
+require_file "docs/team-beta-research-synthesis.md"
+require_file "docs/team-beta-rights-playbook.md"
+require_file "docs/team-beta-qa-matrix.md"
 require_file "frontend/lib/beta-readiness-facts.ts"
 require_file "scripts/backup.sh"
 require_file "scripts/restore-test.sh"
@@ -65,6 +82,7 @@ require_file "scripts/video-manifest.sh"
 require_file "scripts/portal-sso-smoke.sh"
 require_file "scripts/portal-usage-smoke.sh"
 require_file "scripts/portal-delivery-smoke.sh"
+require_file "scripts/portal-download-ticket-smoke.sh"
 require_file "scripts/portal-writeback-guard-smoke.sh"
 require_file "scripts/portal-package-smoke.sh"
 require_file "scripts/portal-saved-search-smoke.sh"
@@ -78,8 +96,19 @@ require_file "scripts/private-source-guard.mjs"
 require_file "scripts/public-env-guard.mjs"
 require_file "scripts/git-hygiene-guard.mjs"
 require_file "scripts/storage-honesty-guard.mjs"
+require_file "scripts/team-beta-signoff-guard.mjs"
+require_file "scripts/team-beta-signoff-guard-test.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
+
+if grep -q 'Beta Command Center' frontend/components/dam/enterprise/AdminPage.tsx \
+  && grep -q 'Actor audit proof' frontend/components/dam/enterprise/AdminPage.tsx \
+  && grep -q 'Beta coverage gates' frontend/components/dam/enterprise/AdminPage.tsx \
+  && grep -q 'Next actions' frontend/components/dam/enterprise/AdminPage.tsx; then
+  pass "Admin beta command center shows go/no-go, coverage gates, actor audit proof, and next actions"
+else
+  fail "Admin beta command center proof surface missing"
+fi
 
 if node scripts/live-dam-surface-guard.mjs >/tmp/tjc-live-dam-surface-guard.txt 2>&1; then
   pass "live DAM route surface stays on enterprise modules"
@@ -121,6 +150,14 @@ if node scripts/public-env-guard.mjs >/tmp/tjc-public-env-guard.txt 2>&1; then
 else
   fail "public env guard failed"
   cat /tmp/tjc-public-env-guard.txt
+fi
+
+if grep -q 'DOWNLOAD_GATE_ALLOW_DEMO_ROLES=0' .env.production.example \
+  && grep -q 'portal-download-ticket-smoke' docs/beta-readiness-command-center.md \
+  && grep -q 'DOWNLOAD_GATE_ALLOW_DEMO_ROLES' docs/teammate-test-guide.md; then
+  pass "download ticket gate smoke and hosted demo-role policy are documented"
+else
+  fail "download ticket gate smoke or hosted demo-role policy missing from readiness docs"
 fi
 
 if node scripts/git-hygiene-guard.mjs >/tmp/tjc-git-hygiene-guard.txt 2>&1; then
@@ -304,6 +341,62 @@ if grep -Eqi 'P0|Critical' docs/teammate-test-guide.md docs/teammate-beta-invite
   pass "beta stop-test policy and forbidden media categories documented"
 else
   fail "beta stop-test policy or forbidden media categories missing"
+fi
+
+team_beta_signoff_output="/tmp/tjc-team-beta-signoff-guard.txt"
+if node scripts/team-beta-signoff-guard.mjs >"$team_beta_signoff_output" 2>&1; then
+  if grep -q 'Team Beta signoff guard passed (GO)' "$team_beta_signoff_output"; then
+    if grep -q 'Owner-led internal dry run | GO' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Tiny teammate invite batch | GO' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Production/internal launch | NO-GO' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Final Signoff Block' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Current final call: \*\*GO for tiny internal Team Beta invite batch' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'docs/team-beta-go-no-go-packet.md' docs/beta-readiness-command-center.md docs/team-beta-internal-test-packet.md; then
+      pass "Team Beta GO/NO-GO packet matches signed invite GO"
+    else
+      fail "Team Beta GO/NO-GO packet missing signed invite GO evidence"
+    fi
+  else
+    if grep -q 'Owner-led internal dry run | GO' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Tiny teammate invite batch | NO-GO until human gates close' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Production/internal launch | NO-GO' docs/team-beta-go-no-go-packet.md \
+      && grep -Eqi 'Do not claim invite GO while any .*field is blank' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Final Signoff Block' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'Current final call: \*\*NO-GO for teammate invite batch' docs/team-beta-go-no-go-packet.md \
+      && grep -q 'docs/team-beta-go-no-go-packet.md' docs/beta-readiness-command-center.md docs/team-beta-internal-test-packet.md; then
+      pass "Team Beta GO/NO-GO packet blocks invites until human signoff"
+    else
+      fail "Team Beta GO/NO-GO packet missing or overclaims invite readiness"
+    fi
+  fi
+else
+  fail "Team Beta human signoff record invalid"
+  cat "$team_beta_signoff_output"
+fi
+
+if grep -q 'Team Beta signoff guard passed' "$team_beta_signoff_output" \
+  && grep -q 'docs/team-beta-signoff-record.md' docs/team-beta-go-no-go-packet.md docs/beta-readiness-command-center.md docs/team-beta-internal-test-packet.md; then
+  pass "Team Beta human signoff record is valid"
+else
+  fail "Team Beta human signoff record invalid"
+  cat "$team_beta_signoff_output"
+fi
+
+if node scripts/team-beta-signoff-guard-test.mjs >/tmp/tjc-team-beta-signoff-guard-test.txt 2>&1; then
+  pass "Team Beta signoff guard self-test covers no-go and go states"
+else
+  fail "Team Beta signoff guard self-test failed"
+  cat /tmp/tjc-team-beta-signoff-guard-test.txt
+fi
+
+if grep -Eq 'Doctrine/sacrament|Baptism|Holy Spirit|footwashing|Holy Communion|Sabbath' docs/team-beta-go-no-go-packet.md \
+  && grep -Eq 'hymn 470-525|Hymns of Praise|channel, territory, rights basis' docs/team-beta-go-no-go-packet.md \
+  && grep -Eq 'RE/minors|Religious Education|minor-identifying captions' docs/team-beta-go-no-go-packet.md \
+  && grep -Eq 'Testimony/pastoral|context-safe or archive-only' docs/team-beta-go-no-go-packet.md \
+  && grep -Eq 'AI may suggest tags only; AI cannot approve' docs/team-beta-go-no-go-packet.md; then
+  pass "Team Beta research-derived no-go checks are represented"
+else
+  fail "Team Beta research-derived no-go checks missing from final packet"
 fi
 
 echo

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Box, ClipboardList, Grid3X3, HelpCircle, Library, PackageCheck, Settings, type LucideIcon } from "lucide-react";
+import { routeWithRole } from "@/lib/role-routes";
 import type { DemoRole } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
@@ -60,7 +61,7 @@ export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
     return (
       <Link
         key={`${item.href}-${item.label}`}
-        href={item.href}
+        href={routeWithRole(item.href, role)}
         className={cn(
           "group relative inline-flex min-w-0 flex-1 items-center justify-center font-black text-[#5b655f] transition-all duration-200 hover:text-tjc-evergreen active:translate-y-px",
           top && "min-h-11 flex-none gap-2 rounded-xl px-4 text-sm",

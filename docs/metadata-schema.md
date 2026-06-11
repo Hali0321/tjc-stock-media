@@ -1,5 +1,21 @@
 # Metadata Schema
 
+This schema is the canonical asset metadata contract described in
+`docs/data-engineering-playbook.md`. ResourceSpace stores the authoritative
+asset record and review state; Google Shared Drive stores selected master
+originals; the portal renders role-safe read models; AI fields are suggestions
+only.
+
+## Contract Rules
+
+- Preserve provenance before improving search.
+- Keep original/master custody fields separate from portal-facing fields.
+- Keep visible content tags separate from TJC/church-context terms.
+- Keep AI suggestion fields separate from human-approved fields.
+- Treat missing metadata as readiness debt, not as permission to infer.
+- Add fields in a backward-compatible way; use aliases or field-map migration for
+  renames.
+
 ## Source / Provenance
 
 | Field | Purpose |
@@ -61,11 +77,23 @@
 | `workflow_state` | Intake, Metadata Drafted, Rights Review, Approved, Archived. |
 | `public_safe` | Yes, no, unknown. |
 | `usage_scope` | Do Not Publish, Public, Internal Only, Archive Only, Limited. |
+| `reuse_tier` | Stock-safe, context-safe, archive-only. Required before broad reuse; stock-safe means broad cross-ministry reuse, context-safe means original-context/channel reuse only, archive-only means preservation/reference without reuse. |
+| `visibility_tier` | Public, member/internal, reviewer/admin, archive. Separate visibility from approval and reuse. |
+| `sensitivity_class` | Public-safe, member-sensitive, sacrament-sensitive, youth-sensitive, testimony-sensitive, internal-governance, archive-restricted. |
+| `doctrine_sacrament_theme` | Baptism, Holy Spirit, footwashing, Holy Communion, Sabbath, prayer-in-Spirit, church identity, none. |
+| `testimony_theme` | Healing, illness, visions, family conversion, spiritual battle, grief, pastoral/private, none. |
+| `rights_basis` | TJC-owned, contributor license, public domain, jurisdiction-limited public domain, hymn license, hymn permission, fair use internal only, unknown. |
+| `approved_channels` | Website, livestream, projection, choir upload, print, social, internal training, limited-share link, archive only. |
+| `required_notice` | Copyright/license notice required for hymn, publication, third-party, or channel-specific reuse. |
+| `hymn_number_or_title` | Hymn number/title when music, lyric, choir, accompaniment, or service media includes hymn content. |
+| `rights_territory` | Worldwide, country-specific, jurisdiction-limited, unknown. |
 | `consent_status` | Confirmed, not confirmed, not applicable, unknown. |
+| `consent_release_record_id` | Traceable consent/release record or documented exception when identifiable people or minors appear. |
 | `reviewed_by` | Rights reviewer name/account. |
 | `reviewed_date` | Date reviewed. |
 | `approval_notes` | Why this asset is safe or restricted. |
 | `expiration_or_recheck_date` | Date to revisit rights if needed. |
+| `domain_reviewer` | Doctrine, music rights, RE/minors, pastoral sensitivity, archive, or DAM reviewer responsible for specialized approval. |
 
 ## Derivatives / Format Handling
 
@@ -78,6 +106,8 @@
 | `conversion_needed` | Whether user-facing preview/download derivative is needed. |
 | `conversion_status` | Not evaluated, generated, failed, not needed. |
 | `derivative_path` | Local/export path for generated derivative when applicable. |
+| `parent_master_asset_id` | Master/source asset this derivative belongs to, when known. |
+| `derivative_channel` | Intended derivative channel, such as preview, web, projection, print, internal training, or archive access. |
 | `original_preserved` | Yes/no check that original file remains untouched. |
 
 Policy: preserve originals as masters. If HEIC preview fails, attach a metadata-stripped JPG derivative to the same asset record instead of replacing the HEIC or creating an unmanaged duplicate.

@@ -60,8 +60,7 @@ export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): 
           small: imageUrlForRole(asset.imageUrls.small, role) || asset.imageUrls.small,
           card: imageUrlForRole(asset.imageUrls.card, role) || asset.imageUrls.card,
           collection: imageUrlForRole(asset.imageUrls.collection, role) || asset.imageUrls.collection,
-          detail: imageUrlForRole(asset.imageUrls.detail, role) || asset.imageUrls.detail,
-          download: imageUrlForRole(asset.imageUrls.download, role) || asset.imageUrls.download
+          detail: imageUrlForRole(asset.imageUrls.detail, role) || asset.imageUrls.detail
         }
       : undefined
   };

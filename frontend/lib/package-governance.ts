@@ -26,6 +26,9 @@ export type PackageGovernanceSection = {
   totalRefs: number;
   resolvedRefs: number;
   missingRefs: Array<string | number>;
+  readinessScore: number;
+  readinessStatus: "ready" | "review" | "blocked" | "empty";
+  readinessSummary: string;
   portalReadyRefs: number;
   internalOnlyRefs: number;
   reviewRequiredRefs: number;
@@ -42,6 +45,9 @@ export type PackageGovernancePacket = {
   totalRefs: number;
   resolvedRefs: number;
   missingRefs: number;
+  readinessScore: number;
+  readinessLabel: string;
+  readinessStatus: "ready" | "review" | "blocked" | "empty";
   portalReadyRefs: number;
   internalOnlyRefs: number;
   reviewRequiredRefs: number;
@@ -108,6 +114,46 @@ function command(label: string, ready: boolean, detail: string, review = false):
   };
 }
 
+function readinessScore(totalRefs: number, portalReadyRefs: number) {
+  return totalRefs ? Math.round((portalReadyRefs / totalRefs) * 100) : 0;
+}
+
+function readinessStatus({
+  totalRefs,
+  missingRefs,
+  blockedRefs
+}: {
+  totalRefs: number;
+  missingRefs: number;
+  blockedRefs: number;
+}): PackageGovernancePacket["readinessStatus"] {
+  if (!totalRefs) return "empty";
+  if (missingRefs) return "blocked";
+  if (blockedRefs) return "review";
+  return "ready";
+}
+
+function readinessLabel(status: PackageGovernancePacket["readinessStatus"], score: number) {
+  if (status === "empty") return "Add refs";
+  if (status === "blocked") return "Refs missing";
+  if (status === "review") return `${score}% publish-ready`;
+  return "Ready to publish";
+}
+
+function sectionReadinessSummary(section: {
+  totalRefs: number;
+  missingRefs: Array<string | number>;
+  portalReadyRefs: number;
+  internalOnlyRefs: number;
+  reviewRequiredRefs: number;
+}) {
+  if (!section.totalRefs) return "No refs selected. Section will stay out of package output.";
+  if (section.missingRefs.length) return `${section.missingRefs.length} ref${section.missingRefs.length === 1 ? "" : "s"} no longer resolves.`;
+  if (section.reviewRequiredRefs) return `${section.reviewRequiredRefs} ref${section.reviewRequiredRefs === 1 ? "" : "s"} need rights review before publish.`;
+  if (section.internalOnlyRefs) return `${section.internalOnlyRefs} internal-only ref${section.internalOnlyRefs === 1 ? "" : "s"} block public publish.`;
+  return `${section.portalReadyRefs}/${section.totalRefs} refs are Portal Ready.`;
+}
+
 export function buildPackageGovernance(draft: DamPackage, resolvedSections: ResolvedPackageSection[], role: DemoRole): PackageGovernancePacket {
   const canSeeOpsCopy = opsView(role);
   const sections = resolvedSections.map((section): PackageGovernanceSection => {
@@ -120,6 +166,12 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
       ...section.missingResourceSpaceAssetIds.map((ref) => canSeeOpsCopy ? `Missing ResourceSpace ref ${ref}` : `Missing media reference ${ref}`),
       ...assets.flatMap((item) => item.publishReady ? [] : [`${item.ref}: ${item.reason}`])
     ]);
+    const sectionScore = readinessScore(section.resourceSpaceAssetIds.length, portalReadyRefs);
+    const sectionStatus = readinessStatus({
+      totalRefs: section.resourceSpaceAssetIds.length,
+      missingRefs: section.missingResourceSpaceAssetIds.length,
+      blockedRefs
+    });
 
     return {
       id: section.id,
@@ -127,6 +179,15 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
       totalRefs: section.resourceSpaceAssetIds.length,
       resolvedRefs: section.assets.length,
       missingRefs: section.missingResourceSpaceAssetIds,
+      readinessScore: sectionScore,
+      readinessStatus: sectionStatus,
+      readinessSummary: sectionReadinessSummary({
+        totalRefs: section.resourceSpaceAssetIds.length,
+        missingRefs: section.missingResourceSpaceAssetIds,
+        portalReadyRefs,
+        internalOnlyRefs,
+        reviewRequiredRefs
+      }),
       portalReadyRefs,
       internalOnlyRefs,
       reviewRequiredRefs,
@@ -149,6 +210,8 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
   const canPreview = hasRefs && missingRefs === 0 && allAssets.every((item) => item.canPreview);
   const canShare = canPreview && allAssets.every((item) => item.shareReady);
   const canPublish = hasRefs && missingRefs === 0 && allAssets.every((item) => item.publishReady);
+  const packageScore = readinessScore(totalRefs, portalReadyRefs);
+  const packageStatus = readinessStatus({ totalRefs, missingRefs, blockedRefs });
   const reason = !hasRefs
     ? `Package needs media ${refNoun} before preview, share, or publish.`
     : missingRefs
@@ -167,6 +230,9 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
     totalRefs,
     resolvedRefs,
     missingRefs,
+    readinessScore: packageScore,
+    readinessLabel: readinessLabel(packageStatus, packageScore),
+    readinessStatus: packageStatus,
     portalReadyRefs,
     internalOnlyRefs,
     reviewRequiredRefs,
@@ -174,9 +240,9 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
     reason,
     auditMessage: `Package governance: ${portalReadyRefs}/${totalRefs} Portal Ready, ${internalOnlyRefs} internal-only, ${reviewRequiredRefs} review-required, ${missingRefs} missing.`,
     commandCenter: [
-      command("Preview", canPreview, canPreview ? `All ${refNoun} can render a role-safe preview.` : `Preview waits for resolvable ${refNoun} and role-safe previews.`, !canPreview && hasRefs),
-      command("Share", canShare, canShare ? "Share packet can stay within current role policy." : `Share waits for Portal Ready ${refNoun} or internal-ready ${refNoun} allowed for this role.`, !canShare && hasRefs),
-      command("Publish", canPublish, canPublish ? (canSeeOpsCopy ? "All refs are Portal Ready; ResourceSpace originals stay canonical." : "All references are Portal Ready; original files stay protected.") : reason, !canPublish && hasRefs)
+      command("Preview package", canPreview, canPreview ? `All ${refNoun} can render a role-safe preview.` : `Preview waits for resolvable ${refNoun} and role-safe previews.`, !canPreview && hasRefs),
+      command("Prepare share packet", canShare, canShare ? "Share stays policy-scoped; no public link is created here." : `Share waits for Portal Ready ${refNoun} or internal-ready ${refNoun} allowed for this role.`, !canShare && hasRefs),
+      command("Queue publish review", canPublish, canPublish ? (canSeeOpsCopy ? "All refs are Portal Ready; ResourceSpace originals stay canonical." : "All references are Portal Ready; original files stay protected.") : reason, !canPublish && hasRefs)
     ],
     sections
   };

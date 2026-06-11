@@ -106,6 +106,9 @@ if (!requestIdentitySource.includes("const localFallbackRole = normalizeRole(exp
 if (!requestIdentitySource.includes('highestTrustedRole(directRole, mappedRole(groups), highestRole(groups)) || "Viewer"')) {
   failures.push("frontend/lib/request-identity.ts must default trusted-header sessions without trusted role claims to Viewer");
 }
+if (!requestIdentitySource.includes("normalizeTrustedIdentityText") || !requestIdentitySource.includes("normalizeTrustedEmail") || !requestIdentitySource.includes("normalizePersistedDisplayText")) {
+  failures.push("frontend/lib/request-identity.ts must sanitize trusted SSO identity headers before audit/storage use");
+}
 if (/highestTrustedRole\(directRole,\s*mappedRole\(groups\),\s*highestRole\(groups\)\)\s*\|\|\s*(fallbackRole|localFallbackRole)/.test(requestIdentitySource)) {
   failures.push("frontend/lib/request-identity.ts must not trust explicit URL/form roles when trusted SSO headers are enabled");
 }

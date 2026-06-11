@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Archive, FileSearch, FolderOpen, HelpCircle, KeyRound, ListFilter, Search, Send, Settings2, ShieldAlert, ShieldCheck, Tags, UploadCloud, UserRoundSearch, X } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
+import { routeWithRole } from "@/lib/role-routes";
 import { cn } from "@/lib/ui";
 
 type Command = {
@@ -180,7 +181,7 @@ export function CommandPalette() {
 
   function runCommand(command: Command) {
     closePalette();
-    router.push(command.href);
+    router.push(routeWithRole(command.href, role));
   }
 
   function onInputKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
@@ -206,7 +207,7 @@ export function CommandPalette() {
     <>
       <button
         type="button"
-        className="group hidden min-h-10 w-10 items-center justify-center gap-2 rounded-md border border-[#d3ded7] bg-white px-0 text-left text-sm font-black text-tjc-evergreen transition hover:border-[#a8c7bb] hover:bg-[#f7fbf8] active:translate-y-px lg:inline-flex 2xl:w-auto 2xl:px-3"
+        className="group inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-[#d3ded7] bg-white px-3 text-left text-sm font-black text-tjc-evergreen transition hover:border-[#a8c7bb] hover:bg-[#f7fbf8] active:translate-y-px md:w-10 md:px-0 2xl:w-auto 2xl:px-3"
         onClick={openPalette}
         aria-label="Open command palette"
         aria-keyshortcuts="Meta+K Control+K"
@@ -216,16 +217,6 @@ export function CommandPalette() {
         </span>
         <span className="hidden text-sm font-black text-tjc-ink 2xl:inline">Command</span>
         <kbd className="hidden shrink-0 rounded-md border border-[#c7d2ca] bg-[#f4f7f4] px-1.5 py-0.5 text-[11px] font-black text-tjc-muted 2xl:inline">⌘K</kbd>
-      </button>
-      <button
-        type="button"
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d3ded7] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#f3f8f4] active:translate-y-px lg:hidden"
-        onClick={openPalette}
-        aria-label="Open command palette"
-        aria-keyshortcuts="Meta+K Control+K"
-      >
-        <Search size={16} strokeWidth={1.8} aria-hidden="true" />
-        <span>Search commands</span>
       </button>
       {open && typeof document !== "undefined" ? createPortal((
         <div className="fixed inset-0 z-[80] bg-[#07100d]/36 p-3" role="presentation" onMouseDown={closePalette}>

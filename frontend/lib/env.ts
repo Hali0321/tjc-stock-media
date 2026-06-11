@@ -107,6 +107,10 @@ export function betaTaskModeEnabled() {
   return process.env.BETA_TASK_MODE_ENABLED !== "0";
 }
 
+export function downloadGateDemoRolesAllowed() {
+  return process.env.DOWNLOAD_GATE_ALLOW_DEMO_ROLES === "1";
+}
+
 export function hasVercelKvConfig() {
   return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 }

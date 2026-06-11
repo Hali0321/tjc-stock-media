@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Download, Eye, FileLock2, Mail, ShieldCheck } from "lucide-react";
 import { AssetQuickLookDialog } from "@/components/AssetQuickLookDialog";
+import { GatedDownloadButton } from "@/components/GatedDownloadButton";
 import { MediaPreview } from "@/components/MediaPreview";
 import { ReuseStateBadge } from "@/components/StatusBadge";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
@@ -149,10 +150,10 @@ export function AssetCard({
             <h2 className="dam-asset-card-title line-clamp-2 text-sm font-black leading-tight text-tjc-ink max-sm:text-[12px]">{display.title}</h2>
             <span className="dam-asset-card-subtitle mt-1 block truncate text-xs font-semibold text-tjc-muted max-sm:text-[10px]">{display.cardSubtitle}</span>
           </div>
-	          {canDownload && !hasWarnings ? (
-	            <a className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#92cfad] bg-[#e6f7ec] text-[#164d34] transition hover:bg-[#d9f0e3] active:translate-y-px" href={downloadHref} aria-label={`Download approved copy of ${display.title}`}>
-	              <Download aria-hidden="true" size={15} strokeWidth={1.8} />
-	            </a>
+          {canDownload && !hasWarnings ? (
+            <GatedDownloadButton className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#92cfad] bg-[#e6f7ec] text-[#164d34] transition hover:bg-[#d9f0e3] active:translate-y-px" href={downloadHref} ariaLabel={`Download approved copy of ${display.title}`} reason={`Approved-copy card request for ${display.title}`}>
+              <Download aria-hidden="true" size={15} strokeWidth={1.8} />
+            </GatedDownloadButton>
           ) : (
             <Link className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#d6dfd8] bg-white text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`} aria-label={`${verdict.action} for ${display.title}`}>
               <ArrowRight aria-hidden="true" size={15} strokeWidth={1.8} />
@@ -185,10 +186,10 @@ export function AssetCard({
         </div>
         <div className="mt-auto grid">
           {canDownload && !hasWarnings ? (
-            <a className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-3 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
+            <GatedDownloadButton className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-3 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref} reason={`Approved-copy card request for ${display.title}`}>
               <Download size={15} strokeWidth={1.8} aria-hidden="true" />
               {verdict.action}
-            </a>
+            </GatedDownloadButton>
           ) : (
             <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" href={`/assets/${asset.id}`}>
               {verdict.action}

@@ -6,6 +6,7 @@ import {
   readThumbnailDeliveryInput,
   readThumbnailDerivativeDelivery,
   thumbnailAccessDeniedError,
+  thumbnailDownloadVariantDeniedError,
   thumbnailImageResponse,
   thumbnailMalformedIdError,
   thumbnailNotFoundError
@@ -26,6 +27,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { asset, source } = await getAssetRecordById(id);
   if (!asset) {
     const error = thumbnailNotFoundError(session, source);
+    return NextResponse.json(error.body, { status: error.status });
+  }
+  if (deliveryInput.variant === "download") {
+    const error = thumbnailDownloadVariantDeniedError(session, source);
     return NextResponse.json(error.body, { status: error.status });
   }
 

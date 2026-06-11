@@ -18,6 +18,7 @@ import {
 import { MediaPreview } from "@/components/MediaPreview";
 import { FilterPills } from "@/components/FilterPills";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { GatedDownloadButton, parseDownloadGateHref } from "@/components/GatedDownloadButton";
 import { LibraryPagination } from "@/components/LibraryPagination";
 import { SavedViewCard } from "@/components/SavedViewCard";
 import { assetPresentation } from "@/lib/presentation";
@@ -69,6 +70,9 @@ function PrimaryAction({
       <span>{children}</span>
     </>
   );
+  if (href && !disabled && parseDownloadGateHref(href)) {
+    return <GatedDownloadButton className={classes} href={href} ariaLabel="Download approved copy">{content}</GatedDownloadButton>;
+  }
   if (href && !disabled) return <a className={classes} href={href}>{content}</a>;
   return <button className={classes} type={type} onClick={onClick} disabled={disabled}>{content}</button>;
 }

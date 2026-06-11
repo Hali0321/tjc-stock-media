@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, FileLock2, Image as ImageIcon, Mail, Square, View } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
+import { GatedDownloadButton } from "@/components/GatedDownloadButton";
 import { ReuseRequestDialog } from "@/components/ReuseRequestDialog";
 import { toastDownloadBlocked } from "@/lib/tjc-toasts";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
@@ -42,10 +43,10 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
         <p className="mt-1 text-sm font-semibold leading-snug text-tjc-muted">{state.panelLabel}</p>
       </div>
       {state.approvedCopy.allowed ? (
-        <a className="mb-3 flex min-h-14 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref}>
+        <GatedDownloadButton className="mb-3 flex min-h-14 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#062d24] active:translate-y-px" href={downloadHref} reason={`Download panel approved-copy request for ${assetTitle}`}>
           <Download size={17} strokeWidth={1.8} aria-hidden="true" />
           Download approved web copy
-        </a>
+        </GatedDownloadButton>
       ) : (
         <div className="mb-3 rounded-md border border-[#dfbd73] bg-[#fff8e8] p-3 text-[#6f4608]" role="status">
           <div className="grid grid-cols-[auto_1fr] gap-3">
@@ -84,9 +85,9 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             );
           }
           return option.available ? (
-            <a key={option.label} className="grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-[#8fc9a9] bg-[#f7fbf8] p-3 text-[#164d34] transition hover:bg-[#eef7f1] active:translate-y-px" href={downloadHref}>
+            <GatedDownloadButton key={option.label} className="grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-[#8fc9a9] bg-[#f7fbf8] p-3 text-left text-[#164d34] transition hover:bg-[#eef7f1] active:translate-y-px" href={downloadHref} reason={`${option.label} approved-copy request for ${assetTitle}`}>
               {row}
-            </a>
+            </GatedDownloadButton>
           ) : (
             <button key={option.label} className={cn("grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-tjc-line bg-white p-3 text-left text-[#5d665f]", index === 0 && !state.approvedCopy.allowed && "border-[#dfbd73] bg-[#fffaf0] text-[#6f4608]")} type="button" disabled>
               {row}

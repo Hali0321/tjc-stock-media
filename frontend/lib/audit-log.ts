@@ -160,6 +160,20 @@ export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt
   return record;
 }
 
+export function appendRequiredAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string }) {
+  const createdAt = new Date();
+  const draft: AuditEventRecord = {
+    id: `${safeIsoTimestampIdPart(createdAt)}-${crypto.randomUUID().slice(0, 8)}`,
+    createdAt: createdAt.toISOString(),
+    actor: event.actor || event.role,
+    ...event
+  };
+  const record = normalizeAuditEvent(draft);
+  if (!record) throw new Error("Audit event normalization failed.");
+  appendRuntimeJsonLine(auditFile(createdAt), record);
+  return record;
+}
+
 export function listAuditEvents(limit = 20): AuditEventRecord[] {
   const safeLimit = Math.max(1, Math.min(maxAuditEventsReturned, Math.trunc(limit) || 20));
   const readWindow = Math.max(minAuditReadWindow, Math.min(maxAuditEventsReturned, safeLimit * 2));

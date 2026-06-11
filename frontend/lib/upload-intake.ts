@@ -36,9 +36,13 @@ export type UploadIntakeValidationError = {
 type UploadIntakeAuditPacket = Pick<UploadIntakePacket, "eventName" | "files" | "sourceLink"> &
   Partial<Pick<UploadIntakePacket, "largeFiles" | "reviewWarnings">>;
 type UploadIntakeAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+const MAX_UPLOAD_INTAKE_FILES = 80;
 
 export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
-  const files = form.getAll("files").filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0);
+  const files = form
+    .getAll("files")
+    .filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0)
+    .slice(0, MAX_UPLOAD_INTAKE_FILES + 1);
   const sourceLink = normalizeUrlField(form.get("sourceLink"), "", 500);
   const title = normalizeDisplayTextField(form.get("title"), "", 160);
   const eventName = normalizeDisplayTextField(form.get("eventName"), "", 120);
@@ -117,6 +121,15 @@ export function uploadIntakeValidationError(intake: UploadIntakePacket): UploadI
         error: "Suggested tags must use the current media-library taxonomy.",
         invalidTags: intake.invalidTags,
         guidance: "Add new wording to intake notes for reviewer consideration."
+      },
+      status: 400
+    };
+  }
+  if (intake.files.length > MAX_UPLOAD_INTAKE_FILES) {
+    return {
+      body: {
+        error: "Upload intake supports one focused batch at a time.",
+        guidance: `Submit ${MAX_UPLOAD_INTAKE_FILES} or fewer files, or route larger batches through Shared Drive Incoming.`
       },
       status: 400
     };

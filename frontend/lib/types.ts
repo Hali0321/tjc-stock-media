@@ -27,7 +27,7 @@ export type StockMediaAsset = {
     card: string;
     collection: string;
     detail: string;
-    download: string;
+    download?: string;
   };
   mediaType: "photo" | "video" | "audio" | "graphic" | "document";
   collection: string;
@@ -552,8 +552,23 @@ export type SearchResult = {
       label: string;
       filter: string;
       count: number;
-      kind: "policy" | "media" | "people" | "shape" | "workflow";
+      kind: "policy" | "media" | "people" | "shape" | "workflow" | "ministry";
     }>;
+    noResultHelp?: {
+      title: string;
+      guidance: string;
+      querySuggestions: string[];
+      filters: Array<{
+        label: string;
+        filter: string;
+        count: number;
+        kind: "policy" | "media" | "people" | "shape" | "workflow" | "ministry";
+      }>;
+      savedViews: Array<{
+        id: string;
+        label: string;
+      }>;
+    };
     scoreHint: string;
   };
   zeroResultInsights: ZeroResultInsight[];

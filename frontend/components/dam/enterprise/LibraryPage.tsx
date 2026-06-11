@@ -1,12 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronDown, Download, Folder, MoreHorizontal, Search, Share2, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronDown, Download, Folder, MoreHorizontal, Search, Share2, Sparkles, Target } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
+import { buildDamMissionControl, type MissionControlTone } from "@/lib/dam-mission-control";
 import type { CatalogSort, StockMediaAsset } from "@/lib/types";
 import { sourceNoun } from "@/lib/enterprise-display";
+import { routeWithRole } from "@/lib/role-routes";
 import { ActionButton, AssetCard, ErrorCard, IconButton, InspectorDrawer, LoadingCard, PageHeader, SavedViewPanel, SourcePill } from "./EnterpriseShared";
+
+function missionToneClass(tone: MissionControlTone) {
+  if (tone === "ready") return "is-ready";
+  if (tone === "risk") return "is-risk";
+  if (tone === "watch") return "is-watch";
+  return "is-info";
+}
 
 export function EnterpriseLibraryPage() {
   const { role } = useDemoRole();
@@ -23,6 +32,8 @@ export function EnterpriseLibraryPage() {
   const search = useAssetsSearch({ role, query, filters, view: view || undefined, collection: collection || undefined, sort, limit, offset });
   const assets = search.data?.assets || [];
   const discovery = search.data?.discovery;
+  const noResultHelp = discovery?.noResultHelp;
+  const mission = buildDamMissionControl({ result: search.data, role, selectedCount: selectedIds.length });
   useEffect(() => {
     if (!selectedId && assets[0]) {
       setSelectedId(assets[0].id);
@@ -68,6 +79,17 @@ export function EnterpriseLibraryPage() {
   const toggleFilter = (filter: string) => {
     setFilters((current) => current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]);
   };
+  const runSuggestedQuery = (term: string) => {
+    setQuery(term);
+    setView("");
+    setCollection("");
+  };
+  const openSuggestedView = (id: string) => {
+    setView(id);
+    setCollection("");
+    setQuery("");
+    setFilters([]);
+  };
   const clearAll = () => {
     setQuery("");
     setView("");
@@ -75,11 +97,73 @@ export function EnterpriseLibraryPage() {
     setFilters([]);
     setSort("Approved first");
   };
+  const runMissionAction = (action: (typeof mission.actions)[number]) => {
+    if (action.filter) {
+      setFilters((current) => current.includes(action.filter!) ? current : [...current, action.filter!]);
+      announceLibraryAction(`${action.label}: applied ${action.filter}.`);
+      return;
+    }
+    if (action.query) {
+      setQuery(action.query);
+      announceLibraryAction(`${action.label}: searching ${action.query}.`);
+      return;
+    }
+    if (action.href) {
+      window.location.href = routeWithRole(action.href, role);
+      return;
+    }
+    announceLibraryAction(action.detail);
+  };
   return (
     <div className="enterprise-page enterprise-library">
       <PageHeader title="Asset Library" count={search.data ? `${search.data.total.toLocaleString()} assets` : undefined} actions={<><ActionButton onClick={() => announceLibraryAction("Saved views are available in the left panel. Choose one to update the library query.")}>Saved views <ChevronDown size={14} /></ActionButton><ActionButton tone="primary" onClick={() => void saveCurrentSearch()}>Save this search</ActionButton><IconButton label="More" onClick={() => announceLibraryAction("More library actions are limited to backend-gated download, package, and share workflows in this beta.")}><MoreHorizontal size={17} /></IconButton></>} />
       {libraryMessage ? <p className="ed-inline-success">{libraryMessage}</p> : null}
       <section className="ed-approved-banner"><CheckCircle2 size={24} /><div><strong>{search.live ? `Showing ${sourceNoun(search.source)}-backed records` : `${sourceNoun(search.source)} disconnected or read-only`}</strong><span>{search.source?.detail || "The UI is waiting for the backend DAM source."}</span></div><SourcePill source={search.source} live={search.live} /><button type="button" onClick={() => announceLibraryAction("Source banner kept visible for tester safety; it cannot be dismissed in this beta.")}>×</button></section>
+      {search.data ? (
+        <section className="ed-mission-control" aria-label="DAM mission control">
+          <div className="ed-mission-score">
+            <span><Target size={15} aria-hidden="true" /> DAM Mission Control</span>
+            <strong>{mission.score}</strong>
+            <em>{mission.label}</em>
+          </div>
+          <div className="ed-mission-main">
+            <div>
+              <h2>{mission.summary}</h2>
+              <p>{mission.selectedSummary}</p>
+            </div>
+            <div className="ed-mission-lanes">
+              {mission.lanes.map((lane) => (
+                <button
+                  className={missionToneClass(lane.tone)}
+                  type="button"
+                  key={lane.id}
+                  onClick={() => lane.filter ? toggleFilter(lane.filter) : announceLibraryAction(lane.detail)}
+                >
+                  <span>{lane.label}</span>
+                  <strong>{lane.value}</strong>
+                  <small>{lane.detail}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+          <aside className="ed-mission-actions">
+            <div>
+              <span>Spotlight</span>
+              {mission.spotlight.href ? <a href={routeWithRole(mission.spotlight.href, role)}>{mission.spotlight.title}</a> : <strong>{mission.spotlight.title}</strong>}
+              <small>{mission.spotlight.detail}</small>
+            </div>
+            <nav aria-label="Recommended DAM actions">
+              {mission.actions.map((action) => (
+                <button className={`is-${action.priority}`} type="button" key={action.id} onClick={() => runMissionAction(action)}>
+                  <span>{action.label}</span>
+                  <small>{action.detail}</small>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </button>
+              ))}
+            </nav>
+          </aside>
+        </section>
+      ) : null}
       <form className="ed-library-search" role="search" onSubmit={(event) => event.preventDefault()}>
         <Search size={17} aria-hidden="true" />
         <label className="sr-only" htmlFor="library-local-search">Search media assets</label>
@@ -94,7 +178,7 @@ export function EnterpriseLibraryPage() {
             <small>{discovery.scoreHint}</small>
           </div>
           {discovery.expandedTerms.length ? (
-            <p>{discovery.expandedTerms.slice(0, 6).map((term) => <button type="button" key={term} onClick={() => setQuery(term)}>{term}</button>)}</p>
+            <p>{discovery.expandedTerms.slice(0, 6).map((term) => <button type="button" key={term} onClick={() => runSuggestedQuery(term)}>{term}</button>)}</p>
           ) : null}
           {discovery.suggestedFilters.length ? (
             <nav aria-label="Suggested filters">
@@ -133,7 +217,29 @@ export function EnterpriseLibraryPage() {
           />
           <main className="ed-asset-workspace">
             <div className="ed-bulk-toolbar"><strong>{selectedIds.length} selected</strong><button type="button" onClick={() => announceLibraryAction("Bulk download stays backend-gated. Open a record to request an approved copy.")}><Download size={15} />Download</button><button type="button" onClick={() => announceLibraryAction("Collection edits are not written back in beta. Use Package Builder for portal-local refs.")}><Folder size={15} />Add to collection</button><button type="button" onClick={() => announceLibraryAction("Share links are disabled until identity and access policy are connected.")}><Share2 size={15} />Share</button><button type="button" onClick={() => announceLibraryAction("Bulk more actions are disabled until backend policy actions are connected.")}><MoreHorizontal size={15} />More</button><button type="button" onClick={() => setSelectedIds(assets.map((asset) => asset.id))}>Select visible</button></div>
-            {assets.length ? <div className="ed-grid">{assets.map((asset) => <AssetCard asset={asset} selected={selectedIds.includes(asset.id)} onSelect={() => toggleAsset(asset)} key={asset.id} />)}</div> : <section className="ed-empty-state"><Search size={24} /><h2>No {sourceNoun(search.source)} records match this search</h2><p>Try a broader ministry, category, channel, or rights term.</p><ActionButton onClick={() => setQuery("")}>Clear search</ActionButton></section>}
+            {assets.length ? <div className="ed-grid">{assets.map((asset) => <AssetCard asset={asset} selected={selectedIds.includes(asset.id)} onSelect={() => toggleAsset(asset)} key={asset.id} />)}</div> : (
+              <section className="ed-empty-state">
+                <Search size={24} />
+                <h2>{noResultHelp?.title || `No ${sourceNoun(search.source)} records match this search`}</h2>
+                <p>{noResultHelp?.guidance || "Try a broader ministry, category, channel, or rights term."}</p>
+                {noResultHelp?.querySuggestions.length ? (
+                  <nav aria-label="Suggested searches">
+                    {noResultHelp.querySuggestions.map((term) => <button type="button" key={term} onClick={() => runSuggestedQuery(term)}>{term}</button>)}
+                  </nav>
+                ) : null}
+                {noResultHelp?.filters.length ? (
+                  <nav aria-label="Suggested recovery filters">
+                    {noResultHelp.filters.map((item) => <button type="button" key={item.filter} onClick={() => toggleFilter(item.filter)}>{item.label} <span>{item.count.toLocaleString()}</span></button>)}
+                  </nav>
+                ) : null}
+                {noResultHelp?.savedViews.length ? (
+                  <nav aria-label="Suggested saved views">
+                    {noResultHelp.savedViews.map((item) => <button type="button" key={item.id} onClick={() => openSuggestedView(item.id)}>{item.label}</button>)}
+                  </nav>
+                ) : null}
+                <ActionButton onClick={clearAll}>Clear all</ActionButton>
+              </section>
+            )}
             {pagination ? <div className="ed-bulk-toolbar" aria-label="Library pagination"><strong>Showing {pagination.rangeStart.toLocaleString()}-{pagination.rangeEnd.toLocaleString()} of {search.data?.total.toLocaleString()}</strong><button type="button" disabled={!pagination.hasPrevious} onClick={() => setOffset(pagination.previousOffset)}>Previous</button><button type="button" disabled={!pagination.hasNext} onClick={() => setOffset(pagination.nextOffset)}>Next</button></div> : null}
           </main>
           <InspectorDrawer asset={selected} source={search.source} live={search.live} />

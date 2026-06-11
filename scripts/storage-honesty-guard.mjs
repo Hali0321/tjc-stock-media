@@ -438,14 +438,20 @@ if (!portalPackageSmoke.includes("package save response leaked creator identity"
   failures.push("package smoke must prove Contributor package saves do not leak creator identity");
 }
 for (const surface of [
-  { name: "catalog search", source: catalog },
-  { name: "catalog search request", source: catalogSearchRequest }
+  { name: "catalog search", source: catalog, helper: "safeBoundedInt" },
+  { name: "catalog search request", source: catalogSearchRequest, helper: "normalizeBoundedIntField" }
 ]) {
-  if (!surface.source.includes("safeBoundedInt")) failures.push(`${surface.name} must normalize pagination bounds through safeBoundedInt`);
+  if (!surface.source.includes(surface.helper)) failures.push(`${surface.name} must normalize pagination bounds through ${surface.helper}`);
   if (/Number\.isFinite\([^)]*(limit|offset|parsed)/.test(surface.source)) failures.push(`${surface.name} must not hand-roll pagination number bounds`);
+}
+if (!requestValidation.includes("function normalizeBoundedIntField") || !requestValidation.includes("safeBoundedInt(value, options)")) {
+  failures.push("request validation must own bounded numeric request field normalization through safeBoundedInt");
 }
 if (!catalogLanguage.includes("safeNonNegativeInt(dimensions?.[1])") || !catalogLanguage.includes("safeNonNegativeInt(dimensions?.[2])") || /const\s+(width|height)\s*=\s*Number\(dimensions/.test(catalogLanguage)) {
   failures.push("catalog language dimension filters must normalize image dimensions through safeNonNegativeInt");
+}
+if (!portalBetaRehearsal.includes("function parseHttpCode") || /httpCode:\s*Number\(process\.env\.CODE\)/.test(portalBetaRehearsal)) {
+  failures.push("portal beta rehearsal evidence must normalize HTTP codes before writing JSONL");
 }
 
 if (!usageAnalytics.includes("normalizePersistedDisplayText")) failures.push("usage analytics must normalize usage labels through normalizePersistedDisplayText");
@@ -494,7 +500,8 @@ if (!sourceRedaction.includes("function canSeePrivateSourceFiles") || /if \(canS
 if (!sourceRedaction.includes("export const sourceCustodyAssetKeys") || !sourceRedaction.includes("function omitAssetKeys")) {
   failures.push("source redaction must centralize private asset key omission");
 }
-if (!sourceRedaction.includes("omitAssetKeys(asset, sourceCustodyAssetKeys)") || !sourceRedaction.includes("omitAssetKeys(roleSafeAsset, publicHiddenAssetKeys)")) {
+const sourceCustodyRedactionPattern = /const\s+roleSafeAsset\s*=\s*omitAssetKeys\((?:asset|downloadSafeAsset),\s*sourceCustodyAssetKeys\)/;
+if (!sourceCustodyRedactionPattern.test(sourceRedaction) || !sourceRedaction.includes("omitAssetKeys(roleSafeAsset, publicHiddenAssetKeys)")) {
   failures.push("normal-user payload redaction must derive safeAsset from roleSafeAsset through centralized key omission");
 }
 const sourceCustodyAssetKeys = stringArrayConst(sourceRedaction, "sourceCustodyAssetKeys");

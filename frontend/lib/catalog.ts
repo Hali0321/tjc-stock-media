@@ -221,7 +221,9 @@ export async function searchAssets({
       query: effectiveQuery,
       view: selectedViewId,
       collection,
+      filters,
       matchedAssets: sorted,
+      availableAssets: roleVisible,
       totalVisible: roleVisible.length
     }),
     zeroResultInsights: buildZeroResultInsights(roleVisible),

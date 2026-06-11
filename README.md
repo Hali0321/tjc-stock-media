@@ -4,6 +4,11 @@ North Star: a TJC user can find, trust, request, or review a ministry media asse
 
 This repo sets up a local ResourceSpace DAM prototype and a private TJC-facing Next.js portal for True Jesus Church ministry media governance. Google Shared Drive remains the master-original warehouse. ResourceSpace is the source of truth for assets, metadata, search, rights review, and approval fields. The Next.js portal is the governed workbench for Library, Intake, Review, Collections, Asset Detail, and Governance; it does not replace ResourceSpace or become a second DAM.
 
+Data engineering posture: use a lightweight canonical asset metadata catalog, not
+a separate data platform. See `docs/data-engineering-playbook.md` for source
+boundaries, idempotent imports, data quality contracts, schema drift, AI
+suggestion rules, and the trigger points for adding heavier infrastructure.
+
 ```text
 Legacy sources
 Google Photos / old Drive folders / IA DME folders

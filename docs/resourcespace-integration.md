@@ -4,6 +4,12 @@ Last updated: 2026-06-10
 
 ## Data Flow
 
+Data engineering posture: follow `docs/data-engineering-playbook.md`. The
+current system is a canonical asset metadata catalog over Google Shared Drive,
+ResourceSpace, portal read models, metadata exports, audit logs, and future AI
+sidecars. Do not add a warehouse, lake, vector database, or custom canonical
+database until the playbook trigger points are met.
+
 ```txt
 Google Shared Drive / Amazon S3
         ↓

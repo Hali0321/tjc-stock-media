@@ -29,3 +29,12 @@ make launch-readiness
 ## Safety
 
 Any public-use approval must include reviewer, review date, usage scope, and notes. Unknown people, children, sacrament, worship, sermon, music, or unclear contributor media stays `Needs Review` until a rights reviewer approves.
+
+
+<claude-mem-context>
+# Memory Context
+
+# [tjc-stock-media] recent context, 2026-06-11 5:52pm EDT
+
+No previous sessions found.
+</claude-mem-context>

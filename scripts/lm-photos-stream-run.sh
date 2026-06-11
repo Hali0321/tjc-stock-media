@@ -36,10 +36,20 @@ echo "Work root: $WORK_ROOT"
 echo "Audit dir: $AUDIT_DIR"
 echo "Staging root: $STAGING_ROOT"
 echo "Stage mode: $STAGE_MODE"
+if [ "$DRY_RUN" = "1" ]; then
+  echo "Mode: dry run only; no ZIP extraction, ResourceSpace import, staging write, temp cleanup, or ZIP deletion."
+else
+  echo "Mode: live run; process albums one at a time and verify manifest count equals import audit count."
+fi
 
 ORDER_FILE="$WORK_ROOT/zip-order.txt"
 find "$ZIP_DIR" -maxdepth 1 -type f -name '*.zip' ! -name 'Open Album-3-001.zip' | sort > "$ORDER_FILE"
 find "$ZIP_DIR" -maxdepth 1 -type f -name 'Open Album-3-001.zip' | sort >> "$ORDER_FILE"
+zip_count="$(wc -l < "$ORDER_FILE" | tr -d ' ')"
+echo "ZIPs discovered: $zip_count"
+if grep -q '/Open Album-3-001.zip$' "$ORDER_FILE"; then
+  echo "Order note: Open Album-3-001.zip queued last because it is largest."
+fi
 
 processed=0
 while IFS= read -r zip <&3; do
@@ -79,7 +89,11 @@ with zipfile.ZipFile(sys.argv[1]) as zf:
     print(sum(1 for info in zf.infolist() if not info.is_dir() and Path(info.filename).suffix.lower() in media))
 PY
 )"
+    zip_size_mb="$(du -m "$zip" | awk '{print $1}')"
     echo "    Media files in ZIP: $file_count"
+    echo "    ZIP size MB: $zip_size_mb"
+    echo "    Would write source manifest: $source_manifest"
+    echo "    Would write album import audit: $album_audit"
     processed=$((processed + 1))
     continue
   fi
@@ -144,3 +158,7 @@ PY
 done 3< "$ORDER_FILE"
 
 echo "Processed albums: $processed"
+if [ "$DRY_RUN" = "1" ]; then
+  echo "Dry run complete: no files extracted, staged, imported, deleted, or cleaned up."
+  echo "Next: choose PROCESS_LIMIT, confirm free space, run make smoke, then use DRY_RUN=0 only when ready."
+fi

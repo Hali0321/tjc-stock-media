@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, ChevronDown, Download, FileText, Grid3X3, Lock, PackageCheck, Search, Share2, ShieldCheck, Star } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, Download, FileText, Grid3X3, Lock, PackageCheck, Search, Share2, ShieldAlert, ShieldCheck, Star } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetDetail, useDownloadGate } from "@/components/dam/useDamApi";
 import { assetDetailTabs, isActivityTab } from "@/lib/asset-record-workbench";
 import { assetRecordRef, assetType, displayTitle, sourceNoun } from "@/lib/enterprise-display";
 import { assetDetailMetadataRows, assetKeywordText, rightsRestrictionRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus } from "@/lib/enterprise-status";
+import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { cn } from "@/lib/ui";
 import { ActionButton, AssetThumb, ErrorCard, IconButton, LoadingCard, RightsVerdictCard, SourcePill } from "./EnterpriseShared";
+
+function confidenceLabel(value: string) {
+  return value.replace(/_/g, " ");
+}
 
 export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const { role } = useDemoRole();
@@ -20,10 +25,19 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const [assetActionMessage, setAssetActionMessage] = useState("");
   const asset = detail.data?.asset;
   const related = detail.data?.related || [];
-  const approved = asset?.reuseDecision?.downloadable || assetEnterpriseStatus(asset) === "Approved";
   if (detail.loading) return <div className="enterprise-page"><LoadingCard label="Loading media asset record..." /></div>;
   if (detail.error || !asset) return <div className="enterprise-page"><ErrorCard message={detail.error || "Asset not found."} source={detail.source} /></div>;
   const metadataRows = assetDetailMetadataRows(asset, role);
+  const reusePacket = buildPortalReuseDecision(asset, role);
+  const approved = reusePacket.viewerVerdict.canDownload;
+  const blockerPreview = reusePacket.viewerVerdict.blockers.slice(0, 4);
+  const hiddenBlockerCount = Math.max(0, reusePacket.viewerVerdict.blockers.length - blockerPreview.length);
+  const confidenceRows = [
+    ["Source", reusePacket.metadataConfidence.source],
+    ["Rights", reusePacket.metadataConfidence.rights],
+    ["People/minors", reusePacket.metadataConfidence.peopleMinors],
+    ["Review", reusePacket.metadataConfidence.review]
+  ];
   return (
     <div className="enterprise-page enterprise-detail">
       <div className="ed-breadcrumb">Library <span>›</span> {sourceNoun(detail.source)} <span>›</span> {assetRecordRef(asset)}</div>
@@ -35,6 +49,26 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
             <div className="ed-detail-actions"><IconButton label="Favorite" onClick={() => setAssetActionMessage("Favorite saved for this beta session.")}><Star size={18} /></IconButton><IconButton label="Download" onClick={() => setAssetActionMessage("Use the sticky approved-copy button to run the backend download gate.")}><Download size={18} /></IconButton><IconButton label="Versions" onClick={() => setTab("Activity")}><FileText size={18} /></IconButton><IconButton label="Share" onClick={() => setAssetActionMessage("Share links wait for identity and access policy. No public link was created.")}><Share2 size={18} /></IconButton><IconButton label="Fullscreen" onClick={() => setAssetActionMessage("Preview uses fit-to-panel mode in this beta. Original files remain gated.")}><Grid3X3 size={18} /></IconButton></div>
           </header>
           {assetActionMessage ? <p className="ed-inline-success">{assetActionMessage}</p> : null}
+          <section className={cn("ed-detail-trust-card", `is-${reusePacket.viewerVerdict.tone}`)} aria-label="Asset reuse trust summary">
+            <div className="ed-detail-trust-answer">
+              <span>{approved ? <ShieldCheck size={22} /> : <ShieldAlert size={22} />}</span>
+              <div>
+                <small>Can I use this?</small>
+                <strong>{reusePacket.viewerVerdict.title}</strong>
+                <p>{reusePacket.viewerVerdict.reason}</p>
+              </div>
+            </div>
+            <div className="ed-detail-trust-proof" aria-label="Current blocker summary">
+              {blockerPreview.length ? blockerPreview.map((blocker) => <span key={blocker.code}><AlertTriangle size={13} />{blocker.label}</span>) : <span className="is-clear"><CheckCircle2 size={13} />No active portal blockers</span>}
+              {hiddenBlockerCount ? <span>+{hiddenBlockerCount} more</span> : null}
+            </div>
+            <div className="ed-detail-confidence-grid">
+              {confidenceRows.map(([label, value]) => <span key={label}><strong>{label}</strong><em>{confidenceLabel(value)}</em></span>)}
+            </div>
+            <button type="button" onClick={() => setAssetActionMessage(`${reusePacket.viewerVerdict.primaryAction}: ${reusePacket.viewerVerdict.reason}`)}>
+              {reusePacket.viewerVerdict.primaryAction}
+            </button>
+          </section>
           <div className="ed-hero-preview"><AssetThumb asset={asset} fit="contain" /><span>{asset.imageDimensions || "Preview unavailable or not provided"}</span><button type="button" onClick={() => setAssetActionMessage("Zoom preview is unavailable until safe derivatives are exported.")}><Search size={18} /></button></div>
           <nav className="ed-tabs is-large" aria-label="Asset record tabs">{assetDetailTabs.map((item) => <button className={cn(tab === item && "is-active")} type="button" key={item} onClick={() => setTab(item)}>{item}</button>)}</nav>
           <section className="ed-card ed-metadata-card">
@@ -54,7 +88,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
         </aside>
       </div>
       <div className={cn("ed-sticky-action-bar", !approved && "is-blocked")}>
-        <div>{approved ? <ShieldCheck size={28} /> : <Lock size={28} />}<span><strong>{approved ? "Approved for use" : "Review required before use"}</strong><small>{approved ? "Download still goes through backend gate." : "Approved copy is blocked until evidence clears."}</small></span></div>
+        <div>{approved ? <ShieldCheck size={28} /> : <Lock size={28} />}<span><strong>{approved ? "Approved copy can be requested" : "Review required before use"}</strong><small>{approved ? "Download still goes through backend gate and audit." : asset?.reuseDecision?.summary || "Approved copy is blocked until evidence clears."}</small></span></div>
         {approved ? <ActionButton tone="primary" icon={Download} onClick={async () => {
           const result = await downloadGate.requestDownload({ termsAccepted: true, usageChannel: "portal", reason: `Asset detail approved-copy request for ${displayTitle(asset)}` });
           setDownloadMessage(result.allowed ? `Download gate allowed. Audit ${result.auditId || "recorded"}.` : `Download blocked: ${result.reason || result.requiredAction || "Not allowed"}.`);

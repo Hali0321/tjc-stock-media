@@ -27,10 +27,14 @@ record_pass() {
   LABEL="$label" CODE="$code" FILE="$file" node <<'NODE'
 const fs = require("fs");
 const path = require("path");
+function parseHttpCode(value) {
+  const code = Number.parseInt(value || "", 10);
+  return Number.isFinite(code) && code >= 100 && code <= 599 ? code : 0;
+}
 const entry = {
   label: process.env.LABEL,
   status: "pass",
-  httpCode: Number(process.env.CODE),
+  httpCode: parseHttpCode(process.env.CODE),
   responseFile: path.relative(process.env.RUN_DIR, process.env.FILE)
 };
 fs.appendFileSync(process.env.RESULTS_JSONL, `${JSON.stringify(entry)}\n`);

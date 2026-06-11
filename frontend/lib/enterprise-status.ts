@@ -1,4 +1,5 @@
 import type { StockMediaAsset } from "@/lib/types";
+import { buildReuseDecision } from "@/lib/portal-reuse-decision";
 
 export type EnterpriseStatus =
   | "Approved"
@@ -21,7 +22,11 @@ export type EnterpriseStatusTone = "success" | "warning" | "danger";
 
 export function assetEnterpriseStatus(asset?: StockMediaAsset): EnterpriseStatus {
   if (!asset) return "Not configured";
-  if (asset.status === "Approved Public" || asset.status === "Approved Internal") return "Approved";
+  const reuse = buildReuseDecision(asset);
+  if (reuse.state === "portal-ready" || reuse.state === "internal-ready") return "Approved";
+  if (reuse.state === "blocked-people-minors") return "Missing Consent";
+  if (reuse.state === "blocked-do-not-use" || reuse.state === "blocked-archive") return "Restricted";
+  if (asset.status === "Approved Public" || asset.status === "Approved Internal") return "Needs Review";
   if (asset.status === "Possible Minors") return "Missing Consent";
   if (asset.status === "Do Not Use" || asset.status === "Searchable Archive") return "Restricted";
   return "Needs Review";

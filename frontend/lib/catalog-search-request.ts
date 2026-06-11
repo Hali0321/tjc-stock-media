@@ -1,7 +1,6 @@
 import { isKnownCollectionId, isKnownSavedViewId } from "@/lib/catalog";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
-import { safeBoundedInt } from "@/lib/persisted-record-safety";
-import { normalizePublicTextField, normalizeTextField } from "@/lib/request-validation";
+import { normalizeBoundedIntField, normalizePublicTextField, normalizeTextField } from "@/lib/request-validation";
 
 export type CatalogSearchRequestInput = {
   query: string;
@@ -18,11 +17,11 @@ export type CatalogSearchRequest =
   | { input?: undefined; error: { message: string; status: 400 } };
 
 function normalizeLimit(value: string | null) {
-  return safeBoundedInt(value, { min: 1, max: 120, fallback: 72 });
+  return normalizeBoundedIntField(value, { min: 1, max: 120, fallback: 72 });
 }
 
 function normalizeOffset(value: string | null) {
-  return safeBoundedInt(value, { min: 0, max: Number.MAX_SAFE_INTEGER, fallback: 0 });
+  return normalizeBoundedIntField(value, { min: 0, max: Number.MAX_SAFE_INTEGER, fallback: 0 });
 }
 
 export function readCatalogSearchRequest(params: Pick<URLSearchParams, "get" | "getAll">): CatalogSearchRequest {

@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bell, Box, Check, ClipboardCheck, Database, Download, FileText, HardDrive, KeyRound, Lock, MessageSquareWarning, Plug, RefreshCw, Settings, Shield, ShieldCheck, Sparkles, Tags, Users } from "lucide-react";
+import { AlertTriangle, Bell, Box, Check, CheckCircle2, ClipboardCheck, Database, Download, FileText, HardDrive, KeyRound, Lock, MessageSquareWarning, Plug, RefreshCw, Settings, Shield, ShieldCheck, Sparkles, Tags, Users, XCircle } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAdminReadiness } from "@/components/dam/useDamApi";
 import { adminNavItems, adminNavLabel, integrationReadinessColumns, integrationState, policySummaryRows, systemHealthRows } from "@/lib/admin-control";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
-import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DamReadinessResult, IntegrationReadinessItem } from "@/lib/types";
+import { routeWithRole } from "@/lib/role-routes";
+import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, BetaReadinessFact, DamReadinessResult, IntegrationReadinessItem } from "@/lib/types";
 import { ActionButton, CustodyMapPanel, ErrorCard, KpiCard, LoadingCard, PageHeader, SourcePill, StatusBadge } from "./EnterpriseShared";
 
 const roleRows = [
@@ -43,6 +44,141 @@ const moduleIcons = {
 
 const feedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "agent-ready", "fixed", "wont-fix"];
 const feedbackSeverities: Array<BetaFeedbackSeverity | "all"> = ["all", "critical", "high", "medium", "low"];
+
+function betaFactClass(fact: BetaReadinessFact) {
+  if (fact.state === "pass") return "is-pass";
+  if (fact.state === "block") return "is-block";
+  return "is-warn";
+}
+
+function betaFactIcon(fact: BetaReadinessFact) {
+  if (fact.state === "pass") return <CheckCircle2 size={16} aria-hidden="true" />;
+  if (fact.state === "block") return <XCircle size={16} aria-hidden="true" />;
+  return <AlertTriangle size={16} aria-hidden="true" />;
+}
+
+function betaFactSourceLabel(source: BetaReadinessFact["source"]) {
+  return source.replace(/-/g, " ");
+}
+
+function betaCoverageGates(readiness?: DamReadinessResult | null) {
+  const facts = readiness?.betaReadiness.facts || [];
+  const fact = (id: string) => facts.find((item) => item.id === id);
+  const fieldMappings = readiness?.fieldMappings || [];
+  const requiredFields = fieldMappings.filter((item) => item.required);
+  const requiredMapped = requiredFields.filter((item) => item.resourceSpaceField && item.coverage > 0);
+  const requiredCoverage = requiredFields.length ? Math.round(requiredFields.reduce((sum, item) => sum + item.coverage, 0) / requiredFields.length) : 0;
+  const browserQa = fact("browser-qa");
+  const stopPolicy = fact("beta-stop-test-policy");
+  const roleCopy = fact("beta-role-switch-copy");
+  const auditReady = fact("audit-evidence");
+  return [
+    {
+      id: "qa",
+      label: "Browser QA coverage",
+      value: browserQa?.ready ? "Pass" : "Missing",
+      detail: browserQa?.detail || "No browser QA fact loaded.",
+      state: browserQa?.state || "warn"
+    },
+    {
+      id: "metadata",
+      label: "Required field coverage",
+      value: `${requiredCoverage}%`,
+      detail: `${requiredMapped.length}/${requiredFields.length || 0} required ResourceSpace mappings have data.`,
+      state: requiredCoverage >= 90 ? "pass" : requiredCoverage >= 70 ? "warn" : "block"
+    },
+    {
+      id: "audit",
+      label: "Actor audit proof",
+      value: auditReady?.ready ? "Present" : "Needed",
+      detail: auditReady?.detail || "No actor-backed audit fact loaded.",
+      state: auditReady?.state || "warn"
+    },
+    {
+      id: "policy",
+      label: "Tester safety policy",
+      value: stopPolicy?.ready && roleCopy?.ready ? "Clear" : "Review",
+      detail: stopPolicy?.ready && roleCopy?.ready ? "Stop-test rules and simulated role copy are documented." : "Confirm stop-test policy and beta-only role copy before invite batch.",
+      state: stopPolicy?.state === "pass" && roleCopy?.state === "pass" ? "pass" : "block"
+    }
+  ];
+}
+
+function betaNextActions(readiness?: DamReadinessResult | null) {
+  const facts = readiness?.betaReadiness.facts || [];
+  const blocked = facts.filter((item) => item.state === "block");
+  const warnings = facts.filter((item) => item.state === "warn");
+  const actions = [...blocked, ...warnings].slice(0, 5).map((item) => `${item.label}: ${item.detail}`);
+  if (actions.length) return actions;
+  return [
+    "Run hosted smoke against invite URL before teammate batch.",
+    "Export Feedback Inbox after first beta pass.",
+    "Keep ResourceSpace writeback disabled unless owner approves."
+  ];
+}
+
+function BetaCommandCenter({ readiness, compact = false }: { readiness?: DamReadinessResult | null; compact?: boolean }) {
+  const beta = readiness?.betaReadiness;
+  const facts = beta?.facts || [];
+  const blocked = facts.filter((item) => item.state === "block");
+  const warnings = facts.filter((item) => item.state === "warn");
+  const passes = facts.filter((item) => item.state === "pass");
+  const coverageGates = betaCoverageGates(readiness);
+  const recommendation = beta?.ready
+    ? "Go for small internal teammate test"
+    : blocked.length
+      ? "No-go until blockers clear"
+      : "Dry-run only until proof is current";
+  const statusClass = beta?.ready ? "is-pass" : blocked.length ? "is-block" : "is-warn";
+
+  if (compact) {
+    return (
+      <section className="ed-card ed-beta-command-center is-compact">
+        <header className="ed-card-head"><div><h3>Beta Go/No-Go</h3><p>{recommendation}</p></div><span className={`ed-beta-verdict ${statusClass}`}>{beta?.ready ? "Go" : "Hold"}</span></header>
+        <div className="ed-beta-mini-grid">
+          <span><strong>{passes.length}</strong><small>pass</small></span>
+          <span><strong>{warnings.length}</strong><small>warn</small></span>
+          <span><strong>{blocked.length}</strong><small>block</small></span>
+        </div>
+        {betaNextActions(readiness).slice(0, 3).map((action) => <p className="ed-beta-action" key={action}>{action}</p>)}
+      </section>
+    );
+  }
+
+  return (
+    <section className="ed-card ed-admin-module ed-beta-command-center">
+      <header className="ed-card-head">
+        <div>
+          <h3>Beta Command Center</h3>
+          <p>Go/no-go evidence for teammate testing. Blocks are invite stoppers; warnings are rehearsal follow-ups.</p>
+        </div>
+        <span className={`ed-beta-verdict ${statusClass}`}>{recommendation}</span>
+      </header>
+      <div className="ed-admin-stat-grid">
+        <article><strong>{beta?.score || 0}%</strong><span>beta proof score</span><small>{beta?.generatedAt ? `generated ${new Date(beta.generatedAt).toLocaleString()}` : "not generated"}</small></article>
+        <article><strong>{blocked.length}</strong><span>invite blockers</span><small>{warnings.length} warnings</small></article>
+        <article><strong>{passes.length}/{facts.length || 0}</strong><span>facts passing</span><small>from script, QA, env, catalog</small></article>
+      </div>
+      <div className="ed-beta-coverage-grid" aria-label="Beta coverage gates">
+        {coverageGates.map((gate) => <article className={`ed-beta-gate is-${gate.state}`} key={gate.id}><strong>{gate.value}</strong><span>{gate.label}</span><p>{gate.detail}</p></article>)}
+      </div>
+      <div className="ed-beta-fact-grid">
+        {facts.map((fact) => (
+          <article className={`ed-beta-fact ${betaFactClass(fact)}`} key={fact.id}>
+            <span>{betaFactIcon(fact)}{fact.state}</span>
+            <strong>{fact.label}</strong>
+            <p>{fact.detail}</p>
+            <small>{betaFactSourceLabel(fact.source)}</small>
+          </article>
+        ))}
+      </div>
+      <section className="ed-beta-next-actions">
+        <h4>Next actions</h4>
+        {betaNextActions(readiness).map((action) => <p key={action}>{action}</p>)}
+      </section>
+    </section>
+  );
+}
 
 function FeedbackInboxModule() {
   const [feedback, setFeedback] = useState<BetaFeedbackRecord[]>([]);
@@ -173,12 +309,14 @@ function IntegrationTable({ rows = [] }: { rows?: IntegrationReadinessItem[] }) 
 }
 
 function AuditTable({ readiness, onViewAll }: { readiness?: DamReadinessResult | null; onViewAll?: () => void }) {
+  const actorRows = (readiness?.auditLog.recent || []).filter((row) => row.actor).slice(0, 8);
   return (
     <section className="ed-card">
       <header className="ed-card-head"><h3>Recent Audit Activity</h3>{onViewAll ? <button className="ed-link-button" type="button" onClick={onViewAll}>View all logs</button> : null}</header>
+      {actorRows.length ? <div className="ed-beta-audit-proof" aria-label="Actor-backed audit proof">{actorRows.map((row) => <p key={`proof-${row.id}`}><strong>{row.actor}</strong><span>{row.role} · {row.type} · {row.status}</span></p>)}</div> : null}
       <table className="ed-table">
-        <thead><tr><th>Time</th><th>Role</th><th>Action</th><th>Object</th><th>Summary</th></tr></thead>
-        <tbody>{(readiness?.auditLog.recent || []).slice(0, 10).map((row) => <tr key={row.id}><td>{row.createdAt}</td><td>{row.role}</td><td>{row.type}</td><td>{row.assetId || row.resourceSpaceId || "Portal"}</td><td>{row.summary}</td></tr>)}</tbody>
+        <thead><tr><th>Time</th><th>Actor</th><th>Role</th><th>Action</th><th>Object</th><th>Summary</th></tr></thead>
+        <tbody>{(readiness?.auditLog.recent || []).slice(0, 10).map((row) => <tr key={row.id}><td>{row.createdAt}</td><td>{row.actor || "Unknown"}</td><td>{row.role}</td><td>{row.type}</td><td>{row.assetId || row.resourceSpaceId || "Portal"}</td><td>{row.summary}</td></tr>)}</tbody>
       </table>
     </section>
   );
@@ -187,6 +325,7 @@ function AuditTable({ readiness, onViewAll }: { readiness?: DamReadinessResult |
 function OverviewModule({ readiness, onSelectModule }: { readiness?: DamReadinessResult | null; onSelectModule: (id: string) => void }) {
   return (
     <>
+      <BetaCommandCenter readiness={readiness} />
       <CustodyMapPanel readiness={readiness} />
       <div className="ed-kpi-grid is-four"><KpiCard label="Records" value={(readiness?.assetCount || 0).toLocaleString()} delta="ResourceSpace-backed" icon={Database} /><KpiCard label="Readiness" value={`${readiness?.score || 0}/100`} delta="policy score" icon={Shield} /><KpiCard label="Needs Review" value={(readiness?.metrics.needsReview || 0).toLocaleString()} delta="queue count" icon={FileText} /><KpiCard label="Audit Events" value={(readiness?.auditLog.count || 0).toLocaleString()} delta="portal log" icon={Box} /></div>
       <section className="ed-card"><header className="ed-card-head"><div><h3>Integration Status</h3><p>ResourceSpace, Drive, S3, and portal readiness.</p></div><SourcePill source={readiness?.source} live={mediaSourceIsLive(readiness?.source)} /></header><IntegrationTable rows={readiness?.integrationReadiness || []} /></section>
@@ -284,7 +423,7 @@ export function EnterpriseAdminPage() {
   const [activeNav, setActiveNav] = useState(adminNavItems[0].id);
   const admin = useAdminReadiness(role);
   if (!ready) return <div className="enterprise-page"><LoadingCard label="Loading control center..." /></div>;
-  if (role !== "DAM Admin") return <div className="enterprise-page"><section className="ed-card ed-access-block"><Lock size={28} /><h1>Governance requires DAM Admin role</h1><p>System governance, policies, user access, integrations, and audit controls are restricted to DAM Admins.</p><Link href="/">Return to Asset Library</Link></section></div>;
+  if (role !== "DAM Admin") return <div className="enterprise-page"><section className="ed-card ed-access-block"><Lock size={28} /><h1>Governance requires DAM Admin role</h1><p>System governance, policies, user access, integrations, and audit controls are restricted to DAM Admins.</p><Link href={routeWithRole("/", role)}>Return to Asset Library</Link></section></div>;
   const readiness = admin.data;
   return (
     <div className="enterprise-page enterprise-admin-control">
@@ -299,7 +438,7 @@ export function EnterpriseAdminPage() {
             <AdminModuleContent activeNav={activeNav} readiness={readiness} onSelectModule={setActiveNav} />
           </>}
         </section>
-        <aside className="ed-admin-rail"><section className="ed-card"><h3>Policy Summary</h3><p>{readiness?.source.detail || "Readiness not loaded."}</p><div className="ed-big-check"><Check size={30} /></div>{policySummaryRows(readiness).map((row) => <p className="ed-row-between" key={row.label}><span>{row.label}</span><strong>{row.value.toLocaleString()}</strong></p>)}<ActionButton onClick={() => setActiveNav("rights-policies")}>Manage policies</ActionButton></section><section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3><button className="ed-link-button" type="button" onClick={() => setActiveNav("audit-logs")}>View all</button></header>{(readiness?.auditLog.recent || []).slice(0, 5).map((item) => <p className="ed-activity" key={item.id}><Bell size={16} />{item.summary}<small>{item.role} · {item.createdAt}</small></p>)}</section><section className="ed-card"><h3>System Health</h3>{systemHealthRows(readiness).map((item) => <p className="ed-row-between" key={item.id}><span>{item.label}</span><StatusBadge status={item.state} /></p>)}<button className="ed-link-button" type="button" onClick={() => setActiveNav("system-settings")}>View system status</button></section></aside>
+        <aside className="ed-admin-rail"><BetaCommandCenter readiness={readiness} compact /><section className="ed-card"><h3>Policy Summary</h3><p>{readiness?.source.detail || "Readiness not loaded."}</p><div className="ed-big-check"><Check size={30} /></div>{policySummaryRows(readiness).map((row) => <p className="ed-row-between" key={row.label}><span>{row.label}</span><strong>{row.value.toLocaleString()}</strong></p>)}<ActionButton onClick={() => setActiveNav("rights-policies")}>Manage policies</ActionButton></section><section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3><button className="ed-link-button" type="button" onClick={() => setActiveNav("audit-logs")}>View all</button></header>{(readiness?.auditLog.recent || []).slice(0, 5).map((item) => <p className="ed-activity" key={item.id}><Bell size={16} />{item.summary}<small>{item.actor ? `${item.actor} · ` : ""}{item.role} · {item.createdAt}</small></p>)}</section><section className="ed-card"><h3>System Health</h3>{systemHealthRows(readiness).map((item) => <p className="ed-row-between" key={item.id}><span>{item.label}</span><StatusBadge status={item.state} /></p>)}<button className="ed-link-button" type="button" onClick={() => setActiveNav("system-settings")}>View system status</button></section></aside>
       </div>
     </div>
   );

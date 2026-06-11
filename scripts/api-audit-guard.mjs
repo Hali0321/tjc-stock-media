@@ -7,6 +7,7 @@ const apiRoot = path.join(root, "frontend/app/api");
 const mutatingMethodPattern = /export\s+async\s+function\s+(POST|PATCH|PUT|DELETE)\b/g;
 const auditedWorkflowCalls = [
   "appendAuditEvent(",
+  "appendRequiredAuditEvent(",
   "runReviewActionWorkflow("
 ];
 
@@ -54,7 +55,7 @@ for (const fullPath of walk(apiRoot)) {
     const body = functionBodyAt(source, match.index || 0);
     const hasAudit = auditedWorkflowCalls.some((call) => body.includes(call));
     if (!hasAudit) {
-      failures.push(`${relativePath} exposes ${method} without appendAuditEvent or audited workflow delegation in that handler`);
+      failures.push(`${relativePath} exposes ${method} without appendAuditEvent, appendRequiredAuditEvent, or audited workflow delegation in that handler`);
     }
   }
 }

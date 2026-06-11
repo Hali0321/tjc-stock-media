@@ -20,12 +20,15 @@ import {
   type LucideIcon
 } from "lucide-react";
 import type { DamReadinessResult, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+import { useDemoRole } from "@/components/RoleProvider";
 import { custodyMapRows, custodyMapStatus } from "@/lib/admin-control";
 import { inspectorDrawerTabs } from "@/lib/asset-record-workbench";
 import { assetDate, assetRecordRef, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
 import { inspectorMetadataRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
 import { mediaPreviewState, mediaPreviewUnavailableReason } from "@/lib/media-preview-state";
+import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
+import { routeWithRole } from "@/lib/role-routes";
 import { cn } from "@/lib/ui";
 
 export function StatusBadge({ status }: { status: EnterpriseStatus }) {
@@ -36,9 +39,9 @@ export function IconButton({ label, children, onClick }: { label: string; childr
   return <button className="ed-icon-button" type="button" aria-label={label} onClick={onClick}>{children}</button>;
 }
 
-export function ActionButton({ children, tone = "secondary", icon: Icon, onClick, disabled = false }: { children: ReactNode; tone?: "primary" | "secondary" | "dark"; icon?: LucideIcon; onClick?: () => void; disabled?: boolean }) {
+export function ActionButton({ children, tone = "secondary", icon: Icon, onClick, disabled = false, disabledReason }: { children: ReactNode; tone?: "primary" | "secondary" | "dark"; icon?: LucideIcon; onClick?: () => void; disabled?: boolean; disabledReason?: string }) {
   return (
-    <button className={cn("ed-action", tone === "primary" && "is-primary", tone === "dark" && "is-dark")} type="button" onClick={onClick} disabled={disabled}>
+    <button className={cn("ed-action", tone === "primary" && "is-primary", tone === "dark" && "is-dark")} type="button" onClick={onClick} disabled={disabled} title={disabled ? disabledReason : undefined} data-disabled-reason={disabled ? disabledReason : undefined}>
       {Icon ? <Icon size={16} aria-hidden="true" /> : null}
       {children}
     </button>
@@ -87,6 +90,7 @@ export function AssetThumb({ asset, className, fit = "cover" }: { asset?: StockM
 }
 
 export function AssetCard({ asset, selected = false, onSelect }: { asset: StockMediaAsset; selected?: boolean; onSelect?: () => void }) {
+  const { role } = useDemoRole();
   return (
     <article className={cn("ed-asset-card", selected && "is-selected")}>
       <button className="ed-card-media" type="button" onClick={onSelect} aria-pressed={selected} aria-label={`Select ${asset.title}`}>
@@ -97,7 +101,7 @@ export function AssetCard({ asset, selected = false, onSelect }: { asset: StockM
       </button>
       <strong title={displayTitle(asset)}>{displayTitle(asset)}</strong>
       <small>{recordIdLabel()} {assetRecordRef(asset)} · {assetDate(asset)} · {formatBytes(asset.fileSizeBytes)}</small>
-      <div className="ed-card-footer"><StatusBadge status={assetEnterpriseStatus(asset)} /><span className="ed-quality-chip">{metadataQualityLabel(asset)}</span><Link href={`/assets/${asset.id}`}>Open record</Link></div>
+      <div className="ed-card-footer"><StatusBadge status={assetEnterpriseStatus(asset)} /><span className="ed-quality-chip">{metadataQualityLabel(asset)}</span><Link href={routeWithRole(`/assets/${asset.id}`, role)}>Open record</Link></div>
     </article>
   );
 }
@@ -150,23 +154,25 @@ export function SavedViewPanel({
 }
 
 export function RightsVerdictCard({ asset, source }: { asset?: StockMediaAsset; source?: MediaSourceStatus | null }) {
-  const approved = asset?.reuseDecision?.downloadable || assetEnterpriseStatus(asset) === "Approved";
-  const blocked = asset?.reuseDecision && !asset.reuseDecision.downloadable;
+  const { role } = useDemoRole();
+  const verdict = asset ? buildPortalReuseDecision(asset, role).viewerVerdict : null;
+  const approved = Boolean(verdict?.canDownload);
+  const status: EnterpriseStatus = approved ? "Approved" : verdict?.tone === "unavailable" ? "Restricted" : verdict ? "Needs Review" : "Not configured";
   const noun = sourceNoun(source);
   return (
     <section className={cn("ed-card ed-verdict-card", approved ? "is-approved" : "is-blocked")}>
       <div className="ed-card-head">
         <h3>Can I use this?</h3>
-        <StatusBadge status={approved ? "Approved" : blocked ? "Needs Review" : "Not configured"} />
+        <StatusBadge status={status} />
       </div>
       <div className="ed-verdict-body">
         <span>{approved ? <Check size={28} /> : <Lock size={24} />}</span>
         <div>
-          <strong>{approved ? `Yes, this ${noun} record is approved.` : "Review required before use."}</strong>
-          <p>{asset?.reuseDecision?.summary || asset?.usageGuidance || `Usage rights are not fully provided in ${noun}.`}</p>
+          <strong>{verdict?.title || `Review required before using this ${noun} record.`}</strong>
+          <p>{verdict?.reason || asset?.usageGuidance || `Usage rights are not fully provided in ${noun}.`}</p>
         </div>
       </div>
-      <Link className="ed-action" href="/guide">View Usage Guidelines</Link>
+      <Link className="ed-action" href={routeWithRole("/guide", role)}>View Usage Guidelines</Link>
     </section>
   );
 }

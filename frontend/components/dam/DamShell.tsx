@@ -9,6 +9,7 @@ import { BetaPrototypeTools } from "@/components/BetaPrototypeTools";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useDemoRole } from "@/components/RoleProvider";
 import { roles } from "@/lib/permissions";
+import { routeWithRole } from "@/lib/role-routes";
 import type { DemoRole } from "@/lib/types";
 
 function DamRoleSwitch({ compact = false }: { compact?: boolean }) {
@@ -31,8 +32,9 @@ function DamRoleSwitch({ compact = false }: { compact?: boolean }) {
 }
 
 function DamBrand({ opsShell }: { opsShell: boolean }) {
+  const { role } = useDemoRole();
   return (
-    <Link href={opsShell ? "/review" : "/"} className="dam-brand-lockup flex min-w-0 items-center gap-3" aria-label="True Jesus Church Media Library home">
+    <Link href={routeWithRole(opsShell ? "/review" : "/", role)} className="dam-brand-lockup flex min-w-0 items-center gap-3" aria-label="True Jesus Church Media Library home">
       <span className="dam-brand-mark grid h-12 w-32 shrink-0 place-items-center overflow-hidden rounded-xl text-[10px] font-black text-white">
         <img src="/brand/tjc-logo-english-color.png" alt="" aria-hidden="true" />
       </span>
@@ -86,10 +88,10 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
       </span>
       <DamTopSearch />
       <CommandPalette />
-      <Link href="/guide" className="dam-header-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
+      <Link href={routeWithRole("/guide", role)} className="dam-header-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open help">
         <HelpCircle size={18} strokeWidth={1.9} aria-hidden="true" />
       </Link>
-      <Link href="/review" className="dam-header-icon dam-bell-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open notifications">
+      <Link href={routeWithRole("/review", role)} className="dam-header-icon dam-bell-icon grid h-10 w-10 place-items-center rounded-xl border text-tjc-evergreen transition hover:bg-[#eef7f1]" aria-label="Open notifications">
         <Bell size={18} strokeWidth={1.9} aria-hidden="true" />
       </Link>
       <div className="dam-account-menu-wrap" ref={accountRef}>
@@ -126,8 +128,8 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
             <button type="button" onClick={() => setAccountMessage("Profile is mapped to trusted SSO headers in production. This beta uses local role simulation.")}>
               <UserCircle size={16} /> Profile & access
             </button>
-            <Link href="/guide" role="menuitem" onClick={() => setAccountOpen(false)}><HelpCircle size={16} /> Help guide</Link>
-            {role === "DAM Admin" ? <Link href="/admin" role="menuitem" onClick={() => setAccountOpen(false)}><ShieldCheck size={16} /> Admin console</Link> : null}
+            <Link href={routeWithRole("/guide", role)} role="menuitem" onClick={() => setAccountOpen(false)}><HelpCircle size={16} /> Help guide</Link>
+            {role === "DAM Admin" ? <Link href={routeWithRole("/admin", role)} role="menuitem" onClick={() => setAccountOpen(false)}><ShieldCheck size={16} /> Admin console</Link> : null}
             <button type="button" disabled><LogOut size={16} /> Sign out when SSO is live</button>
           </div>
         ) : null}
@@ -137,6 +139,7 @@ function DamUtilityActions({ role, opsShell }: { role: DemoRole; opsShell: boole
 }
 
 function DamTopSearch() {
+  const { role } = useDemoRole();
   const [query, setQuery] = useState("");
   useEffect(() => {
     setQuery(new URLSearchParams(window.location.search).get("q") || "");
@@ -154,6 +157,7 @@ function DamTopSearch() {
         placeholder="Search library..."
         autoComplete="off"
       />
+      <input type="hidden" name="role" value={role} />
       <kbd>⌘ K</kbd>
     </form>
   );
@@ -185,9 +189,10 @@ function DamMobileMenu({
 }
 
 function DamFooter({ opsShell }: { opsShell: boolean }) {
+  const { role } = useDemoRole();
   return (
     <footer className="relative z-10 mx-auto flex w-full max-w-[1760px] flex-wrap items-center gap-3 border-t border-[#d8e1da] px-4 py-6 text-sm font-semibold text-tjc-muted md:px-6">
-      <Link href="/guide" className="font-black text-tjc-evergreen">Help</Link>
+      <Link href={routeWithRole("/guide", role)} className="font-black text-tjc-evergreen">Help</Link>
       {opsShell ? (
         <>
           <span>Review queues, evidence, and audit-safe actions stay together.</span>
@@ -235,7 +240,7 @@ export function DamShell({ children }: { children: ReactNode }) {
 
       <aside className="dam-desktop-rail hidden border-r border-[#d7dde2] bg-white lg:block" aria-label="Desktop workspace navigation">
         <div className="sticky top-[var(--app-header-height)] grid h-[calc(100dvh-var(--app-header-height))] content-start gap-3 p-3">
-          <Link href="/" className="dam-rail-brand" aria-label="True Jesus Church Media Library home">
+          <Link href={routeWithRole("/", role)} className="dam-rail-brand" aria-label="True Jesus Church Media Library home">
             <img src="/brand/tjc-logo-english-white.png" alt="True Jesus Church" />
             <span>MEDIA LIBRARY</span>
           </Link>
@@ -243,9 +248,9 @@ export function DamShell({ children }: { children: ReactNode }) {
           <AppNav role={role} variant="menu" />
           <section className="dam-quick-access" aria-label="Quick access">
             <h2>Quick access</h2>
-            <Link href="/?view=saved"><Star size={15} />Saved views</Link>
-            <Link href="/?view=recently-approved"><Clock size={15} />Recent approvals</Link>
-            <Link href="/upload"><UploadCloud size={15} />Send media</Link>
+            <Link href={routeWithRole("/?view=saved", role)}><Star size={15} />Saved views</Link>
+            <Link href={routeWithRole("/?view=recently-approved", role)}><Clock size={15} />Recent approvals</Link>
+            <Link href={routeWithRole("/upload", role)}><UploadCloud size={15} />Send media</Link>
           </section>
           <section className="dam-storage-meter" aria-label="Storage used">
             <h2>Storage used</h2>

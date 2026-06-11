@@ -15,6 +15,7 @@ import {
   UploadCloud,
   type LucideIcon
 } from "lucide-react";
+import { GatedDownloadButton, parseDownloadGateHref } from "@/components/GatedDownloadButton";
 import { MediaPreview } from "@/components/MediaPreview";
 import { cn } from "@/lib/ui";
 import type { CatalogCollection, DemoRole, StockMediaAsset } from "@/lib/types";
@@ -64,6 +65,9 @@ export function PrimaryAction({
       <span>{children}</span>
     </>
   );
+  if (href && !disabled && parseDownloadGateHref(href)) {
+    return <GatedDownloadButton className={classes} href={href} ariaLabel="Download approved copy">{content}</GatedDownloadButton>;
+  }
   if (href && !disabled) return <a className={classes} href={href}>{content}</a>;
   return <button className={classes} type={type} onClick={onClick} disabled={disabled}>{content}</button>;
 }

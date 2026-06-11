@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Download, ExternalLink, FileLock2, ShieldAlert } from "lucide-react";
 import { Dialog } from "@/components/Dialog";
+import { GatedDownloadButton } from "@/components/GatedDownloadButton";
 import { MediaPreview } from "@/components/MediaPreview";
 import { ReuseStateBadge, StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
@@ -73,10 +74,10 @@ export function AssetQuickLookDialog({ asset, role, open, onClose }: AssetQuickL
           </div>
 
           {state.approvedCopy.allowed ? (
-            <a className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 dam-button-primary px-3 text-sm font-black transition active:translate-y-px" href={downloadHref}>
+            <GatedDownloadButton className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 dam-button-primary px-3 text-sm font-black transition active:translate-y-px" href={downloadHref} reason={`Quick-look approved-copy request for ${display.title}`}>
               <Download size={16} strokeWidth={1.9} aria-hidden="true" />
               Download approved copy
-            </a>
+            </GatedDownloadButton>
           ) : (
             <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-[#dfbd73] bg-[#fffaf0] p-3 text-[#6f4608]">
               <FileLock2 size={18} strokeWidth={1.9} aria-hidden="true" />

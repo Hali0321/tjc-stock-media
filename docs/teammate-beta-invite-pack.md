@@ -1,8 +1,8 @@
 # Teammate Beta Invite Pack
 
-Last updated: 2026-06-10
+Last updated: 2026-06-11
 
-Use this for small internal testing only. Share the stable hosted beta URL, not a deployment-specific Vercel preview URL:
+Use this only after `docs/beta-readiness-command-center.md` marks the Team Beta ops runbook complete. This invite pack is for tiny internal Team Beta testing only. Share the stable hosted beta URL, not a deployment-specific Vercel preview URL:
 
 `https://tjc-stock-media.vercel.app`
 
@@ -24,11 +24,13 @@ Use this for small internal testing only. Share the stable hosted beta URL, not 
 ## Safety Copy
 
 - Beta only.
-- No sensitive uploads.
+- Tiny internal Team Beta only; do not forward outside the named test group.
+- No sensitive, private, unreleased, youth-identifiable, copyrighted, source, or master media uploads.
 - Role switch is simulated for QA only.
-- ResourceSpace writeback is disabled unless explicitly approved.
+- ResourceSpace writeback is queued/disabled unless explicitly approved.
 - Queued review decisions are portal evidence, not ResourceSpace success.
 - Original/source media stays restricted; portal downloads must stay behind role and reuse gates.
+- Stop testing and notify the triager for any P0 issue.
 
 ## Feedback Expectations
 
@@ -36,9 +38,9 @@ Use the in-app Report issue button during Task Mode. Each report should include 
 
 Severity mapping:
 
-- Critical: security, privacy, source-truth, writeback honesty, or unsafe download issue.
-- High: workflow blocked or broken route.
-- Medium: confusing UX slowing the mission.
-- Low: visual polish, wording, or preference.
+- P0: security, privacy, source-truth, writeback honesty, or unsafe download issue.
+- P1: workflow blocked or broken route.
+- P2: confusing UX slowing the mission.
+- P3: visual polish, wording, or preference.
 
-Stop the test batch for Critical/P0 issues. Triage High issues before inviting a wider group.
+Stop the test batch for P0 issues. Triage P1 issues before inviting another batch.

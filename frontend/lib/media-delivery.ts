@@ -4,6 +4,7 @@ import { assetResourceRef } from "@/lib/asset-refs";
 import type { AuditEventRecord } from "@/lib/audit-log";
 import type { getAssetRecordById } from "@/lib/catalog";
 import type { createDamRouteSession } from "@/lib/dam-route-session";
+import type { DownloadTicketRecord } from "@/lib/download-tickets";
 import type { ImageVariant } from "@/lib/images";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { safeSlugText } from "@/lib/persisted-record-safety";
@@ -96,6 +97,17 @@ export function thumbnailAccessDeniedError(reason: string | undefined, session: 
   return { body: { error: reason || "Preview restricted.", ...session.sourceEnvelope(source) }, status: 403 };
 }
 
+export function thumbnailDownloadVariantDeniedError(session: DamRouteSession, source: AssetRecordResult["source"]): ThumbnailDeliveryRouteError {
+  return {
+    body: {
+      error: "Download-grade derivatives require the approved-copy download gate.",
+      requiredAction: "request-download-ticket",
+      ...session.sourceEnvelope(source)
+    },
+    status: 403
+  };
+}
+
 function placeholderSvg(label: string) {
   const safeLabel = label.replace(/[<>&"]/g, "");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="${safeLabel}">
@@ -185,7 +197,13 @@ export function downloadRoleDeniedAuditEvent(asset: AssetRecord, session: DamRou
   };
 }
 
-export function approvedCopyDownloadedAuditEvent(asset: AssetRecord, delivery: Extract<ApprovedCopyDelivery, { status: "ready" }>, session: DamRouteSession, source: AssetRecordResult["source"]): DownloadAuditEvent {
+export function approvedCopyDownloadedAuditEvent(
+  asset: AssetRecord,
+  delivery: Extract<ApprovedCopyDelivery, { status: "ready" }>,
+  session: DamRouteSession,
+  source: AssetRecordResult["source"],
+  ticket?: DownloadTicketRecord
+): DownloadAuditEvent {
   const auditSource = downloadAuditSource(session, source);
   return {
     type: "approved_download",
@@ -195,7 +213,16 @@ export function approvedCopyDownloadedAuditEvent(asset: AssetRecord, delivery: E
     resourceSpaceId: assetResourceRef(asset),
     status: "allowed",
     summary: "Approved copy downloaded.",
-    details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName: delivery.fileName }
+    details: {
+      source: auditSource.label,
+      sourceDetail: auditSource.detail,
+      fileName: delivery.fileName,
+      ticketId: ticket?.id || null,
+      gateAuditId: ticket?.gateAuditId || null,
+      usageChannel: ticket?.scope || null,
+      reason: ticket?.reason || null,
+      termsAcceptedAt: ticket?.termsAcceptedAt || null
+    }
   };
 }
 

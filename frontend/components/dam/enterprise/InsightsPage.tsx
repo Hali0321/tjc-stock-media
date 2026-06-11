@@ -8,6 +8,7 @@ import { useAssetsSearch } from "@/components/dam/useDamApi";
 import { assetRecordRef, assetType, displayTitle, formatBytes, sourceLabel } from "@/lib/enterprise-display";
 import { buildInsightsCommandCenter } from "@/lib/insights-command-center";
 import { insightHealthRows, insightKpis } from "@/lib/insights-dashboard";
+import { routeWithRole } from "@/lib/role-routes";
 import type { SearchResult, StockMediaAsset } from "@/lib/types";
 import { ActionButton, AssetThumb, ErrorCard, LoadingCard, PageHeader, StatusBadge } from "./EnterpriseShared";
 
@@ -82,9 +83,10 @@ function InsightStatCard({ stat }: { stat: InsightStat }) {
 }
 
 function InsightPanel({ title, action, actionHref, className = "", children }: { title: string; action?: string; actionHref?: string; className?: string; children: ReactNode }) {
+  const { role } = useDemoRole();
   return (
     <section className={`ed-card ed-insight-panel ${className}`}>
-      <header className="ed-card-head"><h3>{title}</h3>{action && actionHref ? <a href={actionHref}>{action}</a> : null}</header>
+      <header className="ed-card-head"><h3>{title}</h3>{action && actionHref ? <a href={routeWithRole(actionHref, role)}>{action}</a> : null}</header>
       {children}
     </section>
   );
@@ -365,6 +367,7 @@ function ViewerInsights({
   savedViews: SearchResult["savedViews"];
   collections: SearchResult["collections"];
 }) {
+  const { role } = useDemoRole();
   const visible = counts?.visibleToRole || counts?.totalMatching || 0;
   const ready = counts?.portalReady || counts?.approved || 0;
   const needs = counts?.needsReview || 0;
@@ -399,7 +402,7 @@ function ViewerInsights({
     <>
       <div className="ed-insight-stat-grid">{stats.map((stat) => <InsightStatCard key={stat.label} stat={stat} />)}</div>
       <div className="ed-viewer-board">
-        <InsightPanel title="My Common Use Cases" action="View all use cases" actionHref="/guide">{useCases.map(([title, detail, Icon, href]) => <a className="ed-use-case" href={href} key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong><span>›</span></a>)}</InsightPanel>
+        <InsightPanel title="My Common Use Cases" action="View all use cases" actionHref="/guide">{useCases.map(([title, detail, Icon, href]) => <a className="ed-use-case" href={routeWithRole(href, role)} key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong><span>›</span></a>)}</InsightPanel>
         <InsightPanel title="Frequently Used Topics" action="Browse all topics" actionHref="/?view=saved"><TopicsList usage={usage} savedViews={savedViews} /></InsightPanel>
         <InsightPanel title="Recently Viewed Assets"><div className="ed-recent-assets">{assets.slice(0, 5).map((asset) => <article key={asset.id}><AssetThumb asset={asset} /><strong>{displayTitle(asset)}<small>{assetType(asset)} · {formatBytes(asset.fileSizeBytes)}</small></strong><span>Visible</span></article>)}</div></InsightPanel>
         <InsightPanel title="Top Categories" action="Explore all categories" actionHref="/collections"><CategoryDonut assets={assets} visibleTotal={visible} /></InsightPanel>

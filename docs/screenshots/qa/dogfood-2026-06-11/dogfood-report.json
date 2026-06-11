@@ -1,0 +1,221 @@
+{
+  "checkedAt": "2026-06-11T18:47:10.378Z",
+  "base": "http://127.0.0.1:4867",
+  "routes": [
+    {
+      "role": "Viewer",
+      "route": "/",
+      "status": 200,
+      "title": "True Jesus Church Media Library"
+    },
+    {
+      "role": "Viewer",
+      "route": "/assets/368",
+      "status": 200,
+      "title": "True Jesus Church Media Library"
+    },
+    {
+      "role": "Viewer",
+      "route": "/assets/644",
+      "status": 200,
+      "title": "True Jesus Church Media Library"
+    },
+    {
+      "role": "Viewer",
+      "route": "/review",
+      "status": 200,
+      "title": "True Jesus Church Media Library"
+    },
+    {
+      "role": "Reviewer",
+      "route": "/review",
+      "status": 200,
+      "title": "True Jesus Church Media Library"
+    },
+    {
+      "role": "Contributor",
+      "route": "/upload",
+      "status": 200,
+      "title": "True Jesus Church Media Library"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "Viewer / HTTP ok",
+      "pass": true,
+      "detail": "200"
+    },
+    {
+      "name": "library has asset search",
+      "pass": true,
+      "detail": "local search visible"
+    },
+    {
+      "name": "Bible search returns visible media",
+      "pass": true,
+      "detail": "15 cards"
+    },
+    {
+      "name": "library shows rights trust prompt",
+      "pass": true,
+      "detail": "inspector verdict visible"
+    },
+    {
+      "name": "library shows source status banner",
+      "pass": false,
+      "detail": "source banner/pill visible"
+    },
+    {
+      "name": "library desktop no horizontal overflow",
+      "pass": true,
+      "detail": "{\"overflowX\":false,\"h1\":\"Asset Library 23 assets\",\"visibleButtons\":[\"Command⌘K\",\"Open help\",\"Open notifications\",\"AKAlex KimBrand Team\",\"MEDIA LIBRARY\",\"Assets\",\"Collections\",\"Package Builder\",\"Help Guide\",\"Brand Hub\",\"Insights\",\"Saved views\",\"Recent approvals\",\"Send media\",\"Saved views\",\"Save this search\",\"More\",\"×\",\"Ready supply65%15 governed records\",\"Review debt0Rights, source, people, and pending-review blockers\",\"Record readiness100%Average readiness score\",\"Search fit23Records matching current intent\",\"Bible Desk 10\",\"Show ready-to-use media15 records can anchor sermon slides, newsletters, social, and web work.\",\"Clear\",\"scripture\",\"open bible\",\"word of god\",\"word\",\"book\"]}"
+    },
+    {
+      "name": "Viewer /assets/368 HTTP ok",
+      "pass": true,
+      "detail": "200"
+    },
+    {
+      "name": "approved detail answers can I use this",
+      "pass": true,
+      "detail": "trust card present"
+    },
+    {
+      "name": "approved detail shows rights section",
+      "pass": true,
+      "detail": "rights rail present"
+    },
+    {
+      "name": "approved detail gives safe primary action",
+      "pass": true,
+      "detail": "safe action visible"
+    },
+    {
+      "name": "approved detail hides ops-only truth from viewer",
+      "pass": true,
+      "detail": "no ops truth leak"
+    },
+    {
+      "name": "approved detail desktop no horizontal overflow",
+      "pass": true,
+      "detail": "{\"overflowX\":false,\"h1\":\"Bench Bible\",\"visibleButtons\":[\"Command⌘K\",\"Open help\",\"Open notifications\",\"AKAlex KimBrand Team\",\"MEDIA LIBRARY\",\"Assets\",\"Collections\",\"Package Builder\",\"Help Guide\",\"Brand Hub\",\"Insights\",\"Saved views\",\"Recent approvals\",\"Send media\",\"Favorite\",\"Download\",\"Versions\",\"Share\",\"Fullscreen\",\"Request DAM review\",\"Metadata\",\"Keywords\",\"AI Insights\",\"Comments\",\"Activity\",\"Usage History\",\"View Usage Guidelines\",\"Request DAM review\",\"Add to package\",\"Create share link\"]}"
+    },
+    {
+      "name": "Viewer /assets/644 HTTP ok",
+      "pass": true,
+      "detail": "200"
+    },
+    {
+      "name": "unsafe detail blocks reuse before approval",
+      "pass": false,
+      "detail": "review blocker visible"
+    },
+    {
+      "name": "request DAM review button visible on unsafe asset",
+      "pass": false,
+      "detail": "button missing"
+    },
+    {
+      "name": "Viewer /review HTTP ok",
+      "pass": true,
+      "detail": "200"
+    },
+    {
+      "name": "viewer cannot access review inbox",
+      "pass": true,
+      "detail": "viewer gate present"
+    },
+    {
+      "name": "viewer review mobile no horizontal overflow",
+      "pass": true,
+      "detail": "{\"overflowX\":false,\"h1\":\"Review inbox requires reviewer access\",\"visibleButtons\":[\"True Jesus ChurchMedia Library\",\"Open app menu\",\"Return to Asset Library\",\"Task mode\",\"Report issue\",\"Help\"]}"
+    },
+    {
+      "name": "Reviewer /review HTTP ok",
+      "pass": true,
+      "detail": "200"
+    },
+    {
+      "name": "reviewer sees queue and workbench",
+      "pass": true,
+      "detail": "review page core zones visible"
+    },
+    {
+      "name": "review decisions blocked until evidence",
+      "pass": true,
+      "detail": "[{\"label\":\"ApproveMissing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\",\"disabled\":true,\"title\":\"Missing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\"},{\"label\":\"Request ChangesMissing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\",\"disabled\":true,\"title\":\"Missing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\"},{\"label\":\"Missing ConsentMissing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\",\"disabled\":true,\"title\":\"Missing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\"},{\"label\":\"RestrictMissing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\",\"disabled\":true,\"title\":\"Missing: Owner/license confirmed, People visibility confirmed, Children/youth checked, Usage scope selected...\"},{\"label\":\"More Actions\",\"disabled\":false,\"title\":\"\"}]"
+    },
+    {
+      "name": "review page names ResourceSpace as final truth",
+      "pass": true,
+      "detail": "truth copy present"
+    },
+    {
+      "name": "review desktop no horizontal overflow",
+      "pass": true,
+      "detail": "{\"overflowX\":false,\"h1\":\"Review Queue 80 items\",\"visibleButtons\":[\"Command⌘K\",\"Open help\",\"Open notifications\",\"AKAlex KimBrand Team\",\"MEDIA LIBRARY\",\"Assets\",\"Collections\",\"Package Builder\",\"Help Guide\",\"Brand Hub\",\"Review\",\"Insights\",\"Saved views\",\"Recent approvals\",\"Send media\",\"Filter\",\"Open risk evidence\",\"Missing copyright evidence 2109\",\"People/minors unknown 0\",\"Source access restricted 0\",\"Rights review needed 2290\",\"Usage scope needed 2109\",\"Internal Only 0\",\"Sort by: Oldest First\",\"2012 Photo 644JPG · 4898x3265 · 1.3 MBResourceSpace 644Needs Review\",\"Favorite\",\"Download\",\"Expand preview\",\"100%\",\"Details\"]}"
+    },
+    {
+      "name": "Contributor /upload HTTP ok",
+      "pass": true,
+      "detail": "200"
+    },
+    {
+      "name": "contributor upload says send never publishes",
+      "pass": true,
+      "detail": "safety copy present"
+    },
+    {
+      "name": "upload starts at step 1",
+      "pass": true,
+      "detail": "wizard step visible"
+    },
+    {
+      "name": "upload validates before review request",
+      "pass": true,
+      "detail": "validation shown"
+    },
+    {
+      "name": "upload mobile no horizontal overflow",
+      "pass": true,
+      "detail": "{\"overflowX\":false,\"h1\":\"Send media for review\",\"visibleButtons\":[\"True Jesus ChurchMedia Library\",\"Open app menu\",\"Task mode\",\"Report issue\"]}"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "role": "Viewer",
+      "width": 1440,
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    }
+  ],
+  "networkFailures": [],
+  "screenshots": [
+    "docs/screenshots/qa/dogfood-2026-06-11/01-library-bible-search-viewer.png",
+    "docs/screenshots/qa/dogfood-2026-06-11/02-asset-368-trust-viewer.png",
+    "docs/screenshots/qa/dogfood-2026-06-11/03-asset-644-request-review-viewer.png",
+    "docs/screenshots/qa/dogfood-2026-06-11/04-review-gate-viewer-mobile.png",
+    "docs/screenshots/qa/dogfood-2026-06-11/05-review-workbench-reviewer.png",
+    "docs/screenshots/qa/dogfood-2026-06-11/06-upload-safe-request-contributor-mobile.png"
+  ],
+  "notes": [
+    "Viewer Bible search: 15 cards; first-screen actions: Command⌘K | Open help | Open notifications | AKAlex KimBrand Team | MEDIA LIBRARY | Assets | Collections | Package Builder | Help Guide | Brand Hub",
+    "Reviewer decision states: ApproveMissing: Owner/license =disabled; Request ChangesMissing: Owner/=disabled; Missing ConsentMissing: Owner/=disabled; RestrictMissing: Owner/license=disabled; More Actions=enabled"
+  ],
+  "failures": [
+    {
+      "name": "library shows source status banner",
+      "pass": false,
+      "detail": "source banner/pill visible"
+    },
+    {
+      "name": "unsafe detail blocks reuse before approval",
+      "pass": false,
+      "detail": "review blocker visible"
+    },
+    {
+      "name": "request DAM review button visible on unsafe asset",
+      "pass": false,
+      "detail": "button missing"
+    }
+  ]
+}

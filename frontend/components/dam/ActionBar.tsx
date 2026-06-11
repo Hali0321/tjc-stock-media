@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
+import { GatedDownloadButton, parseDownloadGateHref } from "@/components/GatedDownloadButton";
 import { cn } from "@/lib/ui";
 import type { ReactNode } from "react";
 
@@ -39,6 +40,9 @@ export function DamActionButton({
       <span>{children}</span>
     </>
   );
+  if (href && !disabled && parseDownloadGateHref(href)) {
+    return <GatedDownloadButton className={className} href={href} ariaLabel="Download approved copy">{content}</GatedDownloadButton>;
+  }
   if (href && !disabled) return <Link className={className} href={href} title={disabledReason}>{content}</Link>;
   return <button className={className} type={type} onClick={onClick} disabled={disabled} title={disabled ? disabledReason : undefined}>{content}</button>;
 }

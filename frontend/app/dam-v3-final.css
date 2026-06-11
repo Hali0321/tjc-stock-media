@@ -1021,7 +1021,7 @@ body,
 
   .dam-utility-actions button[aria-label="Open command palette"],
   .dam-app-header button[aria-label="Open command palette"] {
-    display: none !important;
+    display: inline-flex !important;
   }
 
   .dam-desktop-rail .workbench-menu-nav a {

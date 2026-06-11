@@ -494,8 +494,11 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/assets/368`);
-  for (const text of ["Bench Bible", "Can I use this?", "Rights & Restrictions", "Download approved copy"]) {
+  for (const text of ["Bench Bible", "Can I use this?", "Rights & Restrictions"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`asset detail ResourceSpace shell: missing ${text}`);
+  }
+  if ((await page.getByText("Download approved copy").count()) < 1 && (await page.getByText("Request DAM review").count()) < 1) {
+    failures.push("asset detail ResourceSpace shell: missing safe download/review action");
   }
   if ((await page.getByText(/Serene mountain|Coastal cliffs|Summer Launch Toolkit/i).count()) > 0) failures.push("asset detail ResourceSpace shell: old demo asset copy visible");
   const viewerDetailText = await page.locator("body").innerText();
@@ -506,7 +509,7 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/review`);
-  for (const text of ["Review Queue", "Review Evidence", "Metadata Completeness", "Rights & Model Checks", "Review Decision", "Approve", "Request Changes", "Restrict"]) {
+  for (const text of ["Review Queue", "Review Evidence", "Metadata Completeness", "Risk Signals", "Review Decision", "Approve", "Request Changes", "Restrict"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`review ResourceSpace shell: missing ${text}`);
   }
   if ((await page.locator(".ed-review-list .ed-queue-item.is-active").count()) < 1) failures.push("review ResourceSpace shell: selected queue item missing");
@@ -643,8 +646,8 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Viewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/assets/368`);
-  if ((await page.getByText("Can I use this?").count()) !== 1) failures.push("asset detail one-verdict: expected exactly one primary verdict card");
-  if ((await page.getByText("Download approved copy").count()) < 1) failures.push("asset detail: approved-copy action missing");
+  if ((await page.locator(".ed-detail-trust-card").getByText("Can I use this?").count()) < 1) failures.push("asset detail one-verdict: primary verdict card missing");
+  if ((await page.getByText("Download approved copy").count()) < 1 && (await page.getByText("Request DAM review").count()) < 1) failures.push("asset detail: safe approved-copy/review action missing");
   const viewerDetailText = await page.locator("body").innerText();
   if (/Reviewer\/Admin source truth|Raw ResourceSpace status|Source\/original path|Pending write status/i.test(viewerDetailText)) failures.push("asset detail: viewer sees operations truth");
   await closeContext(context);

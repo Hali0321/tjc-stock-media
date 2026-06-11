@@ -1,5 +1,5 @@
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
-import { safeCompactText, safeEnumValue, safePathSlugText, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeBoundedInt, safeCompactText, safeEnumValue, safePathSlugText, safeSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const brandKitIdPattern = /^[A-Za-z0-9_-]{1,80}$/;
@@ -95,6 +95,10 @@ export function normalizePersistedSlugText(value: unknown, max = 100, options: {
   if (containsPrivateSourceText(text)) return "";
   if (options.rejectUnsafePath && containsUnsafePathText(text)) return "";
   return safeSlugText(text, max);
+}
+
+export function normalizeBoundedIntField(value: unknown, options: { fallback: number; min: number; max: number }) {
+  return safeBoundedInt(value, options);
 }
 
 export function normalizeUrlField(value: unknown, fallback = "", max = 500) {

@@ -34,6 +34,9 @@ const failures = [];
 if (sourceCustodyAssetKeys.length < 8) {
   failures.push("API payload guard could not read canonical sourceCustodyAssetKeys");
 }
+if (!sourceRedactionSource.includes("function omitDownloadImageUrl") || !sourceRedactionSource.includes("download: _download")) {
+  failures.push("source-redaction must strip imageUrls.download from every role payload");
+}
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");
@@ -55,7 +58,7 @@ const downloadSource = fs.readFileSync(path.join(root, downloadRoute), "utf8");
 const thumbnailRoute = "frontend/app/api/assets/thumbnail/[id]/route.ts";
 const thumbnailSource = fs.readFileSync(path.join(root, thumbnailRoute), "utf8");
 const mediaDeliverySource = fs.readFileSync(path.join(root, "frontend/lib/media-delivery.ts"), "utf8");
-if (!downloadSource.includes("readApprovedCopyDelivery(id, asset.title)") || !downloadSource.includes("hasApprovedCopyDerivative(id)") || !downloadSource.includes("downloadMalformedIdError()") || !downloadSource.includes("downloadNotFoundError(session, source)") || !downloadSource.includes("downloadRoleDeniedError(session, source)") || !downloadSource.includes("downloadRoleDeniedAuditEvent(asset, session, source)") || !downloadSource.includes("approvedCopyUnavailableError(delivery, session, source)") || !downloadSource.includes("approvedCopyDownloadedAuditEvent(asset, delivery, session, source)") || !downloadSource.includes("approvedCopyImageResponse(delivery)")) {
+if (!downloadSource.includes("readApprovedCopyDelivery(id, asset.title)") || !downloadSource.includes("hasApprovedCopyDerivative(id)") || !downloadSource.includes("downloadMalformedIdError()") || !downloadSource.includes("downloadNotFoundError(session, source)") || !downloadSource.includes("downloadRoleDeniedError(session, source)") || !downloadSource.includes("downloadRoleDeniedAuditEvent(asset, session, source)") || !downloadSource.includes("approvedCopyUnavailableError(delivery, session, source)") || !downloadSource.includes("approvedCopyDownloadedAuditEvent(asset, delivery, session, source") || !downloadSource.includes("approvedCopyImageResponse(delivery)")) {
   failures.push(`${downloadRoute} must resolve approved-copy GET responses and gate checks through media-delivery`);
 }
 if (!downloadSource.includes("Private originals and S3 paths are not exposed.")) {
@@ -66,6 +69,12 @@ if (!mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeli
 }
 if (!downloadSource.includes("readDownloadGateInput(request)") || !mediaDeliverySource.includes("function readDownloadGateInput") || !mediaDeliverySource.includes("function normalizeDownloadVariant") || !mediaDeliverySource.includes("function readApprovedCopyDelivery") || !mediaDeliverySource.includes("function hasApprovedCopyDerivative") || !mediaDeliverySource.includes("function downloadMalformedIdError") || !mediaDeliverySource.includes("function downloadNotFoundError") || !mediaDeliverySource.includes("function downloadRoleDeniedError") || !mediaDeliverySource.includes("function approvedCopyUnavailableError") || !mediaDeliverySource.includes("function approvedCopyImageResponse") || !mediaDeliverySource.includes("function approvedCopyDownloadedAuditEvent") || !mediaDeliverySource.includes("function downloadRoleDeniedAuditEvent")) {
   failures.push(`${downloadRoute} must delegate download gate body parsing, approved-copy delivery, metadata normalization, GET errors, and GET audit details to media-delivery`);
+}
+if (!downloadSource.includes("consumeDownloadTicket(") || !downloadSource.includes("mintDownloadTicket(") || !downloadSource.includes("appendRequiredAuditEvent(") || !downloadSource.includes("ticket=${encodeURIComponent(ticket.ticket)}")) {
+  failures.push(`${downloadRoute} must require one-time tickets and fail closed when required download audit cannot persist`);
+}
+if (!thumbnailSource.includes('deliveryInput.variant === "download"') || !thumbnailSource.includes("thumbnailDownloadVariantDeniedError(session, source)") || !mediaDeliverySource.includes("function thumbnailDownloadVariantDeniedError") || !mediaDeliverySource.includes("request-download-ticket")) {
+  failures.push(`${thumbnailRoute} must block download-grade thumbnail delivery outside the approved-copy ticket gate`);
 }
 if (/readJsonObject|normalizeDisplayTextField|function\s+normalizeDownloadVariant|findFilestoreDerivative|readDeliveredImage|approvedCopyFileName/.test(downloadSource)) {
   failures.push(`${downloadRoute} must not hand-roll download gate body parsing, usage metadata, variant normalization, or approved-copy delivery`);
@@ -145,10 +154,10 @@ const catalogSearchRequestSource = fs.readFileSync(path.join(root, "frontend/lib
 if (!searchRouteSource.includes("readCatalogSearchRequest(params)") || !searchRouteSource.includes("searchAssets({ role, ...input })")) {
   failures.push(`${searchRoute} must delegate search parameter parsing and validation to catalog-search-request`);
 }
-if (!catalogSearchRequestSource.includes('normalizePublicTextField(params.get("q"), "", 200)') || !catalogSearchRequestSource.includes('normalizePublicTextField(value, "", 80)') || !catalogSearchRequestSource.includes("normalizeCatalogSort(sort)") || !catalogSearchRequestSource.includes("safeBoundedInt(value")) {
+if (!catalogSearchRequestSource.includes('normalizePublicTextField(params.get("q"), "", 200)') || !catalogSearchRequestSource.includes('normalizePublicTextField(value, "", 80)') || !catalogSearchRequestSource.includes("normalizeCatalogSort(sort)") || !catalogSearchRequestSource.includes("normalizeBoundedIntField(value")) {
   failures.push("catalog-search-request must own public query/filter, sort, limit, and offset normalization");
 }
-if (/normalizePublicTextField|normalizeTextField|normalizeCatalogSort|safeBoundedInt|function\s+normalize(Limit|Offset)|isKnown(SavedView|Collection)Id/.test(searchRouteSource)) {
+if (/normalizePublicTextField|normalizeTextField|normalizeCatalogSort|normalizeBoundedIntField|safeBoundedInt|function\s+normalize(Limit|Offset)|isKnown(SavedView|Collection)Id/.test(searchRouteSource)) {
   failures.push(`${searchRoute} must not hand-roll search parameter normalization or validation`);
 }
 
@@ -175,6 +184,9 @@ if (!requestValidationSource.includes("function normalizeFeedbackId")) {
 }
 if (!requestValidationSource.includes("function normalizePublicTextField")) {
   failures.push("request validation must expose normalizePublicTextField for public reviewer-visible fields");
+}
+if (!requestValidationSource.includes("function normalizeBoundedIntField") || !requestValidationSource.includes("safeBoundedInt(value, options)")) {
+  failures.push("request validation must expose normalizeBoundedIntField for bounded numeric request fields");
 }
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
@@ -337,8 +349,8 @@ if (!uploadRouteSource.includes("normalizeUploadIntake(form)")) {
 if (!uploadRouteSource.includes("uploadIntakeValidationError(intake)") || !uploadRouteSource.includes("buildUploadIntakeResponse(intake)") || !uploadRouteSource.includes("uploadIntakeRoleDeniedError()") || !uploadRouteSource.includes("uploadIntakeDeniedAuditEvent(role, identity.id)") || !uploadRouteSource.includes("uploadIntakeSubmittedAuditEvent(intake, role, identity.id)")) {
   failures.push(`${uploadRoute} must delegate intake validation responses, role denial copy, audit details, and response payloads to upload-intake`);
 }
-if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("LARGE_MEDIA_BYTES") || !uploadIntakeSource.includes("function uploadIntakeValidationError") || !uploadIntakeSource.includes("function uploadIntakeRoleDeniedError") || !uploadIntakeSource.includes("function uploadIntakeDeniedAuditEvent") || !uploadIntakeSource.includes("function uploadIntakeSubmittedAuditEvent") || !uploadIntakeSource.includes("function buildUploadIntakeResponse")) {
-  failures.push("upload-intake must normalize public intake text, canonical tags, large-media threshold, validation responses, denial copy, audit details, and response payloads in one module");
+if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("LARGE_MEDIA_BYTES") || !uploadIntakeSource.includes("MAX_UPLOAD_INTAKE_FILES") || !uploadIntakeSource.includes("function uploadIntakeValidationError") || !uploadIntakeSource.includes("function uploadIntakeRoleDeniedError") || !uploadIntakeSource.includes("function uploadIntakeDeniedAuditEvent") || !uploadIntakeSource.includes("function uploadIntakeSubmittedAuditEvent") || !uploadIntakeSource.includes("function buildUploadIntakeResponse")) {
+  failures.push("upload-intake must normalize public intake text, canonical tags, large-media threshold, file-count threshold, validation responses, denial copy, audit details, and response payloads in one module");
 }
 if (/normalize(DateField|DisplayTextField|PublicTextField|UrlField)\(|missingRequired|invalidTags|largeFiles|uploadDefaultState|upload_(denied|submitted)|role-cannot-submit|This role can search approved media but cannot upload|Upload intake denied for role/.test(uploadRouteSource)) {
   failures.push(`${uploadRoute} must not hand-roll upload intake field normalization, validation, denial copy, audit details, or response payloads`);
