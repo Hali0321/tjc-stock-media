@@ -82,6 +82,9 @@ if (!requestValidationSource.includes("function readFormData")) {
 if (!requestValidationSource.includes("function normalizeBrandKitId")) {
   failures.push("request validation must expose normalizeBrandKitId for brand kit route ids");
 }
+if (!requestValidationSource.includes("function normalizeFeedbackId")) {
+  failures.push("request validation must expose normalizeFeedbackId for beta feedback route ids");
+}
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");
@@ -100,6 +103,12 @@ if (!brandKitRouteSource.includes("normalizeBrandKitId((await params).id)")) {
 }
 if (!brandKitRouteSource.includes("`/api/brand-kits/${encodeURIComponent(kitId)}`")) {
   failures.push(`${brandKitRoute} must record usage route with encoded brand kit id`);
+}
+
+const betaFeedbackItemRoute = "frontend/app/api/beta-feedback/[id]/route.ts";
+const betaFeedbackItemRouteSource = fs.readFileSync(path.join(root, betaFeedbackItemRoute), "utf8");
+if (!betaFeedbackItemRouteSource.includes("normalizeFeedbackId((await params).id)")) {
+  failures.push(`${betaFeedbackItemRoute} must normalize path params through normalizeFeedbackId`);
 }
 
 if (failures.length) {

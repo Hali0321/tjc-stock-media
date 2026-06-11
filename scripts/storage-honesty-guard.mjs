@@ -79,7 +79,7 @@ for (const store of persistedRecordSources) {
   if (!store.source.includes("safeIsoTimestamp")) failures.push(`${store.name} must normalize persisted timestamps through safeIsoTimestamp`);
   if (!store.source.includes("newestByTimestamp")) failures.push(`${store.name} must sort persisted records through newestByTimestamp`);
   if (!store.source.includes("safeCompactText") && !store.source.includes("normalizePersisted")) failures.push(`${store.name} must normalize persisted text through shared safety helpers`);
-  if (!store.source.includes("safeSlugText") && !store.source.includes("normalizePersistedSlugText")) failures.push(`${store.name} must normalize persisted slugs through normalizePersistedSlugText or safeSlugText`);
+  if (!store.source.includes("safeSlugText") && !store.source.includes("normalizePersistedSlugText") && !store.source.includes("normalizeFeedbackId")) failures.push(`${store.name} must normalize persisted slugs through normalizePersistedSlugText, safeSlugText, or normalizeFeedbackId`);
   if (!store.source.includes(store.enumHelper || "safeEnumValue")) failures.push(`${store.name} must normalize persisted enums through ${store.enumHelper || "safeEnumValue"}`);
   if (/function\s+safeIso\s*\(/.test(store.source)) failures.push(`${store.name} must not hand-roll Date.parse timestamp guards`);
   if (/Date\.parse/.test(store.source)) failures.push(`${store.name} must not hand-roll timestamp ordering with Date.parse`);
@@ -144,8 +144,8 @@ for (const store of [
   { name: "pending review writes", source: pendingReviewWrites },
   { name: "audit log", source: auditLog }
 ]) {
-  if (!store.source.includes("normalizePersistedSlugText")) {
-    failures.push(`${store.name} must normalize persisted identifiers through normalizePersistedSlugText`);
+  if (!store.source.includes("normalizePersistedSlugText") && !store.source.includes("normalizeFeedbackId")) {
+    failures.push(`${store.name} must normalize persisted identifiers through normalizePersistedSlugText or normalizeFeedbackId`);
   }
 }
 for (const store of [

@@ -311,6 +311,16 @@ if (!/status is invalid/i.test(data.error || "")) {
   -d '{"role":"DAM Admin","status":"done"}' \
   "$BASE_URL/api/beta-feedback/$feedback_id?role=DAM%20Admin"
 
+expect_json_status 404 feedback-admin-patch-malformed-id '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!/not found/i.test(data.error || "")) {
+  console.error(`FAIL: malformed feedback id did not return not found: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' -X PATCH -H 'Content-Type: application/json' \
+  -d '{"role":"DAM Admin","status":"agent-ready"}' \
+  "$BASE_URL/api/beta-feedback/..%2Fprivate-source?role=DAM%20Admin"
+
 FEEDBACK_ID="$feedback_id" expect_json_status 200 feedback-admin-patch '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.FEEDBACK_ID;

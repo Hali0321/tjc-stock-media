@@ -3,7 +3,7 @@ import { appendAuditEvent } from "@/lib/audit-log";
 import { normalizeFeedbackSeverity, normalizeFeedbackStatus, normalizeFeedbackText, patchBetaFeedback } from "@/lib/beta-feedback";
 import { canAdmin } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { readJsonObject } from "@/lib/request-validation";
+import { normalizeFeedbackId, readJsonObject } from "@/lib/request-validation";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Beta feedback updates require DAM Admin role." }, { status: 403 });
   }
 
-  const { id } = await params;
+  const id = normalizeFeedbackId((await params).id);
   const body = await readJsonObject<{ status?: string; severity?: string; notes?: string }>(request);
   const status = normalizeFeedbackText(body.status, 40);
   const severity = normalizeFeedbackText(body.severity, 40);

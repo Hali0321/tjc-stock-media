@@ -3,6 +3,7 @@ import { safeCompactText, safeEnumValue, safePathSlugText, safeSlugText } from "
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const brandKitIdPattern = /^[A-Za-z0-9_-]{1,80}$/;
+const feedbackIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
 const collectionDraftAudiences = ["Private draft", "Internal ministry", "Public-approved portal"] as const;
 export type CollectionDraftAudience = typeof collectionDraftAudiences[number];
@@ -33,6 +34,13 @@ export function normalizeBrandKitId(value: unknown) {
   const id = String(value).trim();
   if (containsPrivateSourceText(id) || containsUnsafePathText(id)) return "";
   return brandKitIdPattern.test(id) ? id : "";
+}
+
+export function normalizeFeedbackId(value: unknown) {
+  if (typeof value !== "string" && typeof value !== "number") return "";
+  const id = String(value).trim();
+  if (containsPrivateSourceText(id) || containsUnsafePathText(id)) return "";
+  return feedbackIdPattern.test(id) ? id : "";
 }
 
 export function normalizeResourceSpaceRef(value: unknown) {

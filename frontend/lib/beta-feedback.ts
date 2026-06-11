@@ -5,7 +5,7 @@ import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { isSafeHttpUrl } from "@/lib/private-source-text";
-import { normalizePersistedDisplayText, normalizePersistedSlugText, normalizeSafeRoutePath } from "@/lib/request-validation";
+import { normalizeFeedbackId, normalizePersistedDisplayText, normalizeSafeRoutePath } from "@/lib/request-validation";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -39,7 +39,7 @@ function safeText(value: unknown, maxLength: number) {
 }
 
 function safeId(value: unknown) {
-  return normalizePersistedSlugText(value, 120);
+  return normalizeFeedbackId(value);
 }
 
 export function normalizeFeedbackSeverity(value: unknown, fallback: BetaFeedbackSeverity = "medium"): BetaFeedbackSeverity {
@@ -284,7 +284,8 @@ export function buildBetaFeedbackExport(records: BetaFeedbackRecord[], filters: 
 }
 
 export async function patchBetaFeedback(id: string, patch: FeedbackPatch) {
-  const cleanId = safeText(id, 120);
+  const cleanId = safeId(id);
+  if (!cleanId) return null;
   const records = await listBetaFeedback();
   const existing = records.find((record) => record.id === cleanId);
   if (!existing) return null;
