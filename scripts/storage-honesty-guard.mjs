@@ -8,6 +8,7 @@ const files = {
   savedSearches: "frontend/lib/saved-search-store.ts",
   packages: "frontend/lib/package-store.ts",
   packageDrafts: "frontend/lib/package-drafts.ts",
+  packageGovernance: "frontend/lib/package-governance.ts",
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
@@ -33,6 +34,7 @@ const feedback = read(files.feedback);
 const savedSearches = read(files.savedSearches);
 const packages = read(files.packages);
 const packageDrafts = read(files.packageDrafts);
+const packageGovernance = read(files.packageGovernance);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
@@ -120,6 +122,9 @@ if (!/collectionId:\s*raw\.collectionId\s*\?\s*normalizeResourceSpaceRef\(raw\.c
 }
 if (!packageDrafts.includes("normalizeResourceSpaceRef") || /refs\.map\(\(ref\)\s*=>\s*String\(ref\)\)/.test(packageDrafts)) {
   failures.push("package draft client helpers must normalize package refs through normalizeResourceSpaceRef");
+}
+if (!packageGovernance.includes("normalizeResourceSpaceRef") || /String\(asset\.resourceSpaceId\s*\|\|\s*asset\.id\)/.test(packageGovernance)) {
+  failures.push("package governance display refs must normalize through normalizeResourceSpaceRef");
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");
