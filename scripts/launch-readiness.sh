@@ -72,6 +72,7 @@ require_file "scripts/portal-beta-rehearsal.sh"
 require_file "scripts/portal-hosted-smoke.sh"
 require_file "scripts/live-dam-surface-guard.mjs"
 require_file "scripts/api-identity-guard.mjs"
+require_file "scripts/api-audit-guard.mjs"
 require_file "scripts/public-env-guard.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
@@ -88,6 +89,13 @@ if node scripts/api-identity-guard.mjs >/tmp/tjc-api-identity-guard.txt 2>&1; th
 else
   fail "API identity guard failed"
   cat /tmp/tjc-api-identity-guard.txt
+fi
+
+if node scripts/api-audit-guard.mjs >/tmp/tjc-api-audit-guard.txt 2>&1; then
+  pass "mutating API routes have audit coverage"
+else
+  fail "API audit guard failed"
+  cat /tmp/tjc-api-audit-guard.txt
 fi
 
 if node scripts/public-env-guard.mjs >/tmp/tjc-public-env-guard.txt 2>&1; then
