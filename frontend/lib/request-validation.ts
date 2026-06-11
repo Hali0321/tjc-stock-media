@@ -1,8 +1,10 @@
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
+const privateTextPattern = /source path|master drive|checksum|[a-f0-9]{32,}/i;
 
 export function normalizeAssetId(value: unknown) {
   if (typeof value !== "string" && typeof value !== "number") return "";
   const id = String(value).trim();
+  if (privateTextPattern.test(id)) return "";
   return assetIdPattern.test(id) ? id : "";
 }
 
@@ -19,7 +21,7 @@ export function normalizeTextField(value: unknown, fallback: string, max = 100) 
 export function normalizeDisplayTextField(value: unknown, fallback: string, max = 100) {
   const text = normalizeTextField(value, fallback, max).replace(/\s+/g, " ").trim();
   if (text.includes("..") || /[\\/]/.test(text)) return fallback.slice(0, max);
-  if (/source path|master drive|checksum/i.test(text)) return fallback.slice(0, max);
+  if (privateTextPattern.test(text)) return fallback.slice(0, max);
   return text;
 }
 
@@ -27,7 +29,7 @@ export function normalizeUrlField(value: unknown, fallback = "", max = 500) {
   const text = normalizeTextField(value, fallback, max);
   if (!text) return fallback.slice(0, max);
   if (text.includes("..") || /[\\]/.test(text)) return fallback.slice(0, max);
-  if (/source path|master drive|checksum/i.test(text)) return fallback.slice(0, max);
+  if (privateTextPattern.test(text)) return fallback.slice(0, max);
   return /^https?:\/\//i.test(text) ? text : fallback.slice(0, max);
 }
 

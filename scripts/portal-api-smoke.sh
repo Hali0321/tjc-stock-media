@@ -177,6 +177,9 @@ expect_code 403 blocked-approved-download-viewer "$BASE_URL/api/download/368?rol
 expect_code 400 malformed-asset-detail "$BASE_URL/api/assets/%2E%2E644?role=Reviewer"
 expect_code 400 malformed-thumbnail "$BASE_URL/api/assets/thumbnail/%2E%2E644?variant=detail&role=Reviewer"
 expect_code 400 malformed-download "$BASE_URL/api/download/%2E%2E368?role=Viewer"
+expect_code 400 checksum-asset-detail "$BASE_URL/api/assets/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?role=Reviewer"
+expect_code 400 checksum-thumbnail "$BASE_URL/api/assets/thumbnail/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb?variant=detail&role=Reviewer"
+expect_code 400 checksum-download "$BASE_URL/api/download/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc?role=Viewer"
 expect_json_status 404 missing-thumbnail-viewer-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/thumbnail/999999?variant=detail&role=Viewer"
 expect_json_status 400 unknown-saved-view-payload-safe '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
@@ -195,7 +198,7 @@ if (Object.prototype.hasOwnProperty.call(data, "collection") || JSON.stringify(d
 expect_json_status 400 unknown-sort-payload-safe '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);
-if (Object.prototype.hasOwnProperty.call(data, "sort") || text.includes("../") || /source path|master drive|checksum/i.test(text)) {
+if (Object.prototype.hasOwnProperty.call(data, "sort") || text.includes("../") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
   console.error("FAIL: unknown sort response echoed rejected input");
   process.exit(1);
 }
@@ -401,6 +404,34 @@ if (text.includes("../private") || /source path|master drive|checksum/i.test(tex
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"
 
+expect_json_status 400 upload-checksum-display-fields-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (!Array.isArray(data.missingRequired) || !data.missingRequired.includes("title") || !data.missingRequired.includes("ministry/team") || !data.missingRequired.includes("source/photographer")) {
+  console.error(`FAIL: checksum-shaped upload display fields did not become missing requirements: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+if (/[a-f0-9]{32,}/i.test(text)) {
+  console.error(`FAIL: upload validation echoed checksum-shaped display fields: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST \
+  -F 'role=Contributor' \
+  -F 'title=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+  -F 'eventName=Checksum private-token event' \
+  -F 'eventDate=2026-06-06' \
+  -F 'ministry=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
+  -F 'source=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc' \
+  -F 'peopleVisible=No' \
+  -F 'minorsVisible=No' \
+  -F 'usageRights=TJC-owned / permission confirmed' \
+  -F 'approvalSuggestion=Internal ministry' \
+  -F 'notes=No consent restrictions; no people visible.' \
+  -F 'tags=Bible, worship' \
+  -F 'intakeNotes=QA checksum-shaped display fields.' \
+  -F 'sourceLink=https://drive.google.com/example' \
+  "$BASE_URL/api/upload"
+
 expect_json_status 403 batch-viewer-payload-safe '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);
@@ -420,6 +451,11 @@ if (!/reviewer access/i.test(data.error || "")) {
 expect_code 400 batch-malformed-asset \
   -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","action":"request-review","assetIds":["../644"]}' \
+  "$BASE_URL/api/batch"
+
+expect_code 400 batch-checksum-asset \
+  -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Reviewer","action":"request-review","assetIds":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]}' \
   "$BASE_URL/api/batch"
 
 expect_json_status 404 batch-missing-asset-payload-safe '
@@ -507,6 +543,17 @@ if (data.title !== "Untitled ministry collection" || data.owner !== "Ministry me
 }
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Contributor","assetIds":["368"],"title":"source path handoff","owner":"master drive checksum owner","expiry":"2026-02-30","audience":"Internal ministry"}' \
+  "$BASE_URL/api/collections"
+
+expect_json collection-checksum-display-fields-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.title !== "Untitled ministry collection" || data.owner !== "Ministry media" || /[a-f0-9]{32,}/i.test(text)) {
+  console.error(`FAIL: collection checksum-shaped display fields were not sanitized: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Contributor","assetIds":["368"],"title":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","owner":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","expiry":"2026-02-30","audience":"Internal ministry"}' \
   "$BASE_URL/api/collections"
 
 expect_json collection-expiry-date-preserved '
@@ -648,12 +695,12 @@ expect_json_status 403 contributor-denied-download-payload-safe "$normal_user_pa
 expect_json_status 403 download-gate-metadata-sanitized '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);
-if (data.downloadUrl || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+if (data.downloadUrl || text.includes("../private") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: blocked download gate echoed unsafe metadata: ${text.slice(0, 700)}`);
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d '{"role":"Viewer","termsAccepted":true,"variant":"../private-source-path","usageChannel":"../private master drive","reason":"../private checksum"}' \
+  -d '{"role":"Viewer","termsAccepted":true,"variant":"../private-source-path","usageChannel":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}' \
   "$BASE_URL/api/download/368"
 
 expect_json rights-status-not-publish-status '
