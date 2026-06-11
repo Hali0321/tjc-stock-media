@@ -158,8 +158,15 @@ for (const route of [
 
 const uploadRoute = "frontend/app/api/upload/route.ts";
 const uploadRouteSource = fs.readFileSync(path.join(root, uploadRoute), "utf8");
-if (!uploadRouteSource.includes("normalizePublicTextField")) {
-  failures.push(`${uploadRoute} must normalize public intake freeform text through normalizePublicTextField`);
+const uploadIntakeSource = fs.readFileSync(path.join(root, "frontend/lib/upload-intake.ts"), "utf8");
+if (!uploadRouteSource.includes("normalizeUploadIntake(form)")) {
+  failures.push(`${uploadRoute} must delegate intake field normalization to upload-intake`);
+}
+if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("LARGE_MEDIA_BYTES")) {
+  failures.push("upload-intake must normalize public intake text, canonical tags, and large-media threshold in one module");
+}
+if (/normalize(DateField|DisplayTextField|PublicTextField|UrlField)\(/.test(uploadRouteSource)) {
+  failures.push(`${uploadRoute} must not hand-roll upload intake field normalization`);
 }
 if (/normalizeTextField\(form\.get/.test(uploadRouteSource)) {
   failures.push(`${uploadRoute} must not normalize public intake form fields through raw normalizeTextField`);

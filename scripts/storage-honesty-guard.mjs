@@ -38,6 +38,7 @@ const files = {
   enterpriseInsights: "frontend/components/dam/enterprise/InsightsPage.tsx",
   assetRoute: "frontend/app/api/assets/[id]/route.ts",
   uploadRoute: "frontend/app/api/upload/route.ts",
+  uploadIntake: "frontend/lib/upload-intake.ts",
   reviewRoute: "frontend/app/api/review/route.ts",
   batchRoute: "frontend/app/api/batch/route.ts",
   downloadRoute: "frontend/app/api/download/[id]/route.ts",
@@ -101,6 +102,7 @@ const enterpriseBrandHub = read(files.enterpriseBrandHub);
 const enterpriseInsights = read(files.enterpriseInsights);
 const assetRoute = read(files.assetRoute);
 const uploadRoute = read(files.uploadRoute);
+const uploadIntake = read(files.uploadIntake);
 const reviewRoute = read(files.reviewRoute);
 const batchRoute = read(files.batchRoute);
 const downloadRoute = read(files.downloadRoute);
@@ -275,7 +277,7 @@ if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\
 if (!requestValidation.includes("function normalizeResourceSpaceRef")) {
   failures.push("request validation must expose normalizeResourceSpaceRef");
 }
-if (!uploadRoute.includes("sourceLinkCaptured: Boolean(sourceLink)") || /details:\s*\{[^}]*sourceLink:\s*sourceLink/s.test(uploadRoute)) {
+if (!uploadRoute.includes("uploadIntakeAuditDetails(intake)") || !uploadIntake.includes("sourceLinkCaptured: Boolean(intake.sourceLink)") || /details:\s*\{[^}]*sourceLink:\s*(sourceLink|intake\.sourceLink)/s.test(uploadRoute) || /sourceLink:\s*intake\.sourceLink/.test(uploadIntake)) {
   failures.push("upload audit details must persist sourceLinkCaptured instead of raw sourceLink URLs");
 }
 if (!requestValidation.includes("containsPrivateSourceText(ref)")) {

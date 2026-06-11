@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeDateField, normalizeDisplayTextField, normalizePublicTextField, normalizeUrlField, readFormData } from "@/lib/request-validation";
-import { nonCanonicalUploadTags } from "@/lib/upload-tags";
-import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
+import { readFormData } from "@/lib/request-validation";
+import { normalizeUploadIntake, uploadIntakeAuditDetails } from "@/lib/upload-intake";
+import { uploadDefaultState } from "@/lib/workflow-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -24,80 +24,42 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This role can search approved media but cannot upload." }, { status: 403 });
   }
 
-  const files = form.getAll("files").filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0);
-  const sourceLink = normalizeUrlField(form.get("sourceLink"), "", 500);
-  const title = normalizeDisplayTextField(form.get("title"), "", 160);
-  const eventName = normalizeDisplayTextField(form.get("eventName"), "", 120);
-  const eventDate = normalizeDateField(form.get("eventDate"));
-  const ministry = normalizeDisplayTextField(form.get("ministry"), "", 120);
-  const source = normalizeDisplayTextField(form.get("source"), "", 160);
-  const peopleVisible = normalizePublicTextField(form.get("peopleVisible"), "Unknown", 40);
-  const minorsVisible = normalizePublicTextField(form.get("minorsVisible"), "Unknown", 40);
-  const usageRights = normalizePublicTextField(form.get("usageRights"), "Unknown - needs review", 80);
-  const approvalSuggestion = normalizePublicTextField(form.get("approvalSuggestion"), "Reviewer decides", 80);
-  const consentRestrictions = normalizePublicTextField(form.get("notes"), "", 600);
-  const suggestedTags = normalizePublicTextField(form.get("tags"), "", 300);
-  const intakeNotes = normalizePublicTextField(form.get("intakeNotes"), "", 600);
-  const missingRequired = [
-    !title && "title",
-    !eventName && "event name",
-    !eventDate && "event date",
-    !ministry && "ministry/team",
-    !source && "source/photographer",
-    peopleVisible === "Unknown" && "people visible",
-    minorsVisible === "Unknown" && "children/youth visible",
-    /unknown|needs review/i.test(usageRights) && "usage rights",
-    !consentRestrictions && "consent/restrictions",
-    !approvalSuggestion && "suggested approval direction",
-    !suggestedTags && "suggested tags",
-    !intakeNotes && "intake notes"
-  ].filter((item): item is string => Boolean(item));
-  if (missingRequired.length) {
-    return NextResponse.json({ error: "Intake is missing required review context.", missingRequired }, { status: 400 });
+  const intake = normalizeUploadIntake(form);
+  if (intake.missingRequired.length) {
+    return NextResponse.json({ error: "Intake is missing required review context.", missingRequired: intake.missingRequired }, { status: 400 });
   }
-  const invalidTags = nonCanonicalUploadTags(suggestedTags);
-  if (invalidTags.length) {
+  if (intake.invalidTags.length) {
     return NextResponse.json(
       {
         error: "Suggested tags must use the current media-library taxonomy.",
-        invalidTags,
+        invalidTags: intake.invalidTags,
         guidance: "Add new wording to intake notes for reviewer consideration."
       },
       { status: 400 }
     );
   }
-  if (!files.length && !sourceLink) {
+  if (!intake.files.length && !intake.sourceLink) {
     return NextResponse.json({ error: "Add at least one file or existing media link before submitting intake." }, { status: 400 });
   }
 
-  const largeFiles = files.filter((file) => file.size > LARGE_MEDIA_BYTES);
-  if (largeFiles.length) {
+  if (intake.largeFiles.length) {
     appendAuditEvent({
       type: "upload_submitted",
       role,
       actor: identity.id,
       status: "blocked",
       summary: "Large-media intake routed away from browser upload.",
-      details: { eventName, fileCount: files.length, largeFileCount: largeFiles.length, sourceLinkCaptured: Boolean(sourceLink) }
+      details: { ...uploadIntakeAuditDetails(intake), largeFileCount: intake.largeFiles.length }
     });
     return NextResponse.json({
       status: "large-media-intake",
       message: uploadDefaultState.largeMediaMessage,
       defaultReviewState: uploadDefaultState.status,
-      fileCount: files.length,
-      largeFileCount: largeFiles.length,
-      sourceLinkCaptured: Boolean(sourceLink)
+      fileCount: intake.files.length,
+      largeFileCount: intake.largeFiles.length,
+      sourceLinkCaptured: Boolean(intake.sourceLink)
     });
   }
-
-  const reviewWarnings = [
-    !source && "Source/photographer missing",
-    peopleVisible === "Unknown" && "People visibility unknown",
-    minorsVisible === "Unknown" && "Children/youth visibility unknown",
-    minorsVisible === "Yes" && "Children/youth visible",
-    /unknown|needs review/i.test(usageRights) && "Usage rights unclear",
-    /church-wide|public/i.test(approvalSuggestion) && (!/permission confirmed|tjc-owned/i.test(usageRights) || peopleVisible === "Unknown" || minorsVisible !== "No") && "Public approval suggestion conflicts with rights/people fields"
-  ].filter((warning): warning is string => Boolean(warning));
 
   appendAuditEvent({
     type: "upload_submitted",
@@ -105,7 +67,7 @@ export async function POST(request: NextRequest) {
     actor: identity.id,
     status: "preview",
     summary: "Intake validated for DAM review; no media-library write performed.",
-    details: { eventName, fileCount: files.length, sourceLinkCaptured: Boolean(sourceLink), reviewWarnings }
+    details: { ...uploadIntakeAuditDetails(intake), reviewWarnings: intake.reviewWarnings }
   });
 
   return NextResponse.json({
@@ -113,9 +75,9 @@ export async function POST(request: NextRequest) {
     defaultReviewState: uploadDefaultState.status,
     message:
       "Upload intake validated. New media remains Needs Review / Do Not Publish until a reviewer clears the record.",
-    eventName,
-    fileCount: files.length,
-    sourceLinkCaptured: Boolean(sourceLink),
-    reviewWarnings
+    eventName: intake.eventName,
+    fileCount: intake.files.length,
+    sourceLinkCaptured: Boolean(intake.sourceLink),
+    reviewWarnings: intake.reviewWarnings
   });
 }
