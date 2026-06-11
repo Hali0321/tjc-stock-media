@@ -236,6 +236,9 @@ for (const surface of [
   if (!surface.source.includes("resourceSpaceRecordRef") || /resourceSpaceAssetUrl\(asset(Resource|\.resourceSpaceId)/.test(surface.source)) {
     failures.push(`${surface.name} ResourceSpace URLs must use strict resourceSpaceRecordRef`);
   }
+  if (!surface.source.includes("canOpenResourceSpace(role)") || !surface.source.includes("resourceSpaceAssetUrl")) {
+    failures.push(`${surface.name} ResourceSpace admin URLs must stay behind canOpenResourceSpace(role)`);
+  }
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");
