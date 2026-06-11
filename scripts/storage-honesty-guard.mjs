@@ -391,6 +391,9 @@ if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(usageAnalytics)) failures.
 if (!usageAnalytics.includes("function usageActorLabel") || /normalizePersistedDisplayText\(event\.actor/.test(usageAnalytics)) {
   failures.push("usage analytics must store role-level actor labels instead of raw actor identities");
 }
+if (!read("scripts/portal-usage-smoke.sh").includes("DELETE FROM usage_events WHERE role = ? AND metadata_json LIKE ?") || !read("scripts/portal-usage-smoke.sh").includes("smokeMarker: process.env.MARKER")) {
+  failures.push("usage analytics smoke must clean seeded unsafe analytics rows after payload sanitization checks");
+}
 if (!usageAnalytics.includes("function safeUsageFailureReason") || /reason:\s*error instanceof Error/.test(usageAnalytics)) {
   failures.push("usage analytics write failures must not expose raw storage error messages");
 }

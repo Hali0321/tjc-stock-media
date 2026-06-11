@@ -8,7 +8,19 @@ SMOKE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 export USAGE_ANALYTICS_DB_PATH MARKER SMOKE_STARTED_AT
 
 TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
+cleanup() {
+  node <<'NODE' >/dev/null 2>&1 || true
+const { DatabaseSync } = require("node:sqlite");
+const file = process.env.USAGE_ANALYTICS_DB_PATH;
+const marker = process.env.MARKER;
+if (!file || !marker) process.exit(0);
+const db = new DatabaseSync(file);
+db.prepare("DELETE FROM usage_events WHERE role = ? AND metadata_json LIKE ?").run("Root", `%${marker}%`);
+db.close();
+NODE
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
 
 http_code() {
   local output="$1"
@@ -140,7 +152,7 @@ db.prepare(`
   "../private-resource",
   "javascript:alert(1)",
   "../private-query",
-  JSON.stringify({ "../private": "../private" })
+  JSON.stringify({ smokeMarker: process.env.MARKER, "../private": "../private" })
 );
 db.prepare(`
   INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
@@ -154,7 +166,7 @@ db.prepare(`
   "../private-resource",
   "javascript:alert(1)",
   "ignored",
-  JSON.stringify({ "../private": "../private" })
+  JSON.stringify({ smokeMarker: process.env.MARKER, "../private": "../private" })
 );
 db.prepare(`
   INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
@@ -168,7 +180,7 @@ db.prepare(`
   "checksum resource",
   "/review/source path",
   "source path handoff",
-  JSON.stringify({ "source path": "master drive checksum" })
+  JSON.stringify({ smokeMarker: process.env.MARKER, "source path": "master drive checksum" })
 );
 db.prepare(`
   INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
@@ -182,7 +194,7 @@ db.prepare(`
   "review-resource",
   "/library/master drive",
   "ignored",
-  JSON.stringify({ "review note": "checksum ready" })
+  JSON.stringify({ smokeMarker: process.env.MARKER, "review note": "checksum ready" })
 );
 db.prepare(`
   INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
@@ -196,7 +208,7 @@ db.prepare(`
   "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   "/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
   "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-  JSON.stringify({ "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" })
+  JSON.stringify({ smokeMarker: process.env.MARKER, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" })
 );
 db.close();
 NODE
