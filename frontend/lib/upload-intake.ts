@@ -1,6 +1,8 @@
 import { normalizeDateField, normalizeDisplayTextField, normalizePublicTextField, normalizeUrlField } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
+import type { AuditEventRecord } from "@/lib/audit-log";
+import type { DemoRole } from "@/lib/types";
 
 export type UploadIntakePacket = {
   files: File[];
@@ -29,10 +31,11 @@ export type UploadIntakeValidationError = {
     invalidTags?: string[];
     guidance?: string;
   };
-  status: 400;
+  status: 400 | 403;
 };
 type UploadIntakeAuditPacket = Pick<UploadIntakePacket, "eventName" | "files" | "sourceLink"> &
   Partial<Pick<UploadIntakePacket, "largeFiles" | "reviewWarnings">>;
+type UploadIntakeAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
 
 export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
   const files = form.getAll("files").filter((value): value is File => value instanceof File && Boolean(value.name) && value.size > 0);
@@ -124,6 +127,10 @@ export function uploadIntakeValidationError(intake: UploadIntakePacket): UploadI
   return null;
 }
 
+export function uploadIntakeRoleDeniedError(): UploadIntakeValidationError {
+  return { body: { error: "This role can search approved media but cannot upload." }, status: 403 };
+}
+
 export function uploadIntakeAuditStatus(intake: UploadIntakePacket) {
   return intake.largeFiles.length ? "blocked" as const : "preview" as const;
 }
@@ -132,6 +139,28 @@ export function uploadIntakeAuditSummary(intake: UploadIntakePacket) {
   return intake.largeFiles.length
     ? "Large-media intake routed away from browser upload."
     : "Intake validated for DAM review; no media-library write performed.";
+}
+
+export function uploadIntakeDeniedAuditEvent(role: DemoRole, actor: string): UploadIntakeAuditEvent {
+  return {
+    type: "upload_denied",
+    role,
+    actor,
+    status: "denied",
+    summary: "Upload intake denied for role.",
+    details: { reason: "role-cannot-submit" }
+  };
+}
+
+export function uploadIntakeSubmittedAuditEvent(intake: UploadIntakePacket, role: DemoRole, actor: string): UploadIntakeAuditEvent {
+  return {
+    type: "upload_submitted",
+    role,
+    actor,
+    status: uploadIntakeAuditStatus(intake),
+    summary: uploadIntakeAuditSummary(intake),
+    details: uploadIntakeAuditDetails(intake)
+  };
 }
 
 export function buildUploadIntakeResponse(intake: UploadIntakePacket) {

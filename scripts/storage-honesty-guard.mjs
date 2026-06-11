@@ -283,7 +283,7 @@ if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\
 if (!requestValidation.includes("function normalizeResourceSpaceRef")) {
   failures.push("request validation must expose normalizeResourceSpaceRef");
 }
-if (!uploadRoute.includes("uploadIntakeAuditDetails(intake)") || !uploadIntake.includes("sourceLinkCaptured: Boolean(intake.sourceLink)") || /details:\s*\{[^}]*sourceLink:\s*(sourceLink|intake\.sourceLink)/s.test(uploadRoute) || /sourceLink:\s*intake\.sourceLink/.test(uploadIntake)) {
+if (!uploadIntake.includes("function uploadIntakeAuditDetails") || !uploadIntake.includes("sourceLinkCaptured: Boolean(intake.sourceLink)") || /details:\s*\{[^}]*sourceLink:\s*(sourceLink|intake\.sourceLink)/s.test(uploadRoute) || /sourceLink:\s*intake\.sourceLink/.test(uploadIntake)) {
   failures.push("upload audit details must persist sourceLinkCaptured instead of raw sourceLink URLs");
 }
 if (!requestValidation.includes("containsPrivateSourceText(ref)")) {

@@ -6,9 +6,9 @@ import { readFormData } from "@/lib/request-validation";
 import {
   buildUploadIntakeResponse,
   normalizeUploadIntake,
-  uploadIntakeAuditDetails,
-  uploadIntakeAuditStatus,
-  uploadIntakeAuditSummary,
+  uploadIntakeDeniedAuditEvent,
+  uploadIntakeRoleDeniedError,
+  uploadIntakeSubmittedAuditEvent,
   uploadIntakeValidationError
 } from "@/lib/upload-intake";
 
@@ -19,15 +19,9 @@ export async function POST(request: NextRequest) {
   const identity = requestIdentity(request, String(form.get("role") || "Viewer"));
   const role = identity.role;
   if (!canUpload(role)) {
-    appendAuditEvent({
-      type: "upload_denied",
-      role,
-      actor: identity.id,
-      status: "denied",
-      summary: "Upload intake denied for role.",
-      details: { reason: "role-cannot-submit" }
-    });
-    return NextResponse.json({ error: "This role can search approved media but cannot upload." }, { status: 403 });
+    const denied = uploadIntakeRoleDeniedError();
+    appendAuditEvent(uploadIntakeDeniedAuditEvent(role, identity.id));
+    return NextResponse.json(denied.body, { status: denied.status });
   }
 
   const intake = normalizeUploadIntake(form);
@@ -36,14 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(validationError.body, { status: validationError.status });
   }
 
-  appendAuditEvent({
-    type: "upload_submitted",
-    role,
-    actor: identity.id,
-    status: uploadIntakeAuditStatus(intake),
-    summary: uploadIntakeAuditSummary(intake),
-    details: uploadIntakeAuditDetails(intake)
-  });
+  appendAuditEvent(uploadIntakeSubmittedAuditEvent(intake, role, identity.id));
 
   return NextResponse.json(buildUploadIntakeResponse(intake));
 }

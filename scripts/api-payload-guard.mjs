@@ -327,14 +327,14 @@ const uploadIntakeSource = fs.readFileSync(path.join(root, "frontend/lib/upload-
 if (!uploadRouteSource.includes("normalizeUploadIntake(form)")) {
   failures.push(`${uploadRoute} must delegate intake field normalization to upload-intake`);
 }
-if (!uploadRouteSource.includes("uploadIntakeValidationError(intake)") || !uploadRouteSource.includes("buildUploadIntakeResponse(intake)") || !uploadRouteSource.includes("uploadIntakeAuditStatus(intake)") || !uploadRouteSource.includes("uploadIntakeAuditSummary(intake)")) {
-  failures.push(`${uploadRoute} must delegate intake validation responses, audit status, and response payloads to upload-intake`);
+if (!uploadRouteSource.includes("uploadIntakeValidationError(intake)") || !uploadRouteSource.includes("buildUploadIntakeResponse(intake)") || !uploadRouteSource.includes("uploadIntakeRoleDeniedError()") || !uploadRouteSource.includes("uploadIntakeDeniedAuditEvent(role, identity.id)") || !uploadRouteSource.includes("uploadIntakeSubmittedAuditEvent(intake, role, identity.id)")) {
+  failures.push(`${uploadRoute} must delegate intake validation responses, role denial copy, audit details, and response payloads to upload-intake`);
 }
-if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("LARGE_MEDIA_BYTES") || !uploadIntakeSource.includes("function uploadIntakeValidationError") || !uploadIntakeSource.includes("function buildUploadIntakeResponse")) {
-  failures.push("upload-intake must normalize public intake text, canonical tags, large-media threshold, validation responses, and response payloads in one module");
+if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("LARGE_MEDIA_BYTES") || !uploadIntakeSource.includes("function uploadIntakeValidationError") || !uploadIntakeSource.includes("function uploadIntakeRoleDeniedError") || !uploadIntakeSource.includes("function uploadIntakeDeniedAuditEvent") || !uploadIntakeSource.includes("function uploadIntakeSubmittedAuditEvent") || !uploadIntakeSource.includes("function buildUploadIntakeResponse")) {
+  failures.push("upload-intake must normalize public intake text, canonical tags, large-media threshold, validation responses, denial copy, audit details, and response payloads in one module");
 }
-if (/normalize(DateField|DisplayTextField|PublicTextField|UrlField)\(|missingRequired|invalidTags|largeFiles|uploadDefaultState/.test(uploadRouteSource)) {
-  failures.push(`${uploadRoute} must not hand-roll upload intake field normalization, validation, or response payloads`);
+if (/normalize(DateField|DisplayTextField|PublicTextField|UrlField)\(|missingRequired|invalidTags|largeFiles|uploadDefaultState|upload_(denied|submitted)|role-cannot-submit|This role can search approved media but cannot upload|Upload intake denied for role/.test(uploadRouteSource)) {
+  failures.push(`${uploadRoute} must not hand-roll upload intake field normalization, validation, denial copy, audit details, or response payloads`);
 }
 if (/normalizeTextField\(form\.get/.test(uploadRouteSource)) {
   failures.push(`${uploadRoute} must not normalize public intake form fields through raw normalizeTextField`);
