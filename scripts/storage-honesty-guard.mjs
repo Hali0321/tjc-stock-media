@@ -382,8 +382,8 @@ for (const surface of [
 if (!savedSearches.includes("savedSearchForRolePayload") || !savedSearches.includes("createdBy: creatorLabel(record.role)")) {
   failures.push("saved search list payloads must scrub creator identity for non-review roles while keeping stored audit actor");
 }
-if (!savedSearchRoute.includes("savedSearchForRolePayload(identity.role, record)")) {
-  failures.push("saved search route must return role-safe saved search payloads");
+if (!savedSearchRoute.includes("buildSavedSearchSaveResponse(identity.role, record)") || !savedSearches.includes("savedSearchForRolePayload(role, record)")) {
+  failures.push("saved search route must return role-safe saved search payloads through saved-search-store");
 }
 if (!read("scripts/portal-saved-search-smoke.sh").includes("saved search contributor list leaked creator identity")) {
   failures.push("saved search smoke must prove Contributor lists do not leak creator identity");

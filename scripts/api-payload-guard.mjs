@@ -256,14 +256,14 @@ if (/normalizeFeedback(Severity|Status|Text)\(|normalizeRoleFilter|function\s+no
 const savedSearchRoute = "frontend/app/api/saved-searches/route.ts";
 const savedSearchRouteSource = fs.readFileSync(path.join(root, savedSearchRoute), "utf8");
 const savedSearchSource = fs.readFileSync(path.join(root, "frontend/lib/saved-search-store.ts"), "utf8");
-if (!savedSearchRouteSource.includes("readSavedSearchDraftInput(request)") || !savedSearchRouteSource.includes("hasSavedSearchCriteria(draft)") || !savedSearchRouteSource.includes("saveSavedSearchDraft(draft, identity)")) {
-  failures.push(`${savedSearchRoute} must delegate draft parsing, criteria checks, and record creation to saved-search-store`);
+if (!savedSearchRouteSource.includes("readSavedSearchDraftInput(request)") || !savedSearchRouteSource.includes("savedSearchCriteriaError(draft)") || !savedSearchRouteSource.includes("saveSavedSearchDraft(draft, identity)") || !savedSearchRouteSource.includes("buildSavedSearchListResponse(searches)") || !savedSearchRouteSource.includes("buildSavedSearchSaveResponse(identity.role, record)") || !savedSearchRouteSource.includes("savedSearchSavedAuditEvent(record, identity.role, identity.id)")) {
+  failures.push(`${savedSearchRoute} must delegate draft parsing, criteria checks, record creation, response payloads, and audit details to saved-search-store`);
 }
-if (!savedSearchSource.includes("function readSavedSearchDraftInput") || !savedSearchSource.includes("function hasSavedSearchCriteria") || !savedSearchSource.includes("function saveSavedSearchDraft")) {
-  failures.push("saved-search-store must own saved search draft parsing, criteria checks, and record creation");
+if (!savedSearchSource.includes("function readSavedSearchDraftInput") || !savedSearchSource.includes("function hasSavedSearchCriteria") || !savedSearchSource.includes("function saveSavedSearchDraft") || !savedSearchSource.includes("function savedSearchCriteriaError") || !savedSearchSource.includes("function buildSavedSearchListResponse") || !savedSearchSource.includes("function buildSavedSearchSaveResponse") || !savedSearchSource.includes("function savedSearchSavedAuditEvent")) {
+  failures.push("saved-search-store must own saved search draft parsing, criteria checks, record creation, response payloads, and audit details");
 }
-if (/readJsonObject|sanitizeSavedSearch|safeIsoTimestampIdPart|saveSavedSearch\(/.test(savedSearchRouteSource)) {
-  failures.push(`${savedSearchRoute} must not hand-roll saved search body parsing, sanitization, timestamp ids, or persistence record creation`);
+if (/readJsonObject|sanitizeSavedSearch|safeIsoTimestampIdPart|saveSavedSearch\(|hasSavedSearchCriteria|savedSearchForRolePayload|storageMode:\s*record\.storageMode|filterCount|role-cannot-(list|save)-saved-searches/.test(savedSearchRouteSource)) {
+  failures.push(`${savedSearchRoute} must not hand-roll saved search body parsing, sanitization, timestamp ids, persistence record creation, criteria checks, role payloads, response payloads, or audit details`);
 }
 
 const packageRoute = "frontend/app/api/packages/route.ts";

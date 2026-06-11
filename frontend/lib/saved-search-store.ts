@@ -5,6 +5,7 @@ import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from 
 import { newestByTimestamp, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText, readJsonObject } from "@/lib/request-validation";
+import type { AuditEventRecord } from "@/lib/audit-log";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
 export type SavedSearchRecord = {
@@ -25,6 +26,13 @@ export type SavedSearchDraft = Pick<SavedSearchRecord, "id" | "title" | "query" 
 
 const savedSearchStorePath = () => path.join(repoRoot(), "data", "runtime", "saved-searches.json");
 export const maxSavedSearches = 250;
+type SavedSearchAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+type SavedSearchRouteError = {
+  body: {
+    error: string;
+  };
+  status: 400 | 403;
+};
 
 function newestFirst(records: SavedSearchRecord[]) {
   return newestByTimestamp(records, (record) => record.updatedAt);
@@ -73,6 +81,18 @@ export function hasSavedSearchCriteria(draft: SavedSearchDraft) {
   return Boolean(draft.query || draft.view || draft.collection || draft.filters.length);
 }
 
+export function savedSearchListDeniedError(): SavedSearchRouteError {
+  return { body: { error: "Saved search list requires Contributor, Reviewer, or DAM Admin role." }, status: 403 };
+}
+
+export function savedSearchSaveDeniedError(): SavedSearchRouteError {
+  return { body: { error: "Saved search save requires Contributor, Reviewer, or DAM Admin role." }, status: 403 };
+}
+
+export function savedSearchCriteriaError(draft: SavedSearchDraft): SavedSearchRouteError | null {
+  return hasSavedSearchCriteria(draft) ? null : { body: { error: "Saved search needs a query, saved view, collection, or filter." }, status: 400 };
+}
+
 function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
   const raw = (input || {}) as Partial<SavedSearchRecord>;
   const draft = sanitizeSavedSearch(raw);
@@ -119,6 +139,77 @@ export function savedSearchForRolePayload(role: DemoRole, record: SavedSearchRec
   return {
     ...record,
     createdBy: creatorLabel(record.role)
+  };
+}
+
+export function savedSearchListForRolePayload(role: DemoRole, records: SavedSearchRecord[]) {
+  return records.map((record) => savedSearchForRolePayload(role, record));
+}
+
+export function buildSavedSearchListResponse(searches: SavedSearchRecord[]) {
+  return { searches, count: searches.length, storageMode: "local-json" as const };
+}
+
+export function buildSavedSearchSaveResponse(role: DemoRole, record: SavedSearchRecord) {
+  return { ok: true, search: savedSearchForRolePayload(role, record), storageMode: record.storageMode };
+}
+
+export function savedSearchListDeniedAuditEvent(role: DemoRole, actor: string): SavedSearchAuditEvent {
+  return {
+    type: "saved_search_denied",
+    role,
+    actor,
+    status: "denied",
+    summary: "Saved search list denied for Viewer role.",
+    details: { reason: "role-cannot-list-saved-searches" }
+  };
+}
+
+export function savedSearchSaveDeniedAuditEvent(role: DemoRole, actor: string): SavedSearchAuditEvent {
+  return {
+    type: "saved_search_denied",
+    role,
+    actor,
+    status: "denied",
+    summary: "Saved search save denied for Viewer role.",
+    details: { reason: "role-cannot-save-search" }
+  };
+}
+
+export function savedSearchListViewedAuditEvent(
+  searches: SavedSearchRecord[],
+  role: DemoRole,
+  actor: string
+): SavedSearchAuditEvent {
+  return {
+    type: "saved_search_listed",
+    role,
+    actor,
+    status: "preview",
+    summary: "Saved search list viewed.",
+    details: { count: searches.length }
+  };
+}
+
+export function savedSearchSavedAuditEvent(
+  record: SavedSearchRecord,
+  role: DemoRole,
+  actor: string
+): SavedSearchAuditEvent {
+  return {
+    type: "saved_search_saved",
+    role,
+    actor,
+    status: "preview",
+    summary: `Saved search created: ${record.title}.`,
+    details: {
+      savedSearchId: record.id,
+      query: record.query || null,
+      view: record.view || null,
+      collection: record.collection || null,
+      filterCount: record.filters.length,
+      storageMode: record.storageMode
+    }
   };
 }
 
