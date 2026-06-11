@@ -427,6 +427,9 @@ if (!apiPayloadGuard.includes('stringArrayConst(sourceRedactionSource, "sourceCu
 if (/sourcePath",\s*new Set|masterDrivePath",\s*new Set/.test(apiPayloadGuard)) {
   failures.push("API payload guard must not allowlist raw source path keys in API routes");
 }
+if (!downloadRoute.includes("const auditSource = envelope.source") || /source:\s*source\.label/.test(downloadRoute) || /sourceDetail:\s*source\.detail/.test(downloadRoute)) {
+  failures.push("download audit details must derive source labels/details from role-safe envelope source");
+}
 requireAllStrings("API payload guard direct URL keys", apiPayloadGuard, ["signedUrl", "originalUrl"]);
 if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");

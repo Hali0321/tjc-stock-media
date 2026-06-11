@@ -33,6 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
   const { asset, source } = await getAssetRecordById(id);
   const envelope = session.sourceEnvelope(source);
+  const auditSource = envelope.source;
 
   if (!asset) {
     return NextResponse.json({ error: "Asset not found", ...envelope }, { status: 404 });
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       resourceSpaceId,
       status: "denied",
       summary: "Approved copy download denied; original/master remains restricted.",
-      details: { source: source.label, sourceDetail: source.detail, assetStatus: asset.status }
+      details: { source: auditSource.label, sourceDetail: auditSource.detail, assetStatus: asset.status }
     });
     return NextResponse.json(
       {
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       resourceSpaceId,
       status: "allowed",
       summary: "Approved copy downloaded.",
-      details: { source: source.label, sourceDetail: source.detail, fileName: `${safeTitle}-approved-copy.jpg` }
+      details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName: `${safeTitle}-approved-copy.jpg` }
     });
     return new NextResponse(bytes, {
       headers: {
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { asset, source } = await getAssetRecordById(id);
   const envelope = session.sourceEnvelope(source);
+  const auditSource = envelope.source;
   const variant = normalizeDownloadVariant(body.variant);
   const usageChannel = normalizeDisplayTextField(body.usageChannel, "", 80) || null;
   const reason = normalizeDisplayTextField(body.reason, "", 240) || null;
@@ -130,7 +132,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       status: "blocked",
       summary: "Download gate blocked because usage terms were not accepted.",
       details: {
-        source: source.label,
+        source: auditSource.label,
         assetStatus: asset.status,
         usageChannel,
         reason
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       status: "denied",
       summary: "Download gate denied approved copy.",
       details: {
-        source: source.label,
+        source: auditSource.label,
         assetStatus: asset.status,
         reasonCodes: access.reasonCodes || [],
         accessReason: access.reason || null,
@@ -187,7 +189,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       status: "blocked",
       summary: "Download gate blocked because approved derivative is unavailable.",
       details: {
-        source: source.label,
+        source: auditSource.label,
         assetStatus: asset.status,
         usageChannel
       }
@@ -212,7 +214,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     status: "allowed",
     summary: "Download gate approved an approved-copy URL.",
     details: {
-      source: source.label,
+      source: auditSource.label,
       assetStatus: asset.status,
       variant,
       usageChannel,
