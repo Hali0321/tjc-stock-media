@@ -229,6 +229,15 @@ if (/checksumLikePattern|\/\^\[a-f0-9\]\{32,\}/.test(requestValidation)) {
 if (!requestValidation.includes("function readJsonObject")) {
   failures.push("request validation must expose readJsonObject for API JSON body fallback");
 }
+if (!env.includes("function normalizedResourceSpaceBaseUrl") || !env.includes('url.protocol !== "http:"') || !env.includes('url.protocol !== "https:"')) {
+  failures.push("env must normalize ResourceSpace base URL and reject non-http(s) values");
+}
+if (!env.includes("normalizedResourceSpaceBaseUrl()") || /resourceSpaceBaseUrl\(\)\s*&&/.test(env)) {
+  failures.push("ResourceSpace API config readiness must require normalizedResourceSpaceBaseUrl");
+}
+if (!read("frontend/lib/resourcespace-client.ts").includes("normalizedResourceSpaceBaseUrl") || /[^A-Za-z]resourceSpaceBaseUrl\(/.test(read("frontend/lib/resourcespace-client.ts"))) {
+  failures.push("ResourceSpace client must build API/admin links from normalizedResourceSpaceBaseUrl only");
+}
 if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
   failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");
 }

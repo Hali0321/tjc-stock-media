@@ -28,9 +28,24 @@ export function resourceSpaceBaseUrl() {
   return process.env.RESOURCESPACE_BASE_URL || process.env.RS_BASE_URL || "http://localhost:8088";
 }
 
+export function normalizedResourceSpaceBaseUrl() {
+  const raw = resourceSpaceBaseUrl().trim();
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+    url.username = "";
+    url.password = "";
+    url.hash = "";
+    url.search = "";
+    return url.toString().replace(/\/+$/g, "");
+  } catch {
+    return "";
+  }
+}
+
 export function hasResourceSpaceApiConfig() {
   return Boolean(
-    resourceSpaceBaseUrl()
+    normalizedResourceSpaceBaseUrl()
     && (process.env.RESOURCESPACE_API_USER || process.env.RS_API_USER)
     && (process.env.RESOURCESPACE_API_KEY || process.env.RS_API_KEY)
   );

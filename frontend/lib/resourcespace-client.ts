@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { resourceSpaceApiKey, resourceSpaceApiUser, resourceSpaceBaseUrl } from "@/lib/env";
+import { normalizedResourceSpaceBaseUrl, resourceSpaceApiKey, resourceSpaceApiUser } from "@/lib/env";
 
 export type ResourceSpaceApiResult<T = unknown> = {
   ok: boolean;
@@ -10,7 +10,7 @@ export type ResourceSpaceApiResult<T = unknown> = {
 };
 
 function normalizeBaseUrl() {
-  return resourceSpaceBaseUrl().replace(/\/+$/g, "");
+  return normalizedResourceSpaceBaseUrl();
 }
 
 function buildQuery(params: Record<string, string | number | boolean | undefined>) {
@@ -39,11 +39,12 @@ function normalizeApiResponse<T>(data: unknown): ResourceSpaceApiResult<T> {
 }
 
 export async function resourceSpaceApiRequest<T = unknown>(params: Record<string, string | number | boolean | undefined>): Promise<ResourceSpaceApiResult<T>> {
-  if (!resourceSpaceApiUser() || !resourceSpaceApiKey()) {
-    return { ok: false, status: 409, error: "ResourceSpace API credentials are not configured." };
+  const baseUrl = normalizeBaseUrl();
+  if (!baseUrl || !resourceSpaceApiUser() || !resourceSpaceApiKey()) {
+    return { ok: false, status: 409, error: "ResourceSpace API base URL or credentials are not configured." };
   }
 
-  const url = `${normalizeBaseUrl()}/api/?${signedQuery(params)}`;
+  const url = `${baseUrl}/api/?${signedQuery(params)}`;
   try {
     const response = await fetch(url, { cache: "no-store" });
     const text = await response.text();
@@ -65,7 +66,7 @@ export async function resourceSpaceApiRequest<T = unknown>(params: Record<string
 export async function resourceSpaceApiDiagnostics() {
   const result = await resourceSpaceApiRequest<unknown>({ function: "do_search", search: "", fetchrows: 1 });
   return {
-    configured: Boolean(resourceSpaceApiUser() && resourceSpaceApiKey()),
+    configured: Boolean(normalizeBaseUrl() && resourceSpaceApiUser() && resourceSpaceApiKey()),
     ok: result.ok,
     status: result.status,
     error: result.error
@@ -89,7 +90,8 @@ export async function resourceSpaceGetCollectionResources(collectionId: string |
 }
 
 export function resourceSpaceAssetUrl(id: string) {
-  return `${normalizeBaseUrl()}/pages/view.php?ref=${encodeURIComponent(id)}`;
+  const baseUrl = normalizeBaseUrl();
+  return baseUrl ? `${baseUrl}/pages/view.php?ref=${encodeURIComponent(id)}` : "";
 }
 
 export function resourceSpaceAdminUrl() {
