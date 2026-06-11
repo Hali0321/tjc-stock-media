@@ -144,6 +144,7 @@ const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/re
 const reviewRoute = "frontend/app/api/review/route.ts";
 const reviewRouteSource = fs.readFileSync(path.join(root, reviewRoute), "utf8");
 const reviewActionWorkflowSource = fs.readFileSync(path.join(root, "frontend/lib/review-action-workflow.ts"), "utf8");
+const reviewQueueResponseSource = fs.readFileSync(path.join(root, "frontend/lib/review-queue-response.ts"), "utf8");
 const workflowPolicySource = fs.readFileSync(path.join(root, "frontend/lib/workflow-policy.ts"), "utf8");
 if (!requestValidationSource.includes("function readJsonObject")) {
   failures.push("request validation must expose readJsonObject for API JSON body fallback");
@@ -173,11 +174,14 @@ for (const fullPath of walk(apiRoot)) {
 if (!reviewRouteSource.includes("normalizeReviewQueueId(request.nextUrl.searchParams.get(\"queue\"))") || !reviewRouteSource.includes("readReviewActionRequestBody(request)")) {
   failures.push(`${reviewRoute} must delegate queue normalization and action body parsing to review modules`);
 }
+if (!reviewRouteSource.includes("buildReviewQueueResponse(queue, session)") || !reviewQueueResponseSource.includes("function buildReviewQueueResponse") || !reviewQueueResponseSource.includes("pendingReviewWriteSummary") || !reviewQueueResponseSource.includes("resourceSpaceRecordRef")) {
+  failures.push(`${reviewRoute} must delegate review queue payload assembly to review-queue-response`);
+}
 if (!workflowPolicySource.includes("function normalizeReviewQueueId") || !reviewActionWorkflowSource.includes("function readReviewActionRequestBody") || !reviewActionWorkflowSource.includes("readJsonObject<ReviewActionRequestBody>(request)")) {
   failures.push("review modules must own review queue normalization and action body parsing");
 }
-if (/readJsonObject|function\s+normalizeQueue|reviewQueues/.test(reviewRouteSource)) {
-  failures.push(`${reviewRoute} must not hand-roll review body parsing or queue normalization`);
+if (/readJsonObject|function\s+normalizeQueue|reviewQueues|pendingReviewWriteSummary|resourceSpaceRecordRef|resourceSpaceAssetUrl|canOpenResourceSpace/.test(reviewRouteSource)) {
+  failures.push(`${reviewRoute} must not hand-roll review body parsing, queue normalization, or response payload assembly`);
 }
 
 const brandKitRoute = "frontend/app/api/brand-kits/[id]/route.ts";

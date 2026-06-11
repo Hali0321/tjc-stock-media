@@ -40,6 +40,7 @@ const files = {
   uploadRoute: "frontend/app/api/upload/route.ts",
   uploadIntake: "frontend/lib/upload-intake.ts",
   reviewRoute: "frontend/app/api/review/route.ts",
+  reviewQueueResponse: "frontend/lib/review-queue-response.ts",
   batchRoute: "frontend/app/api/batch/route.ts",
   downloadRoute: "frontend/app/api/download/[id]/route.ts",
   reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
@@ -104,6 +105,7 @@ const assetRoute = read(files.assetRoute);
 const uploadRoute = read(files.uploadRoute);
 const uploadIntake = read(files.uploadIntake);
 const reviewRoute = read(files.reviewRoute);
+const reviewQueueResponse = read(files.reviewQueueResponse);
 const batchRoute = read(files.batchRoute);
 const downloadRoute = read(files.downloadRoute);
 const reviewActionWorkflow = read(files.reviewActionWorkflow);
@@ -250,7 +252,7 @@ for (const surface of [
 for (const surface of [
   { name: "pending review writes", source: pendingReviewWrites },
   { name: "asset route", source: assetRoute },
-  { name: "review route", source: reviewRoute },
+  { name: "review queue response", source: reviewQueueResponse },
   { name: "batch route", source: batchRoute },
   { name: "download route", source: downloadRoute },
   { name: "review action workflow", source: reviewActionWorkflow },
@@ -262,7 +264,7 @@ for (const surface of [
 }
 for (const surface of [
   { name: "asset route", source: assetRoute },
-  { name: "review route", source: reviewRoute }
+  { name: "review queue response", source: reviewQueueResponse }
 ]) {
   if (!surface.source.includes("resourceSpaceRecordRef") || /resourceSpaceAssetUrl\(asset(Resource|\.resourceSpaceId)/.test(surface.source)) {
     failures.push(`${surface.name} ResourceSpace URLs must use strict resourceSpaceRecordRef`);
@@ -472,7 +474,7 @@ if (!downloadRoute.includes("const auditSource = envelope.source") || /source:\s
   failures.push("download audit details must derive source labels/details from role-safe envelope source");
 }
 requireAllStrings("API payload guard direct URL keys", apiPayloadGuard, ["signedUrl", "originalUrl"]);
-if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
+if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewQueueResponse.includes("assets: session.assetsPayload(queue.assets)") || !reviewQueueResponse.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
 }
 requireAllStrings("source redaction custody key list", sourceRedaction, ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]);

@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { assetResourceRef, resourceSpaceRecordRef } from "@/lib/asset-refs";
 import { getReviewQueue } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
-import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
-import { canOpenResourceSpace, canReview } from "@/lib/permissions";
+import { canReview } from "@/lib/permissions";
 import { readReviewActionRequestBody, runReviewActionWorkflow } from "@/lib/review-action-workflow";
+import { buildReviewQueueResponse } from "@/lib/review-queue-response";
 import { normalizeReviewQueueId } from "@/lib/workflow-policy";
-import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 
 export const dynamic = "force-dynamic";
 
@@ -27,28 +25,7 @@ export async function GET(request: NextRequest) {
   }
   const queueId = normalizeReviewQueueId(request.nextUrl.searchParams.get("queue"));
   const queue = await getReviewQueue(role, queueId);
-  const envelope = session.rawSourceEnvelope(queue.source);
-  return NextResponse.json({
-    ...queue,
-    assets: session.assetsPayload(queue.assets),
-    allAssets: session.assetsPayload(queue.allAssets),
-    ...envelope,
-    pendingWrites: Object.fromEntries(
-      queue.assets
-        .map((asset) => {
-          const pending = latestPendingWriteForResource(assetResourceRef(asset));
-          return pending ? [asset.id, pendingReviewWriteSummary(pending)] : null;
-        })
-        .filter((item): item is [string, ReturnType<typeof pendingReviewWriteSummary>] => Boolean(item))
-    ),
-    resourceSpaceUrls: Object.fromEntries(
-      queue.assets
-        .map((asset) => [asset.id, resourceSpaceRecordRef(asset)] as const)
-        .filter((entry): entry is readonly [string, string] => Boolean(entry[1]) && canOpenResourceSpace(role))
-        .map(([assetId, resourceSpaceRef]) => [assetId, resourceSpaceAssetUrl(resourceSpaceRef)])
-    ),
-    canReview: canReview(role)
-  });
+  return NextResponse.json(buildReviewQueueResponse(queue, session));
 }
 
 export async function POST(request: NextRequest) {
