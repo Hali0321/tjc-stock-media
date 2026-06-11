@@ -351,8 +351,11 @@ if (/path\.relative\(repoRoot\(\),\s*exportPath\)|\.runtime\/exports|Reading \$\
 if (!sourceRedaction.includes("function canSeePrivateSourceFiles") || /if \(canSeeOperationalSource\(role\)\) return asset/.test(sourceRedaction)) {
   failures.push("reviewer payloads must not expose raw private source-file fields");
 }
-if (!/const\s*{[\s\S]*fileSizeBytes:[\s\S]*\.\.\.safeAsset[\s\S]*}\s*=\s*roleSafeAsset;/.test(sourceRedaction)) {
-  failures.push("normal-user payload redaction must derive safeAsset from roleSafeAsset, not raw asset");
+if (!sourceRedaction.includes("export const sourceCustodyAssetKeys") || !sourceRedaction.includes("function omitAssetKeys")) {
+  failures.push("source redaction must centralize private asset key omission");
+}
+if (!sourceRedaction.includes("omitAssetKeys(asset, sourceCustodyAssetKeys)") || !sourceRedaction.includes("omitAssetKeys(roleSafeAsset, publicHiddenAssetKeys)")) {
+  failures.push("normal-user payload redaction must derive safeAsset from roleSafeAsset through centralized key omission");
 }
 if (!portalApiSmoke.includes("reviewer-payload-hides-source-custody") || !portalApiSmoke.includes("dam-admin-payload-keeps-source-custody")) {
   failures.push("portal API smoke must prove Reviewer redaction and DAM Admin source custody visibility");
@@ -373,8 +376,13 @@ if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !re
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
 }
 for (const key of ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]) {
-  if (!sourceRedaction.includes(`${key}: _${key}`)) {
-    failures.push(`source redaction must strip ${key} outside DAM Admin payloads`);
+  if (!sourceRedaction.includes(`"${key}"`)) {
+    failures.push(`source redaction custody key list must strip ${key} outside DAM Admin payloads`);
+  }
+}
+for (const key of ["resourceSpaceId", "sourceAccount", "sourcePlatform", "sourceSystem", "workflowState"]) {
+  if (!sourceRedaction.includes(`"${key}"`)) {
+    failures.push(`source redaction public-hidden key list must strip ${key} outside normal-user payloads`);
   }
 }
 if (!auditLog.includes("normalizeAssetId")) failures.push("audit log must normalize asset ids through normalizeAssetId");

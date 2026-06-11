@@ -10,6 +10,37 @@ function canSeePrivateSourceFiles(role: DemoRole) {
   return role === "DAM Admin";
 }
 
+export const sourceCustodyAssetKeys = [
+  "checksumSha256",
+  "duplicateGroup",
+  "duplicateRole",
+  "masterDrivePath",
+  "originalFilename",
+  "sourceAlbumMemberships",
+  "sourceAlbumPath",
+  "sourcePath"
+] satisfies ReadonlyArray<keyof StockMediaAsset>;
+
+export const publicHiddenAssetKeys = [
+  "fileSizeBytes",
+  "pendingReviewWrite",
+  "resourceSpaceId",
+  "reuseDecision",
+  "reviewer",
+  "sourceAccount",
+  "sourcePlatform",
+  "sourceSystem",
+  "workflowState"
+] satisfies ReadonlyArray<keyof StockMediaAsset>;
+
+function omitAssetKeys(asset: StockMediaAsset, keys: ReadonlyArray<keyof StockMediaAsset>): StockMediaAsset {
+  const payload = { ...asset };
+  for (const key of keys) {
+    delete payload[key];
+  }
+  return payload;
+}
+
 function safeSavedViewText(value: string) {
   return value
     .replace(/ResourceSpace-approved/gi, "Library-approved")
@@ -70,40 +101,21 @@ export function sourceForRole(role: DemoRole, source: MediaSourceStatus): MediaS
 
 export function assetForRolePayload(role: DemoRole, asset: StockMediaAsset): StockMediaAsset {
   if (canSeePrivateSourceFiles(role)) return asset;
-  const {
-    checksumSha256: _checksumSha256,
-    duplicateGroup: _duplicateGroup,
-    duplicateRole: _duplicateRole,
-    masterDrivePath: _masterDrivePath,
-    originalFilename: _originalFilename,
-    sourceAlbumMemberships: _sourceAlbumMemberships,
-    sourceAlbumPath: _sourceAlbumPath,
-    sourcePath: _sourcePath,
-    ...roleSafeAsset
-  } = asset;
+  const roleSafeAsset = omitAssetKeys(asset, sourceCustodyAssetKeys);
 
   if (canSeeOperationalSource(role)) {
     return roleSafeAsset;
   }
 
+  const safeAsset = omitAssetKeys(roleSafeAsset, publicHiddenAssetKeys);
   const {
-    fileSizeBytes: _fileSizeBytes,
-    pendingReviewWrite: _pendingReviewWrite,
-    resourceSpaceId: _resourceSpaceId,
-    reuseDecision: _reuseDecision,
-    sourcePlatform: _sourcePlatform,
-    sourceSystem: _sourceSystem,
-    workflowState: _workflowState,
-    reviewer: _reviewer,
     collection,
     eventName,
     rightsNotes,
-    sourceAccount: _sourceAccount,
     tags,
     tjcTerms,
-    usageTerms,
-    ...safeAsset
-  } = roleSafeAsset;
+    usageTerms
+  } = safeAsset;
 
   return {
     ...safeAsset,
