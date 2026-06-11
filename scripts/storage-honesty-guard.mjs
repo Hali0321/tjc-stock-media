@@ -501,6 +501,9 @@ if (/containsUnsafeRouteText|startsWith\("\/"\)/.test(feedback)) failures.push("
 if (/npm --prefix frontend run (build|dev|typecheck)/.test(makefile) || /npm --prefix frontend run (build|typecheck)/.test(frontendCheck)) {
   failures.push("frontend build/dev checks must run from frontend cwd so Next outputFileTracingRoot and production artifacts are correct");
 }
+if (!frontendCheck.includes("rm -rf frontend/.next") || !frontendCheck.includes("frontend/.next/required-server-files.json")) {
+  failures.push("frontend-check must clean stale Next output and assert the production server manifest before next start smoke");
+}
 if (!env.includes("function findRepoRoot") || !env.includes("looksLikeRepoRoot") || /path\.resolve\(process\.cwd\(\),\s*"\.\."\)/.test(env)) {
   failures.push("env repoRoot must detect repo root from current or frontend cwd without assuming cwd/..");
 }

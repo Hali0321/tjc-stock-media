@@ -49,7 +49,10 @@ if [ ! -d frontend/node_modules ]; then
 fi
 
 (cd frontend && npm run typecheck)
+rm -rf frontend/.next
 (cd frontend && npm run build)
+
+[ -f frontend/.next/required-server-files.json ] || { echo "FAIL: Next production server manifest missing"; exit 1; }
 
 if rg -n "RS_API_KEY|RS_API_USER|api_key|private key" frontend/app frontend/components >/tmp/tjc-frontend-secret-scan.txt; then
   echo "FAIL: possible client-side API secret exposure"
