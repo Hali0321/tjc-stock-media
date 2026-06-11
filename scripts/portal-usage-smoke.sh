@@ -3,6 +3,7 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:4868}"
 USAGE_ANALYTICS_DB_PATH="${USAGE_ANALYTICS_DB_PATH:-$(pwd)/.runtime/analytics/portal-usage.sqlite}"
+CURL_MAX_TIME="${PORTAL_USAGE_SMOKE_CURL_MAX_TIME:-30}"
 MARKER="usage-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 SMOKE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 export USAGE_ANALYTICS_DB_PATH MARKER SMOKE_STARTED_AT
@@ -25,7 +26,7 @@ trap cleanup EXIT
 http_code() {
   local output="$1"
   shift
-  curl --max-time 15 -sS -o "$output" -w '%{http_code}' "$@"
+  curl --max-time "$CURL_MAX_TIME" -sS -o "$output" -w '%{http_code}' "$@"
 }
 
 expect_code() {

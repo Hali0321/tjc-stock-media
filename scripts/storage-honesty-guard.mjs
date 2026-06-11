@@ -422,6 +422,12 @@ if (!usageAnalytics.includes("normalizeAssetId")) failures.push("usage analytics
 if (!usageAnalytics.includes("normalizeResourceSpaceRef")) failures.push("usage analytics must normalize ResourceSpace ids through normalizeResourceSpaceRef");
 if (!usageAnalytics.includes("safeEnumValue")) failures.push("usage analytics must normalize event types through safeEnumValue");
 if (!usageAnalytics.includes("safeNonNegativeInt")) failures.push("usage analytics must normalize metric counters through safeNonNegativeInt");
+if (!usageAnalytics.includes("PRAGMA journal_mode = WAL") || !usageAnalytics.includes("PRAGMA busy_timeout = 2500")) {
+  failures.push("usage analytics SQLite must enable WAL and busy timeout for beta concurrency");
+}
+if (!usageAnalytics.includes("totalEvents: safeNonNegativeInt(total.count)")) {
+  failures.push("usage analytics diagnostics must normalize total event counter");
+}
 if (!usageAnalytics.includes("normalizeSafeRoutePath")) failures.push("usage analytics must normalize routes through normalizeSafeRoutePath");
 if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(usageAnalytics)) failures.push("usage analytics must not hand-roll compact text normalization");
 if (/\.includes\(value as /.test(usageAnalytics)) failures.push("usage analytics must not hand-roll enum fallback normalization");

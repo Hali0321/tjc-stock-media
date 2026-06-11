@@ -50,6 +50,8 @@ function database() {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   db = new DatabaseSync(file);
   db.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA busy_timeout = 2500;
     CREATE TABLE IF NOT EXISTS usage_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       created_at TEXT NOT NULL,
@@ -197,7 +199,7 @@ export function usageAnalyticsDiagnostics() {
     return {
       enabled: true,
       storageMode: usageAnalyticsStorageMode(),
-      totalEvents: Number(total.count || 0),
+      totalEvents: safeNonNegativeInt(total.count),
       topSearches: metricRows("search", "query"),
       topAssets: metricRows("asset_view", "asset_id"),
       dailyEvents: dailyEventRows()
