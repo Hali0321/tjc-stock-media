@@ -183,6 +183,20 @@ db.prepare(`
   "ignored",
   JSON.stringify({ "review note": "checksum ready" })
 );
+db.prepare(`
+  INSERT INTO usage_events (created_at, type, role, actor, asset_id, resource_space_id, route, query, metadata_json)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).run(
+  new Date().toISOString(),
+  "search",
+  "Root",
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  JSON.stringify({ "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" })
+);
 db.close();
 NODE
 
@@ -262,7 +276,7 @@ expect_json_status() {
 expect_json_status 200 usage-analytics-payload-sanitized '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data.usageAnalytics || {});
-if (/private|Root|javascript:|source path|master drive|checksum/i.test(text)) {
+if (/private|Root|javascript:|source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: unsafe usage analytics labels leaked to Reviewer payload: ${text.slice(0, 700)}`);
   process.exit(1);
 }

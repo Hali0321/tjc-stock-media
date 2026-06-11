@@ -202,6 +202,22 @@ fs.appendFileSync(path.join(auditDir, `${month}.jsonl`), `${JSON.stringify({
   summary: "source path audit summary",
   details: { "source path": "master drive checksum", plain: "checksum handoff" }
 })}\n`);
+fs.appendFileSync(path.join(auditDir, `${month}.jsonl`), `${JSON.stringify({
+  id: `unsafe-token-${process.env.MARKER}`,
+  type: "saved_search_saved",
+  createdAt: now,
+  role: "Reviewer",
+  actor: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  assetId: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  resourceSpaceId: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  packageId: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  status: "preview",
+  summary: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  details: {
+    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    plain: "1111111111111111111111111111111111111111111111111111111111111111"
+  }
+})}\n`);
 NODE
 fi
 
@@ -223,7 +239,7 @@ if (!Number.isFinite(pendingCount) || pendingCount > 200) {
   process.exit(1);
 }
 const readinessText = JSON.stringify({ auditLog: data.auditLog, integrationReadiness: data.integrationReadiness });
-if (/synced_as_admin|root_shell|Root|source path|master drive/i.test(readinessText)) {
+if (/synced_as_admin|root_shell|Root|source path|master drive|[a-f0-9]{32,}/i.test(readinessText)) {
   console.error(`FAIL: unsafe persisted audit/pending fields leaked into readiness: ${readinessText.slice(0, 900)}`);
   process.exit(1);
 }
@@ -258,7 +274,7 @@ if (!smokeLines.length) {
   console.error("FAIL: no persisted audit lines found for writeback guard smoke marker");
   process.exit(1);
 }
-const unsafe = smokeLines.find((line) => /\.\.\/private|synced_as_admin|root_shell|Root|source path|master drive|checksum/i.test(line));
+const unsafe = smokeLines.find((line) => /\.\.\/private|synced_as_admin|root_shell|Root|source path|master drive|checksum|[a-f0-9]{32,}/i.test(line));
 if (unsafe) {
   console.error(`FAIL: appendAuditEvent persisted unsafe audit material: ${unsafe.slice(0, 900)}`);
   process.exit(1);

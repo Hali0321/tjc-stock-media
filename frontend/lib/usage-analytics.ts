@@ -70,7 +70,7 @@ function safeText(value: unknown, maxLength: number) {
 }
 
 function containsPrivateSourceText(value: string) {
-  return /source path|master drive|checksum/i.test(value);
+  return /source path|master drive|checksum/i.test(value) || /[a-f0-9]{32,}/i.test(value);
 }
 
 function safeDisplayText(value: unknown, maxLength: number) {
