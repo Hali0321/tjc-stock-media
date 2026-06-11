@@ -159,7 +159,7 @@ if (missingWidths.length) {
   console.error(`browser QA missing required widths: ${missingWidths.join(", ")}`);
   process.exit(1);
 }
-if ((report.pages || 0) < 16) {
+if ((report.pages || 0) < 17) {
   console.error(`browser QA page coverage too low: ${report.pages || 0}`);
   process.exit(1);
 }
@@ -168,7 +168,10 @@ const requiredScreenshots = [
   "library-desktop.png",
   "library-mobile-320.png",
   "packages-desktop.png",
+  "packages-mobile-320.png",
+  "upload-mobile-320.png",
   "review-desktop.png",
+  "detail-mobile-320.png",
   "admin-desktop.png",
   "guide-mobile-320.png"
 ];
