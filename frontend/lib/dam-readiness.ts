@@ -16,7 +16,18 @@ import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildFieldMappings, buildVocabulary } from "@/lib/dam-readiness-metadata";
 import { getActiveMediaSource } from "@/lib/media-source";
 import { buildIntegrationReadiness } from "@/lib/dam-readiness-integrations";
+import type { AuditEventRecord } from "@/lib/audit-log";
+import type { createDamRouteSession } from "@/lib/dam-route-session";
 import type { AdminActionItem, DamReadinessItem, DamReadinessResult } from "@/lib/types";
+
+type DamRouteSession = ReturnType<typeof createDamRouteSession>;
+type DamReadinessAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+type DamReadinessRouteError = {
+  body: {
+    error: string;
+  };
+  status: 403;
+};
 
 function ratio(count: number, total: number) {
   return total ? Math.round((count / total) * 100) : 0;
@@ -137,6 +148,31 @@ function readinessItem(item: DamReadinessItem): DamReadinessItem {
     ...item,
     score: clampScore(item.score),
     tone: item.score >= 80 ? "ok" : item.score >= 55 ? "info" : "warn"
+  };
+}
+
+export function damReadinessDeniedError(): DamReadinessRouteError {
+  return { body: { error: "DAM readiness is available to DAM Admin role." }, status: 403 };
+}
+
+export function damReadinessDeniedAuditEvent(session: DamRouteSession): DamReadinessAuditEvent {
+  return {
+    type: "admin_readiness_denied",
+    role: session.role,
+    actor: session.identity.id,
+    status: "denied",
+    summary: "Governance readiness denied for non-admin role.",
+    details: { reason: "role-cannot-admin" }
+  };
+}
+
+export function damReadinessViewedAuditEvent(session: DamRouteSession): DamReadinessAuditEvent {
+  return {
+    type: "admin_readiness_viewed",
+    role: session.role,
+    actor: session.identity.id,
+    status: "allowed",
+    summary: "Governance readiness viewed."
   };
 }
 

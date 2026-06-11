@@ -199,6 +199,19 @@ if (/readJsonObject|function\s+normalizeQueue|reviewQueues|pendingReviewWriteSum
   failures.push(`${reviewRoute} must not hand-roll review body parsing, queue normalization, response payload assembly, denial copy, or audit details`);
 }
 
+const adminReadinessRoute = "frontend/app/api/admin/readiness/route.ts";
+const adminReadinessRouteSource = fs.readFileSync(path.join(root, adminReadinessRoute), "utf8");
+const damReadinessSource = fs.readFileSync(path.join(root, "frontend/lib/dam-readiness.ts"), "utf8");
+if (!adminReadinessRouteSource.includes("damReadinessDeniedError()") || !adminReadinessRouteSource.includes("damReadinessDeniedAuditEvent(session)") || !adminReadinessRouteSource.includes("damReadinessViewedAuditEvent(session)")) {
+  failures.push(`${adminReadinessRoute} must delegate readiness denial copy and audit details to dam-readiness`);
+}
+if (!damReadinessSource.includes("function damReadinessDeniedError") || !damReadinessSource.includes("function damReadinessDeniedAuditEvent") || !damReadinessSource.includes("function damReadinessViewedAuditEvent")) {
+  failures.push("dam-readiness must own readiness denial copy and audit details");
+}
+if (/role-cannot-admin|DAM readiness is available to DAM Admin role|admin_readiness_(denied|viewed)|Governance readiness/.test(adminReadinessRouteSource)) {
+  failures.push(`${adminReadinessRoute} must not hand-roll readiness denial copy or audit details`);
+}
+
 if (!assetDetailRouteSource.includes("buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source })") || !assetDetailResponseSource.includes("function buildAssetDetailResponse") || !assetDetailResponseSource.includes("pendingReviewWriteSummary") || !assetDetailResponseSource.includes("resourceSpaceRecordRef")) {
   failures.push(`${assetDetailRoute} must delegate asset detail payload assembly to asset-detail-response`);
 }
