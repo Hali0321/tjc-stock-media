@@ -76,6 +76,7 @@ require_file "scripts/api-audit-guard.mjs"
 require_file "scripts/api-payload-guard.mjs"
 require_file "scripts/public-env-guard.mjs"
 require_file "scripts/git-hygiene-guard.mjs"
+require_file "scripts/storage-honesty-guard.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
 
@@ -119,6 +120,13 @@ if node scripts/git-hygiene-guard.mjs >/tmp/tjc-git-hygiene-guard.txt 2>&1; then
 else
   fail "git hygiene guard failed"
   cat /tmp/tjc-git-hygiene-guard.txt
+fi
+
+if node scripts/storage-honesty-guard.mjs >/tmp/tjc-storage-honesty-guard.txt 2>&1; then
+  pass "beta persistence stays capped and honest about storage durability"
+else
+  fail "storage honesty guard failed"
+  cat /tmp/tjc-storage-honesty-guard.txt
 fi
 
 if [ -f .env ]; then
