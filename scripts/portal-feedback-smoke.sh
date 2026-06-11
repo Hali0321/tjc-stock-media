@@ -2,6 +2,7 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:4868}"
+CURL_MAX_TIME="${PORTAL_FEEDBACK_SMOKE_CURL_MAX_TIME:-30}"
 MARKER="feedback-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 TMP_DIR="$(mktemp -d)"
 cleanup() {
@@ -26,7 +27,7 @@ esac
 http_code() {
   local output="$1"
   shift
-  curl --max-time 15 -sS -o "$output" -w '%{http_code}' "$@"
+  curl --max-time "$CURL_MAX_TIME" -sS -o "$output" -w '%{http_code}' "$@"
 }
 
 expect_json_status() {
