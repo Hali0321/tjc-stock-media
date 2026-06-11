@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DamPackage, DemoRole } from "@/lib/types";
@@ -58,10 +58,6 @@ function safeResourceSpaceRef(value: unknown) {
   const ref = String(value || "").trim().slice(0, 80);
   if (containsPrivateSourceText(ref) || /^[a-f0-9]{32,}$/i.test(ref)) return "";
   return /^[a-z0-9_-]+$/i.test(ref) ? ref : "";
-}
-
-function safeBoolean(value: unknown) {
-  return value === true;
 }
 
 export function sanitizePackageDraft(input: unknown): DamPackage {
