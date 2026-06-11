@@ -26,7 +26,7 @@ function safeText(value: unknown, maxLength: number) {
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum/i.test(text)) return "";
+  if (/source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) return "";
   return text;
 }
 

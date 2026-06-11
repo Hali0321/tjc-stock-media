@@ -29,7 +29,7 @@ export type ReviewActionWorkflowResult = {
 function safeDisplayText(value: unknown, maxLength: number) {
   const text = String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
   if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum/i.test(text)) return "";
+  if (/source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) return "";
   return text;
 }
 

@@ -124,12 +124,12 @@ if (!data.auditRecord.actor || data.auditRecord.reviewerRole !== "Reviewer") {
   console.error(`FAIL: queued review audit proof missing actor/reviewer role: ${JSON.stringify(data.auditRecord)}`);
   process.exit(1);
 }
-if (data.label !== "Request More Info" || /source path|master drive|checksum|\.\.\/private/i.test(text)) {
+if (data.label !== "Request More Info" || /source path|master drive|checksum|\.\.\/private|[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: queued review response echoed unsafe display fields: ${text.slice(0, 900)}`);
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"role\":\"Reviewer\",\"id\":\"$REVIEW_ASSET_ID\",\"action\":\"Request More Info\",\"label\":\"../private source path\",\"notes\":\"$MARKER complete evidence should queue without live ResourceSpace writeback.\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"../private master drive checksum\"}" \
+  -d "{\"role\":\"Reviewer\",\"id\":\"$REVIEW_ASSET_ID\",\"action\":\"Request More Info\",\"label\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"notes\":\"$MARKER complete evidence should queue without live ResourceSpace writeback.\",\"checklist\":{\"sourceConfirmed\":true,\"rightsConfirmed\":true,\"peopleVisibilityConfirmed\":true,\"childrenYouthChecked\":true,\"usageScopeSelected\":true},\"reviewerName\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}" \
   "$BASE_URL/api/review"
 
 if [ "$local_runtime_probe" = "1" ]; then
@@ -154,6 +154,22 @@ fs.writeFileSync(path.join(pendingDir, `unsafe-${process.env.MARKER}.json`), `${
   syncState: "synced_as_admin",
   retryCount: -7,
   lastError: "../private pending error"
+}, null, 2)}\n`);
+fs.writeFileSync(path.join(pendingDir, `unsafe-token-${process.env.MARKER}.json`), `${JSON.stringify({
+  id: `unsafe-token-${process.env.MARKER}`,
+  resourceId: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  oldStatus: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  requestedStatus: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  reviewerRole: "Reviewer",
+  reviewerName: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  createdAt: "not-a-date",
+  updatedAt: now,
+  note: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  checklist: { sourceConfirmed: "yes" },
+  blockers: ["ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"],
+  syncState: "queued",
+  retryCount: -7,
+  lastError: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 }, null, 2)}\n`);
 for (let index = 0; index < 210; index += 1) {
   fs.writeFileSync(path.join(pendingDir, `filler-${process.env.MARKER}-${index}.json`), `${JSON.stringify({
