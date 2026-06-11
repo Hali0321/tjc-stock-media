@@ -151,7 +151,7 @@ const forbiddenKeys = new Set([
   "integrationReadiness",
   "auditLog"
 ]);
-const forbiddenText = [/s3:\/\//i, /amazonaws\.com/i, /source path/i, /master drive/i, /checksum/i, /ResourceSpace ID/i, /\bRS\s+\d+\b/i];
+const forbiddenText = [/s3:\/\//i, /amazonaws\.com/i, /source path/i, /master drive/i, /checksum/i, /ResourceSpace ID/i, /\bRS\s+\d+\b/i, /[a-f0-9]{32,}/i];
 const leaks = [];
 function walk(value, path) {
   if (Array.isArray(value)) return value.forEach((item, index) => walk(item, `${path}[${index}]`));

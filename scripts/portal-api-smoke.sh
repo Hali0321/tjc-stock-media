@@ -133,6 +133,7 @@ const forbiddenText = [
   /raw ResourceSpace/i,
   /ResourceSpace ID/i,
   /\bRS\s+\d+\b/,
+  /[a-f0-9]{32,}/i,
   /MVP 2024/i,
   /stock media candidate/i,
   /prototype/i,

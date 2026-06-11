@@ -89,7 +89,8 @@ const normalUserOpsLeakPatterns = [
   /original filename/i,
   /checksum/i,
   /raw ResourceSpace/i,
-  /ResourceSpace ID/i
+  /ResourceSpace ID/i,
+  /[a-f0-9]{32,}/i
 ];
 
 function isExpectedDeniedConsole(text) {

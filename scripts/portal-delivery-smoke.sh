@@ -147,7 +147,8 @@ const forbiddenText = [
   /source path/i,
   /master drive/i,
   /master\/original path/i,
-  /checksum/i
+  /checksum/i,
+  /[a-f0-9]{32,}/i
 ];
 const leaks = [];
 function walk(value, path) {
