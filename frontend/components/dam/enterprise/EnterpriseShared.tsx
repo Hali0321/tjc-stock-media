@@ -22,7 +22,7 @@ import {
 import type { DamReadinessResult, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { custodyMapRows, custodyMapStatus } from "@/lib/admin-control";
 import { inspectorDrawerTabs } from "@/lib/asset-record-workbench";
-import { assetDate, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
+import { assetDate, assetRecordRef, assetType, displayTitle, formatBytes, metadataQualityLabel, recordIdLabel, sourceLabel, sourceNoun } from "@/lib/enterprise-display";
 import { inspectorMetadataRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, statusToneClass, type EnterpriseStatus } from "@/lib/enterprise-status";
 import { mediaPreviewState, mediaPreviewUnavailableReason } from "@/lib/media-preview-state";
@@ -79,7 +79,7 @@ export function AssetThumb({ asset, className, fit = "cover" }: { asset?: StockM
         <strong>{asset ? assetType(asset) : "DAM"}</strong>
         <span>{state}</span>
         <small>{mediaPreviewUnavailableReason(state)}</small>
-        {asset ? <small>{recordIdLabel()} {asset.resourceSpaceId || asset.id}</small> : null}
+        {asset ? <small>{recordIdLabel()} {assetRecordRef(asset)}</small> : null}
       </div>
     );
   }
@@ -96,7 +96,7 @@ export function AssetCard({ asset, selected = false, onSelect }: { asset: StockM
         <span className="ed-card-tools"><Star size={14} /><Download size={14} /><MoreHorizontal size={14} /></span>
       </button>
       <strong title={displayTitle(asset)}>{displayTitle(asset)}</strong>
-      <small>{recordIdLabel()} {asset.resourceSpaceId || asset.id} · {assetDate(asset)} · {formatBytes(asset.fileSizeBytes)}</small>
+      <small>{recordIdLabel()} {assetRecordRef(asset)} · {assetDate(asset)} · {formatBytes(asset.fileSizeBytes)}</small>
       <div className="ed-card-footer"><StatusBadge status={assetEnterpriseStatus(asset)} /><span className="ed-quality-chip">{metadataQualityLabel(asset)}</span><Link href={`/assets/${asset.id}`}>Open record</Link></div>
     </article>
   );
@@ -178,7 +178,7 @@ export function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAss
   const tabRows = inspectorMetadataRows({ asset, tab, source });
   return (
     <aside className="ed-inspector ed-panel">
-      <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {asset.resourceSpaceId || asset.id}</strong><span>›</span><button type="button" onClick={() => setMessage("Inspector stays pinned on desktop. Select another record to change context.")}>×</button></div>
+      <div className="ed-drawer-top"><span>‹</span><strong>{recordIdLabel(source)} {assetRecordRef(asset)}</strong><span>›</span><button type="button" onClick={() => setMessage("Inspector stays pinned on desktop. Select another record to change context.")}>×</button></div>
       <AssetThumb asset={asset} className="ed-inspector-preview" fit="contain" />
       <h2 title={displayTitle(asset)}>{displayTitle(asset)}</h2>
       <div className="ed-meta-line"><StatusBadge status={assetEnterpriseStatus(asset)} /><span>{assetDate(asset)}</span><span>{formatBytes(asset.fileSizeBytes)}</span></div>

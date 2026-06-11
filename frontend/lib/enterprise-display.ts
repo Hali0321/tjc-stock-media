@@ -1,4 +1,5 @@
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
+import { normalizeAssetId, normalizeResourceSpaceRef } from "@/lib/request-validation";
 
 export function formatBytes(bytes?: number) {
   if (!bytes) return "Not provided";
@@ -16,8 +17,12 @@ export function assetDate(asset: StockMediaAsset) {
   return asset.capturedDate || asset.eventDate || asset.reviewedDate || asset.importDate || "Not provided";
 }
 
+export function assetRecordRef(asset?: Pick<StockMediaAsset, "id" | "resourceSpaceId">) {
+  return normalizeResourceSpaceRef(asset?.resourceSpaceId) || normalizeAssetId(asset?.id) || "media-record";
+}
+
 export function displayTitle(asset?: StockMediaAsset) {
-  return asset?.title?.trim() || asset?.originalFilename || `Media asset ${asset?.resourceSpaceId || asset?.id || ""}`.trim();
+  return asset?.title?.trim() || asset?.originalFilename || `Media asset ${assetRecordRef(asset)}`.trim();
 }
 
 export function metadataQualityLabel(asset: StockMediaAsset) {
