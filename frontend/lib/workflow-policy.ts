@@ -50,6 +50,11 @@ export const reviewQueues = [
 
 export type ReviewQueueId = (typeof reviewQueues)[number]["id"];
 
+export function normalizeReviewQueueId(value: unknown): ReviewQueueId {
+  const found = reviewQueues.find((queue) => queue.id === value);
+  return found?.id || "pending";
+}
+
 export function isReviewActionBackend(value: unknown): value is ReviewActionBackend {
   return reviewActions.some((action) => action.backend === value);
 }

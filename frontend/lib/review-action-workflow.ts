@@ -5,7 +5,7 @@ import { sourceEnvelope } from "@/lib/media-source/session";
 import { updateResourceReviewStatus } from "@/lib/media-source/resourcespace-api";
 import { canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetId, normalizeDisplayTextField } from "@/lib/request-validation";
+import { normalizeAssetId, normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 import { missingReviewEvidence, normalizeReviewChecklist, queuePendingReviewDecision } from "@/lib/review-decision";
 import { recordUsageEvent } from "@/lib/usage-analytics";
 import { isReviewActionBackend, reviewActions, type ReviewActionBackend } from "@/lib/workflow-policy";
@@ -26,6 +26,10 @@ export type ReviewActionWorkflowResult = {
   status: number;
   body: Record<string, unknown>;
 };
+
+export async function readReviewActionRequestBody(request: { json(): Promise<unknown> }): Promise<ReviewActionRequestBody> {
+  return readJsonObject<ReviewActionRequestBody>(request);
+}
 
 export async function runReviewActionWorkflow(request: NextRequest, body: ReviewActionRequestBody): Promise<ReviewActionWorkflowResult> {
   const identity = requestIdentity(request, body.role);

@@ -125,6 +125,10 @@ if (!searchRouteSource.includes('normalizePublicTextField(value, "", 80)')) {
 }
 
 const requestValidationSource = fs.readFileSync(path.join(root, "frontend/lib/request-validation.ts"), "utf8");
+const reviewRoute = "frontend/app/api/review/route.ts";
+const reviewRouteSource = fs.readFileSync(path.join(root, reviewRoute), "utf8");
+const reviewActionWorkflowSource = fs.readFileSync(path.join(root, "frontend/lib/review-action-workflow.ts"), "utf8");
+const workflowPolicySource = fs.readFileSync(path.join(root, "frontend/lib/workflow-policy.ts"), "utf8");
 if (!requestValidationSource.includes("function readJsonObject")) {
   failures.push("request validation must expose readJsonObject for API JSON body fallback");
 }
@@ -149,6 +153,15 @@ for (const fullPath of walk(apiRoot)) {
   if (/request\.formData\(\)/.test(source)) {
     failures.push(`${relativePath} must parse fallback multipart forms through readFormData`);
   }
+}
+if (!reviewRouteSource.includes("normalizeReviewQueueId(request.nextUrl.searchParams.get(\"queue\"))") || !reviewRouteSource.includes("readReviewActionRequestBody(request)")) {
+  failures.push(`${reviewRoute} must delegate queue normalization and action body parsing to review modules`);
+}
+if (!workflowPolicySource.includes("function normalizeReviewQueueId") || !reviewActionWorkflowSource.includes("function readReviewActionRequestBody") || !reviewActionWorkflowSource.includes("readJsonObject<ReviewActionRequestBody>(request)")) {
+  failures.push("review modules must own review queue normalization and action body parsing");
+}
+if (/readJsonObject|function\s+normalizeQueue|reviewQueues/.test(reviewRouteSource)) {
+  failures.push(`${reviewRoute} must not hand-roll review body parsing or queue normalization`);
 }
 
 const brandKitRoute = "frontend/app/api/brand-kits/[id]/route.ts";

@@ -5,17 +5,11 @@ import { getReviewQueue } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 import { canOpenResourceSpace, canReview } from "@/lib/permissions";
-import { readJsonObject } from "@/lib/request-validation";
-import { runReviewActionWorkflow, type ReviewActionRequestBody } from "@/lib/review-action-workflow";
-import { reviewQueues, type ReviewQueueId } from "@/lib/workflow-policy";
+import { readReviewActionRequestBody, runReviewActionWorkflow } from "@/lib/review-action-workflow";
+import { normalizeReviewQueueId } from "@/lib/workflow-policy";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 
 export const dynamic = "force-dynamic";
-
-function normalizeQueue(value: string | null): ReviewQueueId {
-  const found = reviewQueues.find((queue) => queue.id === value);
-  return found?.id || "pending";
-}
 
 export async function GET(request: NextRequest) {
   const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
@@ -31,7 +25,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: "Review Inbox requires reviewer access." }, { status: 403 });
   }
-  const queueId = normalizeQueue(request.nextUrl.searchParams.get("queue"));
+  const queueId = normalizeReviewQueueId(request.nextUrl.searchParams.get("queue"));
   const queue = await getReviewQueue(role, queueId);
   const envelope = session.rawSourceEnvelope(queue.source);
   return NextResponse.json({
@@ -58,7 +52,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await readJsonObject<ReviewActionRequestBody>(request);
+  const body = await readReviewActionRequestBody(request);
   const result = await runReviewActionWorkflow(request, body);
   return NextResponse.json(result.body, { status: result.status });
 }
