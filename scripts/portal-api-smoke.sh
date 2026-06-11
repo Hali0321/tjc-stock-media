@@ -768,13 +768,23 @@ if (leaked.length) {
 }
 ' "$BASE_URL/api/assets/367?role=Viewer"
 
-expect_json reviewer-payload-keeps-original-metadata '
+expect_json reviewer-payload-hides-source-custody '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-if (!data.asset?.sourcePath || !data.asset?.originalFilename || !data.asset?.checksumSha256) {
-  console.error("FAIL: Reviewer asset payload lost audit/source metadata");
+const asset = data.asset;
+const leaked = ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "originalFilename", "checksumSha256"].filter((key) => asset && key in asset);
+if (leaked.length) {
+  console.error(`FAIL: Reviewer asset payload leaked source custody metadata: ${leaked.join(", ")}`);
   process.exit(1);
 }
 ' "$BASE_URL/api/assets/367?role=Reviewer"
+
+expect_json dam-admin-payload-keeps-source-custody '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!data.asset?.sourcePath || !data.asset?.originalFilename || !data.asset?.checksumSha256) {
+  console.error("FAIL: DAM Admin asset payload lost source custody metadata");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/367?role=DAM%20Admin"
 
 expect_json people-unknown-saved-view '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

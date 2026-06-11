@@ -40,7 +40,8 @@ const files = {
   reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
   resourceSpaceApi: "frontend/lib/media-source/resourcespace-api.ts",
   mediaSourceIndex: "frontend/lib/media-source/index.ts",
-  readiness: "frontend/lib/dam-readiness-integrations.ts"
+  readiness: "frontend/lib/dam-readiness-integrations.ts",
+  portalApiSmoke: "scripts/portal-api-smoke.sh"
 };
 
 function read(file) {
@@ -84,6 +85,7 @@ const reviewActionWorkflow = read(files.reviewActionWorkflow);
 const resourceSpaceApi = read(files.resourceSpaceApi);
 const mediaSourceIndex = read(files.mediaSourceIndex);
 const readiness = read(files.readiness);
+const portalApiSmoke = read(files.portalApiSmoke);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
 const viewerVerdict = read("frontend/lib/viewer-verdict.ts");
@@ -338,6 +340,12 @@ if (/path\.relative\(repoRoot\(\),\s*exportPath\)|\.runtime\/exports|Reading \$\
 }
 if (!sourceRedaction.includes("function canSeePrivateSourceFiles") || /if \(canSeeOperationalSource\(role\)\) return asset/.test(sourceRedaction)) {
   failures.push("reviewer payloads must not expose raw private source-file fields");
+}
+if (!portalApiSmoke.includes("reviewer-payload-hides-source-custody") || !portalApiSmoke.includes("dam-admin-payload-keeps-source-custody")) {
+  failures.push("portal API smoke must prove Reviewer redaction and DAM Admin source custody visibility");
+}
+if (/reviewer-payload-keeps-original-metadata|Reviewer asset payload lost audit\/source metadata/.test(portalApiSmoke)) {
+  failures.push("portal API smoke must not expect Reviewer payloads to keep original source-file metadata");
 }
 if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !reviewRoute.includes("assets: session.assetsPayload(queue.assets)") || !reviewRoute.includes("allAssets: session.assetsPayload(queue.allAssets)")) {
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
