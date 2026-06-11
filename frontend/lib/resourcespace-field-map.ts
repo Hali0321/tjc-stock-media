@@ -49,6 +49,13 @@ const defaultResourceSpaceFieldMap = {
 
 type FieldMap = Record<string, string | number>;
 
+function normalizeFieldMapValue(value: unknown): string | number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  return text ? text : null;
+}
+
 function parseConfiguredFieldMap() {
   const raw = process.env.RESOURCESPACE_FIELD_MAP_JSON;
   if (!raw) {
@@ -65,7 +72,9 @@ function parseConfiguredFieldMap() {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("RESOURCESPACE_FIELD_MAP_JSON must be a JSON object.");
     }
-    const entries = Object.entries(parsed).filter(([, value]) => typeof value === "string" || typeof value === "number");
+    const entries = Object.entries(parsed)
+      .map(([key, value]) => [key, normalizeFieldMapValue(value)] as const)
+      .filter((entry): entry is readonly [string, string | number] => entry[1] !== null);
     return {
       configured: true,
       valid: true,

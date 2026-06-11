@@ -47,6 +47,7 @@ const files = {
   downloadRoute: "frontend/app/api/download/[id]/route.ts",
   reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
   resourceSpaceApi: "frontend/lib/media-source/resourcespace-api.ts",
+  resourceSpaceFieldMap: "frontend/lib/resourcespace-field-map.ts",
   mediaSourceIndex: "frontend/lib/media-source/index.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts",
   portalApiSmoke: "scripts/portal-api-smoke.sh",
@@ -114,6 +115,7 @@ const batchRoute = read(files.batchRoute);
 const downloadRoute = read(files.downloadRoute);
 const reviewActionWorkflow = read(files.reviewActionWorkflow);
 const resourceSpaceApi = read(files.resourceSpaceApi);
+const resourceSpaceFieldMap = read(files.resourceSpaceFieldMap);
 const mediaSourceIndex = read(files.mediaSourceIndex);
 const readiness = read(files.readiness);
 const portalApiSmoke = read(files.portalApiSmoke);
@@ -334,6 +336,9 @@ if (!resourceSpaceClient.includes("function parseApiResponseText") || !resourceS
 }
 if (!resourceSpaceClient.includes("function timeoutSignal") || !resourceSpaceClient.includes("new AbortController()") || !resourceSpaceClient.includes("cache: \"no-store\", signal") || !resourceSpaceClient.includes("clearTimeout(timer)")) {
   failures.push("ResourceSpace API client must bound live DAM requests with an abort timeout");
+}
+if (!resourceSpaceFieldMap.includes("function normalizeFieldMapValue") || !resourceSpaceFieldMap.includes("value.trim()") || !resourceSpaceFieldMap.includes("entry[1] !== null")) {
+  failures.push("ResourceSpace field map config must drop blank/non-scalar values before merging with beta defaults");
 }
 if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoTimestampIdPart")) {
   failures.push("persisted record safety must expose safeIsoTimestampIdPart for record id timestamps");
