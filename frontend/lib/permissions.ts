@@ -3,16 +3,25 @@ import { decideAccess } from "@/lib/access-decisions";
 
 export const roles: DemoRole[] = ["Viewer", "Contributor", "Reviewer", "DAM Admin"];
 export type ReviewRole = "Reviewer" | "DAM Admin";
+export type RoleFilter = DemoRole | "all";
+
+export function isKnownRole(value: unknown): value is DemoRole {
+  return roles.includes(value as DemoRole);
+}
 
 export function normalizeRole(value: string | null | undefined): DemoRole {
-  if (value && roles.includes(value as DemoRole)) {
-    return value as DemoRole;
+  if (isKnownRole(value)) {
+    return value;
   }
   return "Viewer";
 }
 
 export function normalizeRoleWithFallback(value: unknown, fallback: DemoRole = "Viewer"): DemoRole {
-  return roles.includes(value as DemoRole) ? value as DemoRole : fallback;
+  return isKnownRole(value) ? value : fallback;
+}
+
+export function normalizeRoleFilter(value: unknown): RoleFilter {
+  return value === "all" || isKnownRole(value) ? value : "all";
 }
 
 export function normalizeContributingRoleWithFallback(value: unknown, fallback: DemoRole = "Contributor"): DemoRole {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackEnabled } from "@/lib/env";
 import { createBetaFeedback, listBetaFeedback, normalizeFeedbackRoute, normalizeFeedbackText, normalizeFeedbackUrl, putBetaFeedbackAttachment, validateFeedbackPayload } from "@/lib/beta-feedback";
-import { canAdmin, roles } from "@/lib/permissions";
+import { canAdmin, isKnownRole } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import type { BetaFeedbackSeverity } from "@/lib/types";
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   }
   const { fields, file } = await readFeedbackInput(request);
   const rawRole = normalizeFeedbackText(fields.role, 80);
-  if (!roles.includes(rawRole as never)) {
+  if (!isKnownRole(rawRole)) {
     return NextResponse.json({ error: "Feedback role is invalid.", missing: ["role"] }, { status: 400 });
   }
   const identity = requestIdentity(request, rawRole);
