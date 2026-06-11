@@ -2,6 +2,7 @@ import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteT
 import { safeCompactText, safeEnumValue, safePathSlugText, safeSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
+const brandKitIdPattern = /^[A-Za-z0-9_-]{1,80}$/;
 const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
 const collectionDraftAudiences = ["Private draft", "Internal ministry", "Public-approved portal"] as const;
 export type CollectionDraftAudience = typeof collectionDraftAudiences[number];
@@ -25,6 +26,13 @@ export function normalizeAssetId(value: unknown) {
 export function normalizeAssetIds(value: unknown, max = 120) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.map(normalizeAssetId).filter(Boolean))].slice(0, max);
+}
+
+export function normalizeBrandKitId(value: unknown) {
+  if (typeof value !== "string" && typeof value !== "number") return "";
+  const id = String(value).trim();
+  if (containsPrivateSourceText(id) || containsUnsafePathText(id)) return "";
+  return brandKitIdPattern.test(id) ? id : "";
 }
 
 export function normalizeResourceSpaceRef(value: unknown) {

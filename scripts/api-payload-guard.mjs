@@ -79,6 +79,9 @@ if (!requestValidationSource.includes("function readJsonObject")) {
 if (!requestValidationSource.includes("function readFormData")) {
   failures.push("request validation must expose readFormData for API multipart body fallback");
 }
+if (!requestValidationSource.includes("function normalizeBrandKitId")) {
+  failures.push("request validation must expose normalizeBrandKitId for brand kit route ids");
+}
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");
@@ -88,6 +91,15 @@ for (const fullPath of walk(apiRoot)) {
   if (/request\.formData\(\)/.test(source)) {
     failures.push(`${relativePath} must parse fallback multipart forms through readFormData`);
   }
+}
+
+const brandKitRoute = "frontend/app/api/brand-kits/[id]/route.ts";
+const brandKitRouteSource = fs.readFileSync(path.join(root, brandKitRoute), "utf8");
+if (!brandKitRouteSource.includes("normalizeBrandKitId((await params).id)")) {
+  failures.push(`${brandKitRoute} must normalize path params through normalizeBrandKitId`);
+}
+if (!brandKitRouteSource.includes("`/api/brand-kits/${encodeURIComponent(kitId)}`")) {
+  failures.push(`${brandKitRoute} must record usage route with encoded brand kit id`);
 }
 
 if (failures.length) {
