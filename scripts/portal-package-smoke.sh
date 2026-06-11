@@ -4,7 +4,20 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:4868}"
 MARKER="package-smoke-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
+cleanup() {
+  MARKER="$MARKER" node <<'NODE' >/dev/null 2>&1 || true
+const fs = require("fs");
+const path = require("path");
+const marker = process.env.MARKER;
+const filePath = path.join(process.cwd(), "data", "runtime", "package-drafts.json");
+if (!marker || !fs.existsSync(filePath)) process.exit(0);
+const rows = JSON.parse(fs.readFileSync(filePath, "utf8"));
+const kept = Array.isArray(rows) ? rows.filter((row) => !JSON.stringify(row).includes(marker)) : rows;
+fs.writeFileSync(filePath, `${JSON.stringify(kept, null, 2)}\n`);
+NODE
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
 
 http_code() {
   local output="$1"
