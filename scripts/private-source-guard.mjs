@@ -33,6 +33,14 @@ for (const file of scanRoots.flatMap(walk)) {
   }
 }
 
+const reviewActionWorkflow = fs.readFileSync(path.join(root, "frontend/lib/review-action-workflow.ts"), "utf8");
+if (!reviewActionWorkflow.includes("normalizeDisplayTextField")) {
+  failures.push("frontend/lib/review-action-workflow.ts must normalize reviewer-visible text through normalizeDisplayTextField");
+}
+if (/function\s+safeDisplayText\s*\(/.test(reviewActionWorkflow)) {
+  failures.push("frontend/lib/review-action-workflow.ts must not hand-roll reviewer text sanitization");
+}
+
 if (failures.length) {
   console.error("Private source guard failed:");
   for (const failure of failures) console.error(`- ${failure}`);

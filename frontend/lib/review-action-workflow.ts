@@ -3,9 +3,8 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { sourceEnvelope } from "@/lib/media-source/session";
 import { updateResourceReviewStatus } from "@/lib/media-source/resourcespace-api";
 import { canReview } from "@/lib/permissions";
-import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetId } from "@/lib/request-validation";
+import { normalizeAssetId, normalizeDisplayTextField } from "@/lib/request-validation";
 import { missingReviewEvidence, normalizeReviewChecklist, queuePendingReviewDecision } from "@/lib/review-decision";
 import { recordUsageEvent } from "@/lib/usage-analytics";
 import { isReviewActionBackend, reviewActions, type ReviewActionBackend } from "@/lib/workflow-policy";
@@ -26,13 +25,6 @@ export type ReviewActionWorkflowResult = {
   status: number;
   body: Record<string, unknown>;
 };
-
-function safeDisplayText(value: unknown, maxLength: number) {
-  const text = String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
-  if (containsUnsafePathText(text)) return "";
-  if (containsPrivateSourceText(text)) return "";
-  return text;
-}
 
 export async function runReviewActionWorkflow(request: NextRequest, body: ReviewActionRequestBody): Promise<ReviewActionWorkflowResult> {
   const identity = requestIdentity(request, body.role);
@@ -67,7 +59,7 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
 
   const action = reviewActions.find((item) => item.backend === body.action);
   const checklist = normalizeReviewChecklist(body.checklist);
-  const note = safeDisplayText(body.notes, 1200);
+  const note = normalizeDisplayTextField(body.notes, "", 1200);
   const missingEvidence = missingReviewEvidence(body.action, checklist, note);
   if (missingEvidence.length) {
     appendAuditEvent({
@@ -124,7 +116,7 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
       ok: true,
       id: assetId,
       action: body.action,
-      label: safeDisplayText(body.label, 120) || body.action,
+      label: normalizeDisplayTextField(body.label, "", 120) || body.action,
       notes: note,
       message: sync.ok
         ? "ResourceSpace review fields were updated through the live API."
