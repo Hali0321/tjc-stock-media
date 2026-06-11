@@ -8,11 +8,11 @@ import {
 } from "@/lib/asset-governance";
 import {
   assetHaystack,
-  catalogSortOptions,
   collectionDefinitions,
   includesAny,
   intentDefinitions,
   matchesCatalogFilter,
+  normalizeCatalogSort,
   savedViewDefinitions,
   viewAliases
 } from "@/lib/catalog-language";
@@ -27,7 +27,7 @@ import { buildCatalogDiscovery, discoveryScore, matchesDiscoveryQuery } from "@/
 import { getActiveMediaSource } from "@/lib/media-source";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { assetMatchesReviewQueue, missingReviewFields, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
-import type { CatalogSort, DemoRole, SearchResult, StockMediaAsset } from "@/lib/types";
+import type { DemoRole, SearchResult, StockMediaAsset } from "@/lib/types";
 
 export function normalizeSavedViewId(view?: string) {
   if (!view) return undefined;
@@ -67,12 +67,8 @@ function statusWeight(asset: StockMediaAsset) {
   return 5;
 }
 
-function normalizeSort(sort?: string): CatalogSort {
-  return catalogSortOptions.includes(sort as CatalogSort) ? (sort as CatalogSort) : "Approved first";
-}
-
 function sortCatalogAssets(assets: StockMediaAsset[], sort?: string) {
-  const normalized = normalizeSort(sort);
+  const normalized = normalizeCatalogSort(sort);
   const sorted = [...assets];
   if (normalized === "A-Z") {
     return sorted.sort((a, b) =>

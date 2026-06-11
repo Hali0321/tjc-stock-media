@@ -14,6 +14,11 @@ export function normalizeRoleWithFallback(value: unknown, fallback: DemoRole = "
   return roles.includes(value as DemoRole) ? value as DemoRole : fallback;
 }
 
+export function normalizeContributingRoleWithFallback(value: unknown, fallback: DemoRole = "Contributor"): DemoRole {
+  const role = normalizeRoleWithFallback(value, fallback);
+  return canContribute(role) ? role : fallback;
+}
+
 export function canReview(role: DemoRole) {
   return decideAccess(role, "reviewAsset").allowed;
 }

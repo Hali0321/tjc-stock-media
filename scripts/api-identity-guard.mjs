@@ -71,15 +71,17 @@ for (const fullPath of routeFiles) {
 const rolePersistenceFiles = [
   "frontend/lib/audit-log.ts",
   "frontend/lib/beta-feedback.ts",
-  "frontend/lib/package-store.ts",
-  "frontend/lib/saved-search-store.ts",
+  { path: "frontend/lib/package-store.ts", helper: "normalizeContributingRoleWithFallback" },
+  { path: "frontend/lib/saved-search-store.ts", helper: "normalizeContributingRoleWithFallback" },
   "frontend/lib/usage-analytics.ts"
 ];
 
-for (const relativePath of rolePersistenceFiles) {
+for (const entry of rolePersistenceFiles) {
+  const relativePath = typeof entry === "string" ? entry : entry.path;
+  const helper = typeof entry === "string" ? "normalizeRoleWithFallback" : entry.helper;
   const source = fs.readFileSync(path.join(root, relativePath), "utf8");
-  if (!source.includes("normalizeRoleWithFallback")) {
-    failures.push(`${relativePath} must normalize persisted roles through normalizeRoleWithFallback`);
+  if (!source.includes(helper)) {
+    failures.push(`${relativePath} must normalize persisted roles through ${helper}`);
   }
   if (/value\s*===\s*"Contributor"\s*\|\|\s*value\s*===\s*"Reviewer"\s*\|\|\s*value\s*===\s*"DAM Admin"/.test(source)
     || /raw\.role\s*===\s*"Contributor"\s*\|\|\s*raw\.role\s*===\s*"Reviewer"\s*\|\|\s*raw\.role\s*===\s*"DAM Admin"/.test(source)) {

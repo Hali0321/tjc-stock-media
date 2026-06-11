@@ -10,6 +10,9 @@ const files = {
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
+  catalog: "frontend/lib/catalog.ts",
+  catalogLanguage: "frontend/lib/catalog-language.ts",
+  searchRoute: "frontend/app/api/assets/search/route.ts",
   betaFeedbackUpdateRoute: "frontend/app/api/beta-feedback/[id]/route.ts",
   betaFeedbackExportRoute: "frontend/app/api/beta-feedback/export/route.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
@@ -25,6 +28,9 @@ const packages = read(files.packages);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
+const catalog = read(files.catalog);
+const catalogLanguage = read(files.catalogLanguage);
+const searchRoute = read(files.searchRoute);
 const betaFeedbackUpdateRoute = read(files.betaFeedbackUpdateRoute);
 const betaFeedbackExportRoute = read(files.betaFeedbackExportRoute);
 const readiness = read(files.readiness);
@@ -45,7 +51,7 @@ for (const store of stores) {
 
 const persistedRecordSources = [
   { name: "feedback", source: feedback },
-  { name: "saved searches", source: savedSearches },
+  { name: "saved searches", source: savedSearches, enumHelper: "normalizeCatalogSort" },
   { name: "package drafts", source: packages },
   { name: "pending review writes", source: pendingReviewWrites },
   { name: "audit log", source: auditLog }
@@ -55,7 +61,7 @@ for (const store of persistedRecordSources) {
   if (!store.source.includes("safeIsoTimestamp")) failures.push(`${store.name} must normalize persisted timestamps through safeIsoTimestamp`);
   if (!store.source.includes("safeCompactText")) failures.push(`${store.name} must normalize persisted text through safeCompactText`);
   if (!store.source.includes("safeSlugText")) failures.push(`${store.name} must normalize persisted slugs through safeSlugText`);
-  if (!store.source.includes("safeEnumValue")) failures.push(`${store.name} must normalize persisted enums through safeEnumValue`);
+  if (!store.source.includes(store.enumHelper || "safeEnumValue")) failures.push(`${store.name} must normalize persisted enums through ${store.enumHelper || "safeEnumValue"}`);
   if (/function\s+safeIso\s*\(/.test(store.source)) failures.push(`${store.name} must not hand-roll Date.parse timestamp guards`);
   if (/String\([^)]*\|\|\s*""\)\.replace\(\/\\s\+\/g/.test(store.source)) failures.push(`${store.name} must not hand-roll compact text normalization`);
   if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi,\s*"-"\)\.replace\(\/\^-\|-\\\$\/g,\s*""\)/.test(store.source)) failures.push(`${store.name} must not hand-roll slug normalization`);
@@ -77,6 +83,16 @@ if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(pa
 
 if (/betaFeedback(?:Statuses|Severities)\.includes/.test(feedback)) {
   failures.push("feedback store must not hand-roll status/severity normalization");
+}
+
+if (!catalogLanguage.includes("function normalizeCatalogSort")) failures.push("catalog language must expose normalizeCatalogSort");
+for (const surface of [
+  { name: "catalog search", source: catalog },
+  { name: "asset search route", source: searchRoute },
+  { name: "saved searches", source: savedSearches }
+]) {
+  if (!surface.source.includes("normalizeCatalogSort")) failures.push(`${surface.name} must normalize catalog sort through normalizeCatalogSort`);
+  if (/catalogSortOptions\.includes/.test(surface.source)) failures.push(`${surface.name} must not hand-roll catalog sort normalization`);
 }
 
 if (!usageAnalytics.includes("safeCompactText")) failures.push("usage analytics must normalize usage labels through safeCompactText");

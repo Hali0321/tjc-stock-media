@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { safeBoolean, safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
-import { normalizeRoleWithFallback } from "@/lib/permissions";
+import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
@@ -102,7 +102,7 @@ function normalizeStoredPackageDraft(input: unknown): StoredPackageDraft | null 
     createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
     createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
-    role: normalizeRoleWithFallback(raw.role, "Contributor"),
+    role: normalizeContributingRoleWithFallback(raw.role, "Contributor"),
     governance: {
       canPreview: safeBoolean(governance.canPreview),
       canShare: safeBoolean(governance.canShare),

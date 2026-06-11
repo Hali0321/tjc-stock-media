@@ -9,6 +9,7 @@ import {
   assetNeedsSourceReview,
   assetNeedsStaleApprovalReview
 } from "@/lib/asset-governance";
+import { safeEnumValue } from "@/lib/persisted-record-safety";
 import { reviewRiskFlags } from "@/lib/workflow-policy";
 import type { CatalogSort, StockMediaAsset } from "@/lib/types";
 
@@ -36,6 +37,10 @@ export type SearchIntentDefinition = {
 };
 
 export const catalogSortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
+
+export function normalizeCatalogSort(value: unknown, fallback: CatalogSort = "Approved first"): CatalogSort {
+  return safeEnumValue(value, catalogSortOptions, fallback);
+}
 
 export function assetHaystack(asset: StockMediaAsset) {
   return [

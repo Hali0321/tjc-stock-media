@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { normalizeCatalogSort } from "@/lib/catalog-language";
 import { repoRoot } from "@/lib/env";
-import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
-import { normalizeRoleWithFallback } from "@/lib/permissions";
+import { safeCompactText, safeIsoTimestamp, safeSlugText } from "@/lib/persisted-record-safety";
+import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
@@ -24,7 +25,6 @@ export type SavedSearchRecord = {
 
 const savedSearchStorePath = () => path.join(repoRoot(), "data", "runtime", "saved-searches.json");
 export const maxSavedSearches = 250;
-const sortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
 
 function newestFirst(records: SavedSearchRecord[]) {
   return [...records].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
@@ -68,7 +68,7 @@ function safeFilter(value: unknown) {
 }
 
 function safeSort(value: unknown): CatalogSort {
-  return safeEnumValue(value, sortOptions, "Approved first");
+  return normalizeCatalogSort(value);
 }
 
 export function sanitizeSavedSearch(input: unknown) {
@@ -99,7 +99,7 @@ function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
     createdAt: safeIsoTimestamp(raw.createdAt) || updatedAt,
     updatedAt,
     createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
-    role: normalizeRoleWithFallback(raw.role, "Contributor"),
+    role: normalizeContributingRoleWithFallback(raw.role, "Contributor"),
     storageMode: "local-json"
   };
 }
