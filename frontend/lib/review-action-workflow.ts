@@ -1,4 +1,5 @@
 import { appendAuditEvent } from "@/lib/audit-log";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { sourceEnvelope } from "@/lib/media-source/session";
 import { updateResourceReviewStatus } from "@/lib/media-source/resourcespace-api";
@@ -62,12 +63,13 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
   const note = normalizeDisplayTextField(body.notes, "", 1200);
   const missingEvidence = missingReviewEvidence(body.action, checklist, note);
   if (missingEvidence.length) {
+    const resourceSpaceId = assetResourceRef(asset);
     appendAuditEvent({
       type: "review_evidence_incomplete",
       role,
       actor: identity.id,
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId,
       status: "blocked",
       summary: "Review decision blocked by missing evidence.",
       details: { action: body.action, missingEvidence }
@@ -76,6 +78,7 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
   }
 
   const requestedStatus = action?.targetStatus || asset.status;
+  const resourceSpaceId = assetResourceRef(asset);
   const pending = queuePendingReviewDecision({
     asset,
     requestedStatus,
@@ -90,7 +93,7 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
     role,
     actor: identity.id,
     assetId: asset.id,
-    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    resourceSpaceId,
     status: "queued",
     summary: "Review decision queued for media-team follow-up.",
     details: {
@@ -104,7 +107,7 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
     role,
     actor: identity.id,
     assetId: asset.id,
-    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    resourceSpaceId,
     route: "/api/review",
     metadata: { action: body.action, requestedStatus }
   });
@@ -126,7 +129,7 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
       sync,
       auditRecord: {
         assetId: asset.id,
-        resourceSpaceId: asset.resourceSpaceId || asset.id,
+        resourceSpaceId,
         previousStatus: asset.status,
         requestedStatus,
         actor: identity.id,

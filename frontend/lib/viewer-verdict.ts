@@ -1,3 +1,4 @@
+import { assetResourceRef } from "@/lib/asset-refs";
 import { assetDisplayTitle } from "@/lib/presentation";
 import { canReview } from "@/lib/permissions";
 import { containsOperationalText } from "@/lib/public-text-safety";
@@ -28,7 +29,7 @@ function safeRequestTitle(asset: StockMediaAsset) {
 }
 
 function safeRequestReference(asset: StockMediaAsset, role: DemoRole) {
-  const raw = String(canExposeOpsReference(role) ? asset.resourceSpaceId || asset.id : asset.id);
+  const raw = canExposeOpsReference(role) ? assetResourceRef(asset) : String(asset.id);
   const cleaned = raw.replace(/[^\w:-]/g, "").slice(0, 80);
   if (!cleaned || unsafeRequestTextPattern.test(cleaned) || containsOperationalText(cleaned)) return String(asset.id).replace(/[^\w:-]/g, "").slice(0, 80) || "media-record";
   return cleaned;

@@ -1,5 +1,5 @@
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
-import { normalizeAssetId, normalizeResourceSpaceRef } from "@/lib/request-validation";
+import { assetResourceRef } from "@/lib/asset-refs";
 
 export function formatBytes(bytes?: number) {
   if (!bytes) return "Not provided";
@@ -18,7 +18,7 @@ export function assetDate(asset: StockMediaAsset) {
 }
 
 export function assetRecordRef(asset?: Pick<StockMediaAsset, "id" | "resourceSpaceId">) {
-  return normalizeResourceSpaceRef(asset?.resourceSpaceId) || normalizeAssetId(asset?.id) || "media-record";
+  return assetResourceRef(asset);
 }
 
 export function displayTitle(asset?: StockMediaAsset) {

@@ -10,6 +10,7 @@ const files = {
   packageRefs: "frontend/lib/package-refs.ts",
   packageDrafts: "frontend/lib/package-drafts.ts",
   packageGovernance: "frontend/lib/package-governance.ts",
+  assetRefs: "frontend/lib/asset-refs.ts",
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
@@ -32,6 +33,12 @@ const files = {
   enterpriseReview: "frontend/components/dam/enterprise/ReviewPage.tsx",
   enterpriseBrandHub: "frontend/components/dam/enterprise/BrandHubPage.tsx",
   enterpriseInsights: "frontend/components/dam/enterprise/InsightsPage.tsx",
+  assetRoute: "frontend/app/api/assets/[id]/route.ts",
+  reviewRoute: "frontend/app/api/review/route.ts",
+  batchRoute: "frontend/app/api/batch/route.ts",
+  downloadRoute: "frontend/app/api/download/[id]/route.ts",
+  reviewActionWorkflow: "frontend/lib/review-action-workflow.ts",
+  resourceSpaceApi: "frontend/lib/media-source/resourcespace-api.ts",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -45,6 +52,7 @@ const packages = read(files.packages);
 const packageRefs = read(files.packageRefs);
 const packageDrafts = read(files.packageDrafts);
 const packageGovernance = read(files.packageGovernance);
+const assetRefs = read(files.assetRefs);
 const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
@@ -67,6 +75,12 @@ const enterpriseAssetDetail = read(files.enterpriseAssetDetail);
 const enterpriseReview = read(files.enterpriseReview);
 const enterpriseBrandHub = read(files.enterpriseBrandHub);
 const enterpriseInsights = read(files.enterpriseInsights);
+const assetRoute = read(files.assetRoute);
+const reviewRoute = read(files.reviewRoute);
+const batchRoute = read(files.batchRoute);
+const downloadRoute = read(files.downloadRoute);
+const reviewActionWorkflow = read(files.reviewActionWorkflow);
+const resourceSpaceApi = read(files.resourceSpaceApi);
 const readiness = read(files.readiness);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
@@ -150,8 +164,11 @@ if (!packageGovernance.includes("normalizedPackageAssetRef") || /String\(asset\.
 if (!packageBuilder.includes("packageAssetRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(packageBuilder)) {
   failures.push("package builder display refs must normalize through package ref module");
 }
-if (!enterpriseDisplay.includes("function assetRecordRef") || !enterpriseDisplay.includes("normalizeResourceSpaceRef") || !enterpriseDisplay.includes("normalizeAssetId")) {
-  failures.push("enterprise display must expose normalized assetRecordRef for record labels");
+if (!assetRefs.includes("function assetResourceRef") || !assetRefs.includes("normalizeResourceSpaceRef") || !assetRefs.includes("normalizeAssetId")) {
+  failures.push("asset ref module must expose assetResourceRef through normalized ResourceSpace/id fallback");
+}
+if (!enterpriseDisplay.includes("function assetRecordRef") || !enterpriseDisplay.includes("assetResourceRef")) {
+  failures.push("enterprise display must expose normalized assetRecordRef through assetResourceRef");
 }
 if (!enterpriseShared.includes("assetRecordRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(enterpriseShared)) {
   failures.push("enterprise shared cards must display record refs through assetRecordRef");
@@ -165,6 +182,19 @@ for (const surface of [
 ]) {
   if (!surface.source.includes("assetRecordRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(surface.source)) {
     failures.push(`${surface.name} record labels must display through assetRecordRef`);
+  }
+}
+for (const surface of [
+  { name: "pending review writes", source: pendingReviewWrites },
+  { name: "asset route", source: assetRoute },
+  { name: "review route", source: reviewRoute },
+  { name: "batch route", source: batchRoute },
+  { name: "download route", source: downloadRoute },
+  { name: "review action workflow", source: reviewActionWorkflow },
+  { name: "ResourceSpace API adapter", source: resourceSpaceApi }
+]) {
+  if (!surface.source.includes("assetResourceRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(surface.source)) {
+    failures.push(`${surface.name} operational refs must normalize through assetResourceRef`);
   }
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {

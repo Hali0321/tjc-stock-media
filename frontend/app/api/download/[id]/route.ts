@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { decideAccess } from "@/lib/access-decisions";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
@@ -37,12 +38,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Asset not found", ...envelope }, { status: 404 });
   }
   if (!canDownloadApprovedCopy(role, asset)) {
+    const resourceSpaceId = assetResourceRef(asset);
     appendAuditEvent({
       type: "denied_download",
       role,
       actor: session.identity.id,
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId,
       status: "denied",
       summary: "Approved copy download denied; original/master remains restricted.",
       details: { source: source.label, sourceDetail: source.detail, assetStatus: asset.status }
@@ -64,12 +66,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const bytes = fs.readFileSync(filePath);
     const safeTitle = safeSlugText(normalizeDisplayTextField(asset.title, "", 80), 80) || `asset-${id}`;
+    const resourceSpaceId = assetResourceRef(asset);
     appendAuditEvent({
       type: "approved_download",
       role,
       actor: session.identity.id,
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId,
       status: "allowed",
       summary: "Approved copy downloaded.",
       details: { source: source.label, sourceDetail: source.detail, fileName: `${safeTitle}-approved-copy.jpg` }
@@ -106,10 +109,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const access = decideAccess(role, "downloadApprovedCopy", asset);
+  const resourceSpaceId = assetResourceRef(asset);
   session.recordUsage({
     type: "download_gate",
     assetId: asset.id,
-    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    resourceSpaceId,
     route: `/api/download/${asset.id}`,
     metadata: { termsAccepted: body.termsAccepted === true, variant }
   });
@@ -122,7 +126,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       role,
       actor: session.identity.id,
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId,
       status: "blocked",
       summary: "Download gate blocked because usage terms were not accepted.",
       details: {
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       role,
       actor: session.identity.id,
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId,
       status: "denied",
       summary: "Download gate denied approved copy.",
       details: {
@@ -179,7 +183,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       role,
       actor: session.identity.id,
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId,
       status: "blocked",
       summary: "Download gate blocked because approved derivative is unavailable.",
       details: {
@@ -204,7 +208,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     role,
     actor: session.identity.id,
     assetId: asset.id,
-    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    resourceSpaceId,
     status: "allowed",
     summary: "Download gate approved an approved-copy URL.",
     details: {

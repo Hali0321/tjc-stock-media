@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { canReview } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     count: found.length,
     auditRecords: found.map((asset) => ({
       assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
+      resourceSpaceId: assetResourceRef(asset),
       previousStatus: asset.status,
       requestedAction: body.action,
       reviewerRole: role,

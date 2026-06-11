@@ -1,3 +1,4 @@
+import { assetResourceRef } from "@/lib/asset-refs";
 import { hasResourceSpaceApiConfig, resourceSpaceWritebackEnabled } from "@/lib/env";
 import { getAssetsFromExport } from "@/lib/media-source/exported-metadata";
 import { markPendingReviewWriteSyncFailed, markPendingReviewWriteSynced } from "@/lib/pending-review-writes";
@@ -66,7 +67,7 @@ export async function getResourceSpaceCollectionAssets(collectionId: string | nu
   }
   const ids = new Set(resourceIdsFromCollectionPayload(resources.data));
   const exportAssets = await getAssetsFromExport() || [];
-  const matched = exportAssets.filter((asset) => ids.has(asset.resourceSpaceId || asset.id));
+  const matched = exportAssets.filter((asset) => ids.has(assetResourceRef(asset)));
   return {
     ok: true,
     status: 200,

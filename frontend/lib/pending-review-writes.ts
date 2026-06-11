@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeEnumValue, safeIsoTimestamp, safeIsoTimestampIdPart, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
@@ -122,10 +123,11 @@ export function createPendingReviewWrite({
 }) {
   ensurePendingDir();
   const now = new Date().toISOString();
-  const id = `${safeIsoTimestampIdPart(now)}-${safeFilePart(asset.resourceSpaceId || asset.id)}-${crypto.randomUUID().slice(0, 8)}`;
+  const resourceId = assetResourceRef(asset);
+  const id = `${safeIsoTimestampIdPart(now)}-${safeFilePart(resourceId)}-${crypto.randomUUID().slice(0, 8)}`;
   const record: ReviewWriteRecord = {
     id,
-    resourceId: asset.resourceSpaceId || asset.id,
+    resourceId,
     oldStatus: normalizePersistedDisplayText(asset.status, 120) || "Unknown",
     requestedStatus: normalizePersistedDisplayText(requestedStatus, 120) || "Needs Review",
     reviewerRole,

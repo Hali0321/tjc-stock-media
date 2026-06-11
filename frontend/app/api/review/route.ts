@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { getReviewQueue } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     pendingWrites: Object.fromEntries(
       queue.assets
         .map((asset) => {
-          const pending = latestPendingWriteForResource(asset.resourceSpaceId || asset.id);
+          const pending = latestPendingWriteForResource(assetResourceRef(asset));
           return pending ? [asset.id, pendingReviewWriteSummary(pending)] : null;
         })
         .filter((item): item is [string, ReturnType<typeof pendingReviewWriteSummary>] => Boolean(item))
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     resourceSpaceUrls: Object.fromEntries(
       queue.assets
         .filter((asset) => asset.resourceSpaceId && canOpenResourceSpace(role))
-        .map((asset) => [asset.id, resourceSpaceAssetUrl(asset.resourceSpaceId || asset.id)])
+        .map((asset) => [asset.id, resourceSpaceAssetUrl(assetResourceRef(asset))])
     ),
     canReview: canReview(role)
   });

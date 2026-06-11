@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { canOpenResourceSpace, canReview, canSeeAsset } from "@/lib/permissions";
@@ -24,11 +25,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!canSeeAsset(role, asset)) {
     return NextResponse.json({ error: "This role cannot view this asset.", ...envelope }, { status: 403 });
   }
-  const pending = latestPendingWriteForResource(asset.resourceSpaceId || asset.id);
+  const resourceSpaceId = assetResourceRef(asset);
+  const pending = latestPendingWriteForResource(resourceSpaceId);
   session.recordUsage({
     type: "asset_view",
     assetId: asset.id,
-    resourceSpaceId: asset.resourceSpaceId || asset.id,
+    resourceSpaceId,
     route: `/api/assets/${asset.id}`
   });
   const isReviewerOrAdmin = canReview(role);
