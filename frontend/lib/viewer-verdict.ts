@@ -1,4 +1,5 @@
 import { assetDisplayTitle } from "@/lib/presentation";
+import { canReview } from "@/lib/permissions";
 import { containsPrivateSourceText } from "@/lib/private-source-text";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
 
@@ -17,7 +18,7 @@ export type RequestMailtoKind = "original" | "review" | "coworker";
 const unsafeRequestTextPattern = /ResourceSpace|Shared Drive|source[- ]path|master drive|master\/original path|master files?|original filename|checksum|raw ResourceSpace|ResourceSpace ID|\bRS\s+\d+\b|\.\.\/private|javascript:/i;
 
 function canExposeOpsReference(role: DemoRole) {
-  return role === "Reviewer" || role === "DAM Admin";
+  return canReview(role);
 }
 
 function safeRequestTitle(asset: StockMediaAsset) {

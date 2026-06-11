@@ -17,6 +17,7 @@ import {
   savedViewDefinitions
 } from "@/lib/catalog-language";
 import { collectionImageUrl } from "@/lib/presentation";
+import { canReview } from "@/lib/permissions";
 import type { CatalogCollection, DemoRole, MetadataHealthSummary, OperationalInsight, SavedViewSummary, StockMediaAsset, ZeroResultInsight } from "@/lib/types";
 
 export function buildSavedViews(assets: StockMediaAsset[]): SavedViewSummary[] {
@@ -67,7 +68,7 @@ export function buildCollections(assets: StockMediaAsset[], role: DemoRole): Cat
       countLabel: `${matching.length.toLocaleString()} asset${matching.length === 1 ? "" : "s"}`,
       dateRange: dateRangeFor(matching),
       ministry:
-        role === "Reviewer" || role === "DAM Admin"
+        canReview(role)
           ? matching.find((asset) => asset.eventName)?.eventName || definition.description
           : definition.description,
       approvalSummary: approvalSummary(matching),

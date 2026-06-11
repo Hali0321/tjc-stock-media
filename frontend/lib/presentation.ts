@@ -1,6 +1,7 @@
 import { decideAccess } from "@/lib/access-decisions";
 import { assetNeedsRightsReview } from "@/lib/asset-governance";
 import { normalizeAssetTitle, usageLabel, shortStatusLabel } from "@/lib/display";
+import { canReview } from "@/lib/permissions";
 import { statusToUserLabel, usageScopeToUserLabel } from "@/lib/resourcespace-schema";
 import { buildReuseDecision, canPreviewAsset, metadataConfidence } from "@/lib/reuse-policy";
 import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
@@ -86,7 +87,7 @@ export function assetDisplayTitle(asset: StockMediaAsset) {
 }
 
 export function provenanceSummary(asset: StockMediaAsset, role: DemoRole) {
-  const opsView = role === "Reviewer" || role === "DAM Admin";
+  const opsView = canReview(role);
   const source = asset.sourceAccount || (opsView ? asset.sourceSystem : undefined) || asset.collection || (opsView ? "ResourceSpace" : "Media archive");
   const origin = asset.eventName || asset.sourcePlatform || asset.collection;
   const adminDecision = decideAccess(role, "viewOriginalMetadata", asset);
@@ -207,7 +208,7 @@ function bestUseCopy(asset: StockMediaAsset) {
 export function trustFacts(asset: StockMediaAsset, role: DemoRole) {
   const provenance = provenanceSummary(asset, role);
   const reuse = buildReuseDecision(asset);
-  const opsView = role === "Reviewer" || role === "DAM Admin";
+  const opsView = canReview(role);
   return [
     { label: opsView ? "ResourceSpace status" : "Approval state", value: statusToUserLabel(asset.status) },
     { label: opsView ? "Portal reuse state" : "Use guidance state", value: `${reuse.label} - ${reuse.summary}` },
