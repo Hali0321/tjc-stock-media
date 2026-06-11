@@ -2,7 +2,7 @@ import type { DemoRole, DamPackage, ReuseBlocker, ReuseState, StockMediaAsset } 
 import type { ResolvedPackageSection } from "@/lib/package-drafts";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { canContribute, canReview } from "@/lib/permissions";
-import { normalizeResourceSpaceRef } from "@/lib/request-validation";
+import { packageAssetRef as normalizedPackageAssetRef } from "@/lib/package-refs";
 
 export type PackageGovernanceAsset = {
   ref: string;
@@ -72,13 +72,13 @@ function assetReason(asset: StockMediaAsset, blockers: ReuseBlocker[]) {
   return blockers.map((blocker) => blocker.label).join(", ");
 }
 
-function packageAssetRef(asset: StockMediaAsset) {
-  return normalizeResourceSpaceRef(asset.resourceSpaceId) || normalizeResourceSpaceRef(asset.id) || "media-reference";
+function packageGovernanceRef(asset: StockMediaAsset) {
+  return normalizedPackageAssetRef(asset) || "media-reference";
 }
 
 function classifyAsset(sectionId: string, sectionTitle: string, asset: StockMediaAsset, role: DemoRole): PackageGovernanceAsset {
   const packet = buildPortalReuseDecision(asset, role);
-  const ref = packageAssetRef(asset);
+  const ref = packageGovernanceRef(asset);
   const portalReady = packet.reuse.state === "portal-ready";
   const internalReady = packet.reuse.state === "internal-ready";
   const canShare = portalReady || (internalReady && roleCanShareInternal(role));

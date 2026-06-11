@@ -4,7 +4,8 @@ import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeContributingRoleWithFallback } from "@/lib/permissions";
-import { normalizePersistedDisplayText, normalizePersistedSlugText, normalizeResourceSpaceRef } from "@/lib/request-validation";
+import { normalizePackageRef } from "@/lib/package-refs";
+import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
 import type { DamPackage, DemoRole } from "@/lib/types";
 
 export type StoredPackageDraft = {
@@ -50,13 +51,13 @@ export function sanitizePackageDraft(input: unknown): DamPackage {
     title: normalizePersistedDisplayText(raw.title, 160) || "ResourceSpace Toolkit Draft",
     description: normalizePersistedDisplayText(raw.description, 500) || undefined,
     status: safeEnumValue(raw.status, packageStatuses, "draft"),
-    collectionId: raw.collectionId ? normalizeResourceSpaceRef(raw.collectionId) || undefined : undefined,
+    collectionId: raw.collectionId ? normalizePackageRef(raw.collectionId) || undefined : undefined,
     sections: sections.slice(0, 12).map((section, index) => ({
       id: safeIdentifierText(section?.id, 80) || `section-${index + 1}`,
       title: normalizePersistedDisplayText(section?.title, 120) || `Section ${index + 1}`,
       resourceSpaceAssetIds: Array.isArray(section?.resourceSpaceAssetIds)
         ? section.resourceSpaceAssetIds
-            .map((ref) => normalizeResourceSpaceRef(ref))
+            .map((ref) => normalizePackageRef(ref))
             .filter((ref) => {
               if (!ref || seenRefs.has(ref)) return false;
               seenRefs.add(ref);

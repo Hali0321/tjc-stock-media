@@ -7,6 +7,7 @@ const files = {
   feedback: "frontend/lib/beta-feedback.ts",
   savedSearches: "frontend/lib/saved-search-store.ts",
   packages: "frontend/lib/package-store.ts",
+  packageRefs: "frontend/lib/package-refs.ts",
   packageDrafts: "frontend/lib/package-drafts.ts",
   packageGovernance: "frontend/lib/package-governance.ts",
   pendingReviewWrites: "frontend/lib/pending-review-writes.ts",
@@ -33,6 +34,7 @@ function read(file) {
 const feedback = read(files.feedback);
 const savedSearches = read(files.savedSearches);
 const packages = read(files.packages);
+const packageRefs = read(files.packageRefs);
 const packageDrafts = read(files.packageDrafts);
 const packageGovernance = read(files.packageGovernance);
 const pendingReviewWrites = read(files.pendingReviewWrites);
@@ -114,17 +116,17 @@ if (!packages.includes("safeBoolean")) failures.push("package drafts must normal
 if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(packages)) {
   failures.push("package drafts must not hand-roll boolean normalization");
 }
-if (!packages.includes("normalizeResourceSpaceRef")) {
-  failures.push("package drafts must normalize ResourceSpace refs through normalizeResourceSpaceRef");
+if (!packageRefs.includes("normalizeResourceSpaceRef")) {
+  failures.push("package ref module must normalize ResourceSpace refs through normalizeResourceSpaceRef");
 }
-if (!/collectionId:\s*raw\.collectionId\s*\?\s*normalizeResourceSpaceRef\(raw\.collectionId\)\s*\|\|\s*undefined\s*:\s*undefined/.test(packages)) {
-  failures.push("package draft collectionId must normalize through normalizeResourceSpaceRef and drop unsafe refs");
+if (!/collectionId:\s*raw\.collectionId\s*\?\s*normalizePackageRef\(raw\.collectionId\)\s*\|\|\s*undefined\s*:\s*undefined/.test(packages)) {
+  failures.push("package draft collectionId must normalize through normalizePackageRef and drop unsafe refs");
 }
-if (!packageDrafts.includes("normalizeResourceSpaceRef") || /refs\.map\(\(ref\)\s*=>\s*String\(ref\)\)/.test(packageDrafts)) {
-  failures.push("package draft client helpers must normalize package refs through normalizeResourceSpaceRef");
+if (!packageDrafts.includes("normalizePackageRefs") || /refs\.map\(\(ref\)\s*=>\s*String\(ref\)\)/.test(packageDrafts)) {
+  failures.push("package draft client helpers must normalize package refs through normalizePackageRefs");
 }
-if (!packageGovernance.includes("normalizeResourceSpaceRef") || /String\(asset\.resourceSpaceId\s*\|\|\s*asset\.id\)/.test(packageGovernance)) {
-  failures.push("package governance display refs must normalize through normalizeResourceSpaceRef");
+if (!packageGovernance.includes("normalizedPackageAssetRef") || /String\(asset\.resourceSpaceId\s*\|\|\s*asset\.id\)/.test(packageGovernance)) {
+  failures.push("package governance display refs must normalize through package ref module");
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");
