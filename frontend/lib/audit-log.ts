@@ -4,7 +4,7 @@ import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { newestByTimestamp, safeEnumValue, safeFiniteNumber, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
-import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
+import { normalizeAssetId, normalizePersistedDisplayText, normalizePersistedSlugText, normalizeResourceSpaceRef } from "@/lib/request-validation";
 import type { DemoRole } from "@/lib/types";
 
 export type AuditEventType =
@@ -94,6 +94,14 @@ function safeId(value: unknown) {
   return normalizePersistedSlugText(value, 120);
 }
 
+function safeAssetId(value: unknown) {
+  return normalizeAssetId(value);
+}
+
+function safeResourceSpaceId(value: unknown) {
+  return normalizeResourceSpaceRef(value);
+}
+
 function safeStatus(value: unknown): AuditEventRecord["status"] {
   return safeEnumValue(value, auditEventStatuses, "preview");
 }
@@ -132,8 +140,8 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
     createdAt,
     role: normalizeRoleWithFallback(raw.role),
     actor: normalizePersistedDisplayText(raw.actor, 160) || "local-beta:unknown",
-    assetId: raw.assetId === undefined ? undefined : safeId(raw.assetId),
-    resourceSpaceId: raw.resourceSpaceId === undefined ? undefined : safeId(raw.resourceSpaceId),
+    assetId: raw.assetId === undefined ? undefined : safeAssetId(raw.assetId),
+    resourceSpaceId: raw.resourceSpaceId === undefined ? undefined : safeResourceSpaceId(raw.resourceSpaceId),
     packageId: raw.packageId === undefined ? undefined : safeId(raw.packageId),
     status: safeStatus(raw.status),
     summary: normalizePersistedDisplayText(raw.summary, 240) || "Audit event",
