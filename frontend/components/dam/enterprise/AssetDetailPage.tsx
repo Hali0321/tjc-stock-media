@@ -5,7 +5,7 @@ import { CheckCircle2, ChevronDown, Download, FileText, Grid3X3, Lock, PackageCh
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetDetail, useDownloadGate } from "@/components/dam/useDamApi";
 import { assetDetailTabs, isActivityTab } from "@/lib/asset-record-workbench";
-import { assetType, displayTitle, sourceNoun } from "@/lib/enterprise-display";
+import { assetRecordRef, assetType, displayTitle, sourceNoun } from "@/lib/enterprise-display";
 import { assetDetailMetadataRows, assetKeywordText, rightsRestrictionRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus } from "@/lib/enterprise-status";
 import { cn } from "@/lib/ui";
@@ -26,7 +26,7 @@ export function EnterpriseAssetDetailPage({ id }: { id: string }) {
   const metadataRows = assetDetailMetadataRows(asset, role);
   return (
     <div className="enterprise-page enterprise-detail">
-      <div className="ed-breadcrumb">Library <span>›</span> {sourceNoun(detail.source)} <span>›</span> {asset.resourceSpaceId || asset.id}</div>
+      <div className="ed-breadcrumb">Library <span>›</span> {sourceNoun(detail.source)} <span>›</span> {assetRecordRef(asset)}</div>
       <div className="ed-detail-layout">
         <main>
           <header className="ed-detail-header">

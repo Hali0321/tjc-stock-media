@@ -27,6 +27,11 @@ const files = {
   packageBuilder: "frontend/components/dam/enterprise/PackageBuilderPage.tsx",
   enterpriseDisplay: "frontend/lib/enterprise-display.ts",
   enterpriseShared: "frontend/components/dam/enterprise/EnterpriseShared.tsx",
+  enterpriseMetadata: "frontend/lib/enterprise-metadata.ts",
+  enterpriseAssetDetail: "frontend/components/dam/enterprise/AssetDetailPage.tsx",
+  enterpriseReview: "frontend/components/dam/enterprise/ReviewPage.tsx",
+  enterpriseBrandHub: "frontend/components/dam/enterprise/BrandHubPage.tsx",
+  enterpriseInsights: "frontend/components/dam/enterprise/InsightsPage.tsx",
   readiness: "frontend/lib/dam-readiness-integrations.ts"
 };
 
@@ -57,6 +62,11 @@ const packageRoute = read(files.packageRoute);
 const packageBuilder = read(files.packageBuilder);
 const enterpriseDisplay = read(files.enterpriseDisplay);
 const enterpriseShared = read(files.enterpriseShared);
+const enterpriseMetadata = read(files.enterpriseMetadata);
+const enterpriseAssetDetail = read(files.enterpriseAssetDetail);
+const enterpriseReview = read(files.enterpriseReview);
+const enterpriseBrandHub = read(files.enterpriseBrandHub);
+const enterpriseInsights = read(files.enterpriseInsights);
 const readiness = read(files.readiness);
 const publicTextSafety = read("frontend/lib/public-text-safety.ts");
 const sourceRedaction = read("frontend/lib/source-redaction.ts");
@@ -145,6 +155,17 @@ if (!enterpriseDisplay.includes("function assetRecordRef") || !enterpriseDisplay
 }
 if (!enterpriseShared.includes("assetRecordRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(enterpriseShared)) {
   failures.push("enterprise shared cards must display record refs through assetRecordRef");
+}
+for (const surface of [
+  { name: "enterprise metadata", source: enterpriseMetadata },
+  { name: "enterprise asset detail", source: enterpriseAssetDetail },
+  { name: "enterprise review", source: enterpriseReview },
+  { name: "enterprise brand hub", source: enterpriseBrandHub },
+  { name: "enterprise insights", source: enterpriseInsights }
+]) {
+  if (!surface.source.includes("assetRecordRef") || /asset\.resourceSpaceId\s*\|\|\s*asset\.id/.test(surface.source)) {
+    failures.push(`${surface.name} record labels must display through assetRecordRef`);
+  }
 }
 if (/function\s+safeResourceSpaceRef\s*\(/.test(packages) || /String\([^)]*\|\|\s*""\)\.trim\(\)\.slice\(0,\s*80\)/.test(packages)) {
   failures.push("package drafts must not hand-roll ResourceSpace ref normalization");

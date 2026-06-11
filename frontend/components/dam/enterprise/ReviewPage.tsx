@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2, ChevronDown, Download, FileText, Filter, Grid3X3, Lock, Star } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useDownloadGate, useReviewQueue } from "@/components/dam/useDamApi";
-import { assetType, displayTitle, formatBytes } from "@/lib/enterprise-display";
+import { assetRecordRef, assetType, displayTitle, formatBytes } from "@/lib/enterprise-display";
 import { reviewEvidenceRows, reviewMetadataRows } from "@/lib/enterprise-metadata";
 import { assetEnterpriseStatus, type EnterpriseStatus } from "@/lib/enterprise-status";
 import { emptyReviewChecklist, initialReviewChecklistForAsset, reviewChecklistItems, reviewDecisionDisabledReason, reviewDecisionMissingLabels, reviewEvidenceCompletion } from "@/lib/review-decision-presenter";
@@ -155,7 +155,7 @@ export function EnterpriseReviewPage() {
             </label>
           </div>
           <p className="ed-review-page-status">{queue.length ? `${(pageStart + 1).toLocaleString()}-${pageEnd.toLocaleString()} of ${queue.length.toLocaleString()}` : "No review records"}</p>
-          {pagedQueue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {asset.resourceSpaceId || asset.id}</small><StatusBadge status={assetEnterpriseStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
+          {pagedQueue.map((asset) => <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {asset.imageDimensions || "No dimensions"} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace {assetRecordRef(asset)}</small><StatusBadge status={assetEnterpriseStatus(asset)} />{pendingDecisionById[asset.id] ? <em>Pending sync to ResourceSpace</em> : null}</span></button>)}
           <nav className="ed-review-pager" aria-label="Review queue pages">
             <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={safeCurrentPage === 1}>Previous</button>
             <span>Page {safeCurrentPage} of {pageCount}</span>
@@ -165,7 +165,7 @@ export function EnterpriseReviewPage() {
         {selectedAsset ? (
           <>
             <main className="ed-review-canvas">
-              <div className="ed-breadcrumb">Review Queue <span>›</span> ResourceSpace {selectedAsset.resourceSpaceId || selectedAsset.id}</div>
+              <div className="ed-breadcrumb">Review Queue <span>›</span> ResourceSpace {assetRecordRef(selectedAsset)}</div>
               <header className="ed-detail-header"><div><h1 title={displayTitle(selectedAsset)}>{displayTitle(selectedAsset)}</h1><span className="ed-file-soft">{assetType(selectedAsset)}</span></div><div className="ed-chip-row">{[selectedAsset.collection, selectedAsset.usageScope].filter(Boolean).map((chip) => <span key={chip}>{chip}</span>)}<StatusBadge status={selectedStatus} />{selectedPending ? <StatusBadge status="Read-only" /> : null}</div><div className="ed-detail-actions"><IconButton label="Favorite" onClick={() => queuePortalNote("Favorite for reviewer follow-up")}><Star size={18} /></IconButton><IconButton label="Download" onClick={requestGatedDownload}><Download size={18} /></IconButton><IconButton label={previewExpanded ? "Collapse preview" : "Expand preview"} onClick={() => setPreviewExpanded((expanded) => !expanded)}><Grid3X3 size={18} /></IconButton></div></header>
               <div className={cn("ed-hero-preview is-review", previewExpanded && "is-expanded")}><AssetThumb asset={selectedAsset} fit="contain" /><span>{selectedAsset.imageDimensions || "Preview unavailable or not provided"}</span><button type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)}>{previewExpanded ? "Fit" : "100%"}</button></div>
               <nav className="ed-tabs is-large" role="tablist" aria-label="Review workbench sections">{reviewWorkbenchTabs.map((tab) => <button className={activeWorkbenchTab === tab ? "is-active" : ""} type="button" role="tab" aria-selected={activeWorkbenchTab === tab} key={tab} onClick={() => setActiveWorkbenchTab(tab)}>{tab}</button>)}</nav>

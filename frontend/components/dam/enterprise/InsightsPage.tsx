@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Calendar, CheckCircle2, Clock3, Database, Download, Eye, FileText, Filter, FolderOpen, ImageIcon, Info, Package, Search, Share2, Shield, Star, Tags, UploadCloud } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
-import { assetType, displayTitle, formatBytes, sourceLabel } from "@/lib/enterprise-display";
+import { assetRecordRef, assetType, displayTitle, formatBytes, sourceLabel } from "@/lib/enterprise-display";
 import { buildInsightsCommandCenter } from "@/lib/insights-command-center";
 import { insightHealthRows, insightKpis } from "@/lib/insights-dashboard";
 import type { SearchResult, StockMediaAsset } from "@/lib/types";
@@ -174,7 +174,7 @@ function TopAssetsList({ assets, usage }: { assets: StockMediaAsset[]; usage?: S
           <span>{index + 1}</span>
           <AssetThumb asset={asset} />
           <strong title={displayTitle(asset)}>{displayTitle(asset)}<small>{assetType(asset)} · {formatBytes(asset.fileSizeBytes)}</small></strong>
-          <em>{asset.resourceSpaceId || asset.id}</em>
+          <em>{assetRecordRef(asset)}</em>
         </article>
       ))}
     </div>

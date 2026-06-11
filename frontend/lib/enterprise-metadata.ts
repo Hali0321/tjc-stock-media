@@ -1,4 +1,4 @@
-import { assetType, formatBytes, recordIdLabel } from "@/lib/enterprise-display";
+import { assetRecordRef, assetType, formatBytes, recordIdLabel } from "@/lib/enterprise-display";
 import type { DemoRole, MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 
 export type MetadataRow = [string, string | number];
@@ -36,7 +36,7 @@ export function inspectorMetadataRows({
   if (tab === "Versions") {
     return [
       ["Versions", "Not provided by current ResourceSpace export"],
-      [recordIdLabel(source), metadataValue(asset.resourceSpaceId || asset.id)]
+      [recordIdLabel(source), metadataValue(assetRecordRef(asset))]
     ];
   }
 
@@ -49,7 +49,7 @@ export function inspectorMetadataRows({
   }
 
   return [
-    [recordIdLabel(source), metadataValue(asset.resourceSpaceId || asset.id)],
+    [recordIdLabel(source), metadataValue(assetRecordRef(asset))],
     ["File type", assetType(asset)],
     ["Dimensions", metadataValue(asset.imageDimensions)],
     ["File size", formatBytes(asset.fileSizeBytes)],
@@ -69,7 +69,7 @@ export function assetDetailMetadataRows(asset: StockMediaAsset, role: DemoRole):
     ["Collection", metadataValue(asset.collection)],
     ["Categories", metadataValue(asset.tjcTerms)],
     ["Keywords", metadataValue(asset.tags)],
-    ["Asset ID", metadataValue(asset.resourceSpaceId || asset.id)],
+    ["Asset ID", metadataValue(assetRecordRef(asset))],
     ["File Type", assetType(asset)],
     ["Dimensions", metadataValue(asset.imageDimensions)],
     ["File Size", formatBytes(asset.fileSizeBytes)],
@@ -110,7 +110,7 @@ export function reviewMetadataRows({
     ["Source", metadataValue(asset.sourceSystem)],
     ["Capture Date", metadataValue(asset.capturedDate)],
     ["Collection", metadataValue(asset.collection)],
-    ["Asset ID", metadataValue(asset.resourceSpaceId || asset.id)],
+    ["Asset ID", metadataValue(assetRecordRef(asset))],
     ["File Type", assetType(asset)],
     ["Dimensions", metadataValue(asset.imageDimensions)],
     ["File Size", formatBytes(asset.fileSizeBytes)],
@@ -128,7 +128,7 @@ export function reviewEvidenceRows({
   pendingStatus?: string;
 }): MetadataRow[] {
   return [
-    ["ResourceSpace ID", metadataValue(asset.resourceSpaceId || asset.id)],
+    ["ResourceSpace ID", metadataValue(assetRecordRef(asset))],
     ["Assigned to", "Reviewer queue"],
     ["Policy", metadataValue(asset.downloadPolicy)],
     ["Source", metadataValue(asset.sourceSystem)],
