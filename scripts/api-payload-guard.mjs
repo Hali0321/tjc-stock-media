@@ -123,6 +123,17 @@ if (!betaFeedbackItemRouteSource.includes("normalizeFeedbackId((await params).id
   failures.push(`${betaFeedbackItemRoute} must normalize path params through normalizeFeedbackId`);
 }
 
+for (const route of [
+  "frontend/app/api/assets/[id]/route.ts",
+  "frontend/app/api/assets/thumbnail/[id]/route.ts",
+  "frontend/app/api/download/[id]/route.ts"
+]) {
+  const source = fs.readFileSync(path.join(root, route), "utf8");
+  if (!source.includes("normalizeAssetId((await params).id)")) {
+    failures.push(`${route} must normalize path params through normalizeAssetId`);
+  }
+}
+
 const uploadRoute = "frontend/app/api/upload/route.ts";
 const uploadRouteSource = fs.readFileSync(path.join(root, uploadRoute), "utf8");
 if (!uploadRouteSource.includes("normalizePublicTextField")) {
