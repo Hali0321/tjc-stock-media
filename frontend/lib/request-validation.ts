@@ -76,6 +76,13 @@ export function normalizeDisplayTextField(value: unknown, fallback: string, max 
   return text;
 }
 
+export function normalizePublicTextField(value: unknown, fallback: string, max = 100) {
+  const text = safeCompactText(value, max) || fallback.slice(0, max);
+  if (containsUnsafeRouteText(text)) return fallback.slice(0, max);
+  if (containsPrivateSourceText(text)) return fallback.slice(0, max);
+  return text;
+}
+
 export function normalizePersistedDisplayText(value: unknown, max = 100) {
   const text = safeCompactText(value, max);
   if (containsUnsafePathText(text)) return "";

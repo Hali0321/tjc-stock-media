@@ -85,6 +85,9 @@ if (!requestValidationSource.includes("function normalizeBrandKitId")) {
 if (!requestValidationSource.includes("function normalizeFeedbackId")) {
   failures.push("request validation must expose normalizeFeedbackId for beta feedback route ids");
 }
+if (!requestValidationSource.includes("function normalizePublicTextField")) {
+  failures.push("request validation must expose normalizePublicTextField for public reviewer-visible fields");
+}
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");
@@ -109,6 +112,15 @@ const betaFeedbackItemRoute = "frontend/app/api/beta-feedback/[id]/route.ts";
 const betaFeedbackItemRouteSource = fs.readFileSync(path.join(root, betaFeedbackItemRoute), "utf8");
 if (!betaFeedbackItemRouteSource.includes("normalizeFeedbackId((await params).id)")) {
   failures.push(`${betaFeedbackItemRoute} must normalize path params through normalizeFeedbackId`);
+}
+
+const uploadRoute = "frontend/app/api/upload/route.ts";
+const uploadRouteSource = fs.readFileSync(path.join(root, uploadRoute), "utf8");
+if (!uploadRouteSource.includes("normalizePublicTextField")) {
+  failures.push(`${uploadRoute} must normalize public intake freeform text through normalizePublicTextField`);
+}
+if (/normalizeTextField\(form\.get/.test(uploadRouteSource)) {
+  failures.push(`${uploadRoute} must not normalize public intake form fields through raw normalizeTextField`);
 }
 
 if (failures.length) {

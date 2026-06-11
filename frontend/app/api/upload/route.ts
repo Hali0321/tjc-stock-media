@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeDateField, normalizeDisplayTextField, normalizeTextField, normalizeUrlField, readFormData } from "@/lib/request-validation";
+import { normalizeDateField, normalizeDisplayTextField, normalizePublicTextField, normalizeUrlField, readFormData } from "@/lib/request-validation";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
@@ -31,13 +31,13 @@ export async function POST(request: NextRequest) {
   const eventDate = normalizeDateField(form.get("eventDate"));
   const ministry = normalizeDisplayTextField(form.get("ministry"), "", 120);
   const source = normalizeDisplayTextField(form.get("source"), "", 160);
-  const peopleVisible = normalizeTextField(form.get("peopleVisible"), "Unknown", 40);
-  const minorsVisible = normalizeTextField(form.get("minorsVisible"), "Unknown", 40);
-  const usageRights = normalizeTextField(form.get("usageRights"), "Unknown - needs review", 80);
-  const approvalSuggestion = normalizeTextField(form.get("approvalSuggestion"), "Reviewer decides", 80);
-  const consentRestrictions = normalizeTextField(form.get("notes"), "", 600);
-  const suggestedTags = normalizeTextField(form.get("tags"), "", 300);
-  const intakeNotes = normalizeTextField(form.get("intakeNotes"), "", 600);
+  const peopleVisible = normalizePublicTextField(form.get("peopleVisible"), "Unknown", 40);
+  const minorsVisible = normalizePublicTextField(form.get("minorsVisible"), "Unknown", 40);
+  const usageRights = normalizePublicTextField(form.get("usageRights"), "Unknown - needs review", 80);
+  const approvalSuggestion = normalizePublicTextField(form.get("approvalSuggestion"), "Reviewer decides", 80);
+  const consentRestrictions = normalizePublicTextField(form.get("notes"), "", 600);
+  const suggestedTags = normalizePublicTextField(form.get("tags"), "", 300);
+  const intakeNotes = normalizePublicTextField(form.get("intakeNotes"), "", 600);
   const missingRequired = [
     !title && "title",
     !eventName && "event name",

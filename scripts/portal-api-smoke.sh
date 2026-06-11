@@ -317,6 +317,34 @@ expect_json_status 400 noncanonical-upload-tags-payload-safe "$normal_user_paylo
   -F 'sourceLink=https://drive.google.com/example' \
   "$BASE_URL/api/upload"
 
+expect_json_status 400 unsafe-upload-tags-sanitized '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (!Array.isArray(data.missingRequired) || !data.missingRequired.includes("suggested tags")) {
+  console.error(`FAIL: unsafe upload tags did not become missing review context: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+if (text.includes("../private") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
+  console.error(`FAIL: unsafe upload tags echoed unsafe material: ${text.slice(0, 700)}`);
+  process.exit(1);
+}
+' -X POST \
+  -F 'role=Contributor' \
+  -F 'title=Unsafe tag test' \
+  -F 'eventName=Unsafe tag test' \
+  -F 'eventDate=2026-06-06' \
+  -F 'ministry=Internet Ministry' \
+  -F 'source=QA Reviewer' \
+  -F 'peopleVisible=No' \
+  -F 'minorsVisible=No' \
+  -F 'usageRights=TJC-owned / permission confirmed' \
+  -F 'approvalSuggestion=Internal ministry' \
+  -F 'notes=No consent restrictions; no people visible.' \
+  -F 'tags=source path, master drive, checksum' \
+  -F 'intakeNotes=QA unsafe tag intake.' \
+  -F 'sourceLink=https://drive.google.com/example' \
+  "$BASE_URL/api/upload"
+
 expect_json source-link-upload-contributor '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.status !== "validated" || data.fileCount !== 0 || data.sourceLinkCaptured !== true) {
