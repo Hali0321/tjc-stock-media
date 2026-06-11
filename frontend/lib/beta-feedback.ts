@@ -32,8 +32,9 @@ type BetaFeedbackRouteError = {
     error: string;
     missing?: string[];
   };
-  status: 400 | 503;
+  status: 400 | 403 | 503;
 };
+type BetaFeedbackAdminArea = "inbox" | "update" | "export";
 export type BetaFeedbackExportFilters = {
   status?: BetaFeedbackStatus | "all";
   severity?: BetaFeedbackSeverity | "all";
@@ -311,6 +312,38 @@ export function validateFeedbackPayload(payload: {
 
 export function betaFeedbackDisabledError(): BetaFeedbackRouteError {
   return { body: { error: "Beta feedback capture is disabled." }, status: 503 };
+}
+
+function betaFeedbackAdminDeniedCopy(area: BetaFeedbackAdminArea) {
+  return {
+    inbox: {
+      error: "Beta feedback inbox requires DAM Admin role.",
+      summary: "Beta feedback inbox access denied for non-admin role."
+    },
+    update: {
+      error: "Beta feedback updates require DAM Admin role.",
+      summary: "Beta feedback update denied for non-admin role."
+    },
+    export: {
+      error: "Beta feedback export requires DAM Admin role.",
+      summary: "Beta feedback export denied for non-admin role."
+    }
+  }[area];
+}
+
+export function betaFeedbackAdminDeniedError(area: BetaFeedbackAdminArea): BetaFeedbackRouteError {
+  return { body: { error: betaFeedbackAdminDeniedCopy(area).error }, status: 403 };
+}
+
+export function betaFeedbackAdminDeniedAuditEvent(area: BetaFeedbackAdminArea, role: DemoRole, actor: string): BetaFeedbackAuditEvent {
+  return {
+    type: "admin_denied",
+    role,
+    actor,
+    status: "denied",
+    summary: betaFeedbackAdminDeniedCopy(area).summary,
+    details: { reason: "role-cannot-admin" }
+  };
 }
 
 export function betaFeedbackSubmissionValidationError(submission: NormalizedBetaFeedbackSubmission): BetaFeedbackRouteError | null {

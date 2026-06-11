@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import {
+  betaFeedbackAdminDeniedAuditEvent,
+  betaFeedbackAdminDeniedError,
   betaFeedbackExportAuditEvent,
   betaFeedbackExportHeaders,
   buildBetaFeedbackExport,
@@ -15,15 +17,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
   if (!canAdmin(identity.role)) {
-    appendAuditEvent({
-      type: "admin_denied",
-      role: identity.role,
-      actor: identity.id,
-      status: "denied",
-      summary: "Beta feedback export denied for non-admin role.",
-      details: { reason: "role-cannot-admin" }
-    });
-    return NextResponse.json({ error: "Beta feedback export requires DAM Admin role." }, { status: 403 });
+    const denied = betaFeedbackAdminDeniedError("export");
+    appendAuditEvent(betaFeedbackAdminDeniedAuditEvent("export", identity.role, identity.id));
+    return NextResponse.json(denied.body, { status: denied.status });
   }
 
   const filters = readBetaFeedbackExportFilters(request.nextUrl.searchParams);

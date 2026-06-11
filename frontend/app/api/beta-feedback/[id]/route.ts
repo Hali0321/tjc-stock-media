@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import {
+  betaFeedbackAdminDeniedAuditEvent,
+  betaFeedbackAdminDeniedError,
   betaFeedbackPatchValidationError,
   betaFeedbackTriagedAuditEvent,
   buildBetaFeedbackPatchResponse,
@@ -16,15 +18,9 @@ export const dynamic = "force-dynamic";
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const identity = requestIdentity(request, request.nextUrl.searchParams.get("role"));
   if (!canAdmin(identity.role)) {
-    appendAuditEvent({
-      type: "admin_denied",
-      role: identity.role,
-      actor: identity.id,
-      status: "denied",
-      summary: "Beta feedback update denied for non-admin role.",
-      details: { reason: "role-cannot-admin" }
-    });
-    return NextResponse.json({ error: "Beta feedback updates require DAM Admin role." }, { status: 403 });
+    const denied = betaFeedbackAdminDeniedError("update");
+    appendAuditEvent(betaFeedbackAdminDeniedAuditEvent("update", identity.role, identity.id));
+    return NextResponse.json(denied.body, { status: denied.status });
   }
 
   const id = normalizeFeedbackId((await params).id);

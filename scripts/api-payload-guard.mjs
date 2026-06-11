@@ -250,8 +250,20 @@ if (!betaFeedbackRouteSource.includes("readBetaFeedbackRequestInput(request)") |
 if (!betaFeedbackRouteSource.includes("betaFeedbackSubmissionValidationError(submission)") || !betaFeedbackRouteSource.includes("createBetaFeedbackFromSubmission(submission, identity, file)") || !betaFeedbackRouteSource.includes("buildBetaFeedbackSubmitResponse(record)") || !betaFeedbackRouteSource.includes("buildBetaFeedbackInboxResponse(feedback)")) {
   failures.push(`${betaFeedbackRoute} must delegate submission validation, persistence assembly, and response payloads to beta-feedback module`);
 }
+if (!betaFeedbackRouteSource.includes('betaFeedbackAdminDeniedError("inbox")') || !betaFeedbackRouteSource.includes('betaFeedbackAdminDeniedAuditEvent("inbox", identity.role, identity.id)')) {
+  failures.push(`${betaFeedbackRoute} must delegate beta feedback inbox admin denial copy and audit details to beta-feedback module`);
+}
+if (!betaFeedbackItemRouteSource.includes('betaFeedbackAdminDeniedError("update")') || !betaFeedbackItemRouteSource.includes('betaFeedbackAdminDeniedAuditEvent("update", identity.role, identity.id)')) {
+  failures.push(`${betaFeedbackItemRoute} must delegate beta feedback update admin denial copy and audit details to beta-feedback module`);
+}
+if (!betaFeedbackExportRouteSource.includes('betaFeedbackAdminDeniedError("export")') || !betaFeedbackExportRouteSource.includes('betaFeedbackAdminDeniedAuditEvent("export", identity.role, identity.id)')) {
+  failures.push(`${betaFeedbackExportRoute} must delegate beta feedback export admin denial copy and audit details to beta-feedback module`);
+}
 if (!betaFeedbackSource.includes("function normalizeBetaFeedbackSubmission") || !betaFeedbackSource.includes("normalizeFeedbackUrl(fields.screenshotLink)") || !betaFeedbackSource.includes("readBetaFeedbackRequestInput") || !betaFeedbackSource.includes("function readBetaFeedbackPatchInput") || !betaFeedbackSource.includes("function createBetaFeedbackFromSubmission") || !betaFeedbackSource.includes("function betaFeedbackSubmissionValidationError") || !betaFeedbackSource.includes("function buildBetaFeedbackSubmitResponse")) {
   failures.push("beta-feedback module must own feedback submission normalization, patch normalization, screenshot URL sanitization, multipart parsing, submission validation, persistence assembly, and response payloads");
+}
+if (!betaFeedbackSource.includes("function betaFeedbackAdminDeniedError") || !betaFeedbackSource.includes("function betaFeedbackAdminDeniedAuditEvent") || !betaFeedbackSource.includes("function betaFeedbackAdminDeniedCopy")) {
+  failures.push("beta-feedback module must own beta feedback admin denial copy and audit details");
 }
 if (!betaFeedbackExportRouteSource.includes("readBetaFeedbackExportFilters(request.nextUrl.searchParams)") || !betaFeedbackSource.includes("function readBetaFeedbackExportFilters") || !betaFeedbackSource.includes("normalizeFeedbackStatusFilter") || !betaFeedbackSource.includes("normalizeFeedbackSeverityFilter") || !betaFeedbackSource.includes("normalizeRoleFilter")) {
   failures.push(`${betaFeedbackExportRoute} must delegate export filter normalization to beta-feedback module`);
@@ -261,6 +273,9 @@ if (!betaFeedbackExportRouteSource.includes("betaFeedbackExportAuditEvent(packet
 }
 if (/normalizeFeedback(Route|Text|Url)\(/.test(betaFeedbackRouteSource) || /readFormData|readJsonObject|validateFeedbackPayload|isKnownRole|\bcreateBetaFeedback\(|putBetaFeedbackAttachment|BetaFeedbackSeverity/.test(betaFeedbackRouteSource)) {
   failures.push(`${betaFeedbackRoute} must not hand-roll feedback submission parsing, field normalization, validation, persistence assembly, or response payloads`);
+}
+if (/admin_denied|role-cannot-admin|Beta feedback (inbox|updates|export) requires DAM Admin role|Beta feedback (inbox access|update|export) denied for non-admin role/.test(betaFeedbackRouteSource) || /admin_denied|role-cannot-admin|Beta feedback (inbox|updates|export) requires DAM Admin role|Beta feedback (inbox access|update|export) denied for non-admin role/.test(betaFeedbackItemRouteSource) || /admin_denied|role-cannot-admin|Beta feedback (inbox|updates|export) requires DAM Admin role|Beta feedback (inbox access|update|export) denied for non-admin role/.test(betaFeedbackExportRouteSource)) {
+  failures.push("beta feedback routes must not hand-roll admin denial copy or audit details");
 }
 if (/readJsonObject|normalizeFeedback(Severity|Status|Text)\(|invalidField|Feedback status is invalid|Feedback severity is invalid/.test(betaFeedbackItemRouteSource)) {
   failures.push(`${betaFeedbackItemRoute} must not hand-roll feedback patch body parsing, status/severity normalization, or validation responses`);
