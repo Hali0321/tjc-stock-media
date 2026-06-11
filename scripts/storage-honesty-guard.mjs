@@ -76,6 +76,10 @@ for (const store of [
   if (/Math\.max\(0,\s*Number\.isFinite\(Number\(/.test(store.source)) failures.push(`${store.name} must not hand-roll nonnegative counter normalization`);
 }
 
+if (!pendingReviewWrites.includes("normalizeReviewRoleWithFallback")) {
+  failures.push("pending review writes must normalize reviewer roles through normalizeReviewRoleWithFallback");
+}
+
 if (!packages.includes("safeBoolean")) failures.push("package drafts must normalize persisted booleans through safeBoolean");
 if (/function\s+safeBoolean\s*\(/.test(packages) || /value\s*===\s*true/.test(packages)) {
   failures.push("package drafts must not hand-roll boolean normalization");

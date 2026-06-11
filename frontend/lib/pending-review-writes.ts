@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
 import { safeCompactText, safeEnumValue, safeIsoTimestamp, safeNonNegativeInt, safeSlugText } from "@/lib/persisted-record-safety";
+import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
 
@@ -34,7 +35,7 @@ function safeDisplayText(value: unknown, maxLength: number) {
 }
 
 function safeRole(value: unknown): ReviewWriteRecord["reviewerRole"] {
-  return value === "DAM Admin" ? "DAM Admin" : "Reviewer";
+  return normalizeReviewRoleWithFallback(value);
 }
 
 function safeSyncState(value: unknown): ReviewWriteRecord["syncState"] {

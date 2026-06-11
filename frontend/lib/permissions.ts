@@ -2,6 +2,7 @@ import type { DemoRole, StockMediaAsset } from "@/lib/types";
 import { decideAccess } from "@/lib/access-decisions";
 
 export const roles: DemoRole[] = ["Viewer", "Contributor", "Reviewer", "DAM Admin"];
+export type ReviewRole = "Reviewer" | "DAM Admin";
 
 export function normalizeRole(value: string | null | undefined): DemoRole {
   if (value && roles.includes(value as DemoRole)) {
@@ -17,6 +18,11 @@ export function normalizeRoleWithFallback(value: unknown, fallback: DemoRole = "
 export function normalizeContributingRoleWithFallback(value: unknown, fallback: DemoRole = "Contributor"): DemoRole {
   const role = normalizeRoleWithFallback(value, fallback);
   return canContribute(role) ? role : fallback;
+}
+
+export function normalizeReviewRoleWithFallback(value: unknown, fallback: ReviewRole = "Reviewer"): ReviewRole {
+  const role = normalizeRoleWithFallback(value, fallback);
+  return canReview(role) ? role as ReviewRole : fallback;
 }
 
 export function canReview(role: DemoRole) {

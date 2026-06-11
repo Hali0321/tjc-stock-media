@@ -1,5 +1,6 @@
 import { buildReuseDecision } from "@/lib/reuse-policy";
 import { createPendingReviewWrite } from "@/lib/pending-review-writes";
+import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import type { DemoRole, ReviewEvidenceChecklist, StockMediaAsset } from "@/lib/types";
 
 export {
@@ -28,7 +29,7 @@ export function queuePendingReviewDecision({
   return createPendingReviewWrite({
     asset,
     requestedStatus,
-    reviewerRole: role === "DAM Admin" ? "DAM Admin" : "Reviewer",
+    reviewerRole: normalizeReviewRoleWithFallback(role),
     reviewerName,
     note,
     checklist,
