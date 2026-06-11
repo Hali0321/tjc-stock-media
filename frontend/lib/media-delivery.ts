@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import type { AccessAction } from "@/lib/access-decisions";
+import { assetResourceRef } from "@/lib/asset-refs";
+import type { AuditEventRecord } from "@/lib/audit-log";
 import type { getAssetRecordById } from "@/lib/catalog";
 import type { createDamRouteSession } from "@/lib/dam-route-session";
 import type { ImageVariant } from "@/lib/images";
@@ -9,6 +11,8 @@ import { normalizeDisplayTextField, readJsonObject } from "@/lib/request-validat
 
 type AssetRecordResult = Awaited<ReturnType<typeof getAssetRecordById>>;
 type DamRouteSession = ReturnType<typeof createDamRouteSession>;
+type AssetRecord = NonNullable<AssetRecordResult["asset"]>;
+type DownloadAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
 
 export type DeliveredImage = {
   bytes: ArrayBuffer;
@@ -38,7 +42,17 @@ export type ThumbnailDeliveryRouteError = {
   } & Record<string, unknown>;
   status: 400 | 403 | 404;
 };
+export type DownloadDeliveryRouteError = {
+  body: {
+    error: string;
+  } & Record<string, unknown>;
+  status: 400 | 403 | 404;
+};
 export type ThumbnailImageResponse = {
+  body: BodyInit;
+  headers: Record<string, string>;
+};
+export type ApprovedCopyImageResponse = {
   body: BodyInit;
   headers: Record<string, string>;
 };
@@ -119,6 +133,79 @@ export function thumbnailImageResponse(delivery: ThumbnailDerivativeDelivery): T
     headers: {
       "Content-Type": delivery.image.contentType,
       "Cache-Control": "private, max-age=300"
+    }
+  };
+}
+
+export function downloadMalformedIdError(): DownloadDeliveryRouteError {
+  return { body: { error: "Malformed asset id." }, status: 400 };
+}
+
+export function downloadNotFoundError(session: DamRouteSession, source: AssetRecordResult["source"]): DownloadDeliveryRouteError {
+  return { body: { error: "Asset not found", ...session.sourceEnvelope(source) }, status: 404 };
+}
+
+function downloadAuditSource(session: DamRouteSession, source: AssetRecordResult["source"]) {
+  return session.sourceEnvelope(source).source;
+}
+
+export function downloadRoleDeniedError(session: DamRouteSession, source: AssetRecordResult["source"]): DownloadDeliveryRouteError {
+  return {
+    body: {
+      error: "Not approved for this role. Source-file access stays restricted.",
+      ...session.sourceEnvelope(source)
+    },
+    status: 403
+  };
+}
+
+export function approvedCopyUnavailableError(delivery: ApprovedCopyDelivery, session: DamRouteSession, source: AssetRecordResult["source"]): DownloadDeliveryRouteError {
+  return {
+    body: {
+      error: delivery.status === "missing-derivative"
+        ? "Approved derivative not available in local filestore."
+        : "Approved derivative is indexed but unavailable.",
+      ...session.sourceEnvelope(source)
+    },
+    status: 404
+  };
+}
+
+export function downloadRoleDeniedAuditEvent(asset: AssetRecord, session: DamRouteSession, source: AssetRecordResult["source"]): DownloadAuditEvent {
+  const auditSource = downloadAuditSource(session, source);
+  return {
+    type: "denied_download",
+    role: session.role,
+    actor: session.identity.id,
+    assetId: asset.id,
+    resourceSpaceId: assetResourceRef(asset),
+    status: "denied",
+    summary: "Approved copy download denied; original/master remains restricted.",
+    details: { source: auditSource.label, sourceDetail: auditSource.detail, assetStatus: asset.status }
+  };
+}
+
+export function approvedCopyDownloadedAuditEvent(asset: AssetRecord, delivery: Extract<ApprovedCopyDelivery, { status: "ready" }>, session: DamRouteSession, source: AssetRecordResult["source"]): DownloadAuditEvent {
+  const auditSource = downloadAuditSource(session, source);
+  return {
+    type: "approved_download",
+    role: session.role,
+    actor: session.identity.id,
+    assetId: asset.id,
+    resourceSpaceId: assetResourceRef(asset),
+    status: "allowed",
+    summary: "Approved copy downloaded.",
+    details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName: delivery.fileName }
+  };
+}
+
+export function approvedCopyImageResponse(delivery: Extract<ApprovedCopyDelivery, { status: "ready" }>): ApprovedCopyImageResponse {
+  return {
+    body: delivery.image.bytes,
+    headers: {
+      "Content-Type": delivery.image.contentType,
+      "Content-Disposition": `attachment; filename="${delivery.fileName}"`,
+      "Cache-Control": "no-store"
     }
   };
 }

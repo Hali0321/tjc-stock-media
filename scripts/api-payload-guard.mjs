@@ -55,8 +55,8 @@ const downloadSource = fs.readFileSync(path.join(root, downloadRoute), "utf8");
 const thumbnailRoute = "frontend/app/api/assets/thumbnail/[id]/route.ts";
 const thumbnailSource = fs.readFileSync(path.join(root, thumbnailRoute), "utf8");
 const mediaDeliverySource = fs.readFileSync(path.join(root, "frontend/lib/media-delivery.ts"), "utf8");
-if (!downloadSource.includes("readApprovedCopyDelivery(id, asset.title)") || !downloadSource.includes("hasApprovedCopyDerivative(id)")) {
-  failures.push(`${downloadRoute} must resolve approved copies through media-delivery`);
+if (!downloadSource.includes("readApprovedCopyDelivery(id, asset.title)") || !downloadSource.includes("hasApprovedCopyDerivative(id)") || !downloadSource.includes("downloadMalformedIdError()") || !downloadSource.includes("downloadNotFoundError(session, source)") || !downloadSource.includes("downloadRoleDeniedError(session, source)") || !downloadSource.includes("downloadRoleDeniedAuditEvent(asset, session, source)") || !downloadSource.includes("approvedCopyUnavailableError(delivery, session, source)") || !downloadSource.includes("approvedCopyDownloadedAuditEvent(asset, delivery, session, source)") || !downloadSource.includes("approvedCopyImageResponse(delivery)")) {
+  failures.push(`${downloadRoute} must resolve approved-copy GET responses and gate checks through media-delivery`);
 }
 if (!downloadSource.includes("Private originals and S3 paths are not exposed.")) {
   failures.push(`${downloadRoute} must keep explicit no-originals response copy`);
@@ -64,8 +64,8 @@ if (!downloadSource.includes("Private originals and S3 paths are not exposed."))
 if (!mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("safeSlugText(normalizeDisplayTextField")) {
   failures.push(`${downloadRoute} must derive download filenames through media-delivery approvedCopyFileName`);
 }
-if (!downloadSource.includes("readDownloadGateInput(request)") || !mediaDeliverySource.includes("function readDownloadGateInput") || !mediaDeliverySource.includes("function normalizeDownloadVariant") || !mediaDeliverySource.includes("function readApprovedCopyDelivery") || !mediaDeliverySource.includes("function hasApprovedCopyDerivative")) {
-  failures.push(`${downloadRoute} must delegate download gate body parsing, approved-copy delivery, and metadata normalization to media-delivery`);
+if (!downloadSource.includes("readDownloadGateInput(request)") || !mediaDeliverySource.includes("function readDownloadGateInput") || !mediaDeliverySource.includes("function normalizeDownloadVariant") || !mediaDeliverySource.includes("function readApprovedCopyDelivery") || !mediaDeliverySource.includes("function hasApprovedCopyDerivative") || !mediaDeliverySource.includes("function downloadMalformedIdError") || !mediaDeliverySource.includes("function downloadNotFoundError") || !mediaDeliverySource.includes("function downloadRoleDeniedError") || !mediaDeliverySource.includes("function approvedCopyUnavailableError") || !mediaDeliverySource.includes("function approvedCopyImageResponse") || !mediaDeliverySource.includes("function approvedCopyDownloadedAuditEvent") || !mediaDeliverySource.includes("function downloadRoleDeniedAuditEvent")) {
+  failures.push(`${downloadRoute} must delegate download gate body parsing, approved-copy delivery, metadata normalization, GET errors, and GET audit details to media-delivery`);
 }
 if (/readJsonObject|normalizeDisplayTextField|function\s+normalizeDownloadVariant|findFilestoreDerivative|readDeliveredImage|approvedCopyFileName/.test(downloadSource)) {
   failures.push(`${downloadRoute} must not hand-roll download gate body parsing, usage metadata, variant normalization, or approved-copy delivery`);

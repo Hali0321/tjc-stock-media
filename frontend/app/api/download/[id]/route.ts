@@ -4,7 +4,18 @@ import { decideAccess } from "@/lib/access-decisions";
 import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
-import { hasApprovedCopyDerivative, readApprovedCopyDelivery, readDownloadGateInput } from "@/lib/media-delivery";
+import {
+  approvedCopyDownloadedAuditEvent,
+  approvedCopyImageResponse,
+  approvedCopyUnavailableError,
+  downloadMalformedIdError,
+  downloadNotFoundError,
+  downloadRoleDeniedAuditEvent,
+  downloadRoleDeniedError,
+  hasApprovedCopyDerivative,
+  readApprovedCopyDelivery,
+  readDownloadGateInput
+} from "@/lib/media-delivery";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
 
@@ -15,66 +26,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
   const role = session.role;
   if (!id) {
-    return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
+    const error = downloadMalformedIdError();
+    return NextResponse.json(error.body, { status: error.status });
   }
   const { asset, source } = await getAssetRecordById(id);
-  const envelope = session.sourceEnvelope(source);
-  const auditSource = envelope.source;
 
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found", ...envelope }, { status: 404 });
+    const error = downloadNotFoundError(session, source);
+    return NextResponse.json(error.body, { status: error.status });
   }
   if (!canDownloadApprovedCopy(role, asset)) {
-    const resourceSpaceId = assetResourceRef(asset);
-    appendAuditEvent({
-      type: "denied_download",
-      role,
-      actor: session.identity.id,
-      assetId: asset.id,
-      resourceSpaceId,
-      status: "denied",
-      summary: "Approved copy download denied; original/master remains restricted.",
-      details: { source: auditSource.label, sourceDetail: auditSource.detail, assetStatus: asset.status }
-    });
-    return NextResponse.json(
-      {
-        error: "Not approved for this role. Source-file access stays restricted.",
-        ...envelope
-      },
-      { status: 403 }
-    );
+    const error = downloadRoleDeniedError(session, source);
+    appendAuditEvent(downloadRoleDeniedAuditEvent(asset, session, source));
+    return NextResponse.json(error.body, { status: error.status });
   }
 
   const delivery = readApprovedCopyDelivery(id, asset.title);
   if (delivery.status !== "ready") {
-    return NextResponse.json(
-      {
-        error: delivery.status === "missing-derivative"
-          ? "Approved derivative not available in local filestore."
-          : "Approved derivative is indexed but unavailable.",
-        ...envelope
-      },
-      { status: 404 }
-    );
+    const error = approvedCopyUnavailableError(delivery, session, source);
+    return NextResponse.json(error.body, { status: error.status });
   }
-  const resourceSpaceId = assetResourceRef(asset);
-  appendAuditEvent({
-    type: "approved_download",
-    role,
-    actor: session.identity.id,
-    assetId: asset.id,
-    resourceSpaceId,
-    status: "allowed",
-    summary: "Approved copy downloaded.",
-    details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName: delivery.fileName }
-  });
-  return new NextResponse(delivery.image.bytes, {
-    headers: {
-      "Content-Type": delivery.image.contentType,
-      "Content-Disposition": `attachment; filename="${delivery.fileName}"`,
-      "Cache-Control": "no-store"
-    }
-  });
+  appendAuditEvent(approvedCopyDownloadedAuditEvent(asset, delivery, session, source));
+  const image = approvedCopyImageResponse(delivery);
+  return new NextResponse(image.body, { headers: image.headers });
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
