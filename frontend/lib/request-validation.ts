@@ -1,8 +1,11 @@
 import { containsPrivateSourceText, containsUnsafePathText, isSafeHttpUrl } from "@/lib/private-source-text";
+import { safeEnumValue, safePathSlugText } from "@/lib/persisted-record-safety";
 
 const assetIdPattern = /^[A-Za-z0-9_-]{1,120}$/;
 const resourceSpaceRefPattern = /^[A-Za-z0-9_-]{1,80}$/;
 const checksumLikePattern = /^[a-f0-9]{32,}$/i;
+const collectionDraftAudiences = ["Private draft", "Internal ministry", "Public-approved portal"] as const;
+export type CollectionDraftAudience = typeof collectionDraftAudiences[number];
 
 export function normalizeAssetId(value: unknown) {
   if (typeof value !== "string" && typeof value !== "number") return "";
@@ -21,6 +24,14 @@ export function normalizeResourceSpaceRef(value: unknown) {
   const ref = String(value).trim();
   if (containsPrivateSourceText(ref) || containsUnsafePathText(ref) || checksumLikePattern.test(ref)) return "";
   return resourceSpaceRefPattern.test(ref) ? ref : "";
+}
+
+export function normalizeCollectionDraftAudience(value: unknown): CollectionDraftAudience {
+  return safeEnumValue(value, collectionDraftAudiences, "Private draft");
+}
+
+export function normalizeCollectionShareSlug(value: unknown) {
+  return safePathSlugText(value, 64) || "collection-draft";
 }
 
 export function normalizeTextField(value: unknown, fallback: string, max = 100) {

@@ -6,6 +6,10 @@ export function safeSlugText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
+export function safePathSlugText(value: unknown, maxLength: number) {
+  return safeCompactText(value, maxLength).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export function safeFileNameText(value: unknown, maxLength: number) {
   return safeCompactText(value, maxLength).replace(/[^a-z0-9._-]+/gi, "-").replace(/^[.-]+|[.-]+$/g, "");
 }

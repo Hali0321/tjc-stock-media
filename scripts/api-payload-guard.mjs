@@ -60,6 +60,18 @@ if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi/.test(downloadSource)) {
   failures.push(`${downloadRoute} must not hand-roll approved-copy filename slugging`);
 }
 
+const collectionsRoute = "frontend/app/api/collections/route.ts";
+const collectionsSource = fs.readFileSync(path.join(root, collectionsRoute), "utf8");
+if (!collectionsSource.includes("normalizeCollectionDraftAudience")) {
+  failures.push(`${collectionsRoute} must derive draft audience through normalizeCollectionDraftAudience`);
+}
+if (!collectionsSource.includes("normalizeCollectionShareSlug")) {
+  failures.push(`${collectionsRoute} must derive share paths through normalizeCollectionShareSlug`);
+}
+if (/function\s+slugify\s*\(/.test(collectionsSource) || /allowedAudiences\s*=\s*new Set/.test(collectionsSource)) {
+  failures.push(`${collectionsRoute} must not hand-roll collection audience or share slug normalization`);
+}
+
 if (failures.length) {
   console.error("API payload guard failed:");
   for (const failure of failures) console.error(`- ${failure}`);

@@ -4,19 +4,9 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { assetIsPortalReady, assetNeedsStaleApprovalReview } from "@/lib/asset-governance";
 import { canSeeAsset, canUpload } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import { normalizeAssetIds, normalizeDateField, normalizeDisplayTextField } from "@/lib/request-validation";
+import { normalizeAssetIds, normalizeCollectionDraftAudience, normalizeCollectionShareSlug, normalizeDateField, normalizeDisplayTextField } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
-
-const allowedAudiences = new Set(["Private draft", "Internal ministry", "Public-approved portal"]);
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 64) || "collection-draft";
-}
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as {
@@ -30,7 +20,7 @@ export async function POST(request: NextRequest) {
   const identity = requestIdentity(request, body.role);
   const role = identity.role;
   const assetIds = normalizeAssetIds(body.assetIds);
-  const audience = allowedAudiences.has(body.audience || "") ? body.audience! : "Private draft";
+  const audience = normalizeCollectionDraftAudience(body.audience);
   const title = normalizeDisplayTextField(body.title, "Untitled ministry collection", 100);
   const expiry = normalizeDateField(body.expiry);
 
@@ -88,7 +78,7 @@ export async function POST(request: NextRequest) {
     owner: normalizeDisplayTextField(body.owner, "Ministry media", 80),
     expiry: expiry || null,
     assetCount: found.length,
-    sharePath: `/collections/${slugify(title)}`,
+    sharePath: `/collections/${normalizeCollectionShareSlug(title)}`,
     sharingBlocked: blockedPublic,
     reuseReadiness: {
       ready: found.length - portalBlockedAssets.length,
