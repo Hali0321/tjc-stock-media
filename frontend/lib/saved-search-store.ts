@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { CatalogSort, DemoRole } from "@/lib/types";
 
@@ -102,7 +103,7 @@ function normalizeStoredSavedSearch(input: unknown): SavedSearchRecord | null {
     createdAt: safeIso(raw.createdAt) || updatedAt,
     updatedAt,
     createdBy: safeDisplayText(raw.createdBy, 120) || "local-beta:unknown",
-    role: raw.role === "Contributor" || raw.role === "Reviewer" || raw.role === "DAM Admin" ? raw.role : "Contributor",
+    role: normalizeRoleWithFallback(raw.role, "Contributor"),
     storageMode: "local-json"
   };
 }

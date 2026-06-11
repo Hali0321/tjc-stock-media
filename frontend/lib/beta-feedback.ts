@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
+import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText, isSafeHttpUrl } from "@/lib/private-source-text";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
@@ -51,10 +52,6 @@ function safeIso(value: unknown) {
   return Number.isNaN(Date.parse(text)) ? "" : text;
 }
 
-function safeRole(value: unknown): DemoRole {
-  return value === "Contributor" || value === "Reviewer" || value === "DAM Admin" ? value : "Viewer";
-}
-
 function safeSeverity(value: unknown): BetaFeedbackSeverity {
   return betaFeedbackSeverities.includes(value as BetaFeedbackSeverity) ? value as BetaFeedbackSeverity : "medium";
 }
@@ -100,7 +97,7 @@ function normalizeStoredFeedback(input: unknown): BetaFeedbackRecord | null {
     id,
     createdAt,
     updatedAt: safeIso(raw.updatedAt) || createdAt,
-    role: safeRole(raw.role),
+    role: normalizeRoleWithFallback(raw.role),
     route: safeRoute(raw.route),
     task: safeFeedbackText(raw.task, 220) || "Free play",
     severity: safeSeverity(raw.severity),

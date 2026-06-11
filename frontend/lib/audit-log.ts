@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot } from "@/lib/env";
+import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
 
@@ -81,10 +82,6 @@ function safeIso(value: unknown) {
   return Number.isNaN(Date.parse(text)) ? "" : text;
 }
 
-function safeRole(value: unknown): DemoRole {
-  return value === "Contributor" || value === "Reviewer" || value === "DAM Admin" ? value : "Viewer";
-}
-
 function safeStatus(value: unknown): AuditEventRecord["status"] {
   return value === "allowed" || value === "denied" || value === "blocked" || value === "queued" || value === "preview"
     ? value
@@ -148,7 +145,7 @@ function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
     id,
     type: safeType(raw.type),
     createdAt,
-    role: safeRole(raw.role),
+    role: normalizeRoleWithFallback(raw.role),
     actor: safeDisplayText(raw.actor, 160) || "local-beta:unknown",
     assetId: raw.assetId === undefined ? undefined : safeId(raw.assetId),
     resourceSpaceId: raw.resourceSpaceId === undefined ? undefined : safeId(raw.resourceSpaceId),

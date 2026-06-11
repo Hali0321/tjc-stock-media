@@ -10,6 +10,10 @@ export function normalizeRole(value: string | null | undefined): DemoRole {
   return "Viewer";
 }
 
+export function normalizeRoleWithFallback(value: unknown, fallback: DemoRole = "Viewer"): DemoRole {
+  return roles.includes(value as DemoRole) ? value as DemoRole : fallback;
+}
+
 export function canReview(role: DemoRole) {
   return decideAccess(role, "reviewAsset").allowed;
 }

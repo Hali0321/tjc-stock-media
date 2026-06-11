@@ -68,6 +68,25 @@ for (const fullPath of routeFiles) {
   }
 }
 
+const rolePersistenceFiles = [
+  "frontend/lib/audit-log.ts",
+  "frontend/lib/beta-feedback.ts",
+  "frontend/lib/package-store.ts",
+  "frontend/lib/saved-search-store.ts",
+  "frontend/lib/usage-analytics.ts"
+];
+
+for (const relativePath of rolePersistenceFiles) {
+  const source = fs.readFileSync(path.join(root, relativePath), "utf8");
+  if (!source.includes("normalizeRoleWithFallback")) {
+    failures.push(`${relativePath} must normalize persisted roles through normalizeRoleWithFallback`);
+  }
+  if (/value\s*===\s*"Contributor"\s*\|\|\s*value\s*===\s*"Reviewer"\s*\|\|\s*value\s*===\s*"DAM Admin"/.test(source)
+    || /raw\.role\s*===\s*"Contributor"\s*\|\|\s*raw\.role\s*===\s*"Reviewer"\s*\|\|\s*raw\.role\s*===\s*"DAM Admin"/.test(source)) {
+    failures.push(`${relativePath} must not hand-roll persisted role allowlists`);
+  }
+}
+
 if (failures.length) {
   console.error("API identity guard failed:");
   for (const failure of failures) console.error(`- ${failure}`);

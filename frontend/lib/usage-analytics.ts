@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
+import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { containsPrivateSourceText, containsUnsafePathText, containsUnsafeRouteText } from "@/lib/private-source-text";
 import type { DemoRole } from "@/lib/types";
 
@@ -81,10 +82,6 @@ function safeRoute(value: unknown) {
   return text;
 }
 
-function safeRole(value: unknown): DemoRole {
-  return value === "Contributor" || value === "Reviewer" || value === "DAM Admin" ? value : "Viewer";
-}
-
 function safeType(value: unknown): UsageEventType {
   return usageEventTypes.includes(value as UsageEventType) ? value as UsageEventType : "search";
 }
@@ -114,8 +111,8 @@ export function recordUsageEvent(event: UsageEventInput) {
     stmt.run(
       new Date().toISOString(),
       safeType(event.type),
-      safeRole(event.role),
-      safeDisplayText(event.actor || event.role, 160) || safeRole(event.role),
+      normalizeRoleWithFallback(event.role),
+      safeDisplayText(event.actor || event.role, 160) || normalizeRoleWithFallback(event.role),
       event.assetId ? safeDisplayText(event.assetId, 120) || null : null,
       event.resourceSpaceId ? safeDisplayText(event.resourceSpaceId, 120) || null : null,
       event.route ? safeRoute(event.route) || null : null,
