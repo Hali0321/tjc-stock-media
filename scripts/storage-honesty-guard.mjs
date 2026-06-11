@@ -323,6 +323,9 @@ if (!read("frontend/lib/persisted-record-safety.ts").includes("function safeIsoT
 if (!localJsonStore.includes("const windowed = normalizeWindow(records, options)") || !localJsonStore.includes("...normalizeWindow(records, options)")) {
   failures.push("local JSON store must normalize and cap records on write as well as read");
 }
+if (!pendingReviewWrites.includes("const safeRecord = normalizePendingReviewWrite(record) || record") || !pendingReviewWrites.includes("writeRuntimeJsonFile(path.join(pendingDir(), `${safeRecord.id}.json`), safeRecord)")) {
+  failures.push("pending review writes must normalize records before writing runtime JSON evidence");
+}
 for (const store of [
   { name: "feedback", source: feedback },
   { name: "saved searches", source: savedSearches },

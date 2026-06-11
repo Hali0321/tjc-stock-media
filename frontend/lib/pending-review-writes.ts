@@ -57,6 +57,12 @@ function readRecord(filePath: string): ReviewWriteRecord | null {
   return readRuntimeJsonFile(filePath, normalizePendingReviewWrite);
 }
 
+function writeRecord(record: ReviewWriteRecord) {
+  const safeRecord = normalizePendingReviewWrite(record) || record;
+  writeRuntimeJsonFile(path.join(pendingDir(), `${safeRecord.id}.json`), safeRecord);
+  return safeRecord;
+}
+
 export function listPendingReviewWrites(): ReviewWriteRecord[] {
   const records = listRuntimeFiles(pendingDir(), ".json")
     .map(readRecord)
@@ -127,13 +133,7 @@ export function createPendingReviewWrite({
     syncState: "queued",
     retryCount: 0
   };
-  writeRuntimeJsonFile(path.join(pendingDir(), `${id}.json`), record);
-  return record;
-}
-
-function writeRecord(record: ReviewWriteRecord) {
-  writeRuntimeJsonFile(path.join(pendingDir(), `${record.id}.json`), record);
-  return record;
+  return writeRecord(record);
 }
 
 export function updatePendingReviewWrite(id: string, update: Partial<Pick<ReviewWriteRecord, "syncState" | "lastError" | "retryCount">>) {
