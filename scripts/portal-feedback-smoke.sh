@@ -85,6 +85,18 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit-unsafe-private-screenshot-link"
 
+unsafe_checksum_link_feedback_id="$(select_json_status 200 feedback-submit-unsafe-checksum-screenshot-link '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.ok !== true || !data.id || !data.createdAt) {
+  console.error(`FAIL: checksum-label screenshot feedback submit shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+console.log(data.id);
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"Feedback unsafe private-token screenshot link smoke\",\"severity\":\"low\",\"expected\":\"Screenshot links should be sanitized.\",\"actual\":\"$MARKER unsafe screenshot link submitted.\",\"screenshotLink\":\"https://example.test/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png\"}" \
+  "$BASE_URL/api/beta-feedback")"
+echo "PASS: feedback-submit-unsafe-checksum-screenshot-link"
+
 unsafe_route_feedback_id="$(select_json_status 200 feedback-submit-unsafe-route '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.ok !== true || !data.id || !data.createdAt) {
@@ -97,6 +109,18 @@ console.log(data.id);
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit-unsafe-route"
 
+unsafe_checksum_route_feedback_id="$(select_json_status 200 feedback-submit-unsafe-checksum-route '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.ok !== true || !data.id || !data.createdAt) {
+  console.error(`FAIL: checksum route feedback submit shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+console.log(data.id);
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task\":\"Feedback unsafe private-token route smoke\",\"severity\":\"low\",\"expected\":\"Private-token route should be normalized before persistence.\",\"actual\":\"$MARKER unsafe route submitted.\"}" \
+  "$BASE_URL/api/beta-feedback")"
+echo "PASS: feedback-submit-unsafe-checksum-route"
+
 unsafe_text_feedback_id="$(select_json_status 200 feedback-submit-unsafe-text '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.ok !== true || !data.id || !data.createdAt) {
@@ -108,6 +132,18 @@ console.log(data.id);
   -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"source path feedback\",\"severity\":\"low\",\"expected\":\"Feedback should keep safe fields only.\",\"actual\":\"$MARKER unsafe text submitted.\",\"reporterName\":\"master drive reporter\",\"browser\":\"checksum browser\",\"device\":\"source path device\",\"viewport\":\"master drive viewport\"}" \
   "$BASE_URL/api/beta-feedback")"
 echo "PASS: feedback-submit-unsafe-text"
+
+unsafe_checksum_text_feedback_id="$(select_json_status 200 feedback-submit-unsafe-checksum-text '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (data.ok !== true || !data.id || !data.createdAt) {
+  console.error(`FAIL: checksum text feedback submit shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+console.log(data.id);
+' -X POST -H 'Content-Type: application/json' \
+  -d "{\"role\":\"Viewer\",\"route\":\"/\",\"task\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"severity\":\"low\",\"expected\":\"Feedback should keep safe required fields.\",\"actual\":\"$MARKER unsafe private-token text submitted.\",\"reporterName\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"browser\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"device\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"viewport\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"}" \
+  "$BASE_URL/api/beta-feedback")"
+echo "PASS: feedback-submit-unsafe-checksum-text"
 
 stale_feedback_id="stale-feedback-$MARKER"
 if [ "$local_runtime_probe" = "1" ]; then
@@ -136,20 +172,20 @@ existing.unshift({
   createdAt: "2030-01-01T00:00:00.000Z",
   updatedAt: "not-a-date",
   role: "Root",
-  route: "javascript:alert(1)",
-  task: "source path stale feedback",
+  route: "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  task: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   severity: "urgent",
-  expected: "master drive expected",
-  actual: "checksum actual",
+  expected: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  actual: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
   status: "done",
-  notes: "source path note",
-  reporterName: "master drive reporter",
-  browser: "checksum browser",
-  device: "source path device",
-  viewport: "master drive viewport",
-  attachmentUrl: "javascript:alert(1)",
+  notes: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  reporterName: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  browser: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  device: "1111111111111111111111111111111111111111111111111111111111111111",
+  viewport: "2222222222222222222222222222222222222222222222222222222222222222",
+  attachmentUrl: "https://example.test/3333333333333333333333333333333333333333333333333333333333333333.png",
   storageMode: "filesystem",
-  actor: "checksum actor"
+  actor: "4444444444444444444444444444444444444444444444444444444444444444"
 }, ...filler);
 fs.writeFileSync(filePath, `${JSON.stringify(existing, null, 2)}\n`);
 NODE
@@ -178,13 +214,16 @@ if [ "$local_runtime_probe" = "1" ]; then
   stale_feedback_probe_id="$stale_feedback_id"
 fi
 
-FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" UNSAFE_PRIVATE_LINK_FEEDBACK_ID="$unsafe_private_link_feedback_id" UNSAFE_ROUTE_FEEDBACK_ID="$unsafe_route_feedback_id" UNSAFE_TEXT_FEEDBACK_ID="$unsafe_text_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
+FEEDBACK_ID="$feedback_id" UNSAFE_LINK_FEEDBACK_ID="$unsafe_link_feedback_id" UNSAFE_PRIVATE_LINK_FEEDBACK_ID="$unsafe_private_link_feedback_id" UNSAFE_CHECKSUM_LINK_FEEDBACK_ID="$unsafe_checksum_link_feedback_id" UNSAFE_ROUTE_FEEDBACK_ID="$unsafe_route_feedback_id" UNSAFE_CHECKSUM_ROUTE_FEEDBACK_ID="$unsafe_checksum_route_feedback_id" UNSAFE_TEXT_FEEDBACK_ID="$unsafe_text_feedback_id" UNSAFE_CHECKSUM_TEXT_FEEDBACK_ID="$unsafe_checksum_text_feedback_id" STALE_FEEDBACK_ID="$stale_feedback_probe_id" expect_json_status 200 feedback-admin-list-visible '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const id = process.env.FEEDBACK_ID;
 const unsafeLinkId = process.env.UNSAFE_LINK_FEEDBACK_ID;
 const unsafePrivateLinkId = process.env.UNSAFE_PRIVATE_LINK_FEEDBACK_ID;
+const unsafeChecksumLinkId = process.env.UNSAFE_CHECKSUM_LINK_FEEDBACK_ID;
 const unsafeRouteId = process.env.UNSAFE_ROUTE_FEEDBACK_ID;
+const unsafeChecksumRouteId = process.env.UNSAFE_CHECKSUM_ROUTE_FEEDBACK_ID;
 const unsafeTextId = process.env.UNSAFE_TEXT_FEEDBACK_ID;
+const unsafeChecksumTextId = process.env.UNSAFE_CHECKSUM_TEXT_FEEDBACK_ID;
 const staleId = process.env.STALE_FEEDBACK_ID;
 if (!Array.isArray(data.feedback) || typeof data.count !== "number") {
   console.error(`FAIL: feedback inbox shape invalid: ${JSON.stringify(data).slice(0, 500)}`);
@@ -213,14 +252,29 @@ if (!unsafePrivateLinkRecord || unsafePrivateLinkRecord.attachmentUrl) {
   console.error(`FAIL: private-label screenshot link persisted: ${JSON.stringify({ unsafePrivateLinkId, unsafePrivateLinkRecord }).slice(0, 500)}`);
   process.exit(1);
 }
+const unsafeChecksumLinkRecord = data.feedback.find((item) => item.id === unsafeChecksumLinkId);
+if (!unsafeChecksumLinkRecord || unsafeChecksumLinkRecord.attachmentUrl) {
+  console.error(`FAIL: checksum-label screenshot link persisted: ${JSON.stringify({ unsafeChecksumLinkId, unsafeChecksumLinkRecord }).slice(0, 500)}`);
+  process.exit(1);
+}
 const unsafeRouteRecord = data.feedback.find((item) => item.id === unsafeRouteId);
 if (!unsafeRouteRecord || unsafeRouteRecord.route !== "/") {
   console.error(`FAIL: unsafe feedback route persisted: ${JSON.stringify({ unsafeRouteId, unsafeRouteRecord }).slice(0, 500)}`);
   process.exit(1);
 }
+const unsafeChecksumRouteRecord = data.feedback.find((item) => item.id === unsafeChecksumRouteId);
+if (!unsafeChecksumRouteRecord || unsafeChecksumRouteRecord.route !== "/") {
+  console.error(`FAIL: checksum feedback route persisted: ${JSON.stringify({ unsafeChecksumRouteId, unsafeChecksumRouteRecord }).slice(0, 500)}`);
+  process.exit(1);
+}
 const unsafeTextRecord = data.feedback.find((item) => item.id === unsafeTextId);
 if (!unsafeTextRecord || unsafeTextRecord.task !== "Free play" || unsafeTextRecord.reporterName || unsafeTextRecord.browser || unsafeTextRecord.device || unsafeTextRecord.viewport) {
   console.error(`FAIL: unsafe feedback text labels persisted: ${JSON.stringify({ unsafeTextId, unsafeTextRecord }).slice(0, 700)}`);
+  process.exit(1);
+}
+const unsafeChecksumTextRecord = data.feedback.find((item) => item.id === unsafeChecksumTextId);
+if (!unsafeChecksumTextRecord || unsafeChecksumTextRecord.task !== "Free play" || unsafeChecksumTextRecord.expected !== "Feedback should keep safe required fields." || !/unsafe private-token text submitted/i.test(unsafeChecksumTextRecord.actual || "") || unsafeChecksumTextRecord.reporterName || unsafeChecksumTextRecord.browser || unsafeChecksumTextRecord.device || unsafeChecksumTextRecord.viewport) {
+  console.error(`FAIL: checksum feedback text labels persisted: ${JSON.stringify({ unsafeChecksumTextId, unsafeChecksumTextRecord }).slice(0, 700)}`);
   process.exit(1);
 }
 if (staleId) {
@@ -231,7 +285,7 @@ if (staleId) {
   }
 }
 const text = JSON.stringify(data.feedback);
-if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+if (text.includes("../private") || /source path|master drive|checksum/i.test(text) || /[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: feedback inbox leaked unsafe text labels: ${text.slice(0, 900)}`);
   process.exit(1);
 }
@@ -268,7 +322,7 @@ if (!/smoke triage note/i.test(data.feedback.notes || "")) {
   console.error(`FAIL: feedback patch did not persist notes: ${JSON.stringify(data.feedback).slice(0, 500)}`);
   process.exit(1);
 }
-if (/\.\.\/private|source path|master drive|checksum/i.test(JSON.stringify(data.feedback))) {
+if (/\.\.\/private|source path|master drive|checksum|[a-f0-9]{32,}/i.test(JSON.stringify(data.feedback))) {
   console.error(`FAIL: feedback patch echoed unsafe labels: ${JSON.stringify(data.feedback).slice(0, 700)}`);
   process.exit(1);
 }
@@ -314,7 +368,7 @@ if (data.counts.exportedRecords < 1 || data.counts.agentReady < 1 || data.counts
   console.error(`FAIL: feedback export counts weak: ${JSON.stringify(data.counts)}`);
   process.exit(1);
 }
-if (JSON.stringify(data).includes("../private") || /source path|master drive|checksum/i.test(JSON.stringify(data))) {
+if (JSON.stringify(data).includes("../private") || /source path|master drive|checksum/i.test(JSON.stringify(data)) || /[a-f0-9]{32,}/i.test(JSON.stringify(data))) {
   console.error(`FAIL: feedback export leaked unsafe text labels: ${JSON.stringify(data).slice(0, 900)}`);
   process.exit(1);
 }

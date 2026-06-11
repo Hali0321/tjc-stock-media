@@ -32,16 +32,20 @@ function safeText(value: unknown, maxLength: number) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
+function isPrivateText(value: string) {
+  return /source path|master drive|checksum/i.test(value) || /[a-f0-9]{32,}/i.test(value);
+}
+
 function safeFeedbackText(value: unknown, maxLength: number) {
   const text = safeText(value, maxLength);
   if (text.includes("..") || /[\\/]/.test(text)) return "";
-  if (/source path|master drive|checksum/i.test(text)) return "";
+  if (isPrivateText(text)) return "";
   return text;
 }
 
 function safeId(value: unknown) {
   const text = safeText(value, 120);
-  if (/source path|master drive|checksum/i.test(text)) return "";
+  if (isPrivateText(text)) return "";
   return text.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
 }
 
@@ -69,14 +73,14 @@ function safeStorageMode(value: unknown): BetaFeedbackRecord["storageMode"] {
 function safeRoute(value: unknown) {
   const route = safeText(value, 240);
   if (!route.startsWith("/") || route.includes("..") || /[\\]/.test(route)) return "/";
-  if (/source path|master drive|checksum/i.test(route)) return "/";
+  if (isPrivateText(route)) return "/";
   return route;
 }
 
 function safeUrl(value: unknown) {
   const url = safeText(value, 500);
   if (url.includes("..") || /[\\]/.test(url)) return "";
-  if (/source path|master drive|checksum/i.test(url)) return "";
+  if (isPrivateText(url)) return "";
   return /^https?:\/\//i.test(url) ? url : "";
 }
 
