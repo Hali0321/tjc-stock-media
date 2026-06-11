@@ -388,8 +388,10 @@ for (const guard of [
   { name: "portal delivery smoke", source: portalDeliverySmoke }
 ]) {
   requireAllStrings(`${guard.name} normal-user payload guard`, guard.source, sourceCustodyAssetKeys);
+  requireAllStrings(`${guard.name} normal-user payload guard`, guard.source, publicHiddenAssetKeys);
 }
 requireAllStrings("portal package smoke governance guard", portalPackageSmoke, sourceCustodyAssetKeys);
+requireAllStrings("portal package smoke governance guard", portalPackageSmoke, publicHiddenAssetKeys);
 if (!apiPayloadGuard.includes('stringArrayConst(sourceRedactionSource, "sourceCustodyAssetKeys")') || !apiPayloadGuard.includes("...sourceCustodyAssetKeys")) {
   failures.push("API payload guard must derive forbidden custody keys from source redaction");
 }
@@ -398,7 +400,7 @@ if (!searchRoute.includes("assets: session.assetsPayload(result.assets)") || !re
   failures.push("reviewer search/review API payloads must pass assets through role redaction");
 }
 requireAllStrings("source redaction custody key list", sourceRedaction, ["sourcePath", "masterDrivePath", "sourceAlbumPath", "sourceAlbumMemberships", "checksumSha256", "originalFilename"]);
-requireAllStrings("source redaction public-hidden key list", sourceRedaction, ["resourceSpaceId", "sourceAccount", "sourcePlatform", "sourceSystem", "workflowState"]);
+requireAllStrings("source redaction public-hidden key list", sourceRedaction, publicHiddenAssetKeys);
 if (!auditLog.includes("normalizeAssetId")) failures.push("audit log must normalize asset ids through normalizeAssetId");
 if (!auditLog.includes("normalizeResourceSpaceRef")) failures.push("audit log must normalize ResourceSpace ids through normalizeResourceSpaceRef");
 for (const module of [

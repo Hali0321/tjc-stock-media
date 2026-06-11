@@ -151,6 +151,12 @@ const forbiddenKeys = new Set([
   "fileSizeBytes",
   "pendingReviewWrite",
   "pendingWrites",
+  "reuseDecision",
+  "reviewer",
+  "sourceAccount",
+  "sourcePlatform",
+  "sourceSystem",
+  "workflowState",
   "integrationReadiness",
   "auditLog"
 ]);

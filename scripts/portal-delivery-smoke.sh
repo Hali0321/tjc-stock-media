@@ -129,12 +129,20 @@ const forbiddenKeys = new Set([
   "fileSizeBytes",
   "masterDrivePath",
   "originalFilename",
+  "pendingReviewWrite",
+  "resourceSpaceId",
   "resourceSpaceUrl",
   "resourceSpaceUrls",
+  "reuseDecision",
+  "reviewer",
+  "sourceAccount",
   "sourceAlbumPath",
   "sourceAlbumMemberships",
   "sourceLink",
-  "sourcePath"
+  "sourcePath",
+  "sourcePlatform",
+  "sourceSystem",
+  "workflowState"
 ]);
 const forbiddenText = [
   /s3:\/\//i,
