@@ -39,6 +39,15 @@ function normalizeApiResponse<T>(data: unknown): ResourceSpaceApiResult<T> {
   return { ok: true, status: 200, data: data as T };
 }
 
+function parseApiResponseText(text: string): ResourceSpaceApiResult<unknown> | { parsed: unknown } {
+  if (!text) return { parsed: null };
+  try {
+    return { parsed: JSON.parse(text) as unknown };
+  } catch {
+    return { ok: false, status: 502, error: "ResourceSpace API returned invalid JSON." };
+  }
+}
+
 function safeApiErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   if (!message || /\/api\/\?|sign=|user=/i.test(message)) return "ResourceSpace API request failed.";
@@ -62,11 +71,12 @@ export async function resourceSpaceApiRequest<T = unknown>(params: Record<string
   try {
     const response = await fetch(url, { cache: "no-store", signal });
     const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+    const parsed = parseApiResponseText(text);
+    if ("ok" in parsed) return parsed as ResourceSpaceApiResult<T>;
     if (!response.ok) {
       return { ok: false, status: response.status, error: `ResourceSpace API returned ${response.status}.` };
     }
-    return normalizeApiResponse<T>(data);
+    return normalizeApiResponse<T>(parsed.parsed);
   } catch (error) {
     return {
       ok: false,
