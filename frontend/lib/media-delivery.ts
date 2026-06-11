@@ -1,9 +1,14 @@
 import fs from "node:fs";
 import type { AccessAction } from "@/lib/access-decisions";
+import type { getAssetRecordById } from "@/lib/catalog";
+import type { createDamRouteSession } from "@/lib/dam-route-session";
 import type { ImageVariant } from "@/lib/images";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
+
+type AssetRecordResult = Awaited<ReturnType<typeof getAssetRecordById>>;
+type DamRouteSession = ReturnType<typeof createDamRouteSession>;
 
 export type DeliveredImage = {
   bytes: ArrayBuffer;
@@ -27,9 +32,22 @@ export type ThumbnailDeliveryInput = {
   variant: ImageVariant;
   action: AccessAction;
 };
+export type ThumbnailDeliveryRouteError = {
+  body: {
+    error: string;
+  } & Record<string, unknown>;
+  status: 400 | 403 | 404;
+};
+export type ThumbnailImageResponse = {
+  body: BodyInit;
+  headers: Record<string, string>;
+};
 export type ApprovedCopyDelivery =
   | { status: "ready"; image: DeliveredImage; fileName: string }
   | { status: "missing-derivative" | "unavailable-derivative" };
+export type ThumbnailDerivativeDelivery =
+  | { status: "ready"; image: DeliveredImage }
+  | { status: "missing-derivative" | "unavailable-derivative"; placeholderLabel: string };
 
 export function supportedImageContentType(bytes: Buffer): DeliveredImage["contentType"] | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
@@ -50,6 +68,59 @@ export function readDeliveredImage(filePath: string): DeliveredImage | null {
   } catch {
     return null;
   }
+}
+
+export function thumbnailMalformedIdError(): ThumbnailDeliveryRouteError {
+  return { body: { error: "Malformed asset id." }, status: 400 };
+}
+
+export function thumbnailNotFoundError(session: DamRouteSession, source: AssetRecordResult["source"]): ThumbnailDeliveryRouteError {
+  return { body: { error: "Asset not found.", ...session.sourceEnvelope(source) }, status: 404 };
+}
+
+export function thumbnailAccessDeniedError(reason: string | undefined, session: DamRouteSession, source: AssetRecordResult["source"]): ThumbnailDeliveryRouteError {
+  return { body: { error: reason || "Preview restricted.", ...session.sourceEnvelope(source) }, status: 403 };
+}
+
+function placeholderSvg(label: string) {
+  const safeLabel = label.replace(/[<>&"]/g, "");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="${safeLabel}">
+  <rect width="640" height="480" fill="#eef1ed"/>
+  <path d="M0 480 640 0" stroke="#dfe6df" stroke-width="8"/>
+  <rect x="232" y="196" width="176" height="84" rx="8" fill="#f7f8f6" stroke="#d7ddd5"/>
+  <path d="M276 252h88l-28-36-22 26-14-16-24 26Z" fill="#8b958d"/>
+  <circle cx="286" cy="222" r="10" fill="#8b958d"/>
+  <text x="320" y="316" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700" fill="#5d675f">${safeLabel}</text>
+</svg>`;
+}
+
+export function thumbnailPlaceholderResponse(label: string): ThumbnailImageResponse {
+  return {
+    body: placeholderSvg(label),
+    headers: {
+      "Content-Type": "image/svg+xml; charset=utf-8",
+      "Cache-Control": "private, max-age=60"
+    }
+  };
+}
+
+export function readThumbnailDerivativeDelivery(id: string, variant: ImageVariant): ThumbnailDerivativeDelivery {
+  const filePath = findFilestoreDerivative(id, variant);
+  if (!filePath) return { status: "missing-derivative", placeholderLabel: "Preview pending" };
+  const image = readDeliveredImage(filePath);
+  if (!image) return { status: "unavailable-derivative", placeholderLabel: "Preview unavailable" };
+  return { status: "ready", image };
+}
+
+export function thumbnailImageResponse(delivery: ThumbnailDerivativeDelivery): ThumbnailImageResponse {
+  if (delivery.status !== "ready") return thumbnailPlaceholderResponse(delivery.placeholderLabel);
+  return {
+    body: delivery.image.bytes,
+    headers: {
+      "Content-Type": delivery.image.contentType,
+      "Cache-Control": "private, max-age=300"
+    }
+  };
 }
 
 export function approvedCopyFileName(title: unknown, id: string) {

@@ -76,21 +76,21 @@ if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi/.test(downloadSource)) {
 for (const route of [
   { name: thumbnailRoute, source: thumbnailSource }
 ]) {
-  if (!route.source.includes("readDeliveredImage(")) {
-    failures.push(`${route.name} must read derivative bytes through media-delivery readDeliveredImage`);
+  if (!route.source.includes("readThumbnailDerivativeDelivery(id, deliveryInput.variant)") || !route.source.includes("thumbnailImageResponse(")) {
+    failures.push(`${route.name} must resolve thumbnail derivatives through media-delivery thumbnail delivery helpers`);
   }
-  if (/from "node:fs"/.test(route.source) || /readFileSync/.test(route.source)) {
-    failures.push(`${route.name} must not hand-roll derivative file reads`);
+  if (/from "node:fs"|readFileSync|findFilestoreDerivative|readDeliveredImage|placeholderImage|<svg|Preview pending|Preview unavailable|session\.sourceEnvelope|Malformed asset id|Asset not found|Preview restricted/.test(route.source)) {
+    failures.push(`${route.name} must not hand-roll derivative reads, placeholder images, access error copy, or source envelopes`);
   }
 }
-if (!thumbnailSource.includes("readThumbnailDeliveryInput(request.nextUrl.searchParams)") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput") || !mediaDeliverySource.includes("function normalizeThumbnailVariant")) {
-  failures.push(`${thumbnailRoute} must delegate thumbnail variant and access-action normalization to media-delivery`);
+if (!thumbnailSource.includes("readThumbnailDeliveryInput(request.nextUrl.searchParams)") || !thumbnailSource.includes("thumbnailMalformedIdError()") || !thumbnailSource.includes("thumbnailNotFoundError(session, source)") || !thumbnailSource.includes("thumbnailAccessDeniedError(access.reason, session, source)") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput") || !mediaDeliverySource.includes("function normalizeThumbnailVariant") || !mediaDeliverySource.includes("function thumbnailMalformedIdError") || !mediaDeliverySource.includes("function thumbnailNotFoundError") || !mediaDeliverySource.includes("function thumbnailAccessDeniedError")) {
+  failures.push(`${thumbnailRoute} must delegate thumbnail variant, access-action normalization, and error responses to media-delivery`);
 }
 if (/variantParam|viewDetailPreview|viewThumbnail|downloadApprovedCopy/.test(thumbnailSource)) {
   failures.push(`${thumbnailRoute} must not hand-roll thumbnail variant or access-action mapping`);
 }
-if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput") || !mediaDeliverySource.includes("function readApprovedCopyDelivery")) {
-  failures.push("media-delivery must own supported image detection, derivative reads, thumbnail delivery input, approved-copy delivery, and approved-copy filenames");
+if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function readThumbnailDerivativeDelivery") || !mediaDeliverySource.includes("function thumbnailImageResponse") || !mediaDeliverySource.includes("function thumbnailPlaceholderResponse") || !mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput") || !mediaDeliverySource.includes("function readApprovedCopyDelivery")) {
+  failures.push("media-delivery must own supported image detection, derivative reads, thumbnail delivery input/responses, approved-copy delivery, and approved-copy filenames");
 }
 
 const collectionsRoute = "frontend/app/api/collections/route.ts";
