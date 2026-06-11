@@ -100,14 +100,14 @@ const batchRoute = "frontend/app/api/batch/route.ts";
 const batchSource = fs.readFileSync(path.join(root, batchRoute), "utf8");
 const batchActionSource = fs.readFileSync(path.join(root, "frontend/lib/batch-actions.ts"), "utf8");
 const assetSelectionSource = fs.readFileSync(path.join(root, "frontend/lib/asset-selection.ts"), "utf8");
-if (!collectionsSource.includes("readCollectionDraftInput(request)") || !collectionsSource.includes("collectionDraftPublicBlockedAssets(input.audience, selection.assets)") || !collectionsSource.includes("buildCollectionDraftPreviewPayload(input, selection.assets, portalBlockedAssets)")) {
-  failures.push(`${collectionsRoute} must delegate collection draft parsing, public gate checks, and preview payload assembly to collection-drafts`);
+if (!collectionsSource.includes("readCollectionDraftInput(request)") || !collectionsSource.includes("collectionDraftPublicBlockedAssets(input.audience, selection.assets)") || !collectionsSource.includes("buildCollectionDraftPreviewPayload(input, selection.assets, portalBlockedAssets)") || !collectionsSource.includes("collectionDraftInputValidationError(input)") || !collectionsSource.includes("collectionDraftSelectionValidationError(selection)") || !collectionsSource.includes("collectionDraftPreviewAuditEvent(input, selection.assets, portalBlockedAssets, role, identity.id)")) {
+  failures.push(`${collectionsRoute} must delegate collection draft parsing, validation, public gate checks, audit details, and preview payload assembly to collection-drafts`);
 }
-if (!collectionDraftSource.includes("normalizeCollectionDraftAudience") || !collectionDraftSource.includes("normalizeCollectionShareSlug") || !collectionDraftSource.includes("normalizeDateField") || !collectionDraftSource.includes("selectedAssetIds")) {
-  failures.push("collection-drafts must own draft audience, share slug, expiry, and selected asset id normalization");
+if (!collectionDraftSource.includes("normalizeCollectionDraftAudience") || !collectionDraftSource.includes("normalizeCollectionShareSlug") || !collectionDraftSource.includes("normalizeDateField") || !collectionDraftSource.includes("selectedAssetIds") || !collectionDraftSource.includes("function collectionDraftInputValidationError") || !collectionDraftSource.includes("function collectionDraftSelectionValidationError") || !collectionDraftSource.includes("function collectionDraftPreviewAuditEvent")) {
+  failures.push("collection-drafts must own draft audience, share slug, expiry, selected asset id normalization, validation, and audit details");
 }
-if (/readJsonObject|normalizeCollectionDraftAudience|normalizeCollectionShareSlug|normalizeDateField|normalizeDisplayTextField|selectedAssetIds|assetIsPortalReady|assetNeedsStaleApprovalReview/.test(collectionsSource)) {
-  failures.push(`${collectionsRoute} must not hand-roll collection draft parsing, field normalization, selected ids, or public gate checks`);
+if (/readJsonObject|normalizeCollectionDraftAudience|normalizeCollectionShareSlug|normalizeDateField|normalizeDisplayTextField|selectedAssetIds|assetIsPortalReady|assetNeedsStaleApprovalReview|missingIds|hiddenAssets|blockedPublic|blockedAssetIds|missingCount/.test(collectionsSource)) {
+  failures.push(`${collectionsRoute} must not hand-roll collection draft parsing, field normalization, selected ids, validation, public gate checks, or audit details`);
 }
 if (/function\s+slugify\s*\(/.test(collectionsSource) || /function\s+slugify\s*\(/.test(collectionDraftSource) || /allowedAudiences\s*=\s*new Set/.test(collectionsSource) || /allowedAudiences\s*=\s*new Set/.test(collectionDraftSource)) {
   failures.push("collection draft code must not hand-roll collection audience or share slug normalization");
