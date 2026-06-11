@@ -47,12 +47,26 @@ export function appendRuntimeJsonLine(filePath: string, record: unknown) {
   fs.appendFileSync(filePath, `${JSON.stringify(record)}\n`, "utf8");
 }
 
-export function readRuntimeJsonLines<TRecord>(filePath: string, normalize: (input: unknown) => TRecord | null) {
+export type RuntimeJsonLinesOptions = {
+  maxLinesFromEnd?: number;
+};
+
+function lineWindow(lines: string[], options?: RuntimeJsonLinesOptions) {
+  const maxLines = Math.trunc(options?.maxLinesFromEnd || 0);
+  return maxLines > 0 ? lines.slice(-maxLines) : lines;
+}
+
+export function readRuntimeJsonLines<TRecord>(
+  filePath: string,
+  normalize: (input: unknown) => TRecord | null,
+  options?: RuntimeJsonLinesOptions
+) {
   try {
-    return fs
+    const lines = fs
       .readFileSync(filePath, "utf8")
       .split("\n")
-      .filter(Boolean)
+      .filter(Boolean);
+    return lineWindow(lines, options)
       .map((line) => {
         try {
           return normalize(JSON.parse(line));

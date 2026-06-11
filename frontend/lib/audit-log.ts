@@ -47,6 +47,8 @@ export type AuditEventRecord = {
 };
 
 const auditEventStatuses: AuditEventRecord["status"][] = ["allowed", "denied", "blocked", "queued", "preview"];
+const maxAuditEventsReturned = 1000;
+const minAuditReadWindow = 100;
 const auditEventTypes: AuditEventType[] = [
   "admin_readiness_denied",
   "admin_readiness_viewed",
@@ -159,12 +161,14 @@ export function appendAuditEvent(event: Omit<AuditEventRecord, "id" | "createdAt
 }
 
 export function listAuditEvents(limit = 20): AuditEventRecord[] {
+  const safeLimit = Math.max(1, Math.min(maxAuditEventsReturned, Math.trunc(limit) || 20));
+  const readWindow = Math.max(minAuditReadWindow, Math.min(maxAuditEventsReturned, safeLimit * 2));
   const events = listRuntimeFiles(auditDir(), ".jsonl")
     .sort()
     .reverse()
-    .flatMap((filePath) => readRuntimeJsonLines(filePath, normalizeAuditEvent));
+    .flatMap((filePath) => readRuntimeJsonLines(filePath, normalizeAuditEvent, { maxLinesFromEnd: readWindow }));
   return newestByTimestamp(events, (event) => event.createdAt)
-    .slice(0, limit);
+    .slice(0, safeLimit);
 }
 
 export function auditLogDiagnostics() {
