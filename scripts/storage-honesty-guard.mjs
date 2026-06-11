@@ -444,6 +444,9 @@ for (const surface of [
   if (!surface.source.includes("safeBoundedInt")) failures.push(`${surface.name} must normalize pagination bounds through safeBoundedInt`);
   if (/Number\.isFinite\([^)]*(limit|offset|parsed)/.test(surface.source)) failures.push(`${surface.name} must not hand-roll pagination number bounds`);
 }
+if (!catalogLanguage.includes("safeNonNegativeInt(dimensions?.[1])") || !catalogLanguage.includes("safeNonNegativeInt(dimensions?.[2])") || /const\s+(width|height)\s*=\s*Number\(dimensions/.test(catalogLanguage)) {
+  failures.push("catalog language dimension filters must normalize image dimensions through safeNonNegativeInt");
+}
 
 if (!usageAnalytics.includes("normalizePersistedDisplayText")) failures.push("usage analytics must normalize usage labels through normalizePersistedDisplayText");
 if (!usageAnalytics.includes("normalizeAssetId")) failures.push("usage analytics must normalize asset ids through normalizeAssetId");

@@ -9,7 +9,7 @@ import {
   assetNeedsSourceReview,
   assetNeedsStaleApprovalReview
 } from "@/lib/asset-governance";
-import { safeEnumValue } from "@/lib/persisted-record-safety";
+import { safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { reviewRiskFlags } from "@/lib/workflow-policy";
 import type { CatalogSort, StockMediaAsset } from "@/lib/types";
 
@@ -287,8 +287,8 @@ export const intentDefinitions: SearchIntentDefinition[] = [
 export function matchesCatalogFilter(asset: StockMediaAsset, filter: string) {
   const value = filter.toLowerCase();
   const dimensions = asset.imageDimensions?.match(/(\d+)\D+(\d+)/);
-  const width = Number(dimensions?.[1] || 0);
-  const height = Number(dimensions?.[2] || 0);
+  const width = safeNonNegativeInt(dimensions?.[1]);
+  const height = safeNonNegativeInt(dimensions?.[2]);
   if (value === "approved public" || value === "church-wide use") return asset.status === "Approved Public";
   if (value === "approved internal" || value === "internal ministry") return asset.status === "Approved Internal";
   if (value === "needs review") return asset.status === "Needs Review" || asset.status === "Possible Minors";
