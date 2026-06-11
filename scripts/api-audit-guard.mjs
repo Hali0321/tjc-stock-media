@@ -18,15 +18,44 @@ function walk(dir) {
   });
 }
 
+function functionBodyAt(source, startIndex) {
+  const paramsOpenIndex = source.indexOf("(", startIndex);
+  if (paramsOpenIndex === -1) return "";
+  let parenDepth = 0;
+  let paramsCloseIndex = -1;
+  for (let index = paramsOpenIndex; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "(") parenDepth += 1;
+    if (char === ")") parenDepth -= 1;
+    if (parenDepth === 0) {
+      paramsCloseIndex = index;
+      break;
+    }
+  }
+  if (paramsCloseIndex === -1) return "";
+  const openIndex = source.indexOf("{", paramsCloseIndex);
+  if (openIndex === -1) return "";
+  let depth = 0;
+  for (let index = openIndex; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth === 0) return source.slice(openIndex, index + 1);
+  }
+  return "";
+}
+
 const failures = [];
 for (const fullPath of walk(apiRoot)) {
   const relativePath = path.relative(root, fullPath);
   const source = fs.readFileSync(fullPath, "utf8");
-  const methods = [...source.matchAll(mutatingMethodPattern)].map((match) => match[1]);
-  if (!methods.length) continue;
-  const hasAudit = auditedWorkflowCalls.some((call) => source.includes(call));
-  if (!hasAudit) {
-    failures.push(`${relativePath} exposes ${methods.join(", ")} without appendAuditEvent or audited workflow delegation`);
+  for (const match of source.matchAll(mutatingMethodPattern)) {
+    const method = match[1];
+    const body = functionBodyAt(source, match.index || 0);
+    const hasAudit = auditedWorkflowCalls.some((call) => body.includes(call));
+    if (!hasAudit) {
+      failures.push(`${relativePath} exposes ${method} without appendAuditEvent or audited workflow delegation in that handler`);
+    }
   }
 }
 
