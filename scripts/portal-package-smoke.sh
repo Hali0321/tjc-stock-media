@@ -71,7 +71,7 @@ if (refs.includes("../private") || refs.some((ref) => /^[a-f0-9]{32,}$/i.test(re
   console.error(`FAIL: package refs were not sanitized/deduped: ${JSON.stringify(refs)}`);
   process.exit(1);
 }
-if (data.package.collectionId || sections.some((section) => /source path|master drive|checksum|private/i.test(section.id || ""))) {
+if (data.package.collectionId || sections.some((section) => /source path|master drive|checksum|private|[a-f0-9]{32,}/i.test(`${section.id || ""} ${section.title || ""}`))) {
   console.error(`FAIL: package identifiers were not sanitized: ${JSON.stringify(data.package).slice(0, 700)}`);
   process.exit(1);
 }
@@ -80,12 +80,12 @@ if (!data.package.governance || typeof data.package.governance.totalRefs !== "nu
   process.exit(1);
 }
 const text = JSON.stringify(data.package);
-if (text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+if (text.includes("../private") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
   console.error(`FAIL: package display fields echoed unsafe text: ${text.slice(0, 700)}`);
   process.exit(1);
 }
 ' -X POST -H 'Content-Type: application/json' \
-  -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"description\":\"../private source path\",\"collectionId\":\"source path collection\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"368\"]},{\"id\":\"master drive section\",\"title\":\"../private master drive checksum\",\"resourceSpaceAssetIds\":[\"367\"]}]}" \
+  -d "{\"role\":\"Contributor\",\"id\":\"$package_id\",\"title\":\"$MARKER ministry toolkit\",\"description\":\"../private source path\",\"collectionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"sections\":[{\"id\":\"hero\",\"title\":\"Hero section\",\"resourceSpaceAssetIds\":[\"367\",\"367\",\"../private\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"368\"]},{\"id\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"title\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"resourceSpaceAssetIds\":[\"367\"]}]}" \
   "$BASE_URL/api/packages?role=Contributor"
 
 if [ "$local_runtime_probe" = "1" ]; then
@@ -122,17 +122,17 @@ const filler = Array.from({ length: 210 }, (_, index) => ({
 }));
 existing.unshift({
   id: process.env.STALE_PACKAGE_ID,
-  title: "../private source path",
-  description: "../private master drive checksum",
+  title: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  description: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   status: "unsafe",
   sections: [{
-    id: "source path section",
-    title: "../private master drive checksum",
+    id: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    title: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     resourceSpaceAssetIds: ["367", "../private", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "367"]
   }],
   createdAt: "not-a-date",
   updatedAt: "2030-01-01T00:00:00.000Z",
-  createdBy: "checksum actor",
+  createdBy: "1111111111111111111111111111111111111111111111111111111111111111",
   role: "Viewer",
   governance: {
     canPreview: "yes",
@@ -142,7 +142,7 @@ existing.unshift({
     portalReadyRefs: "bad",
     blockedRefs: -5,
     missingRefs: -2,
-    reason: "../private"
+    reason: "2222222222222222222222222222222222222222222222222222222222222222"
   },
   storageMode: "local-json"
 }, ...filler);
@@ -176,7 +176,7 @@ if (staleId) {
   const stale = data.packages.find((item) => item.id === staleId);
   const refs = (stale?.sections || []).flatMap((section) => section.resourceSpaceAssetIds || []);
   const text = JSON.stringify(stale || {});
-  if (!stale || stale.title !== "ResourceSpace Toolkit Draft" || stale.sections?.[0]?.id !== "section-1" || stale.sections?.[0]?.title !== "Section 1" || stale.createdBy !== "local-beta:unknown" || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.some((ref) => /^[a-f0-9]{32,}$/i.test(ref)) || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0 || stale.governance?.reason || text.includes("../private") || /source path|master drive|checksum/i.test(text)) {
+  if (!stale || stale.title !== "ResourceSpace Toolkit Draft" || stale.sections?.[0]?.id !== "section-1" || stale.sections?.[0]?.title !== "Section 1" || stale.createdBy !== "local-beta:unknown" || stale.status !== "draft" || stale.role === "Viewer" || refs.includes("../private") || refs.some((ref) => /^[a-f0-9]{32,}$/i.test(ref)) || refs.length !== new Set(refs).size || stale.governance?.canPublish || stale.governance?.totalRefs !== 0 || stale.governance?.reason || text.includes("../private") || /source path|master drive|checksum|[a-f0-9]{32,}/i.test(text)) {
     console.error(`FAIL: persisted unsafe package was not normalized: ${JSON.stringify(stale || null).slice(0, 500)}`);
     process.exit(1);
   }
