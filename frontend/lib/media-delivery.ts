@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import type { AccessAction } from "@/lib/access-decisions";
 import type { ImageVariant } from "@/lib/images";
+import { findFilestoreDerivative } from "@/lib/media-source";
 import { safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 
@@ -26,6 +27,9 @@ export type ThumbnailDeliveryInput = {
   variant: ImageVariant;
   action: AccessAction;
 };
+export type ApprovedCopyDelivery =
+  | { status: "ready"; image: DeliveredImage; fileName: string }
+  | { status: "missing-derivative" | "unavailable-derivative" };
 
 export function supportedImageContentType(bytes: Buffer): DeliveredImage["contentType"] | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
@@ -51,6 +55,18 @@ export function readDeliveredImage(filePath: string): DeliveredImage | null {
 export function approvedCopyFileName(title: unknown, id: string) {
   const safeTitle = safeSlugText(normalizeDisplayTextField(title, "", 80), 80) || `asset-${id}`;
   return `${safeTitle}-approved-copy.jpg`;
+}
+
+export function hasApprovedCopyDerivative(id: string) {
+  return Boolean(findFilestoreDerivative(id, "download"));
+}
+
+export function readApprovedCopyDelivery(id: string, title: unknown): ApprovedCopyDelivery {
+  const filePath = findFilestoreDerivative(id, "download");
+  if (!filePath) return { status: "missing-derivative" };
+  const image = readDeliveredImage(filePath);
+  if (!image) return { status: "unavailable-derivative" };
+  return { status: "ready", image, fileName: approvedCopyFileName(title, id) };
 }
 
 function normalizeDownloadVariant(_value: unknown): DownloadGateInput["variant"] {

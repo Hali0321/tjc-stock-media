@@ -55,26 +55,25 @@ const downloadSource = fs.readFileSync(path.join(root, downloadRoute), "utf8");
 const thumbnailRoute = "frontend/app/api/assets/thumbnail/[id]/route.ts";
 const thumbnailSource = fs.readFileSync(path.join(root, thumbnailRoute), "utf8");
 const mediaDeliverySource = fs.readFileSync(path.join(root, "frontend/lib/media-delivery.ts"), "utf8");
-if (!downloadSource.includes('findFilestoreDerivative(id, "download")')) {
-  failures.push(`${downloadRoute} must resolve approved copies through findFilestoreDerivative`);
+if (!downloadSource.includes("readApprovedCopyDelivery(id, asset.title)") || !downloadSource.includes("hasApprovedCopyDerivative(id)")) {
+  failures.push(`${downloadRoute} must resolve approved copies through media-delivery`);
 }
 if (!downloadSource.includes("Private originals and S3 paths are not exposed.")) {
   failures.push(`${downloadRoute} must keep explicit no-originals response copy`);
 }
-if (!downloadSource.includes("approvedCopyFileName(asset.title, id)") || !mediaDeliverySource.includes("safeSlugText(normalizeDisplayTextField")) {
+if (!mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("safeSlugText(normalizeDisplayTextField")) {
   failures.push(`${downloadRoute} must derive download filenames through media-delivery approvedCopyFileName`);
 }
-if (!downloadSource.includes("readDownloadGateInput(request)") || !mediaDeliverySource.includes("function readDownloadGateInput") || !mediaDeliverySource.includes("function normalizeDownloadVariant")) {
-  failures.push(`${downloadRoute} must delegate download gate body parsing and metadata normalization to media-delivery`);
+if (!downloadSource.includes("readDownloadGateInput(request)") || !mediaDeliverySource.includes("function readDownloadGateInput") || !mediaDeliverySource.includes("function normalizeDownloadVariant") || !mediaDeliverySource.includes("function readApprovedCopyDelivery") || !mediaDeliverySource.includes("function hasApprovedCopyDerivative")) {
+  failures.push(`${downloadRoute} must delegate download gate body parsing, approved-copy delivery, and metadata normalization to media-delivery`);
 }
-if (/readJsonObject|normalizeDisplayTextField|function\s+normalizeDownloadVariant/.test(downloadSource)) {
-  failures.push(`${downloadRoute} must not hand-roll download gate body parsing, usage metadata, or variant normalization`);
+if (/readJsonObject|normalizeDisplayTextField|function\s+normalizeDownloadVariant|findFilestoreDerivative|readDeliveredImage|approvedCopyFileName/.test(downloadSource)) {
+  failures.push(`${downloadRoute} must not hand-roll download gate body parsing, usage metadata, variant normalization, or approved-copy delivery`);
 }
 if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi/.test(downloadSource)) {
   failures.push(`${downloadRoute} must not hand-roll approved-copy filename slugging`);
 }
 for (const route of [
-  { name: downloadRoute, source: downloadSource },
   { name: thumbnailRoute, source: thumbnailSource }
 ]) {
   if (!route.source.includes("readDeliveredImage(")) {
@@ -90,8 +89,8 @@ if (!thumbnailSource.includes("readThumbnailDeliveryInput(request.nextUrl.search
 if (/variantParam|viewDetailPreview|viewThumbnail|downloadApprovedCopy/.test(thumbnailSource)) {
   failures.push(`${thumbnailRoute} must not hand-roll thumbnail variant or access-action mapping`);
 }
-if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput")) {
-  failures.push("media-delivery must own supported image detection, derivative reads, thumbnail delivery input, and approved-copy filenames");
+if (!mediaDeliverySource.includes("function supportedImageContentType") || !mediaDeliverySource.includes("function readDeliveredImage") || !mediaDeliverySource.includes("function approvedCopyFileName") || !mediaDeliverySource.includes("function readThumbnailDeliveryInput") || !mediaDeliverySource.includes("function readApprovedCopyDelivery")) {
+  failures.push("media-delivery must own supported image detection, derivative reads, thumbnail delivery input, approved-copy delivery, and approved-copy filenames");
 }
 
 const collectionsRoute = "frontend/app/api/collections/route.ts";

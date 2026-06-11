@@ -4,8 +4,7 @@ import { decideAccess } from "@/lib/access-decisions";
 import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
-import { findFilestoreDerivative } from "@/lib/media-source";
-import { approvedCopyFileName, readDeliveredImage, readDownloadGateInput } from "@/lib/media-delivery";
+import { hasApprovedCopyDerivative, readApprovedCopyDelivery, readDownloadGateInput } from "@/lib/media-delivery";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
 
@@ -46,16 +45,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     );
   }
 
-  const filePath = findFilestoreDerivative(id, "download");
-  if (!filePath) {
-    return NextResponse.json({ error: "Approved derivative not available in local filestore.", ...envelope }, { status: 404 });
+  const delivery = readApprovedCopyDelivery(id, asset.title);
+  if (delivery.status !== "ready") {
+    return NextResponse.json(
+      {
+        error: delivery.status === "missing-derivative"
+          ? "Approved derivative not available in local filestore."
+          : "Approved derivative is indexed but unavailable.",
+        ...envelope
+      },
+      { status: 404 }
+    );
   }
-
-  const image = readDeliveredImage(filePath);
-  if (!image) {
-    return NextResponse.json({ error: "Approved derivative is indexed but unavailable.", ...envelope }, { status: 404 });
-  }
-  const fileName = approvedCopyFileName(asset.title, id);
   const resourceSpaceId = assetResourceRef(asset);
   appendAuditEvent({
     type: "approved_download",
@@ -65,12 +66,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     resourceSpaceId,
     status: "allowed",
     summary: "Approved copy downloaded.",
-    details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName }
+    details: { source: auditSource.label, sourceDetail: auditSource.detail, fileName: delivery.fileName }
   });
-  return new NextResponse(image.bytes, {
+  return new NextResponse(delivery.image.bytes, {
     headers: {
-      "Content-Type": image.contentType,
-      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Type": delivery.image.contentType,
+      "Content-Disposition": `attachment; filename="${delivery.fileName}"`,
       "Cache-Control": "no-store"
     }
   });
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     route: `/api/download/${asset.id}`,
     metadata: { termsAccepted: input.termsAccepted, variant: input.variant }
   });
-  const derivativeAvailable = Boolean(findFilestoreDerivative(id, "download"));
+  const derivativeAvailable = hasApprovedCopyDerivative(id);
 
   if (!input.termsAccepted) {
     appendAuditEvent({
