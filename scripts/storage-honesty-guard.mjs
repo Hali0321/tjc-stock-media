@@ -11,6 +11,7 @@ const files = {
   auditLog: "frontend/lib/audit-log.ts",
   usageAnalytics: "frontend/lib/usage-analytics.ts",
   env: "frontend/lib/env.ts",
+  nextConfig: "frontend/next.config.mjs",
   reviewEvidence: "frontend/lib/review-evidence.ts",
   requestValidation: "frontend/lib/request-validation.ts",
   catalog: "frontend/lib/catalog.ts",
@@ -32,6 +33,7 @@ const pendingReviewWrites = read(files.pendingReviewWrites);
 const auditLog = read(files.auditLog);
 const usageAnalytics = read(files.usageAnalytics);
 const env = read(files.env);
+const nextConfig = read(files.nextConfig);
 const reviewEvidence = read(files.reviewEvidence);
 const requestValidation = read(files.requestValidation);
 const catalog = read(files.catalog);
@@ -202,6 +204,9 @@ if (/npm --prefix frontend run (build|dev|typecheck)/.test(makefile) || /npm --p
 }
 if (!env.includes("function findRepoRoot") || !env.includes("looksLikeRepoRoot") || /path\.resolve\(process\.cwd\(\),\s*"\.\."\)/.test(env)) {
   failures.push("env repoRoot must detect repo root from current or frontend cwd without assuming cwd/..");
+}
+if (!nextConfig.includes("fileURLToPath(import.meta.url)") || !nextConfig.includes("outputFileTracingRoot: repoRoot") || /outputFileTracingRoot:\s*path\.resolve\(process\.cwd\(\)/.test(nextConfig)) {
+  failures.push("Next config must derive outputFileTracingRoot from its file location, not process.cwd()");
 }
 
 for (const route of [

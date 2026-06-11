@@ -1,9 +1,13 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const frontendDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(frontendDir, "..");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  outputFileTracingRoot: path.resolve(process.cwd(), "..")
+  outputFileTracingRoot: repoRoot
 };
 
 export default nextConfig;
