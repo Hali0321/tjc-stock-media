@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
-import { patchBetaFeedback, readBetaFeedbackPatchInput } from "@/lib/beta-feedback";
+import {
+  betaFeedbackPatchValidationError,
+  betaFeedbackTriagedAuditEvent,
+  buildBetaFeedbackPatchResponse,
+  patchBetaFeedback,
+  readBetaFeedbackPatchInput
+} from "@/lib/beta-feedback";
 import { canAdmin } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
 import { normalizeFeedbackId } from "@/lib/request-validation";
@@ -23,24 +29,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const id = normalizeFeedbackId((await params).id);
   const input = await readBetaFeedbackPatchInput(request);
-  if (input.invalidField === "status") {
-    return NextResponse.json({ error: "Feedback status is invalid." }, { status: 400 });
-  }
-  if (input.invalidField === "severity") {
-    return NextResponse.json({ error: "Feedback severity is invalid." }, { status: 400 });
+  const validationError = betaFeedbackPatchValidationError(input);
+  if (validationError) {
+    return NextResponse.json(validationError.body, { status: validationError.status });
   }
 
   const record = await patchBetaFeedback(id, input.patch);
   if (!record) return NextResponse.json({ error: "Feedback record not found." }, { status: 404 });
 
-  appendAuditEvent({
-    type: "beta_feedback_triaged",
-    role: identity.role,
-    actor: identity.id,
-    status: "preview",
-    summary: `Beta feedback ${record.id} updated to ${record.status}.`,
-    details: { feedbackId: record.id, severity: record.severity, status: record.status }
-  });
+  appendAuditEvent(betaFeedbackTriagedAuditEvent(record, identity.role, identity.id));
 
-  return NextResponse.json({ ok: true, feedback: record });
+  return NextResponse.json(buildBetaFeedbackPatchResponse(record));
 }

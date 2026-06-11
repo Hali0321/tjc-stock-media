@@ -225,23 +225,32 @@ const betaFeedbackSource = fs.readFileSync(path.join(root, "frontend/lib/beta-fe
 if (!betaFeedbackItemRouteSource.includes("readBetaFeedbackPatchInput(request)") || !betaFeedbackItemRouteSource.includes("patchBetaFeedback(id, input.patch)")) {
   failures.push(`${betaFeedbackItemRoute} must delegate patch body parsing and normalization to beta-feedback module`);
 }
+if (!betaFeedbackItemRouteSource.includes("betaFeedbackPatchValidationError(input)") || !betaFeedbackItemRouteSource.includes("buildBetaFeedbackPatchResponse(record)") || !betaFeedbackItemRouteSource.includes("betaFeedbackTriagedAuditEvent(record, identity.role, identity.id)")) {
+  failures.push(`${betaFeedbackItemRoute} must delegate feedback patch validation, audit details, and response payloads to beta-feedback module`);
+}
 if (!betaFeedbackRouteSource.includes("readBetaFeedbackRequestInput(request)") || !betaFeedbackRouteSource.includes("normalizeBetaFeedbackSubmission(")) {
   failures.push(`${betaFeedbackRoute} must delegate submission parsing and field normalization to beta-feedback module`);
 }
-if (!betaFeedbackSource.includes("function normalizeBetaFeedbackSubmission") || !betaFeedbackSource.includes("normalizeFeedbackUrl(fields.screenshotLink)") || !betaFeedbackSource.includes("readBetaFeedbackRequestInput") || !betaFeedbackSource.includes("function readBetaFeedbackPatchInput")) {
-  failures.push("beta-feedback module must own feedback submission normalization, patch normalization, screenshot URL sanitization, and multipart parsing");
+if (!betaFeedbackRouteSource.includes("betaFeedbackSubmissionValidationError(submission)") || !betaFeedbackRouteSource.includes("createBetaFeedbackFromSubmission(submission, identity, file)") || !betaFeedbackRouteSource.includes("buildBetaFeedbackSubmitResponse(record)") || !betaFeedbackRouteSource.includes("buildBetaFeedbackInboxResponse(feedback)")) {
+  failures.push(`${betaFeedbackRoute} must delegate submission validation, persistence assembly, and response payloads to beta-feedback module`);
+}
+if (!betaFeedbackSource.includes("function normalizeBetaFeedbackSubmission") || !betaFeedbackSource.includes("normalizeFeedbackUrl(fields.screenshotLink)") || !betaFeedbackSource.includes("readBetaFeedbackRequestInput") || !betaFeedbackSource.includes("function readBetaFeedbackPatchInput") || !betaFeedbackSource.includes("function createBetaFeedbackFromSubmission") || !betaFeedbackSource.includes("function betaFeedbackSubmissionValidationError") || !betaFeedbackSource.includes("function buildBetaFeedbackSubmitResponse")) {
+  failures.push("beta-feedback module must own feedback submission normalization, patch normalization, screenshot URL sanitization, multipart parsing, submission validation, persistence assembly, and response payloads");
 }
 if (!betaFeedbackExportRouteSource.includes("readBetaFeedbackExportFilters(request.nextUrl.searchParams)") || !betaFeedbackSource.includes("function readBetaFeedbackExportFilters") || !betaFeedbackSource.includes("normalizeFeedbackStatusFilter") || !betaFeedbackSource.includes("normalizeFeedbackSeverityFilter") || !betaFeedbackSource.includes("normalizeRoleFilter")) {
   failures.push(`${betaFeedbackExportRoute} must delegate export filter normalization to beta-feedback module`);
 }
-if (/normalizeFeedback(Route|Text|Url)\(/.test(betaFeedbackRouteSource) || /readFormData|readJsonObject/.test(betaFeedbackRouteSource)) {
-  failures.push(`${betaFeedbackRoute} must not hand-roll feedback submission parsing or field normalization`);
+if (!betaFeedbackExportRouteSource.includes("betaFeedbackExportAuditEvent(packet, identity.role, identity.id)") || !betaFeedbackExportRouteSource.includes("betaFeedbackExportHeaders(packet)")) {
+  failures.push(`${betaFeedbackExportRoute} must delegate export audit details and headers to beta-feedback module`);
 }
-if (/readJsonObject|normalizeFeedback(Severity|Status|Text)\(/.test(betaFeedbackItemRouteSource)) {
-  failures.push(`${betaFeedbackItemRoute} must not hand-roll feedback patch body parsing or status/severity normalization`);
+if (/normalizeFeedback(Route|Text|Url)\(/.test(betaFeedbackRouteSource) || /readFormData|readJsonObject|validateFeedbackPayload|isKnownRole|\bcreateBetaFeedback\(|putBetaFeedbackAttachment|BetaFeedbackSeverity/.test(betaFeedbackRouteSource)) {
+  failures.push(`${betaFeedbackRoute} must not hand-roll feedback submission parsing, field normalization, validation, persistence assembly, or response payloads`);
 }
-if (/normalizeFeedback(Severity|Status|Text)\(|normalizeRoleFilter|function\s+normalize/.test(betaFeedbackExportRouteSource)) {
-  failures.push(`${betaFeedbackExportRoute} must not hand-roll feedback export filter normalization`);
+if (/readJsonObject|normalizeFeedback(Severity|Status|Text)\(|invalidField|Feedback status is invalid|Feedback severity is invalid/.test(betaFeedbackItemRouteSource)) {
+  failures.push(`${betaFeedbackItemRoute} must not hand-roll feedback patch body parsing, status/severity normalization, or validation responses`);
+}
+if (/normalizeFeedback(Severity|Status|Text)\(|normalizeRoleFilter|function\s+normalize|Content-Disposition|exportedRecords|statusFilter/.test(betaFeedbackExportRouteSource)) {
+  failures.push(`${betaFeedbackExportRoute} must not hand-roll feedback export filter normalization, audit details, or download headers`);
 }
 
 const savedSearchRoute = "frontend/app/api/saved-searches/route.ts";

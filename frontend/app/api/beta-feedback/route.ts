@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent } from "@/lib/audit-log";
 import { betaFeedbackEnabled } from "@/lib/env";
-import { createBetaFeedback, listBetaFeedback, normalizeBetaFeedbackSubmission, putBetaFeedbackAttachment, readBetaFeedbackRequestInput, validateFeedbackPayload } from "@/lib/beta-feedback";
-import { canAdmin, isKnownRole } from "@/lib/permissions";
+import {
+  betaFeedbackDisabledError,
+  betaFeedbackSubmissionValidationError,
+  betaFeedbackSubmittedAuditEvent,
+  buildBetaFeedbackInboxResponse,
+  buildBetaFeedbackSubmitResponse,
+  createBetaFeedbackFromSubmission,
+  listBetaFeedback,
+  normalizeBetaFeedbackSubmission,
+  readBetaFeedbackRequestInput
+} from "@/lib/beta-feedback";
+import { canAdmin } from "@/lib/permissions";
 import { requestIdentity } from "@/lib/request-identity";
-import type { BetaFeedbackSeverity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -22,51 +31,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Beta feedback inbox requires DAM Admin role." }, { status: 403 });
   }
   const feedback = await listBetaFeedback();
-  return NextResponse.json({ feedback, count: feedback.length });
+  return NextResponse.json(buildBetaFeedbackInboxResponse(feedback));
 }
 
 export async function POST(request: NextRequest) {
   if (!betaFeedbackEnabled()) {
-    return NextResponse.json({ error: "Beta feedback capture is disabled." }, { status: 503 });
+    const disabled = betaFeedbackDisabledError();
+    return NextResponse.json(disabled.body, { status: disabled.status });
   }
   const { fields, file } = await readBetaFeedbackRequestInput(request);
   const submission = normalizeBetaFeedbackSubmission(fields, request.headers.get("user-agent"));
-  if (!isKnownRole(submission.rawRole)) {
-    return NextResponse.json({ error: "Feedback role is invalid.", missing: ["role"] }, { status: 400 });
+  const validationError = betaFeedbackSubmissionValidationError(submission);
+  if (validationError) {
+    return NextResponse.json(validationError.body, { status: validationError.status });
   }
   const identity = requestIdentity(request, submission.rawRole);
-  const role = identity.role;
-  const missing = validateFeedbackPayload({ role, route: submission.route, severity: submission.severity, expected: submission.expected, actual: submission.actual });
-  if (missing.length) {
-    return NextResponse.json({ error: "Feedback is missing required fields.", missing }, { status: 400 });
-  }
+  const record = await createBetaFeedbackFromSubmission(submission, identity, file);
 
-  const id = crypto.randomUUID();
-  const attachmentUrl = await putBetaFeedbackAttachment(id, file).catch(() => "");
-  const record = await createBetaFeedback({
-    id,
-    role,
-    route: submission.route,
-    task: submission.task,
-    severity: submission.severity as BetaFeedbackSeverity,
-    expected: submission.expected,
-    actual: submission.actual,
-    reporterName: submission.reporterName,
-    browser: submission.browser,
-    device: submission.device,
-    viewport: submission.viewport,
-    attachmentUrl: attachmentUrl || submission.screenshotUrl,
-    actor: identity.id
-  });
+  appendAuditEvent(betaFeedbackSubmittedAuditEvent(record, identity.role, identity.id));
 
-  appendAuditEvent({
-    type: "beta_feedback_submitted",
-    role,
-    actor: identity.id,
-    status: "preview",
-    summary: `Beta feedback submitted for ${submission.route}.`,
-    details: { feedbackId: record.id, task: record.task, severity: record.severity, storageMode: record.storageMode }
-  });
-
-  return NextResponse.json({ ok: true, id: record.id, createdAt: record.createdAt });
+  return NextResponse.json(buildBetaFeedbackSubmitResponse(record));
 }

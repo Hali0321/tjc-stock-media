@@ -2,9 +2,10 @@ import path from "node:path";
 import { hasVercelBlobConfig, hasVercelKvConfig, repoRoot } from "@/lib/env";
 import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeCompactText, safeEnumValue, safeFileNameText, safeIsoTimestamp } from "@/lib/persisted-record-safety";
-import { normalizeRoleFilter, normalizeRoleWithFallback } from "@/lib/permissions";
+import { isKnownRole, normalizeRoleFilter, normalizeRoleWithFallback } from "@/lib/permissions";
 import { isSafeHttpUrl } from "@/lib/private-source-text";
 import { normalizeFeedbackId, normalizePersistedDisplayText, normalizeSafeRoutePath, readFormData, readJsonObject } from "@/lib/request-validation";
+import type { AuditEventRecord } from "@/lib/audit-log";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, DemoRole } from "@/lib/types";
 
 const feedbackIndexKey = "tjc-stock-media:beta-feedback:index";
@@ -24,6 +25,14 @@ type BetaFeedbackPatchBody = {
   status?: unknown;
   severity?: unknown;
   notes?: unknown;
+};
+type BetaFeedbackAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+type BetaFeedbackRouteError = {
+  body: {
+    error: string;
+    missing?: string[];
+  };
+  status: 400 | 503;
 };
 export type BetaFeedbackExportFilters = {
   status?: BetaFeedbackStatus | "all";
@@ -300,6 +309,29 @@ export function validateFeedbackPayload(payload: {
   return errors;
 }
 
+export function betaFeedbackDisabledError(): BetaFeedbackRouteError {
+  return { body: { error: "Beta feedback capture is disabled." }, status: 503 };
+}
+
+export function betaFeedbackSubmissionValidationError(submission: NormalizedBetaFeedbackSubmission): BetaFeedbackRouteError | null {
+  if (!isKnownRole(submission.rawRole)) {
+    return { body: { error: "Feedback role is invalid.", missing: ["role"] }, status: 400 };
+  }
+  const role = normalizeRoleWithFallback(submission.rawRole);
+  const missing = validateFeedbackPayload({ role, route: submission.route, severity: submission.severity, expected: submission.expected, actual: submission.actual });
+  return missing.length ? { body: { error: "Feedback is missing required fields.", missing }, status: 400 } : null;
+}
+
+export function betaFeedbackPatchValidationError(input: BetaFeedbackPatchInput): BetaFeedbackRouteError | null {
+  if (input.invalidField === "status") {
+    return { body: { error: "Feedback status is invalid." }, status: 400 };
+  }
+  if (input.invalidField === "severity") {
+    return { body: { error: "Feedback severity is invalid." }, status: 400 };
+  }
+  return null;
+}
+
 export async function createBetaFeedback(input: Omit<BetaFeedbackRecord, "id" | "createdAt" | "updatedAt" | "status" | "storageMode"> & { id?: string }) {
   const id = input.id || crypto.randomUUID();
   const createdAt = new Date().toISOString();
@@ -319,6 +351,26 @@ export async function createBetaFeedback(input: Omit<BetaFeedbackRecord, "id" | 
     await writeLocalFeedback([record, ...records.filter((item) => item.id !== record.id)]);
   }
   return record;
+}
+
+export async function createBetaFeedbackFromSubmission(submission: NormalizedBetaFeedbackSubmission, identity: { id: string; role: DemoRole }, file: File | null) {
+  const id = crypto.randomUUID();
+  const attachmentUrl = await putBetaFeedbackAttachment(id, file).catch(() => "");
+  return createBetaFeedback({
+    id,
+    role: identity.role,
+    route: submission.route,
+    task: submission.task,
+    severity: normalizeFeedbackSeverity(submission.severity),
+    expected: submission.expected,
+    actual: submission.actual,
+    reporterName: submission.reporterName,
+    browser: submission.browser,
+    device: submission.device,
+    viewport: submission.viewport,
+    attachmentUrl: attachmentUrl || submission.screenshotUrl,
+    actor: identity.id
+  });
 }
 
 export async function listBetaFeedback() {
@@ -367,6 +419,63 @@ export function buildBetaFeedbackExport(records: BetaFeedbackRecord[], filters: 
       open: filtered.filter((record) => !["fixed", "wont-fix"].includes(record.status)).length
     },
     records: filtered
+  };
+}
+
+export function buildBetaFeedbackInboxResponse(feedback: BetaFeedbackRecord[]) {
+  return { feedback, count: feedback.length };
+}
+
+export function buildBetaFeedbackSubmitResponse(record: BetaFeedbackRecord) {
+  return { ok: true, id: record.id, createdAt: record.createdAt };
+}
+
+export function buildBetaFeedbackPatchResponse(record: BetaFeedbackRecord) {
+  return { ok: true, feedback: record };
+}
+
+export function betaFeedbackSubmittedAuditEvent(record: BetaFeedbackRecord, role: DemoRole, actor: string): BetaFeedbackAuditEvent {
+  return {
+    type: "beta_feedback_submitted",
+    role,
+    actor,
+    status: "preview",
+    summary: `Beta feedback submitted for ${record.route}.`,
+    details: { feedbackId: record.id, task: record.task, severity: record.severity, storageMode: record.storageMode }
+  };
+}
+
+export function betaFeedbackTriagedAuditEvent(record: BetaFeedbackRecord, role: DemoRole, actor: string): BetaFeedbackAuditEvent {
+  return {
+    type: "beta_feedback_triaged",
+    role,
+    actor,
+    status: "preview",
+    summary: `Beta feedback ${record.id} updated to ${record.status}.`,
+    details: { feedbackId: record.id, severity: record.severity, status: record.status }
+  };
+}
+
+export function betaFeedbackExportAuditEvent(packet: ReturnType<typeof buildBetaFeedbackExport>, role: DemoRole, actor: string): BetaFeedbackAuditEvent {
+  return {
+    type: "beta_feedback_triaged",
+    role,
+    actor,
+    status: "preview",
+    summary: "Beta feedback export packet generated.",
+    details: {
+      exportedRecords: packet.counts.exportedRecords,
+      statusFilter: packet.filters.status,
+      severityFilter: packet.filters.severity,
+      roleFilter: packet.filters.role,
+      routeFilter: packet.filters.route
+    }
+  };
+}
+
+export function betaFeedbackExportHeaders(packet: ReturnType<typeof buildBetaFeedbackExport>) {
+  return {
+    "Content-Disposition": `attachment; filename="tjc-beta-feedback-${packet.exportedAt.slice(0, 10)}.json"`
   };
 }
 
