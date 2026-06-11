@@ -6,6 +6,7 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy } from "@/lib/permissions";
+import { safeSlugText } from "@/lib/persisted-record-safety";
 import { normalizeAssetId, normalizeDisplayTextField } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const bytes = fs.readFileSync(filePath);
-    const safeTitle = asset.title.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 80) || `asset-${id}`;
+    const safeTitle = safeSlugText(normalizeDisplayTextField(asset.title, "", 80), 80) || `asset-${id}`;
     appendAuditEvent({
       type: "approved_download",
       role,

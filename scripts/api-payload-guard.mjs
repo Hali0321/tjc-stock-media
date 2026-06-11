@@ -53,6 +53,12 @@ if (!downloadSource.includes('findFilestoreDerivative(id, "download")')) {
 if (!downloadSource.includes("Private originals and S3 paths are not exposed.")) {
   failures.push(`${downloadRoute} must keep explicit no-originals response copy`);
 }
+if (!downloadSource.includes("safeSlugText(normalizeDisplayTextField")) {
+  failures.push(`${downloadRoute} must derive download filenames through normalizeDisplayTextField and safeSlugText`);
+}
+if (/\.replace\(\/\[\^a-z0-9_-\]\+\/gi/.test(downloadSource)) {
+  failures.push(`${downloadRoute} must not hand-roll approved-copy filename slugging`);
+}
 
 if (failures.length) {
   console.error("API payload guard failed:");
