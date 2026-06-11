@@ -54,12 +54,12 @@ function mappedRole(groups: string[]) {
 
 export function requestIdentity(request: NextRequest, explicitRole?: string | null): DamUser {
   const headers = request.headers;
-  const fallbackRole = normalizeRole(explicitRole);
+  const localFallbackRole = normalizeRole(explicitRole);
   if (!trustedSsoHeadersEnabled()) {
     return {
-      id: `local-beta:${fallbackRole}`,
-      name: fallbackRole,
-      role: fallbackRole,
+      id: `local-beta:${localFallbackRole}`,
+      name: localFallbackRole,
+      role: localFallbackRole,
       sourceSystem: "local-beta"
     };
   }
@@ -74,7 +74,7 @@ export function requestIdentity(request: NextRequest, explicitRole?: string | nu
     || "";
   const groups = rawGroups.split(/[,|;]/).map((item) => item.trim()).filter(Boolean);
   const directRole = roleFromTrustedValue(headers.get("x-tjc-role"));
-  const role = highestTrustedRole(directRole, mappedRole(groups), highestRole(groups)) || fallbackRole;
+  const role = highestTrustedRole(directRole, mappedRole(groups), highestRole(groups)) || "Viewer";
 
   return {
     id: email ? `sso:${email.toLowerCase()}` : `sso:${role}`,

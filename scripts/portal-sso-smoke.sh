@@ -69,6 +69,10 @@ negative_phrase_headers=(
   -H "cf-access-authenticated-user-email: negative.sso@example.test"
 )
 
+no_role_claim_headers=(
+  -H "cf-access-authenticated-user-email: no-role.sso@example.test"
+)
+
 group_admin_headers=(
   -H "x-tjc-role: Viewer"
   -H "x-tjc-groups: ministry members, DAM Admin"
@@ -90,6 +94,14 @@ if (!/DAM Admin/i.test(data.error || "")) {
   process.exit(1);
 }
 ' "${negative_phrase_headers[@]}" "$BASE_URL/api/admin/readiness?role=Viewer"
+
+expect_json_status 403 missing-trusted-role-does-not-use-query-admin '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!/DAM Admin/i.test(data.error || "")) {
+  console.error(`missing trusted role denial copy invalid: ${JSON.stringify(data).slice(0, 500)}`);
+  process.exit(1);
+}
+' "${no_role_claim_headers[@]}" "$BASE_URL/api/admin/readiness?role=DAM%20Admin"
 
 expect_json group-admin-claim-beats-viewer-header '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

@@ -100,6 +100,15 @@ if (!permissionsSource.includes("function strongestRole")) {
 if (!requestIdentitySource.includes("strongestRole")) {
   failures.push("frontend/lib/request-identity.ts must resolve SSO role precedence through strongestRole");
 }
+if (!requestIdentitySource.includes("const localFallbackRole = normalizeRole(explicitRole)")) {
+  failures.push("frontend/lib/request-identity.ts must keep explicit roles confined to local beta fallback");
+}
+if (!requestIdentitySource.includes('highestTrustedRole(directRole, mappedRole(groups), highestRole(groups)) || "Viewer"')) {
+  failures.push("frontend/lib/request-identity.ts must default trusted-header sessions without trusted role claims to Viewer");
+}
+if (/highestTrustedRole\(directRole,\s*mappedRole\(groups\),\s*highestRole\(groups\)\)\s*\|\|\s*(fallbackRole|localFallbackRole)/.test(requestIdentitySource)) {
+  failures.push("frontend/lib/request-identity.ts must not trust explicit URL/form roles when trusted SSO headers are enabled");
+}
 if (/roleRank|\.indexOf\(next\)\s*>\s*.*\.indexOf\(best\)/.test(requestIdentitySource)) {
   failures.push("frontend/lib/request-identity.ts must not hand-roll SSO role precedence ranking");
 }
