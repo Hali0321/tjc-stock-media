@@ -165,6 +165,26 @@ Viewer and Contributor experiences must never expose source paths, master paths,
 original filenames, checksums, signed URLs, EXIF/private source context,
 ResourceSpace internals, admin evidence, or private notes.
 
+## Collections And Packages
+
+Collections and packages help organize media for ministry work. They do not
+approve media, grant rights, or override item-level policy. A public-approved
+collection still blocks package export when any asset in it is not Portal Ready.
+
+A package export/share decision must check every item for source/ref resolution,
+rights basis, approved channel, required notice, people/minors consent,
+sensitivity/domain review, current lifecycle, withdrawal/takedown state, and
+approved-copy derivative readiness. One blocked item blocks package export.
+
+Package output must exclude originals and masters. Normal package export is
+approved-copy only and still relies on the approved-copy download gate for file
+delivery. Original/master requests stay in the separate request-only workflow.
+
+Local package draft storage and audit events are accountability/readiness
+evidence only. Durable share links require future production storage, identity,
+expiry, revocation, audit, and per-item permission checks before they can be
+enabled.
+
 ## Review States
 
 ```text

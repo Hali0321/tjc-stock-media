@@ -377,6 +377,40 @@ export function renditionRequestAuditEvent(input: {
   };
 }
 
+export function packageDecisionAuditEvent(input: {
+  type: Extract<AuditEventType, "package_export_blocked" | "package_export_approved" | "package_share_decision">;
+  role: DemoRole;
+  actor: string;
+  packageId: string;
+  status: AuditEventRecord["status"];
+  totalRefs: number;
+  portalReadyRefs: number;
+  blockedRefs: number;
+  missingRefs: number;
+  reason: string;
+  action: string;
+}): AuditEventDraft {
+  return {
+    type: input.type,
+    role: input.role,
+    actor: input.actor,
+    packageId: input.packageId,
+    status: input.status,
+    summary: "Package decision recorded; collection membership is not permission truth.",
+    details: {
+      action: input.action,
+      totalRefs: input.totalRefs,
+      portalReadyRefs: input.portalReadyRefs,
+      blockedRefs: input.blockedRefs,
+      missingRefs: input.missingRefs,
+      reason: input.reason,
+      originalMasterIncluded: false,
+      approvedCopyGateRequired: true,
+      durableShareStorage: false
+    }
+  };
+}
+
 function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
   const raw = (input || {}) as Partial<AuditEventRecord>;
   const id = safeId(raw.id);

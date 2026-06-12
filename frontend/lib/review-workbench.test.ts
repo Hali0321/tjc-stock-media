@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { auditAccountabilityArea, auditEventForRolePayload, auditStorageReadiness, originalAccessAuditEvent, renditionRequestAuditEvent, type AuditEventRecord } from "@/lib/audit-log";
+import { auditAccountabilityArea, auditEventForRolePayload, auditStorageReadiness, originalAccessAuditEvent, packageDecisionAuditEvent, renditionRequestAuditEvent, type AuditEventRecord } from "@/lib/audit-log";
 import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildDiscoveryQuery, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { intentDefinitions, matchesCatalogFilter, savedViewDefinitions } from "@/lib/catalog-language";
@@ -7,6 +7,7 @@ import { derivativeIndexDiagnostics, governedRenditionPolicyForVariant, original
 import { fileRequiresAdminIntake, intakeDefaultsToNeedsReview, routeAssetForReview, routeUploadIntakeForReview } from "@/lib/intake-routing";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { buildPackageGovernance } from "@/lib/package-governance";
+import { packageStorageReadiness } from "@/lib/package-store";
 import { canSeeAsset } from "@/lib/permissions";
 import { approvedCopyAccessBoundary, buildOriginalAccessRequestDecision, buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { emptyReviewChecklist } from "@/lib/review-decision-presenter";
@@ -352,6 +353,152 @@ describe("package governance and discovery", () => {
 
     expect(discovery.expandedTerms).toEqual(expect.arrayContaining(["bible", "worship"]));
     expect(matchesDiscoveryQuery(asset(), "sermon slides")).toBe(true);
+  });
+});
+
+describe("Phase 6 rights-aware packages and collections", () => {
+  it("blocks package export and share when one item is not portal ready", () => {
+    const ready = asset({ id: "ready", resourceSpaceId: "2001" });
+    const blocked = asset({
+      id: "blocked",
+      resourceSpaceId: "2002",
+      status: "Approved Public",
+      rightsStatus: "Unknown",
+      consentStatus: "Unknown",
+      rightsBasis: undefined,
+      approvedChannels: [],
+      imageUrls: { small: "/s.jpg", card: "/c.jpg", collection: "/g.jpg", detail: "/d.jpg" }
+    });
+    const draft: DamPackage = {
+      id: "pkg-blocked",
+      title: "Blocked Package",
+      status: "draft",
+      sections: [{ id: "main", title: "Main", resourceSpaceAssetIds: ["2001", "2002"] }]
+    };
+    const governance = buildPackageGovernance(draft, resolvePackageSections(draft, [ready, blocked]), "DAM Admin");
+    const exportAction = governance.actions.find((item) => item.action === "export-approved-copy-package");
+    const shareAction = governance.actions.find((item) => item.action === "prepare-share-decision");
+
+    expect(governance.canPublish).toBe(false);
+    expect(governance.canShare).toBe(false);
+    expect(exportAction).toMatchObject({ allowed: false, originalMasterIncluded: false, requiresApprovedCopyGate: true });
+    expect(shareAction).toMatchObject({ allowed: false, originalMasterIncluded: false, durableShareStorage: false });
+    expect(governance.blockerSummary.map((item) => item.category)).toEqual(expect.arrayContaining(["channel-mismatch", "missing-derivative"]));
+  });
+
+  it("keeps collection membership from overriding item-level policy", () => {
+    const contextSafe = asset({
+      id: "context",
+      resourceSpaceId: "3001",
+      reuseTier: "context-safe",
+      collection: "Sabbath",
+      rightsBasis: "TJC-owned",
+      approvedChannels: ["website"]
+    });
+    const draft: DamPackage = {
+      id: "pkg-collection",
+      title: "Collection Package",
+      status: "draft",
+      collectionId: "sabbath-service",
+      sections: [{ id: "collection", title: "Collection", resourceSpaceAssetIds: ["3001"] }]
+    };
+    const governance = buildPackageGovernance(draft, resolvePackageSections(draft, [contextSafe]), "Reviewer");
+
+    expect(governance.canPublish).toBe(false);
+    expect(governance.reason).toMatch(/Portal Ready/i);
+    expect(governance.sections[0]?.assets[0]?.reuseState).not.toBe("portal-ready");
+  });
+
+  it("requires portal-ready approved-copy readiness instead of raw Approved Public", () => {
+    const rawApproved = asset({
+      id: "raw",
+      resourceSpaceId: "4001",
+      status: "Approved Public",
+      rightsStatus: "Unknown",
+      rightsBasis: undefined,
+      approvedChannels: [],
+      reviewer: undefined,
+      reviewedDate: undefined,
+      imageUrls: { small: "/small.jpg", card: "/card.jpg", collection: "/collection.jpg", detail: "/detail.jpg" }
+    });
+    const draft: DamPackage = {
+      id: "pkg-raw",
+      title: "Raw Approved Package",
+      status: "draft",
+      sections: [{ id: "raw", title: "Raw", resourceSpaceAssetIds: ["4001"] }]
+    };
+    const governance = buildPackageGovernance(draft, resolvePackageSections(draft, [rawApproved]), "DAM Admin");
+
+    expect(rawApproved.status).toBe("Approved Public");
+    expect(governance.portalReadyRefs).toBe(0);
+    expect(governance.actions.find((item) => item.action === "export-approved-copy-package")?.allowed).toBe(false);
+  });
+
+  it("redacts Viewer package payloads and package audit read models", () => {
+    const privateAsset = asset({
+      id: "private",
+      resourceSpaceId: "5001",
+      sourcePath: "/Shared Drives/private/source.jpg",
+      masterDrivePath: "/Shared Drives/master/source.jpg",
+      originalFilename: "source.jpg",
+      checksumSha256: "secret-checksum"
+    });
+    const draft: DamPackage = {
+      id: "pkg-redacted",
+      title: "Redacted Package",
+      status: "draft",
+      sections: [{ id: "main", title: "Main", resourceSpaceAssetIds: ["5001"] }]
+    };
+    const governance = buildPackageGovernance(draft, resolvePackageSections(draft, [privateAsset]), "Viewer");
+    const packageAsset = governance.sections[0]?.assets[0]?.asset;
+    const audit = auditEventForRolePayload("Viewer", {
+      id: "audit-package",
+      createdAt: "2026-06-12T00:00:00.000Z",
+      actor: "reviewer@example.org",
+      ...packageDecisionAuditEvent({
+        type: "package_export_blocked",
+        role: "Reviewer",
+        actor: "reviewer@example.org",
+        packageId: "pkg-redacted",
+        status: "blocked",
+        totalRefs: 1,
+        portalReadyRefs: 0,
+        blockedRefs: 1,
+        missingRefs: 0,
+        reason: "Blocked by source evidence.",
+        action: "export-approved-copy-package"
+      }),
+      details: {
+        sourcePath: "/Shared Drives/private/source.jpg",
+        masterDrivePath: "/Shared Drives/master/source.jpg",
+        checksumSha256: "secret",
+        signedUrl: "https://example.test/private?token=secret",
+        originalMasterIncluded: false,
+        approvedCopyGateRequired: true
+      }
+    });
+
+    expect(packageAsset?.resourceSpaceId).toBeUndefined();
+    expect(packageAsset?.sourcePath).toBeUndefined();
+    expect(packageAsset?.masterDrivePath).toBeUndefined();
+    expect(packageAsset?.originalFilename).toBeUndefined();
+    expect(packageAsset?.checksumSha256).toBeUndefined();
+    expect(audit.packageId).toBe("pkg-redacted");
+    expect(audit.details?.sourcePath).toBeUndefined();
+    expect(audit.details?.masterDrivePath).toBeUndefined();
+    expect(audit.details?.checksumSha256).toBeUndefined();
+    expect(audit.details?.signedUrl).toBeUndefined();
+    expect(audit.details?.originalMasterIncluded).toBeUndefined();
+    expect(audit.details?.approvedCopyGateRequired).toBe(true);
+  });
+
+  it("states local package storage is not durable production share storage", () => {
+    expect(packageStorageReadiness()).toMatchObject({
+      storageMode: "local-json",
+      durableShareStorage: false,
+      productionReadySharing: false,
+      permissionTruth: false
+    });
   });
 });
 

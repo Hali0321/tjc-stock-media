@@ -17,7 +17,39 @@ export type PackageGovernanceAsset = {
   publishReady: boolean;
   shareReady: boolean;
   blockers: ReuseBlocker[];
+  blockerCategories: PackageBlockerCategory[];
   reason: string;
+};
+
+export type PackageBlockerCategory =
+  | "missing-ref"
+  | "missing-rights"
+  | "minors-consent"
+  | "missing-derivative"
+  | "stale-lifecycle"
+  | "withdrawal-takedown"
+  | "channel-mismatch"
+  | "required-notice"
+  | "sensitivity-domain-review"
+  | "missing-source"
+  | "original-master-restricted"
+  | "review-required";
+
+export type PackageBlockerSummary = {
+  category: PackageBlockerCategory;
+  label: string;
+  count: number;
+  refs: string[];
+};
+
+export type PackageActionDecision = {
+  action: "save-draft" | "request-review" | "export-approved-copy-package" | "prepare-share-decision";
+  allowed: boolean;
+  status: "allowed" | "blocked" | "queued" | "preview";
+  reason: string;
+  originalMasterIncluded: false;
+  requiresApprovedCopyGate: boolean;
+  durableShareStorage: false;
 };
 
 export type PackageGovernanceSection = {
@@ -54,6 +86,8 @@ export type PackageGovernancePacket = {
   blockedRefs: number;
   reason: string;
   auditMessage: string;
+  blockerSummary: PackageBlockerSummary[];
+  actions: PackageActionDecision[];
   commandCenter: Array<{
     label: string;
     status: "ready" | "blocked" | "review";
@@ -79,6 +113,113 @@ function assetReason(asset: StockMediaAsset, blockers: ReuseBlocker[]) {
   return blockers.map((blocker) => blocker.label).join(", ");
 }
 
+const blockerCategoryLabels: Record<PackageBlockerCategory, string> = {
+  "missing-ref": "Missing media reference",
+  "missing-rights": "Rights or consent missing",
+  "minors-consent": "Minors/consent review",
+  "missing-derivative": "Approved-copy derivative missing",
+  "stale-lifecycle": "Stale or expired lifecycle",
+  "withdrawal-takedown": "Withdrawal/takedown",
+  "channel-mismatch": "Approved channel mismatch",
+  "required-notice": "Required notice missing",
+  "sensitivity-domain-review": "Sensitivity/domain review",
+  "missing-source": "Source/provenance missing",
+  "original-master-restricted": "Original/master excluded",
+  "review-required": "Review required"
+};
+
+function categoryForBlocker(asset: StockMediaAsset, blocker: ReuseBlocker): PackageBlockerCategory {
+  const text = `${blocker.code} ${blocker.label} ${asset.rightsStatus || ""} ${asset.consentStatus || ""} ${asset.rightsNotes || ""}`.toLowerCase();
+  if (blocker.code === "blocked-source") return "missing-source";
+  if (blocker.code === "blocked-rights") {
+    if (!asset.approvedChannels?.length || /channel/.test(text)) return "channel-mismatch";
+    if (!asset.requiredNotice && (asset.hymnNumberOrTitle || /notice|hymn|music/.test(text))) return "required-notice";
+    return "missing-rights";
+  }
+  if (blocker.code === "blocked-people-minors") return "minors-consent";
+  if (blocker.code === "blocked-derivative") return "missing-derivative";
+  if (blocker.code === "blocked-reviewer-date") return "stale-lifecycle";
+  if (blocker.code === "blocked-sensitive") return "sensitivity-domain-review";
+  if (blocker.code === "blocked-archive" || blocker.code === "blocked-do-not-use") {
+    return asset.withdrawalStatus && asset.withdrawalStatus !== "active" ? "withdrawal-takedown" : "review-required";
+  }
+  return "review-required";
+}
+
+function addSummary(
+  map: Map<PackageBlockerCategory, PackageBlockerSummary>,
+  category: PackageBlockerCategory,
+  ref: string
+) {
+  const current = map.get(category) || { category, label: blockerCategoryLabels[category], count: 0, refs: [] };
+  current.count += 1;
+  if (!current.refs.includes(ref)) current.refs.push(ref);
+  map.set(category, current);
+}
+
+function packageBlockerSummary(sections: PackageGovernanceSection[]): PackageBlockerSummary[] {
+  const map = new Map<PackageBlockerCategory, PackageBlockerSummary>();
+  for (const section of sections) {
+    for (const missing of section.missingRefs) addSummary(map, "missing-ref", String(missing));
+    for (const item of section.assets) {
+      if (!item.publishReady) addSummary(map, "original-master-restricted", item.ref);
+      for (const category of item.blockerCategories) addSummary(map, category, item.ref);
+    }
+  }
+  return [...map.values()].sort((left, right) => left.label.localeCompare(right.label));
+}
+
+export function buildPackageActionDecisions(input: {
+  hasRefs: boolean;
+  canPreview: boolean;
+  canShare: boolean;
+  canPublish: boolean;
+  missingRefs: number;
+  blockedRefs: number;
+  reason: string;
+}): PackageActionDecision[] {
+  return [
+    {
+      action: "save-draft",
+      allowed: input.hasRefs,
+      status: input.hasRefs ? "preview" : "blocked",
+      reason: input.hasRefs ? "Draft can be saved as a local package readiness record." : "Add media references before saving package readiness.",
+      originalMasterIncluded: false,
+      requiresApprovedCopyGate: false,
+      durableShareStorage: false
+    },
+    {
+      action: "request-review",
+      allowed: input.hasRefs && input.blockedRefs > 0,
+      status: input.hasRefs && input.blockedRefs > 0 ? "queued" : "blocked",
+      reason: input.blockedRefs > 0 ? "Blocked items can be queued for review; ResourceSpace approval remains authoritative." : "No blocked refs require package review.",
+      originalMasterIncluded: false,
+      requiresApprovedCopyGate: false,
+      durableShareStorage: false
+    },
+    {
+      action: "export-approved-copy-package",
+      allowed: input.canPublish,
+      status: input.canPublish ? "allowed" : "blocked",
+      reason: input.canPublish ? "Every item is Portal Ready; export may include approved-copy derivatives only." : input.reason,
+      originalMasterIncluded: false,
+      requiresApprovedCopyGate: true,
+      durableShareStorage: false
+    },
+    {
+      action: "prepare-share-decision",
+      allowed: input.canShare && input.missingRefs === 0,
+      status: input.canShare && input.missingRefs === 0 ? "preview" : "blocked",
+      reason: input.canShare && input.missingRefs === 0
+        ? "Share decision can be prepared, but no durable public share link is created here."
+        : input.reason,
+      originalMasterIncluded: false,
+      requiresApprovedCopyGate: true,
+      durableShareStorage: false
+    }
+  ];
+}
+
 function packageGovernanceRef(asset: StockMediaAsset) {
   return normalizedPackageAssetRef(asset) || "media-reference";
 }
@@ -102,6 +243,7 @@ function classifyAsset(sectionId: string, sectionTitle: string, asset: StockMedi
     publishReady: portalReady,
     shareReady: canShare,
     blockers: packet.reuse.blockers,
+    blockerCategories: packet.reuse.blockers.map((blocker) => categoryForBlocker(asset, blocker)),
     reason: assetReason(asset, packet.reuse.blockers)
   };
 }
@@ -221,6 +363,8 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
         : reviewRequiredRefs
           ? "Publish blocked until every ref is Portal Ready."
           : "Every ref is Portal Ready for package publishing.";
+  const blockerSummary = packageBlockerSummary(sections);
+  const actions = buildPackageActionDecisions({ hasRefs, canPreview, canShare, canPublish, missingRefs, blockedRefs, reason });
 
   return {
     role,
@@ -239,6 +383,8 @@ export function buildPackageGovernance(draft: DamPackage, resolvedSections: Reso
     blockedRefs,
     reason,
     auditMessage: `Package governance: ${portalReadyRefs}/${totalRefs} Portal Ready, ${internalOnlyRefs} internal-only, ${reviewRequiredRefs} review-required, ${missingRefs} missing.`,
+    blockerSummary,
+    actions,
     commandCenter: [
       command("Preview package", canPreview, canPreview ? `All ${refNoun} can render a role-safe preview.` : `Preview waits for resolvable ${refNoun} and role-safe previews.`, !canPreview && hasRefs),
       command("Prepare share packet", canShare, canShare ? "Share stays policy-scoped; no public link is created here." : `Share waits for Portal Ready ${refNoun} or internal-ready ${refNoun} allowed for this role.`, !canShare && hasRefs),

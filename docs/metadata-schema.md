@@ -259,6 +259,24 @@ durable request storage, verified approver identity, expiry enforcement,
 revocation, audit, and source-path redaction. Google Shared Drive remains master
 custody.
 
+## Collections / Packages
+
+Collections and packages are curation, readiness, and delivery planning records.
+They are not permission truth. Collection membership may help coworkers find or
+assemble assets, but every package decision must evaluate each item against the
+current ResourceSpace-backed portal policy.
+
+Package export/share decisions require every included asset to be Portal Ready
+for the selected purpose/channel, with no missing references, rights gaps,
+minors/consent blockers, missing required notice, sensitivity/domain-review
+blockers, expired/stale lifecycle, withdrawal/takedown state, or missing
+approved-copy derivative. Raw `Approved Public` does not pass by itself.
+
+Package output may include approved-copy derivatives only. Original/master files
+stay under Shared Drive custody and use the separate original-access request
+workflow. Local package draft JSON is a private-beta readiness record; it is not
+durable production share/export storage and does not grant permission.
+
 ## AI Suggestions
 
 | Field | Purpose |
