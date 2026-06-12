@@ -409,7 +409,8 @@ if (data.allowed !== false || data.downloadUrl || data.ticket) {
   "${REVIEWER_HEADERS[@]}" \
   "$BASE_URL/api/download/$BLOCKED_ID?role=Reviewer"
 
-APPROVED_ID="$APPROVED_ID" node -e '
+if [ "$local_runtime_probe" = "1" ]; then
+  APPROVED_ID="$APPROVED_ID" node -e '
 const fs = require("fs");
 const path = require("path");
 const root = process.cwd();
@@ -425,5 +426,20 @@ if (!gate || !transfer) {
 }
 console.error("PASS: required download audit events persisted");
 '
+else
+  expect_json_status 200 hosted-admin-readiness-audit-surface-safe '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+if (!Array.isArray(data.readiness) || !Array.isArray(data.fieldMappings) || !Array.isArray(data.vocabulary)) {
+  console.error("FAIL: hosted readiness did not return readiness, field mappings, and vocabulary");
+  process.exit(1);
+}
+const text = JSON.stringify(data);
+if (/signedUrl|originalUrl|s3:\/\/|master drive path|sourceAlbumPath|masterDrivePath/i.test(text)) {
+  console.error(`FAIL: hosted readiness exposed private delivery/source internals: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/admin/readiness?role=DAM%20Admin"
+  echo "PASS: hosted audit persistence covered by per-request auditId checks"
+fi
 
 echo "Portal download ticket smoke complete."
