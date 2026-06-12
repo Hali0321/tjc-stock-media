@@ -118,6 +118,12 @@ if (/roleRank|\.indexOf\(next\)\s*>\s*.*\.indexOf\(best\)/.test(requestIdentityS
 if (!requestIdentitySource.includes("productionRuntime()") || !requestIdentitySource.includes("production-client-role-ignored")) {
   failures.push("frontend/lib/request-identity.ts must ignore client role overrides in production");
 }
+if (!requestIdentitySource.includes("productionTrustedIdentityRequired") || !requestIdentitySource.includes("production:trusted-identity-missing")) {
+  failures.push("frontend/lib/request-identity.ts must fail closed to Viewer when production trusted identity is missing");
+}
+if (!requestIdentitySource.includes("requestIsLocalhost(request) || localBetaRoleOverridesEnabled()")) {
+  failures.push("frontend/lib/request-identity.ts must confine client role overrides to localhost or explicit beta mode");
+}
 if (!requestIdentitySource.includes('overridePolicy !== "download-gate"') || !requestIdentitySource.includes("client-role-disabled")) {
   failures.push("frontend/lib/request-identity.ts must centralize download-gate client role override policy");
 }

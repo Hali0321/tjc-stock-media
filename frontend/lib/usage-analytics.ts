@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot, usageAnalyticsDbPath, usageAnalyticsEnabled } from "@/lib/env";
+import { assertRuntimeWriteAllowed } from "@/lib/runtime-file-store";
 import { safeEnumValue, safeFiniteNumber, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { normalizeAssetId, normalizePersistedDisplayText, normalizeResourceSpaceRef, normalizeSafeRoutePath } from "@/lib/request-validation";
@@ -144,6 +145,7 @@ function usageAnalyticsStorageMode() {
 export function recordUsageEvent(event: UsageEventInput) {
   if (!usageAnalyticsEnabled()) return { recorded: false, reason: "usage-analytics-disabled" };
   try {
+    assertRuntimeWriteAllowed("usage-events");
     const connection = database();
     if (!connection) return { recorded: false, reason: safeUsageFailureReason() };
     const stmt = connection.prepare(`

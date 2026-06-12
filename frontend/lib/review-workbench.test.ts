@@ -38,6 +38,7 @@ function asset(overrides: Partial<StockMediaAsset> = {}): StockMediaAsset {
     sourcePlatform: "Shared Drive",
     sourceAccount: "media-team@example.org",
     sourcePath: "/private/source.jpg",
+    masterDrivePath: "/Shared Drives/TJC Stock Media/approved/source.jpg",
     originalFilename: "source.jpg",
     checksumSha256: "abc123abc123abc123abc123abc123ab",
     imageDimensions: "2400x1600",
@@ -75,7 +76,7 @@ describe("review workbench model", () => {
 
     expect(metrics.find((item) => item.label === "Needs review")?.value).toBe("2");
     expect(metrics.find((item) => item.label === "Rights unclear")?.tone).toBe("warning");
-    expect(signals.find((item) => item.label === "People/minors unknown")?.count).toBe(1);
+    expect(signals.find((item) => item.label === "People/minors status unresolved")?.count).toBe(1);
     expect(reviewNextCheckLabel(risky)).toBe("Check people/minors");
     expect(buildReviewDecisionLanes(risky).some((lane) => lane.label === "Rights" && lane.blocked)).toBe(true);
   });
@@ -86,7 +87,7 @@ describe("review workbench model", () => {
 
     expect(requirements.completed).toBe(0);
     expect(requirements.total).toBe(12);
-    expect(requirements.missingLabels).toContain("Review note added");
+    expect(requirements.missingLabels).toContain("Review note missing");
     expect(missing).toContain("proofLinkAttached");
     expect(missing).toContain("reviewNote");
   });

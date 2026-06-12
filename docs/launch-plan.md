@@ -82,6 +82,11 @@ Launch is blocked until all items pass:
 10. Large video/audio upload path is tested outside Cloudflare browser upload limits.
 11. AI cost kill switch is tested.
 12. One-page user guide and 5-minute demo exist.
+13. Production trusted SSO headers are enabled and verified; client role overrides are ignored.
+14. Durable runtime storage is configured for audit log, pending review writes, download tickets, feedback, packages, saved searches, and usage events, or those stateful features fail closed.
+15. ResourceSpace live API reads prove paginated full-archive behavior and do not silently cap at 1,000 records.
+16. ResourceSpace review writeback is confirmed by re-reading the updated record; queued portal review is not final ResourceSpace truth.
+17. Approved Public is checked against portal-ready policy before reuse; raw approval alone is not a download grant.
 
 ## Storage Requirement
 
@@ -189,6 +194,20 @@ reviewed_by
 reviewed_date
 approval_notes
 approved_use_copy_path
+```
+
+Required before broad portal-ready reuse:
+
+```text
+reuse_tier
+visibility_tier
+sensitivity_class
+rights_basis
+approved_channels
+required_notice when applicable
+consent_release_record_id when people/minors require consent evidence
+expiration_or_recheck_date when rights need future review
+domain_reviewer when doctrine, music, youth, testimony, or pastoral sensitivity applies
 ```
 
 ## AI V1

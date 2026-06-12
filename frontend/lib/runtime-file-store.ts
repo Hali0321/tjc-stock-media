@@ -1,6 +1,52 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { durableRuntimeStoreConfigured, productionRuntime, runtimeStoreMode } from "@/lib/env";
+
+export type RuntimeStateCategory =
+  | "audit-log"
+  | "pending-review-writes"
+  | "download-tickets"
+  | "beta-feedback"
+  | "package-drafts"
+  | "saved-searches"
+  | "usage-events"
+  | "runtime";
+
+function categoryForPath(filePath: string): RuntimeStateCategory {
+  if (filePath.includes("audit-log")) return "audit-log";
+  if (filePath.includes("pending-review-writes")) return "pending-review-writes";
+  if (filePath.includes("download-tickets")) return "download-tickets";
+  if (filePath.includes("beta-feedback")) return "beta-feedback";
+  if (filePath.includes("package-drafts")) return "package-drafts";
+  if (filePath.includes("saved-searches")) return "saved-searches";
+  if (filePath.includes("usage")) return "usage-events";
+  return "runtime";
+}
+
+export function runtimeStoreDiagnostics() {
+  const durable = durableRuntimeStoreConfigured();
+  const production = productionRuntime();
+  return {
+    mode: runtimeStoreMode(),
+    adapter: "local-filesystem",
+    durable,
+    production,
+    statefulWritesAllowed: !production || durable,
+    state: production && !durable ? "Blocked" : durable ? "Operational" : "Local beta only",
+    detail: production && !durable
+      ? "Production stateful features require a configured durable runtime store. Local filesystem state is blocked."
+      : durable
+        ? "Durable runtime store is configured for production readiness checks."
+        : "Local filesystem runtime state is enabled for local/private beta only."
+  };
+}
+
+export function assertRuntimeWriteAllowed(category: RuntimeStateCategory) {
+  if (productionRuntime() && !durableRuntimeStoreConfigured()) {
+    throw new Error(`Durable runtime store required for production ${category} writes.`);
+  }
+}
 
 export function ensureRuntimeDir(dir: string) {
   fs.mkdirSync(dir, { recursive: true });
@@ -30,6 +76,7 @@ function writeRuntimeFileAtomically(filePath: string, contents: string) {
 }
 
 export function writeRuntimeJsonFile(filePath: string, record: unknown) {
+  assertRuntimeWriteAllowed(categoryForPath(filePath));
   ensureRuntimeDir(path.dirname(filePath));
   writeRuntimeFileAtomically(filePath, `${JSON.stringify(record, null, 2)}\n`);
 }
@@ -53,6 +100,7 @@ export function listRuntimeFiles(dir: string, extension: string, options?: Runti
 }
 
 export function appendRuntimeJsonLine(filePath: string, record: unknown) {
+  assertRuntimeWriteAllowed(categoryForPath(filePath));
   ensureRuntimeDir(path.dirname(filePath));
   fs.appendFileSync(filePath, `${JSON.stringify(record)}\n`, "utf8");
 }

@@ -15,6 +15,9 @@ only.
 - Treat missing metadata as readiness debt, not as permission to infer.
 - Add fields in a backward-compatible way; use aliases or field-map migration for
   renames.
+- Portal code validates this contract. Missing required identity/provenance,
+  approval, or derivative fields degrade readiness; AI suggestion fields never
+  become final human-approved metadata by inference.
 
 ## Source / Provenance
 

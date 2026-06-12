@@ -29,6 +29,7 @@ Every imported asset starts as:
 | Public approval requires extra confidence. | Public church media has higher reputational risk. |
 | Unknown people or children default to Needs Review. | Consent risk. |
 | No asset goes to Approved Public without metadata. | Prevents looks-fine approvals. |
+| Portal review action is not ResourceSpace truth until live writeback is confirmed by re-read. | Prevents queued sidecar state from masquerading as DAM state. |
 
 ## Quality vs Rights vs Publishing
 

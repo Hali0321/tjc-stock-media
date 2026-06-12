@@ -61,7 +61,7 @@ npm install
 npm run dev
 ```
 
-By default the dev portal runs at `http://localhost:3008`. If that port is busy, run a different port:
+By default the dev portal runs at `http://localhost:4867`. If that port is busy, run a different port:
 
 ```bash
 npx next dev --port 3029
@@ -150,7 +150,7 @@ Open ResourceSpace:
 
 Open TJC Stock Media portal:
 
-`http://localhost:3008`
+`http://localhost:4867`
 
 ## Current Frontend State
 
@@ -160,7 +160,18 @@ The portal now targets a hybrid ministry DAM model: enterprise metadata/permissi
 
 Safety remains unchanged: ResourceSpace is still source of truth, Google Shared Drive keeps master originals, pending review writes are local/not final, uploads stay `Needs Review / Do Not Publish`, unsafe Viewer downloads remain blocked, and original/master access remains restricted.
 
-Refreshed screenshots live under `docs/screenshots/`, including desktop plus 320/390 mobile captures and primitive proofs under `docs/screenshots/primitive-proof/`. Latest `portal-browser-qa` checked 15 routes across 1440/1280/1024/768/390/320, refreshed 20 required page screenshots, and reported zero failures, zero warnings, zero console errors, and zero network failures from `http://localhost:3047`.
+Current hardening pass:
+
+- Production client role overrides are ignored globally. Without trusted SSO headers, privileged routes fail closed.
+- Local beta role switch is QA convenience only; it is not production auth, SSO, impersonation, or permission delegation.
+- ResourceSpace live reads use paginated search and fail safely instead of silently capping archive reads at 1,000 records.
+- Review writeback returns ResourceSpace success only after live API update and post-write confirmation. Otherwise it remains queued, failed, or conflicted sidecar state.
+- `.runtime` JSON/JSONL remains local beta storage. Production stateful features require durable runtime storage or fail closed.
+- Approved Public is not automatically portal-ready; rights, people/minors, reviewer/date, schema, and derivative evidence still gate reuse.
+
+Still blocked for real production until church host, trusted SSO, durable runtime storage, backup/restore evidence, large-media intake, and ResourceSpace field map/writeback are configured and verified.
+
+Refreshed screenshots live under `docs/screenshots/`, including desktop plus 320/390 mobile captures and primitive proofs under `docs/screenshots/primitive-proof/`. Latest `portal-browser-qa` checked 15 routes across 1440/1280/1024/768/390/320, refreshed 20 required page screenshots, and reported zero failures, zero warnings, zero console errors, and zero network failures from a local QA server.
 
 Current local prototype login:
 
@@ -207,7 +218,7 @@ make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
 make launch-readiness # local launch documentation/config guardrail check
-make frontend-dev # run Next.js portal locally at http://localhost:3008
+make frontend-dev # run Next.js portal locally at http://localhost:4867
 make frontend-check # typecheck/build frontend and scan for media/secrets/runtime files
 make demo-check # frontend checks plus demo/doc guardrails
 make portal-api-smoke # API contract smoke for access/search/review/upload/admin

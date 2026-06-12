@@ -1,4 +1,5 @@
 import type { AssetGovernancePassport, StockMediaAsset } from "@/lib/types";
+import { validateAssetMetadataContract } from "@/lib/resourcespace-schema";
 
 const reviewPlaceholderPattern = /review before sharing|reviewer must approve/i;
 const rightsConcernPattern = /rights unclear|unknown|concern|not confirmed|needs review|review required/i;
@@ -160,6 +161,11 @@ export function assetIsPortalReady(asset: StockMediaAsset) {
 }
 
 export function assetNeedsStaleApprovalReview(asset: StockMediaAsset, now: Date | number = new Date()) {
+  if (asset.expirationOrRecheckDate) {
+    const recheck = new Date(asset.expirationOrRecheckDate);
+    const referenceDate = now instanceof Date ? now : new Date();
+    if (!Number.isNaN(recheck.getTime()) && recheck.getTime() < referenceDate.getTime()) return true;
+  }
   if (!assetIsApproved(asset) || !asset.reviewedDate) return false;
   const referenceDate = now instanceof Date ? now : new Date();
   const reviewed = new Date(asset.reviewedDate);
@@ -169,9 +175,11 @@ export function assetNeedsStaleApprovalReview(asset: StockMediaAsset, now: Date 
 
 export function assetPortalBlockers(asset: StockMediaAsset) {
   const blockers: string[] = [];
+  const contract = validateAssetMetadataContract(asset);
   if (assetIsBlocked(asset)) blockers.push("Do not use");
   if (assetIsArchiveOnly(asset)) blockers.push("Archive only");
   if (asset.status !== "Approved Public") blockers.push("Not Approved Public");
+  contract.missing.forEach((field) => blockers.push(`Metadata contract missing: ${field}`));
   if (!asset.peopleRisk || asset.peopleRisk === "Unknown") blockers.push("People/minors unknown");
   if (assetHasChildrenYouthRisk(asset)) blockers.push("Children/youth review required");
   if (assetNeedsSourceReview(asset)) blockers.push("Source not traceable");
@@ -207,7 +215,8 @@ export function assetGovernancePassport(asset: StockMediaAsset): AssetGovernance
     assetHasTaxonomyDrift(asset) && "Taxonomy drift weakens search",
     asset.duplicateGroup && "Duplicate group needs canonical decision",
     assetNeedsUsageGuidance(asset) && "Usage guidance missing",
-    assetNeedsStaleApprovalReview(asset) && "Approval recheck due"
+    assetNeedsStaleApprovalReview(asset) && "Approval recheck due",
+    ...validateAssetMetadataContract(asset).warnings.map((field) => `Metadata contract warning: ${field}`)
   ].filter((item): item is string => Boolean(item));
   const policyScore = scoreFromBooleans([
     blockers.length === 0,

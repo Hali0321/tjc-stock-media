@@ -84,14 +84,27 @@ export async function runReviewActionWorkflow(request: NextRequest, body: Review
 
   const requestedStatus = action?.targetStatus || asset.status;
   const resourceSpaceId = assetResourceRef(asset);
-  const pending = queuePendingReviewDecision({
-    asset,
-    requestedStatus,
-    role,
-    reviewerName: body.reviewerName,
-    note,
-    checklist
-  });
+  let pending: ReturnType<typeof queuePendingReviewDecision>;
+  try {
+    pending = queuePendingReviewDecision({
+      asset,
+      requestedStatus,
+      role,
+      reviewerName: body.reviewerName,
+      note,
+      checklist
+    });
+  } catch (error) {
+    return {
+      status: 503,
+      body: {
+        error: "Review decision could not be queued because required runtime storage is unavailable.",
+        reasonCode: "runtime-store-required",
+        detail: error instanceof Error ? error.message : "Runtime store write failed.",
+        ...envelope
+      }
+    };
+  }
 
   appendAuditEvent({
     type: "review_pending_write_queued",

@@ -181,6 +181,71 @@ export function validateResourceSpaceRecord(row: ResourceSpaceRecord) {
   };
 }
 
+function isMeaningful(value?: string) {
+  return Boolean(value && !/^(unknown|not exported|not applicable|none|n\/a|needs review|review required)$/i.test(value.trim()));
+}
+
+export type MetadataContractValidation = {
+  ok: boolean;
+  missing: string[];
+  warnings: string[];
+};
+
+export function validateAssetMetadataContract(asset: StockMediaAsset): MetadataContractValidation {
+  const missing: string[] = [];
+  const warnings: string[] = [];
+  const requireField = (field: string, present: boolean) => {
+    if (!present) missing.push(field);
+  };
+  const warnField = (field: string, present: boolean) => {
+    if (!present) warnings.push(field);
+  };
+
+  requireField("asset_id", Boolean(asset.id || asset.resourceSpaceId));
+  requireField("media_type", Boolean(asset.mediaType));
+  requireField("source_system", Boolean(asset.sourceSystem || asset.sourcePlatform));
+  requireField("source_album_or_event", Boolean(asset.sourceAlbum || asset.collection || asset.eventName));
+  requireField("original_filename", Boolean(asset.originalFilename));
+  requireField("master_drive_path", Boolean(asset.masterDrivePath));
+  requireField("checksum_sha256", Boolean(asset.checksumSha256));
+
+  if (asset.status === "Approved Public" || asset.status === "Approved Internal") {
+    requireField("rights_status", isMeaningful(asset.rightsStatus));
+    requireField("reviewed_by", Boolean(asset.reviewer));
+    requireField("reviewed_date", Boolean(asset.reviewedDate));
+    requireField("approval_notes", isMeaningful(asset.rightsNotes));
+    requireField("people_visible", Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown"));
+    requireField("approved_use_copy", Boolean(asset.imageUrls?.download));
+  }
+
+  if (asset.status === "Approved Public") {
+    requireField("usage_scope_public", asset.usageScope === "Public" || asset.usageScope === "Public and Internal");
+    requireField("derivative_dimensions", Boolean(asset.imageDimensions));
+  }
+
+  warnField("reuse_tier", isMeaningful(asset.reuseTier));
+  warnField("visibility_tier", isMeaningful(asset.visibilityTier));
+  warnField("sensitivity_class", isMeaningful(asset.sensitivityClass));
+  warnField("rights_basis", isMeaningful(asset.rightsBasis));
+  warnField("approved_channels", Boolean(asset.approvedChannels?.length));
+  warnField("required_notice", asset.requiredNotice !== undefined);
+  warnField("expiration_or_recheck_date", isMeaningful(asset.expirationOrRecheckDate));
+  warnField("domain_reviewer", isMeaningful(asset.domainReviewer));
+
+  const peopleOrYouth = asset.peopleRisk === "Adults visible" || asset.peopleRisk === "Possible minors";
+  if (peopleOrYouth) warnField("consent_release_record_id", isMeaningful(asset.consentReleaseRecordId));
+
+  const aiLooksFinal = Boolean(asset.aiTitleSuggestion || asset.aiVisibleTagSuggestions?.length || asset.aiTjcTermSuggestions?.length || asset.aiQualitySuggestion || asset.aiPeopleOrMinorFlag)
+    && !/accepted|edited|rejected/i.test(asset.humanAiDecision || "");
+  if (aiLooksFinal) warnings.push("ai_suggestions_not_human_approved");
+
+  return {
+    ok: missing.length === 0,
+    missing,
+    warnings
+  };
+}
+
 export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMediaAsset {
   const validation = validateResourceSpaceRecord(row);
   const id = validation.id || value(row, "canonical_asset_id") || "unknown-resource";
@@ -252,6 +317,15 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     aiTjcTermSuggestions: splitResourceSpaceList(value(row, "ai_tjc_term_suggestions")),
     aiQualitySuggestion: value(row, "ai_quality_suggestion") || undefined,
     aiPeopleOrMinorFlag: value(row, "ai_people_or_minor_flag") || undefined,
-    humanAiDecision: value(row, "human_ai_decision") || undefined
+    humanAiDecision: value(row, "human_ai_decision") || undefined,
+    reuseTier: value(row, "reuse_tier") || undefined,
+    visibilityTier: value(row, "visibility_tier") || undefined,
+    sensitivityClass: value(row, "sensitivity_class") || undefined,
+    rightsBasis: value(row, "rights_basis") || undefined,
+    approvedChannels: splitResourceSpaceList(value(row, "approved_channels")),
+    requiredNotice: value(row, "required_notice") || undefined,
+    consentReleaseRecordId: value(row, "consent_release_record_id") || undefined,
+    expirationOrRecheckDate: value(row, "expiration_or_recheck_date") || undefined,
+    domainReviewer: value(row, "domain_reviewer") || undefined
   };
 }

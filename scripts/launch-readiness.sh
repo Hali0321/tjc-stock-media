@@ -50,6 +50,21 @@ require_text() {
   fi
 }
 
+env_value() {
+  local key="$1"
+  if [ ! -f .env ]; then
+    return 0
+  fi
+  grep -E "^${key}=" .env | tail -1 | cut -d= -f2- || true
+}
+
+production_env_requested() {
+  [ "$(env_value NODE_ENV)" = "production" ] \
+    || [ "$(env_value VERCEL_ENV)" = "production" ] \
+    || [ "$(env_value TJC_ENV)" = "production" ] \
+    || [ "$(env_value TJC_DEPLOYMENT_TARGET)" = "church-pc-nas" ]
+}
+
 if command -v docker >/dev/null 2>&1; then
   compose_env=".env"
   compose_file="docker-compose.yml"
@@ -209,13 +224,42 @@ else
 fi
 
 if [ -f .env ]; then
-  if grep -Eq 'change-me|example\.tjc\.org' .env; then
+  if production_env_requested && grep -Eq 'change-me|example\.tjc\.org' .env; then
+    fail "production .env contains placeholder values"
+  elif grep -Eq 'change-me|example\.tjc\.org' .env; then
     warn ".env still contains placeholder values"
   else
     pass ".env does not contain obvious placeholder values"
   fi
+  if production_env_requested; then
+    if [ "$(env_value SSO_TRUSTED_HEADERS)" = "1" ] || [ "$(env_value SSO_PROVIDER)" = "cloudflare-access" ]; then
+      pass "production trusted SSO header mode configured"
+    else
+      fail "production requires trusted SSO headers"
+    fi
+    if [ "$(env_value PORTAL_ALLOW_BETA_ROLE_OVERRIDE)" = "1" ] || [ "$(env_value NEXT_PUBLIC_LOCAL_BETA_ROLE_SWITCH)" = "1" ] || [ "$(env_value DOWNLOAD_GATE_ALLOW_DEMO_ROLES)" = "1" ]; then
+      fail "production beta/client role override is enabled"
+    else
+      pass "production beta/client role overrides disabled"
+    fi
+    runtime_store="$(env_value RUNTIME_STORE)"
+    if [ "$runtime_store" = "external-durable" ] || { [ "$runtime_store" = "vercel-kv" ] && [ -n "$(env_value KV_REST_API_URL)" ] && [ -n "$(env_value KV_REST_API_TOKEN)" ]; }; then
+      pass "production durable runtime store configured"
+    else
+      fail "production durable runtime store missing; stateful features must stay blocked"
+    fi
+  fi
 else
   warn ".env missing; local runtime may not be configured"
+fi
+
+if grep -q 'PORTAL_ALLOW_BETA_ROLE_OVERRIDE=0' .env.production.example \
+  && grep -q 'NEXT_PUBLIC_LOCAL_BETA_ROLE_SWITCH=0' .env.production.example \
+  && grep -q 'PRODUCTION_REQUIRE_TRUSTED_IDENTITY=1' .env.production.example \
+  && grep -q 'RUNTIME_STORE=local-filesystem' .env.production.example; then
+  pass "production template disables client role overrides and declares runtime store"
+else
+  fail "production auth/runtime guardrails missing from .env.production.example"
 fi
 
 if [ -f docs/screenshots/qa/browser-qa-report.json ]; then

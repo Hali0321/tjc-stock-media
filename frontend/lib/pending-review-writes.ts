@@ -12,7 +12,16 @@ import type { ReviewEvidenceChecklist, ReviewWriteRecord, ReviewWriteRecordSumma
 const pendingDirName = "pending-review-writes";
 export const maxPendingReviewWrites = 200;
 const pendingReviewWriteFileReadWindow = maxPendingReviewWrites * 3;
-const syncStates: ReviewWriteRecord["syncState"][] = ["ready_to_sync", "sync_failed", "synced_to_resourcespace", "cancelled", "superseded", "queued"];
+const syncStates: ReviewWriteRecord["syncState"][] = [
+  "queued",
+  "ready_to_sync",
+  "syncing",
+  "sync_failed",
+  "synced_to_resourcespace",
+  "superseded",
+  "cancelled",
+  "conflict_detected"
+];
 
 function pendingDir() {
   return path.join(writableRuntimeRoot(), ".runtime", pendingDirName);
@@ -84,8 +93,10 @@ export function pendingReviewWriteSummary(record: ReviewWriteRecord): ReviewWrit
   };
 }
 
+const terminalSyncStates: ReviewWriteRecord["syncState"][] = ["cancelled", "superseded", "synced_to_resourcespace"];
+
 export function latestPendingWriteForResource(resourceId: string) {
-  return listPendingReviewWrites().find((record) => record.resourceId === resourceId && !["cancelled", "superseded", "synced_to_resourcespace"].includes(record.syncState));
+  return listPendingReviewWrites().find((record) => record.resourceId === resourceId && !terminalSyncStates.includes(record.syncState));
 }
 
 export function pendingReviewWriteDiagnostics() {
@@ -93,7 +104,7 @@ export function pendingReviewWriteDiagnostics() {
   const lastAttempt = records[0];
   const lastError = records.find((record) => record.lastError);
   return {
-    count: records.filter((record) => !["cancelled", "superseded", "synced_to_resourcespace"].includes(record.syncState)).length,
+    count: records.filter((record) => !terminalSyncStates.includes(record.syncState)).length,
     lastAttemptAt: lastAttempt?.updatedAt,
     lastError: lastError?.lastError
   };
@@ -157,9 +168,32 @@ export function markPendingReviewWriteSyncFailed(id: string, error: string) {
   });
 }
 
+export function markPendingReviewWriteReadyToSync(id: string) {
+  return updatePendingReviewWrite(id, {
+    syncState: "ready_to_sync",
+    lastError: undefined
+  });
+}
+
+export function markPendingReviewWriteSyncing(id: string) {
+  return updatePendingReviewWrite(id, {
+    syncState: "syncing",
+    lastError: undefined
+  });
+}
+
 export function markPendingReviewWriteSynced(id: string) {
   return updatePendingReviewWrite(id, {
     syncState: "synced_to_resourcespace",
     lastError: undefined
+  });
+}
+
+export function markPendingReviewWriteConflictDetected(id: string, error: string) {
+  const record = listPendingReviewWrites().find((item) => item.id === id);
+  return updatePendingReviewWrite(id, {
+    syncState: "conflict_detected",
+    lastError: error,
+    retryCount: record ? record.retryCount + 1 : 1
   });
 }

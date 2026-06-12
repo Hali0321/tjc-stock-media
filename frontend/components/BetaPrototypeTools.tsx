@@ -7,8 +7,8 @@ import { useDemoRole } from "@/components/RoleProvider";
 import { normalizeRole } from "@/lib/permissions";
 import type { BetaFeedbackSeverity, DemoRole } from "@/lib/types";
 
-const betaTaskModeEnabled = process.env.NEXT_PUBLIC_BETA_TASK_MODE_ENABLED !== "0";
-const betaFeedbackEnabled = process.env.NEXT_PUBLIC_BETA_FEEDBACK_ENABLED !== "0";
+const betaTaskModeEnabled = process.env.NEXT_PUBLIC_BETA_TASK_MODE_ENABLED === "1";
+const betaFeedbackEnabled = process.env.NEXT_PUBLIC_BETA_FEEDBACK_ENABLED === "1";
 
 type BetaMission = {
   label: string;
@@ -48,7 +48,8 @@ const routeLinks = [
 
 const severityOptions: BetaFeedbackSeverity[] = ["low", "medium", "high", "critical"];
 
-function betaHref(href: string, role: DemoRole) {
+function betaHref(href: string, role: DemoRole, betaLocked: boolean) {
+  if (betaLocked) return `${href}?taskMode=1`;
   return `${href}?role=${encodeURIComponent(role)}&taskMode=1`;
 }
 
@@ -57,7 +58,7 @@ function storageKey(role: DemoRole) {
 }
 
 export function BetaPrototypeTools() {
-  const { role, setRole, ready } = useDemoRole();
+  const { role, setRole, ready, betaLocked } = useDemoRole();
   const [taskMode, setTaskMode] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -81,7 +82,7 @@ export function BetaPrototypeTools() {
     const params = new URLSearchParams(window.location.search);
     setRoute(`${window.location.pathname}${window.location.search}`);
     const queryRole = params.get("role");
-    if (queryRole) {
+    if (queryRole && !betaLocked) {
       const normalized = normalizeRole(queryRole);
       if (normalized !== role) setRole(normalized);
     }
@@ -95,7 +96,7 @@ export function BetaPrototypeTools() {
     } else {
       setTaskMode(window.localStorage.getItem("tjc-beta-task-mode") === "1");
     }
-  }, [ready, role, setRole]);
+  }, [ready, role, setRole, betaLocked]);
 
   useEffect(() => {
     if (!ready) return;
@@ -194,7 +195,7 @@ export function BetaPrototypeTools() {
                     ))}
                   </div>
                   <nav className="beta-quick-links" aria-label="Beta quick links">
-                    {routeLinks.map((item) => <Link href={betaHref(item.href, role)} key={item.href}>{item.label}</Link>)}
+                    {routeLinks.map((item) => <Link href={betaHref(item.href, role, betaLocked)} key={item.href}>{item.label}</Link>)}
                   </nav>
                 </>
               ) : null}

@@ -78,6 +78,15 @@ export type StockMediaAsset = {
   aiQualitySuggestion?: string;
   aiPeopleOrMinorFlag?: string;
   humanAiDecision?: string;
+  reuseTier?: string;
+  visibilityTier?: string;
+  sensitivityClass?: string;
+  rightsBasis?: string;
+  approvedChannels?: string[];
+  requiredNotice?: string;
+  consentReleaseRecordId?: string;
+  expirationOrRecheckDate?: string;
+  domainReviewer?: string;
   reuseDecision?: ReuseDecision;
   pendingReviewWrite?: ReviewWriteRecordSummary;
 };
@@ -143,8 +152,10 @@ export type ReviewEvidenceChecklist = {
 export type ReviewWriteSyncState =
   | "queued"
   | "ready_to_sync"
+  | "syncing"
   | "sync_failed"
   | "synced_to_resourcespace"
+  | "conflict_detected"
   | "cancelled"
   | "superseded";
 
