@@ -21,7 +21,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
           <FolderOpen size={30} strokeWidth={1.8} className="text-tjc-evergreen" aria-hidden="true" />
           <h2 className="text-base font-semibold text-tjc-ink">Select a package</h2>
           <p className="text-sm leading-relaxed text-tjc-muted">
-          {opsView ? "Package context loads from the approved media export used by Find." : "Choose a ministry package, then open Find results to check each media item."}
+            {opsView ? "Package context loads from the approved media export used by Find." : "Choose a ministry package, then open Find results to check each media item."}
           </p>
         </div>
       </section>
@@ -30,6 +30,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
 
   const hasPeopleWarning = Boolean(collection.peopleWarning);
   const hasAssets = collection.count > 0;
+  const readinessLabel = hasPeopleWarning ? "Needs people review" : hasAssets ? "Ready to inspect" : "Not ready";
 
   return (
     <section className="overflow-hidden rounded-md border border-[#d4ded7] bg-white" aria-label={`${collection.name} package inspector`}>
@@ -50,7 +51,7 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
             <CollectionPreviewPlaceholder className="min-h-64 rounded-none" title={collection.name} detail="Cover pending" />
           )}
           <span className="absolute left-4 top-4 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
-            Selected package
+            Package preview
           </span>
         </div>
         <div className="px-4">
@@ -58,23 +59,26 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
             <span>{collection.id}</span>
           </div> : null}
           <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
-            <h2 className="text-2xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
+            <div className="min-w-0">
+              <h2 className="text-2xl font-black leading-tight text-tjc-ink">{collection.name}</h2>
+              <p className="mt-1 text-xs font-black text-tjc-muted">{collection.ministry} · {collection.countLabel} · {readinessLabel}</p>
+            </div>
             <TjcStatusBadge
               domain="reuse"
               status={hasPeopleWarning ? "people-review" : "selected"}
-              tone={hasPeopleWarning ? "warning" : "success"}
+              tone={hasPeopleWarning || !hasAssets ? "warning" : "success"}
               icon={hasPeopleWarning ? ShieldAlert : CheckCircle2}
-              label={hasPeopleWarning ? "Needs people review" : "Package selected"}
+              label={readinessLabel}
               size="xs"
             />
           </div>
-          <p className="mt-1 text-sm leading-relaxed text-tjc-muted">{collection.description}</p>
+          <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{collection.description}</p>
         </div>
 
         <div className="grid gap-2 px-4 sm:grid-cols-2">
           {[
             { label: "Assets", value: collection.countLabel, icon: Images },
-            { label: "Approval", value: collection.approvalSummary, icon: CheckCircle2 },
+            { label: "Readiness", value: collection.approvalSummary, icon: CheckCircle2 },
             { label: "Range", value: collection.dateRange, icon: CalendarDays },
             { label: opsView ? "Source" : "Owner", value: collection.ministry, icon: Database }
           ].map((item) => {
@@ -91,12 +95,12 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
           })}
         </div>
 
-        <div className={hasPeopleWarning ? "mx-4 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]" : "mx-4 rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-[#22563a]"}>
+        <div className={hasPeopleWarning || !hasAssets ? "mx-4 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-[#725216]" : "mx-4 rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-[#22563a]"}>
           <div className="flex items-start gap-2">
             {hasPeopleWarning ? <ShieldAlert size={17} strokeWidth={1.8} aria-hidden="true" /> : <CheckCircle2 size={17} strokeWidth={1.8} aria-hidden="true" />}
             <div>
-              <strong className="block text-sm font-semibold">{hasPeopleWarning ? collection.peopleWarning : hasAssets ? "No package-level people/minors warning" : "This package has no approved assets yet"}</strong>
-              <span className="mt-1 block text-xs leading-relaxed">{hasAssets ? "Confirm per-asset reuse in Find before publication." : "It will appear in Find when assets are approved."}</span>
+              <strong className="block text-sm font-semibold">{hasPeopleWarning ? collection.peopleWarning : hasAssets ? "Ready for per-asset review" : "Add at least one Portal Ready asset before preview, share, or publish."}</strong>
+              <span className="mt-1 block text-xs leading-relaxed">{hasAssets ? "Confirm each asset's reuse decision in Find before publication." : "Empty packages stay as drafts until approved media refs are added."}</span>
             </div>
           </div>
         </div>
@@ -111,8 +115,9 @@ export function CollectionShelfInspector({ collection, totalCollections, onOpen,
             <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
           </button>
         ) : (
-          <div className="mx-4 mb-4 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3 text-sm font-black text-tjc-muted">
-            No assets yet
+          <div className="mx-4 mb-4 grid gap-2 rounded-md border border-[#d6dfd8] bg-[#fbfcfa] p-3 text-sm font-black text-tjc-muted">
+            <span>No approved assets yet</span>
+            <span className="text-xs font-semibold">Next step: add approved media refs from Library.</span>
           </div>
         )}
       </div>
