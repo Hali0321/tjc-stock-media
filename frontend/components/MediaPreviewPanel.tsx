@@ -52,6 +52,9 @@ export function MediaPreviewPanel({
   const fileLine = asset
     ? [asset.mediaType, asset.fileExtension?.toUpperCase(), asset.imageDimensions].filter(Boolean).join(" · ")
     : undefined;
+  const previewCaption = resolvedMode === "image"
+    ? "Preview only · Zoom unavailable until safe derivative is exported"
+    : detail || fileLine || "Role-safe preview only.";
 
   if (resolvedMode === "restricted") {
     return (
@@ -59,24 +62,24 @@ export function MediaPreviewPanel({
         <RestrictedPreviewPanel
           title={title || "Preview restricted"}
           detail={detail || "No role-safe derivative is available. Original/master remains restricted and reuse is governed by the trust record."}
-          className={cn(compact ? "min-h-44 md:min-h-52" : "min-h-72 md:min-h-[28rem] xl:min-h-[32rem]")}
+          className={cn(compact ? "min-h-44 md:min-h-52" : "min-h-64 md:min-h-[24rem] xl:min-h-[28rem]")}
         />
       </section>
     );
   }
 
   return (
-    <section className={cn("overflow-hidden rounded-md border border-[#cfd7d1] bg-white p-3", className)} aria-label={`${resolvedMode} media preview`}>
-      <div className={cn("relative overflow-hidden rounded-md border border-[#dbe4dd] bg-[#f5f8f5]", compact ? "min-h-44 md:min-h-56" : "min-h-[24rem] md:min-h-[30rem] xl:min-h-[34rem]")}>
+    <section className={cn("overflow-hidden rounded-md border border-[#cfd7d1] bg-white p-2 sm:p-3", className)} aria-label={`${resolvedMode} media preview`}>
+      <div className={cn("relative overflow-hidden rounded-md border border-[#dbe4dd] bg-[#f7f8f6]", compact ? "min-h-44 md:min-h-56" : "min-h-[18rem] md:min-h-[24rem] xl:min-h-[30rem]")}>
         {resolvedMode === "image" ? (
-          <div className="grid h-full min-h-[inherit] place-items-center">
+          <div className="grid h-full min-h-[inherit] place-items-center p-3 sm:p-4">
             <MediaPreview
               src={src}
               alt={alt}
               label="Preview unavailable"
               detail="No display derivative is exported for this role."
-              className="min-h-[inherit] px-4"
-              imgClassName="!h-auto max-h-[72dvh] !w-auto max-w-full rounded-sm !object-contain"
+              className="min-h-[inherit]"
+              imgClassName="!h-auto max-h-[58dvh] !w-auto max-w-full rounded-sm !object-contain shadow-sm"
               loading="eager"
             />
           </div>
@@ -89,7 +92,7 @@ export function MediaPreviewPanel({
               Video preview
             </div>
             {src ? (
-              <video className="max-h-[68dvh] w-full rounded-md bg-black" controls preload="metadata" src={src} aria-label={alt} />
+              <video className="max-h-[58dvh] w-full rounded-md bg-black" controls preload="metadata" src={src} aria-label={alt} />
             ) : (
               <StateCard compact variant="restricted" tone="warning" title="Video preview unavailable" description="No role-safe video derivative is exported." />
             )}
@@ -147,24 +150,24 @@ export function MediaPreviewPanel({
           </div>
         ) : null}
 
-        <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-tjc-evergreen">
+        <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-md border border-[#d6dfd8] bg-white/95 px-3 py-1 text-xs font-black text-[#3f4a43] shadow-sm">
           {resolvedMode === "image" ? <ImageIcon size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode === "video" ? <Video size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode === "audio" ? <Music size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode === "document" ? <FileText size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
           {resolvedMode === "unknown" ? <FileQuestion size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
-          {resolvedMode}
+          Preview
         </div>
-        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-md border border-[#d6dfd8] bg-white px-3 py-1 text-xs font-black text-[#4d554d]">
+        <div className="absolute bottom-3 right-3 hidden items-center gap-1.5 rounded-md border border-[#d6dfd8] bg-white/95 px-3 py-1 text-xs font-black text-[#4d554d] shadow-sm sm:inline-flex">
           <LockKeyhole size={13} strokeWidth={1.8} aria-hidden="true" />
-          Original restricted
+          Source restricted
         </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-sm font-black text-tjc-ink">{heading}</h2>
-          <p className="mt-0.5 text-xs font-semibold text-tjc-muted">{detail || fileLine || "Role-safe preview only."}</p>
+          <p className="mt-0.5 text-xs font-semibold text-tjc-muted">{previewCaption}</p>
         </div>
         {variants.length ? (
           <div className="flex flex-wrap gap-2" aria-label="Preview variants">
