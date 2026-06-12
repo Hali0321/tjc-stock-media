@@ -13,6 +13,21 @@ export type DerivativeIndexEntry = {
   generatedAt: string;
 };
 
+export type GovernedRenditionKind =
+  | "thumbnail"
+  | "detail-preview"
+  | "approved-copy"
+  | "original-master-restricted";
+
+export type GovernedRenditionPolicy = {
+  kind: GovernedRenditionKind;
+  downloadGrade: boolean;
+  routeBoundary: "thumbnail-preview" | "approved-copy-gate" | "original-access-request";
+  durableStorage: false;
+  productionReadyFactory: false;
+  detail: string;
+};
+
 type DerivativeIndexManifest = {
   version: 1;
   filestore: string;
@@ -29,6 +44,65 @@ const variantSuffixes: Record<ImageVariant, string[]> = {
   detail: ["lpr_", "hpr_", "scr_", "pre_", "col_"],
   preview: ["lpr_", "hpr_", "scr_", "pre_", "col_"],
   download: ["lpr_", "hpr_", "scr_", "pre_"]
+};
+
+const variantPolicies: Record<ImageVariant, GovernedRenditionPolicy> = {
+  small: {
+    kind: "thumbnail",
+    downloadGrade: false,
+    routeBoundary: "thumbnail-preview",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Small preview derivative for browsing only; it cannot satisfy approved-copy download readiness."
+  },
+  thumb: {
+    kind: "thumbnail",
+    downloadGrade: false,
+    routeBoundary: "thumbnail-preview",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Thumbnail derivative for browsing only; it cannot satisfy approved-copy download readiness."
+  },
+  card: {
+    kind: "thumbnail",
+    downloadGrade: false,
+    routeBoundary: "thumbnail-preview",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Card preview derivative for discovery only; it cannot satisfy approved-copy download readiness."
+  },
+  collection: {
+    kind: "thumbnail",
+    downloadGrade: false,
+    routeBoundary: "thumbnail-preview",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Collection preview derivative for browsing only; it cannot satisfy approved-copy download readiness."
+  },
+  detail: {
+    kind: "detail-preview",
+    downloadGrade: false,
+    routeBoundary: "thumbnail-preview",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Detail preview supports review/inspection; approved-copy download still requires the download gate."
+  },
+  preview: {
+    kind: "detail-preview",
+    downloadGrade: false,
+    routeBoundary: "thumbnail-preview",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Preview derivative supports review/inspection; approved-copy download still requires the download gate."
+  },
+  download: {
+    kind: "approved-copy",
+    downloadGrade: true,
+    routeBoundary: "approved-copy-gate",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Approved-copy derivative must use the approved-copy POST ticket and GET consume gate."
+  }
 };
 
 let cachedManifest: DerivativeIndexManifest | null = null;
@@ -160,6 +234,30 @@ export function derivativeIndexDiagnostics() {
     indexed: Boolean(manifest),
     entries: manifest?.entries.length || 0,
     generatedAt: manifest?.generatedAt,
-    sourceKey: manifest?.sourceKey
+    sourceKey: manifest?.sourceKey,
+    storageMode: "local-runtime-filestore-index",
+    durable: false,
+    productionReadyFactory: false,
+    detail: "Local .runtime derivative index is a read/cache helper, not a durable production rendition factory."
+  };
+}
+
+export function governedRenditionPolicyForVariant(variant: ImageVariant): GovernedRenditionPolicy {
+  return variantPolicies[variant];
+}
+
+export function thumbnailVariantCanSatisfyApprovedCopy(variant: ImageVariant) {
+  const policy = governedRenditionPolicyForVariant(variant);
+  return policy.routeBoundary === "approved-copy-gate" && policy.downloadGrade;
+}
+
+export function originalMasterRenditionPolicy(): GovernedRenditionPolicy {
+  return {
+    kind: "original-master-restricted",
+    downloadGrade: true,
+    routeBoundary: "original-access-request",
+    durableStorage: false,
+    productionReadyFactory: false,
+    detail: "Original/master access is request-only and remains outside approved-copy delivery."
   };
 }

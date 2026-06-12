@@ -146,6 +146,25 @@ Context-safe assets can be requested for original context or selected channels,
 but they are not stock-safe. Archive-only assets are preserved for history and
 review, not normal reuse.
 
+## Rendition And Original Access Rules
+
+Approved-copy downloads are governed derivatives. They are not original/master
+access. Thumbnail, card, collection, detail, and preview derivatives support
+discovery or review only and must not be used as download-grade approved copies.
+
+Approved-copy delivery requires the download gate, terms acceptance, short-lived
+ticket, single consume, and audit record. Missing approved-copy/download
+derivative evidence blocks Portal Ready and normal reuse.
+
+Original/master access remains request-only. A request must name the purpose,
+approver, expiry, audit record, and revocation path before any future workflow
+may grant access. Current portal primitives may record request/blocked/pending,
+expired, or revoked states, but they do not grant live source-file access.
+
+Viewer and Contributor experiences must never expose source paths, master paths,
+original filenames, checksums, signed URLs, EXIF/private source context,
+ResourceSpace internals, admin evidence, or private notes.
+
 ## Review States
 
 ```text

@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { auditAccountabilityArea, auditEventForRolePayload, auditStorageReadiness, type AuditEventRecord } from "@/lib/audit-log";
+import { auditAccountabilityArea, auditEventForRolePayload, auditStorageReadiness, originalAccessAuditEvent, renditionRequestAuditEvent, type AuditEventRecord } from "@/lib/audit-log";
 import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildDiscoveryQuery, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { intentDefinitions, matchesCatalogFilter, savedViewDefinitions } from "@/lib/catalog-language";
+import { derivativeIndexDiagnostics, governedRenditionPolicyForVariant, originalMasterRenditionPolicy, thumbnailVariantCanSatisfyApprovedCopy } from "@/lib/derivative-index";
 import { fileRequiresAdminIntake, intakeDefaultsToNeedsReview, routeAssetForReview, routeUploadIntakeForReview } from "@/lib/intake-routing";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { canSeeAsset } from "@/lib/permissions";
-import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
+import { approvedCopyAccessBoundary, buildOriginalAccessRequestDecision, buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { emptyReviewChecklist } from "@/lib/review-decision-presenter";
 import { missingDomainReviewEvidence } from "@/lib/review-evidence";
 import {
@@ -512,6 +513,143 @@ describe("Phase 4 audit accountability primitives", () => {
       durable: false,
       productionReady: false,
       truthBoundary: "portal-accountability-only"
+    });
+  });
+});
+
+describe("Phase 5 governed rendition and original-access primitives", () => {
+  it("keeps thumbnail and preview derivatives separate from approved-copy download readiness", () => {
+    expect(governedRenditionPolicyForVariant("small")).toMatchObject({
+      kind: "thumbnail",
+      downloadGrade: false,
+      routeBoundary: "thumbnail-preview"
+    });
+    expect(governedRenditionPolicyForVariant("detail")).toMatchObject({
+      kind: "detail-preview",
+      downloadGrade: false,
+      routeBoundary: "thumbnail-preview"
+    });
+    expect(governedRenditionPolicyForVariant("download")).toMatchObject({
+      kind: "approved-copy",
+      downloadGrade: true,
+      routeBoundary: "approved-copy-gate"
+    });
+    expect(thumbnailVariantCanSatisfyApprovedCopy("small")).toBe(false);
+    expect(thumbnailVariantCanSatisfyApprovedCopy("detail")).toBe(false);
+    expect(thumbnailVariantCanSatisfyApprovedCopy("download")).toBe(true);
+  });
+
+  it("blocks portal-ready reuse when approved-copy download derivative is missing", () => {
+    const missingDownload = asset({
+      imageUrls: {
+        small: "/small.jpg",
+        card: "/card.jpg",
+        collection: "/collection.jpg",
+        detail: "/detail.jpg"
+      },
+      rightsBasis: "TJC-owned",
+      approvedChannels: ["website"],
+      reuseTier: "stock-safe",
+      visibilityTier: "public",
+      sensitivityClass: "public-safe"
+    });
+    const decision = buildPortalReuseDecision(missingDownload, "Viewer");
+
+    expect(decision.reuse.state).toBe("blocked-derivative");
+    expect(decision.access.downloadApprovedCopy.allowed).toBe(false);
+    expect(decision.reuse.blockers.map((item) => item.code)).toContain("blocked-derivative");
+  });
+
+  it("keeps original/master access request-only and separate from approved-copy downloads", () => {
+    const ready = asset({
+      rightsBasis: "TJC-owned",
+      approvedChannels: ["website"],
+      reuseTier: "stock-safe",
+      visibilityTier: "public",
+      sensitivityClass: "public-safe"
+    });
+    const boundary = approvedCopyAccessBoundary(ready, "DAM Admin");
+    const adminOriginal = buildOriginalAccessRequestDecision("DAM Admin", ready);
+    const viewerOriginal = buildOriginalAccessRequestDecision("Viewer", ready);
+    const expiredOriginal = buildOriginalAccessRequestDecision("DAM Admin", ready, { status: "approved", expiresAt: "2020-01-01T00:00:00.000Z" }, new Date("2026-06-12T00:00:00.000Z"));
+
+    expect(boundary.approvedCopyAllowed).toBe(true);
+    expect(boundary.originalLiveAccessAllowed).toBe(false);
+    expect(boundary.separateFromOriginalMaster).toBe(true);
+    expect(adminOriginal).toMatchObject({ state: "requestable", liveAccessAllowed: false, requestOnly: true, audited: true, revocable: true });
+    expect(viewerOriginal).toMatchObject({ state: "blocked", liveAccessAllowed: false });
+    expect(expiredOriginal).toMatchObject({ state: "expired", liveAccessAllowed: false });
+    expect(originalMasterRenditionPolicy()).toMatchObject({
+      kind: "original-master-restricted",
+      routeBoundary: "original-access-request"
+    });
+  });
+
+  it("keeps rendition and original-access audit helpers redacted for Viewer/Contributor", () => {
+    const originalEvent = originalAccessAuditEvent({
+      type: "original_access_requested",
+      role: "DAM Admin",
+      actor: "admin@example.org",
+      assetId: "asset-1",
+      resourceSpaceId: "1001",
+      status: "queued",
+      requestState: "requestable",
+      reason: "Need preservation copy for admin review.",
+      approver: "DAM lead",
+      expiresAt: "2026-06-13T00:00:00.000Z"
+    });
+    const renditionEvent = renditionRequestAuditEvent({
+      role: "Reviewer",
+      actor: "reviewer@example.org",
+      assetId: "asset-1",
+      resourceSpaceId: "1001",
+      status: "blocked",
+      renditionKind: "approved-copy",
+      routeBoundary: "approved-copy-gate",
+      reason: "Download derivative missing."
+    });
+    const viewer = auditEventForRolePayload("Viewer", {
+      id: "audit-original",
+      createdAt: "2026-06-12T00:00:00.000Z",
+      actor: originalEvent.actor || "admin@example.org",
+      ...originalEvent,
+      details: {
+        ...originalEvent.details,
+        sourcePath: "/Shared Drives/private/master.jpg",
+        checksumSha256: "secret",
+        signedUrl: "https://example.test/private?token=secret",
+        privateEvidence: "pastoral note"
+      }
+    });
+    const contributor = auditEventForRolePayload("Contributor", {
+      id: "audit-rendition",
+      createdAt: "2026-06-12T00:00:00.000Z",
+      actor: renditionEvent.actor || "reviewer@example.org",
+      ...renditionEvent,
+      details: {
+        ...renditionEvent.details,
+        originalFilename: "private-original.jpg",
+        masterDrivePath: "/Shared Drives/master/private-original.jpg"
+      }
+    });
+
+    expect(viewer.resourceSpaceId).toBeUndefined();
+    expect(viewer.details?.sourcePath).toBeUndefined();
+    expect(viewer.details?.checksumSha256).toBeUndefined();
+    expect(viewer.details?.signedUrl).toBeUndefined();
+    expect(viewer.details?.privateEvidence).toBeUndefined();
+    expect(viewer.details?.liveGrantIssued).toBe(false);
+    expect(contributor.resourceSpaceId).toBeUndefined();
+    expect(contributor.details?.originalFilename).toBeUndefined();
+    expect(contributor.details?.masterDrivePath).toBeUndefined();
+    expect(contributor.details?.routeBoundary).toBe("approved-copy-gate");
+  });
+
+  it("states local derivative index is not a durable production rendition factory", () => {
+    expect(derivativeIndexDiagnostics()).toMatchObject({
+      durable: false,
+      productionReadyFactory: false,
+      storageMode: "local-runtime-filestore-index"
     });
   });
 });

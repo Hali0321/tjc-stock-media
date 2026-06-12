@@ -234,6 +234,31 @@ policy, redaction, and download gates.
 
 Policy: preserve originals as masters. If HEIC preview fails, attach a metadata-stripped JPG derivative to the same asset record instead of replacing the HEIC or creating an unmanaged duplicate.
 
+## Governed Renditions / Original Access
+
+Renditions are governed outputs, not source files. Thumbnail, card, collection,
+detail, and preview derivatives support browsing or review only. They never
+satisfy approved-copy download readiness.
+
+Approved-copy download readiness requires a download-grade derivative and the
+approved-copy gate: POST request, accepted terms, short-lived ticket, GET
+consume, and audit record. Channel-specific future derivatives such as web,
+print, projection, social, newsletter, poster, or reviewer watermarked preview
+must declare type, parent asset, generated/version evidence, content type, and
+permission tier before they can be used in policy.
+
+The local `.runtime` derivative index is a development/private-beta index over
+available filestore derivatives. It is not production-durable storage and not a
+rendition factory. Missing derivatives block Portal Ready where policy requires
+approved-copy readiness.
+
+Original/master access is separate from approved-copy download. It remains
+request-only, approver-gated, time-limited, audited, and revocable. The portal
+must not issue live original/master access unless a future backend workflow has
+durable request storage, verified approver identity, expiry enforcement,
+revocation, audit, and source-path redaction. Google Shared Drive remains master
+custody.
+
 ## AI Suggestions
 
 | Field | Purpose |

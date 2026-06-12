@@ -75,6 +75,8 @@ export type AuditStorageReadiness = {
   detail: string;
 };
 
+type AuditEventDraft = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+
 export type AuditEventRecord = {
   id: string;
   type: AuditEventType;
@@ -316,6 +318,63 @@ export function auditEventForRolePayload(role: DemoRole, event: AuditEventRecord
 
 export function listAuditEventsForRole(role: DemoRole, limit = 20): AuditEventRecord[] {
   return listAuditEvents(limit).map((event) => auditEventForRolePayload(role, event));
+}
+
+export function originalAccessAuditEvent(input: {
+  type: Extract<AuditEventType, "original_access_requested" | "original_access_granted" | "original_access_denied" | "original_access_revoked" | "original_access_expired">;
+  role: DemoRole;
+  actor: string;
+  assetId: string;
+  resourceSpaceId?: string;
+  status: AuditEventRecord["status"];
+  requestState: string;
+  reason: string;
+  approver?: string | null;
+  expiresAt?: string | null;
+}): AuditEventDraft {
+  return {
+    type: input.type,
+    role: input.role,
+    actor: input.actor,
+    assetId: input.assetId,
+    resourceSpaceId: input.resourceSpaceId,
+    status: input.status,
+    summary: "Original/master access decision recorded; approved-copy delivery remains separate.",
+    details: {
+      requestState: input.requestState,
+      reason: input.reason,
+      approver: input.approver || null,
+      expiresAt: input.expiresAt || null,
+      liveGrantIssued: false
+    }
+  };
+}
+
+export function renditionRequestAuditEvent(input: {
+  role: DemoRole;
+  actor: string;
+  assetId: string;
+  resourceSpaceId?: string;
+  status: AuditEventRecord["status"];
+  renditionKind: string;
+  routeBoundary: string;
+  reason: string;
+}): AuditEventDraft {
+  return {
+    type: "rendition_request_recorded",
+    role: input.role,
+    actor: input.actor,
+    assetId: input.assetId,
+    resourceSpaceId: input.resourceSpaceId,
+    status: input.status,
+    summary: "Rendition decision recorded; local derivative index is not production durable.",
+    details: {
+      renditionKind: input.renditionKind,
+      routeBoundary: input.routeBoundary,
+      reason: input.reason,
+      productionDurable: false
+    }
+  };
 }
 
 function normalizeAuditEvent(input: unknown): AuditEventRecord | null {
