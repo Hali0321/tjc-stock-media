@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { repoRoot } from "@/lib/env";
+import { writableRuntimeRoot } from "@/lib/env";
 import { safeIsoTimestamp } from "@/lib/persisted-record-safety";
 import { normalizeAssetId, normalizePersistedDisplayText, normalizePersistedSlugText, normalizeResourceSpaceRef } from "@/lib/request-validation";
 import { ensureRuntimeDir, readRuntimeJsonFile, writeRuntimeJsonFile } from "@/lib/runtime-file-store";
@@ -55,7 +55,7 @@ export type ConsumeDownloadTicketResult =
   | { ok: false; reasonCode: string; reason: string; ticketId?: string };
 
 function ticketDir() {
-  return path.join(repoRoot(), ".runtime", "download-tickets");
+  return path.join(writableRuntimeRoot(), ".runtime", "download-tickets");
 }
 
 function ticketPath(id: string) {

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { repoRoot } from "@/lib/env";
+import { writableRuntimeRoot } from "@/lib/env";
 
 export type ImageVariant = "small" | "thumb" | "card" | "collection" | "detail" | "preview" | "download";
 
@@ -46,7 +46,7 @@ export function clearDerivativeFileIndex() {
 
 export function findResourceSpaceImageDerivative(id: string, variant: ImageVariant) {
   if (!/^[A-Za-z0-9_-]+$/.test(id)) return null;
-  const filestore = path.join(repoRoot(), ".runtime", "filestore");
+  const filestore = path.join(writableRuntimeRoot(), ".runtime", "filestore");
   if (!fs.existsSync(filestore)) return null;
 
   const suffixes = variantSuffixes[variant];

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { normalizeCatalogSort } from "@/lib/catalog-language";
-import { repoRoot } from "@/lib/env";
+import { writableRuntimeRoot } from "@/lib/env";
 import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
@@ -24,7 +24,7 @@ export type SavedSearchRecord = {
 };
 export type SavedSearchDraft = Pick<SavedSearchRecord, "id" | "title" | "query" | "view" | "collection" | "filters" | "sort">;
 
-const savedSearchStorePath = () => path.join(repoRoot(), "data", "runtime", "saved-searches.json");
+const savedSearchStorePath = () => path.join(writableRuntimeRoot(), "data", "runtime", "saved-searches.json");
 export const maxSavedSearches = 250;
 type SavedSearchAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
 type SavedSearchRouteError = {

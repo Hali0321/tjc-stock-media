@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import { assetResourceRef } from "@/lib/asset-refs";
-import { repoRoot } from "@/lib/env";
+import { writableRuntimeRoot } from "@/lib/env";
 import { newestByTimestamp, safeEnumValue, safeIsoTimestamp, safeIsoTimestampIdPart, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { normalizeReviewRoleWithFallback } from "@/lib/permissions";
 import { normalizePersistedDisplayText, normalizePersistedSlugText } from "@/lib/request-validation";
@@ -15,7 +15,7 @@ const pendingReviewWriteFileReadWindow = maxPendingReviewWrites * 3;
 const syncStates: ReviewWriteRecord["syncState"][] = ["ready_to_sync", "sync_failed", "synced_to_resourcespace", "cancelled", "superseded", "queued"];
 
 function pendingDir() {
-  return path.join(repoRoot(), ".runtime", pendingDirName);
+  return path.join(writableRuntimeRoot(), ".runtime", pendingDirName);
 }
 
 function safeFilePart(value: unknown) {

@@ -24,6 +24,13 @@ export function repoRoot() {
   return cachedRepoRoot;
 }
 
+export function writableRuntimeRoot() {
+  if (process.env.VERCEL === "1") {
+    return path.join(process.env.TMPDIR || "/tmp", "tjc-stock-media-runtime");
+  }
+  return repoRoot();
+}
+
 export function resourceSpaceBaseUrl() {
   return process.env.RESOURCESPACE_BASE_URL || process.env.RS_BASE_URL || "http://localhost:8088";
 }

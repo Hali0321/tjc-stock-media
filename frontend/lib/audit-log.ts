@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { repoRoot } from "@/lib/env";
+import { writableRuntimeRoot } from "@/lib/env";
 import { newestByTimestamp, safeEnumValue, safeFiniteNumber, safeIsoTimestamp, safeIsoTimestampIdPart } from "@/lib/persisted-record-safety";
 import { normalizeRoleWithFallback } from "@/lib/permissions";
 import { normalizeAssetId, normalizePersistedDisplayText, normalizePersistedSlugText, normalizeResourceSpaceRef } from "@/lib/request-validation";
@@ -76,7 +76,7 @@ const auditEventTypes: AuditEventType[] = [
 ];
 
 function auditDir() {
-  return path.join(repoRoot(), ".runtime", "audit-log");
+  return path.join(writableRuntimeRoot(), ".runtime", "audit-log");
 }
 
 function auditFile(createdAt = new Date()) {

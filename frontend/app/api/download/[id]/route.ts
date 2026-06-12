@@ -155,7 +155,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   }
 
-  const delivery = readApprovedCopyDelivery(id, asset.title);
+  const delivery = readApprovedCopyDelivery(id, asset.title, source);
   if (delivery.status !== "ready") {
     const error = approvedCopyUnavailableError(delivery, session, source);
     return NextResponse.json(error.body, { status: error.status });
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     route: `/api/download/${asset.id}`,
     metadata: { termsAccepted: input.termsAccepted, variant: input.variant }
   });
-  const derivativeAvailable = hasApprovedCopyDerivative(id);
+  const derivativeAvailable = hasApprovedCopyDerivative(id, source);
 
   if (!input.termsAccepted) {
     const termsRejectedAt = new Date().toISOString();

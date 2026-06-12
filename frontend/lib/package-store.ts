@@ -1,5 +1,5 @@
 import path from "node:path";
-import { repoRoot } from "@/lib/env";
+import { writableRuntimeRoot } from "@/lib/env";
 import { readLocalJsonStore, readLocalJsonStoreSync, writeLocalJsonStore } from "@/lib/local-json-store";
 import { newestByTimestamp, safeBoolean, safeEnumValue, safeIsoTimestamp, safeIsoTimestampIdPart, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { canReview, normalizeContributingRoleWithFallback } from "@/lib/permissions";
@@ -31,7 +31,7 @@ export type StoredPackageDraft = {
   storageMode: "local-json";
 };
 
-const packageStorePath = () => path.join(repoRoot(), "data", "runtime", "package-drafts.json");
+const packageStorePath = () => path.join(writableRuntimeRoot(), "data", "runtime", "package-drafts.json");
 export const maxPackageDrafts = 200;
 const packageStatuses: DamPackage["status"][] = ["draft", "pending-review", "approved", "archived"];
 type PackageDraftAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
