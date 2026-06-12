@@ -53,7 +53,7 @@ export function buildInsightsCommandCenter(result?: SearchResult): InsightsComma
   const score = Math.round((readiness * 0.42) + (metadataScore * 0.28) + ((usageConnected ? 100 : 35) * 0.18) + (Math.max(0, 100 - pct(reviewDebt, rawTotal)) * 0.12));
   const actions: InsightsCommandAction[] = [];
 
-  if (rightsRisk) actions.push(action("rights-review", "Clear rights-risk queue", `${rightsRisk.toLocaleString()} records need rights, consent, or proof review.`, "/review?queue=rights", "critical"));
+  if (rightsRisk) actions.push(action("rights-review", "Clear rights-risk queue", `${rightsRisk.toLocaleString()} records need rights, consent, or proof review.`, "/review?queue=rights-review", "critical"));
   if (peopleRisk) actions.push(action("people-risk", "Resolve people/youth confidence", `${peopleRisk.toLocaleString()} records need people/minors review before broad reuse.`, "/review?queue=people", "high"));
   if (missingSource) actions.push(action("source-traceability", "Repair source traceability", `${missingSource.toLocaleString()} records are missing source or provenance evidence.`, "/admin", "high"));
   if ((metadata?.needsUsage || 0) > 0) actions.push(action("usage-guidance", "Fill usage guidance", `${metadata?.needsUsage.toLocaleString()} records need usage guidance for self-serve reuse.`, "/review", "medium"));

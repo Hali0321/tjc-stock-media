@@ -164,6 +164,7 @@ function downloadAuditSource(session: DamRouteSession, source: AssetRecordResult
 export function downloadRoleDeniedError(session: DamRouteSession, source: AssetRecordResult["source"]): DownloadDeliveryRouteError {
   return {
     body: {
+      allowed: false,
       error: "Not approved for this role. Source-file access stays restricted.",
       ...session.sourceEnvelope(source)
     },

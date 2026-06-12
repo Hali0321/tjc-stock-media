@@ -176,7 +176,7 @@ export function BetaPrototypeTools() {
                 <>
                   <section className="beta-limit-panel" aria-label="Beta limits">
                     <ShieldAlert size={18} />
-                    <p>Beta only. No sensitive media. Role switch is simulated for QA only. No live ResourceSpace writeback. Queued review is not ResourceSpace success. Stop testing for Critical/P0 privacy, source-truth, or download-gate issues.</p>
+                    <p>Beta testing only. No sensitive media. Role switch is simulated QA access; not production auth, not SSO, not real user impersonation, and not permission delegation. No live ResourceSpace writeback. Queued review is not ResourceSpace success. Stop testing for Critical/P0 privacy, source-truth, or download-gate issues.</p>
                   </section>
                   <section className="beta-progress-panel" aria-label="Mission progress">
                     <div>

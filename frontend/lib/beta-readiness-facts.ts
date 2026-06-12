@@ -124,14 +124,22 @@ function allowlistFact(): BetaReadinessFact {
 }
 
 function betaRoleSwitchFact(): BetaReadinessFact {
-  const shell = safeRead(path.join(repoRoot(), "frontend", "components", "dam", "DamShell.tsx"));
   const tools = safeRead(path.join(repoRoot(), "frontend", "components", "BetaPrototypeTools.tsx"));
   const docs = [
     safeRead(path.join(repoRoot(), "docs", "teammate-test-guide.md")),
     safeRead(path.join(repoRoot(), "docs", "teammate-beta-invite-pack.md"))
   ].join("\n");
-  const appCopyReady = /Beta access role/i.test(shell) && /Role switch is simulated/i.test(tools);
-  const docsReady = /role switch (is )?simulated/i.test(docs) && /beta QA only|QA only/i.test(docs);
+  const required = [
+    "simulated QA access",
+    "beta testing only",
+    "not production auth",
+    "not SSO",
+    "not real user impersonation",
+    "not permission delegation"
+  ];
+  const hasAll = (contents: string) => required.every((phrase) => contents.toLowerCase().includes(phrase.toLowerCase()));
+  const appCopyReady = hasAll(tools);
+  const docsReady = hasAll(docs);
   const ready = appCopyReady && docsReady;
   return fact({
     id: "beta-role-switch-copy",

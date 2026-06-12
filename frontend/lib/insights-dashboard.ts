@@ -49,7 +49,7 @@ export const insightCharts: InsightChart[] = [
 export function insightHealthRows(counts: InsightCounts): InsightHealthRow[] {
   return [
     { label: "Missing Metadata", value: counts?.pendingReview || 0, tone: "indigo" },
-    { label: "Rights Review", value: counts?.rightsReview || 0, tone: "red" },
+    { label: "Rights Review", value: counts?.rightsReview || 0, tone: "orange" },
     { label: "Children/Youth", value: counts?.childrenYouth || 0, tone: "indigo" },
     { label: "Missing Source", value: counts?.missingSource || 0, tone: "orange" },
     { label: "Archive", value: counts?.archive || 0, tone: "indigo" },

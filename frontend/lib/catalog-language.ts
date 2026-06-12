@@ -9,6 +9,7 @@ import {
   assetNeedsSourceReview,
   assetNeedsStaleApprovalReview
 } from "@/lib/asset-governance";
+import { assetSearchTerms } from "@/lib/tagging-model";
 import { safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { reviewRiskFlags } from "@/lib/workflow-policy";
 import type { CatalogSort, StockMediaAsset } from "@/lib/types";
@@ -43,27 +44,7 @@ export function normalizeCatalogSort(value: unknown, fallback: CatalogSort = "Ap
 }
 
 export function assetHaystack(asset: StockMediaAsset) {
-  return [
-    asset.title,
-    asset.collection,
-    asset.status,
-    asset.usageScope,
-    asset.mediaType,
-    asset.peopleRisk,
-    asset.eventName,
-    asset.eventDate,
-    asset.capturedDate,
-    asset.importDate,
-    asset.sourcePlatform,
-    asset.sourceSystem,
-    asset.sourceAccount,
-    asset.rightsStatus,
-    asset.qualityStatus,
-    asset.sensitiveContext,
-    ...(asset.tags || []),
-    ...(asset.tjcTerms || []),
-    ...(asset.usageTerms || [])
-  ]
+  return assetSearchTerms(asset)
     .join(" ")
     .toLowerCase();
 }

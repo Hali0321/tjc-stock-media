@@ -27,6 +27,8 @@ Use this only after `docs/beta-readiness-command-center.md` marks the Team Beta 
 - Tiny internal Team Beta only; do not forward outside the named test group.
 - No sensitive, private, unreleased, youth-identifiable, copyrighted, source, or master media uploads.
 - Role switch is simulated for QA only.
+- Role switch is simulated QA access for beta testing only.
+- Role switch is not production auth, not SSO, not real user impersonation, and not permission delegation.
 - ResourceSpace writeback is queued/disabled unless explicitly approved.
 - Queued review decisions are portal evidence, not ResourceSpace success.
 - Original/source media stays restricted; portal downloads must stay behind role and reuse gates.

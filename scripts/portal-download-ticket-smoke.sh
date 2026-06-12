@@ -227,6 +227,44 @@ if (data.asset?.imageUrls && Object.prototype.hasOwnProperty.call(data.asset.ima
 }
 ' "${REVIEWER_HEADERS[@]}" "$BASE_URL/api/assets/$APPROVED_ID?role=Reviewer"
 
+VIEWER_DETAIL_OUTPUT="$TMP_DIR/viewer-detail-redacts-source.json"
+VIEWER_DETAIL_CODE="$(http_code "$VIEWER_DETAIL_OUTPUT" "$BASE_URL/api/assets/$APPROVED_ID?role=Viewer")"
+if [ "$VIEWER_DETAIL_CODE" != "200" ] && [ "$VIEWER_DETAIL_CODE" != "403" ]; then
+  echo "FAIL: viewer-detail-redacts-source expected 200 or 403 got $VIEWER_DETAIL_CODE"
+  cat "$VIEWER_DETAIL_OUTPUT"
+  exit 1
+fi
+node -e '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+const forbidden = [
+  /ResourceSpace/i,
+  /Shared Drive/i,
+  /source path/i,
+  /master drive/i,
+  /original filename/i,
+  /checksum/i,
+  /resourceSpaceId/i,
+  /sourceAlbumPath/i,
+  /masterDrivePath/i
+];
+if (data.source?.label !== "Media library" || data.source?.adapter !== "media-library") {
+  console.error(`FAIL: viewer source was not redacted: ${JSON.stringify(data.source)}`);
+  process.exit(1);
+}
+if (data.asset?.imageUrls && Object.prototype.hasOwnProperty.call(data.asset.imageUrls, "download")) {
+  console.error(`FAIL: viewer detail exposed imageUrls.download: ${JSON.stringify(data.asset.imageUrls)}`);
+  process.exit(1);
+}
+for (const pattern of forbidden) {
+  if (pattern.test(text)) {
+    console.error(`FAIL: viewer detail leaked operational source text ${pattern}: ${text.slice(0, 900)}`);
+    process.exit(1);
+  }
+}
+' < "$VIEWER_DETAIL_OUTPUT"
+echo "PASS: viewer-detail-redacts-source ($VIEWER_DETAIL_CODE)"
+
 expect_json_status 403 direct-approved-get-denied '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.allowed !== false || data.reasonCode !== "ticket-missing" || data.requiredAction !== "request-download-ticket") {
@@ -234,6 +272,17 @@ if (data.allowed !== false || data.reasonCode !== "ticket-missing" || data.requi
   process.exit(1);
 }
 ' "${REVIEWER_HEADERS[@]}" "$BASE_URL/api/download/$APPROVED_ID?role=Reviewer"
+
+expect_json_status 403 viewer-original-download-denied '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.allowed !== false || data.downloadUrl || data.ticket || /ResourceSpace|Shared Drive|master drive|original filename|checksum/i.test(text)) {
+  console.error(`FAIL: viewer original-like request was not safely denied: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' "$BASE_URL/api/download/$APPROVED_ID?role=Viewer&variant=original"
+
+expect_code 400 unsafe-download-path-denied "$BASE_URL/api/download/%2E%2E$APPROVED_ID?role=Viewer"
 
 expect_json_status 403 body-role-spoof-denied-without-trusted-header '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
@@ -254,7 +303,7 @@ if (data.allowed !== false || data.requiredAction !== "accept-usage-terms") {
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","termsAccepted":false,"usageChannel":"Download ticket smoke","reason":"False terms must fail."}' \
   "${REVIEWER_HEADERS[@]}" \
-  "$BASE_URL/api/download/$APPROVED_ID"
+  "$BASE_URL/api/download/$APPROVED_ID?role=Reviewer"
 
 DOWNLOAD_URL="$(select_json_value_status 200 post-ticket-minted '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
@@ -274,7 +323,7 @@ console.log(data.downloadUrl);
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","termsAccepted":true,"usageChannel":"Download ticket smoke","reason":"One-time ticket transfer."}' \
   "${REVIEWER_HEADERS[@]}" \
-  "$BASE_URL/api/download/$APPROVED_ID")"
+  "$BASE_URL/api/download/$APPROVED_ID?role=Reviewer")"
 
 ABS_DOWNLOAD_URL="$(absolute_url "$DOWNLOAD_URL")"
 expect_code 200 ticketed-get-allowed-once "${REVIEWER_HEADERS[@]}" "$ABS_DOWNLOAD_URL"
@@ -297,7 +346,7 @@ console.log(data.downloadUrl);
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","termsAccepted":true,"usageChannel":"Download ticket smoke","reason":"Concurrent one-time ticket race."}' \
   "${REVIEWER_HEADERS[@]}" \
-  "$BASE_URL/api/download/$APPROVED_ID")"
+  "$BASE_URL/api/download/$APPROVED_ID?role=Reviewer")"
 ABS_RACE_DOWNLOAD_URL="$(absolute_url "$RACE_DOWNLOAD_URL")"
 race_one="$TMP_DIR/race-one.body"
 race_two="$TMP_DIR/race-two.body"
@@ -335,7 +384,7 @@ if (data.allowed !== false || data.downloadUrl || data.ticket) {
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","termsAccepted":true,"usageChannel":"Download ticket smoke","reason":"Blocked asset must remain blocked."}' \
   "${REVIEWER_HEADERS[@]}" \
-  "$BASE_URL/api/download/$BLOCKED_ID"
+  "$BASE_URL/api/download/$BLOCKED_ID?role=Reviewer"
 
 APPROVED_ID="$APPROVED_ID" node -e '
 const fs = require("fs");

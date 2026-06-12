@@ -38,6 +38,7 @@ export type StockMediaAsset = {
   sourcePlatform?: string;
   sourceSystem?: string;
   sourceAccount?: string;
+  sourceAlbum?: string;
   sourceAlbumPath?: string;
   sourceAlbumMemberships?: string[];
   eventName?: string;
@@ -71,6 +72,12 @@ export type StockMediaAsset = {
   fileSizeBytes?: number;
   tags?: string[];
   tjcTerms?: string[];
+  aiTitleSuggestion?: string;
+  aiVisibleTagSuggestions?: string[];
+  aiTjcTermSuggestions?: string[];
+  aiQualitySuggestion?: string;
+  aiPeopleOrMinorFlag?: string;
+  humanAiDecision?: string;
   reuseDecision?: ReuseDecision;
   pendingReviewWrite?: ReviewWriteRecordSummary;
 };

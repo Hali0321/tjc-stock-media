@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { AlertTriangle, Bell, Box, Check, CheckCircle2, ClipboardCheck, Database, Download, FileText, HardDrive, KeyRound, Lock, MessageSquareWarning, Plug, RefreshCw, Settings, Shield, ShieldCheck, Sparkles, Tags, Users, XCircle } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAdminReadiness } from "@/components/dam/useDamApi";
 import { adminNavItems, adminNavLabel, integrationReadinessColumns, integrationState, policySummaryRows, systemHealthRows } from "@/lib/admin-control";
+import type { EnterpriseStatus } from "@/lib/enterprise-status";
 import { mediaSourceIsLive } from "@/lib/media-source/truth";
 import { routeWithRole } from "@/lib/role-routes";
 import type { BetaFeedbackRecord, BetaFeedbackSeverity, BetaFeedbackStatus, BetaReadinessFact, DamReadinessResult, IntegrationReadinessItem } from "@/lib/types";
@@ -42,8 +43,93 @@ const moduleIcons = {
   "system-settings": Settings
 } as const;
 
+const DEFAULT_ADMIN_NAV = "overview";
+const DEFAULT_ADMIN_HASH = "governance";
+const adminNavIds = new Set(adminNavItems.map((item) => item.id));
+const adminHashByNav = new Map(adminNavItems.map((item) => [item.id, item.id]));
+adminHashByNav.set(DEFAULT_ADMIN_NAV, DEFAULT_ADMIN_HASH);
+const adminNavByHash = new Map(adminNavItems.map((item) => [item.id, item.id]));
+adminNavByHash.set(DEFAULT_ADMIN_HASH, DEFAULT_ADMIN_NAV);
+adminNavByHash.set("overview", DEFAULT_ADMIN_NAV);
+adminNavByHash.set("users", "users-roles");
+adminNavByHash.set("launch-readiness-section", DEFAULT_ADMIN_NAV);
+adminNavByHash.set("governance-policies-section", DEFAULT_ADMIN_NAV);
+adminNavByHash.set("audit-activity-section", DEFAULT_ADMIN_NAV);
+adminNavByHash.set("system-health-section", DEFAULT_ADMIN_NAV);
+const adminCanonicalHashAliases = new Map<string, string>([
+  ["overview", DEFAULT_ADMIN_HASH],
+  ["users", "users-roles"]
+]);
+const adminFocusTargetByHash = new Map<string, string>([
+  [DEFAULT_ADMIN_HASH, "admin-launch-summary-title"],
+  ["launch-readiness-section", "launch-readiness-section"],
+  ["governance-policies-section", "governance-policies-section"],
+  ["audit-activity-section", "audit-activity-section"],
+  ["system-health-section", "system-health-section"]
+]);
+
+type AdminNavSelectionOptions = {
+  focusTargetId?: string;
+  hash?: string;
+  scroll?: boolean;
+};
+
+type SelectAdminModule = (id: string, options?: AdminNavSelectionOptions) => void;
+
 const feedbackStatuses: BetaFeedbackStatus[] = ["new", "triaged", "agent-ready", "fixed", "wont-fix"];
 const feedbackSeverities: Array<BetaFeedbackSeverity | "all"> = ["all", "critical", "high", "medium", "low"];
+type AdminStatusTone = "Critical" | "Warning" | "Healthy" | "Info" | "Disabled";
+
+function readAdminHash() {
+  try {
+    return decodeURIComponent(window.location.hash.replace(/^#/, ""));
+  } catch {
+    return window.location.hash.replace(/^#/, "");
+  }
+}
+
+function replaceAdminHash(hash: string) {
+  const { pathname, search } = window.location;
+  window.history.replaceState(null, "", `${pathname}${search}#${hash}`);
+}
+
+function canonicalAdminHash(hash: string, navId: string) {
+  const alias = adminCanonicalHashAliases.get(hash);
+  if (alias) return alias;
+  if (adminFocusTargetByHash.has(hash)) return hash;
+  return adminHashByNav.get(navId) || DEFAULT_ADMIN_HASH;
+}
+
+function focusAdminTarget(targetId: string) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  target.scrollIntoView({ block: "start", behavior: "auto" });
+  if (target instanceof HTMLElement) target.focus({ preventScroll: true });
+}
+
+function AdminStatusBadge({ tone, label = tone }: { tone: AdminStatusTone; label?: string }) {
+  const Icon = tone === "Critical" ? XCircle : tone === "Warning" ? AlertTriangle : tone === "Healthy" ? CheckCircle2 : tone === "Disabled" ? Lock : Shield;
+  return <span className={`ed-admin-status is-${tone.toLowerCase()}`}><Icon size={13} aria-hidden="true" />{label}</span>;
+}
+
+function factTone(fact?: { state?: BetaReadinessFact["state"] | string; ready?: boolean }): AdminStatusTone {
+  if (!fact) return "Info";
+  if (fact.state === "block") return "Critical";
+  if (fact.state === "warn") return "Warning";
+  return "Healthy";
+}
+
+function enterpriseTone(status: EnterpriseStatus): AdminStatusTone {
+  if (status === "Operational" || status === "Approved" || status === "Active" || status === "Compliant" || status === "Approved only") return "Healthy";
+  if (status === "Read-only") return "Disabled";
+  if (status === "Blocked" || status === "Not configured" || status === "Restricted" || status === "Missing Consent") return "Critical";
+  if (status === "Degraded" || status === "Pending setup" || status === "Needs Review" || status === "Expiring Soon") return "Warning";
+  return "Info";
+}
+
+function integrationTone(row: IntegrationReadinessItem): AdminStatusTone {
+  return enterpriseTone(integrationState(row));
+}
 
 function betaFactClass(fact: BetaReadinessFact) {
   if (fact.state === "pass") return "is-pass";
@@ -59,6 +145,197 @@ function betaFactIcon(fact: BetaReadinessFact) {
 
 function betaFactSourceLabel(source: BetaReadinessFact["source"]) {
   return source.replace(/-/g, " ");
+}
+
+type GovernanceQueueItem = {
+  fact: BetaReadinessFact;
+  severity: "Critical" | "Warning";
+  actionTitle: string;
+  evidenceMeta: string;
+  evidenceTarget: string;
+};
+
+function governanceActionTitle(fact: BetaReadinessFact) {
+  if (fact.state === "block" && fact.source === "launch-readiness") return "Resolve launch-readiness blocker";
+  if (fact.source === "integration") return "Review integration evidence";
+  if (fact.source === "environment" || fact.source === "git-hygiene") return "Verify policy exception";
+  if (fact.state === "block") return "Review blocker evidence";
+  return "Verify policy exception";
+}
+
+function governanceEvidenceTarget(fact: BetaReadinessFact) {
+  if (fact.source === "integration") return "system-health-section";
+  if (fact.id === "audit-evidence" || fact.source === "catalog") return "audit-activity-section";
+  if (fact.source === "environment" || fact.source === "git-hygiene" || fact.source === "launch-readiness" || fact.source === "qa-report") return "launch-readiness-section";
+  return "governance-policies-section";
+}
+
+function governanceEvidenceMeta(fact: BetaReadinessFact, readiness?: DamReadinessResult | null) {
+  const integration = (readiness?.integrationReadiness || []).find((row) => row.id === fact.id);
+  if (integration) return `${integration.owner} · ${integrationState(integration)}`;
+  if (fact.source === "qa-report") return "Browser/API smoke evidence";
+  if (fact.source === "catalog") return readiness?.auditLog.latestAt ? `Last audit activity ${readiness.auditLog.latestAt}` : "Catalog governance fact";
+  if (fact.source === "launch-readiness") return readiness?.betaReadiness.generatedAt ? `Launch fact generated ${new Date(readiness.betaReadiness.generatedAt).toLocaleString()}` : "Launch readiness fact";
+  if (fact.source === "environment") return "Runtime environment fact";
+  if (fact.source === "git-hygiene") return "Git hygiene fact";
+  return betaFactSourceLabel(fact.source);
+}
+
+function governanceQueueItems(readiness?: DamReadinessResult | null): GovernanceQueueItem[] {
+  const facts = readiness?.betaReadiness.facts || [];
+  return facts
+    .filter((fact) => fact.state === "block" || fact.state === "warn")
+    .sort((left, right) => (left.state === right.state ? 0 : left.state === "block" ? -1 : 1))
+    .map((fact) => ({
+      fact,
+      severity: fact.state === "block" ? "Critical" : "Warning",
+      actionTitle: governanceActionTitle(fact),
+      evidenceMeta: governanceEvidenceMeta(fact, readiness),
+      evidenceTarget: governanceEvidenceTarget(fact)
+    }));
+}
+
+function LaunchReadinessSummary({ readiness, onSelectModule }: { readiness?: DamReadinessResult | null; onSelectModule: SelectAdminModule }) {
+  const beta = readiness?.betaReadiness;
+  const facts = beta?.facts || [];
+  const blockers = facts.filter((item) => item.state === "block");
+  const warnings = facts.filter((item) => item.state === "warn");
+  const qaFact = facts.find((item) => item.id === "browser-qa") || facts.find((item) => item.source === "qa-report");
+  const auditActivity = readiness?.auditLog.recent[0];
+  const launchFact = facts.find((item) => item.source === "launch-readiness" && item.state !== "pass") || facts.find((item) => item.source === "launch-readiness");
+  const stateTone: AdminStatusTone = beta?.ready ? "Healthy" : blockers.length ? "Critical" : "Warning";
+  const stateLabel = beta?.ready ? "Beta Go" : blockers.length ? "Beta No-Go" : "Beta Hold";
+  const queueItems = governanceQueueItems(readiness);
+  const primaryQueueItem = queueItems[0];
+  const remainingQueueItems = queueItems.slice(1);
+
+  function viewEvidence(event: MouseEvent<HTMLAnchorElement>, targetId: string) {
+    event.preventDefault();
+    onSelectModule(DEFAULT_ADMIN_NAV, { focusTargetId: targetId, hash: targetId });
+  }
+
+  return (
+    <section id={DEFAULT_ADMIN_HASH} className={`ed-card ed-launch-summary is-${stateTone.toLowerCase()}`} aria-labelledby="admin-launch-summary-title">
+      <div className="ed-launch-summary-primary">
+        <div>
+          <span className="ed-section-eyebrow">Launch readiness</span>
+          <h2 id="admin-launch-summary-title" tabIndex={-1}>{stateLabel}</h2>
+          <p>{beta?.ready ? "Internal teammate beta can proceed after current invite URL smoke." : blockers.length ? "Resolve critical launch blockers before teammate invites." : "Proceed with rehearsal only until warnings are accepted or cleared."}</p>
+        </div>
+        <div className="ed-launch-verdict">
+          <AdminStatusBadge tone={stateTone} label={stateLabel} />
+          <strong>{beta?.score || 0}%</strong>
+          <span>proof score</span>
+        </div>
+      </div>
+      <div className="ed-governance-queue" aria-labelledby="governance-action-queue-title">
+        <header>
+          <div>
+            <span className="ed-section-eyebrow">Governance Action Queue</span>
+            <h3 id="governance-action-queue-title">Exception-first launch work</h3>
+            <p>Critical blockers first, warnings second. Evidence links stay inside existing governance sections.</p>
+          </div>
+          <div className="ed-governance-queue-counts" aria-label={`${blockers.length} critical blockers and ${warnings.length} warnings`}>
+            <span><strong>{blockers.length}</strong> Critical blockers</span>
+            <span><strong>{warnings.length}</strong> Warnings</span>
+          </div>
+        </header>
+        <div className="ed-governance-queue-list">
+          {primaryQueueItem ? (
+            <>
+              <article className={`is-${primaryQueueItem.severity.toLowerCase()}`} key={primaryQueueItem.fact.id}>
+                <div className="ed-governance-queue-main">
+                  <AdminStatusBadge tone={primaryQueueItem.severity} label={primaryQueueItem.severity} />
+                  <div>
+                    <h4>{primaryQueueItem.actionTitle}</h4>
+                    <p>{primaryQueueItem.fact.detail}</p>
+                  </div>
+                </div>
+                <div className="ed-governance-queue-meta">
+                  <span>{primaryQueueItem.fact.label}</span>
+                  <small>{primaryQueueItem.evidenceMeta}</small>
+                  <a href={`#${primaryQueueItem.evidenceTarget}`} aria-label={`View evidence for ${primaryQueueItem.fact.label}`} onClick={(event) => viewEvidence(event, primaryQueueItem.evidenceTarget)}>View evidence</a>
+                </div>
+              </article>
+              {remainingQueueItems.length ? (
+                <details className="ed-governance-queue-more">
+                  <summary>More launch actions: {remainingQueueItems.filter((item) => item.severity === "Critical").length} critical, {remainingQueueItems.filter((item) => item.severity === "Warning").length} warnings</summary>
+                  <div className="ed-governance-queue-list">
+                    {remainingQueueItems.map((item) => (
+                      <article className={`is-${item.severity.toLowerCase()}`} key={item.fact.id}>
+                        <div className="ed-governance-queue-main">
+                          <AdminStatusBadge tone={item.severity} label={item.severity} />
+                          <div>
+                            <h4>{item.actionTitle}</h4>
+                            <p>{item.fact.detail}</p>
+                          </div>
+                        </div>
+                        <div className="ed-governance-queue-meta">
+                          <span>{item.fact.label}</span>
+                          <small>{item.evidenceMeta}</small>
+                          <a href={`#${item.evidenceTarget}`} aria-label={`View evidence for ${item.fact.label}`} onClick={(event) => viewEvidence(event, item.evidenceTarget)}>View evidence</a>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+            </>
+          ) : (
+            <article className="is-healthy">
+              <div className="ed-governance-queue-main">
+                <AdminStatusBadge tone="Healthy" />
+                <div>
+                  <h4>No open launch exceptions</h4>
+                  <p>Keep scheduled smoke, audit export, and reviewer proof current during beta.</p>
+                </div>
+              </div>
+              <div className="ed-governance-queue-meta">
+                <span>Launch evidence</span>
+                <small>Current readiness facts</small>
+                <a href="#launch-readiness-section" aria-label="View launch evidence" onClick={(event) => viewEvidence(event, "launch-readiness-section")}>View evidence</a>
+              </div>
+            </article>
+          )}
+        </div>
+      </div>
+      <details className="ed-launch-evidence-detail">
+        <summary>Launch evidence, audit activity, and system facts</summary>
+        <div className="ed-launch-facts" aria-label="Launch readiness facts">
+          <article className={blockers.length ? "is-critical" : "is-healthy"}>
+            <AdminStatusBadge tone={blockers.length ? "Critical" : "Healthy"} label={blockers.length ? "Critical" : "Healthy"} />
+            <strong>{blockers.length}</strong>
+            <span>Blockers</span>
+            <p>{blockers[0]?.detail || "No invite-stopping blockers reported."}</p>
+          </article>
+          <article className={warnings.length ? "is-warning" : "is-healthy"}>
+            <AdminStatusBadge tone={warnings.length ? "Warning" : "Healthy"} label={warnings.length ? "Warning" : "Healthy"} />
+            <strong>{warnings.length}</strong>
+            <span>Warnings</span>
+            <p>{warnings[0]?.detail || "No warning follow-ups reported."}</p>
+          </article>
+          <article>
+            <AdminStatusBadge tone={factTone(qaFact)} label={qaFact?.ready ? "Healthy" : qaFact?.state === "block" ? "Critical" : "Warning"} />
+            <strong>{qaFact?.ready ? "Passed" : "Check"}</strong>
+            <span>Last smoke/API check</span>
+            <p>{qaFact?.detail || "Run browser QA and portal API smoke before invite batch."}</p>
+          </article>
+          <article>
+            <AdminStatusBadge tone={auditActivity?.actor ? "Healthy" : "Warning"} label={auditActivity?.actor ? "Healthy" : "Warning"} />
+            <strong>{readiness?.auditLog.latestAt || auditActivity?.createdAt || "No activity"}</strong>
+            <span>Last audit activity</span>
+            <p>{auditActivity ? `${auditActivity.actor || "Unknown actor"}: ${auditActivity.summary}` : "No actor-backed governance event visible yet."}</p>
+          </article>
+          <article>
+            <AdminStatusBadge tone={factTone(launchFact)} label={launchFact?.state === "block" ? "Critical" : launchFact?.state === "warn" ? "Warning" : "Healthy"} />
+            <strong>{launchFact?.ready ? "Current" : "Review"}</strong>
+            <span>Governance activity</span>
+            <p>{launchFact?.detail || "Launch-readiness facts are loading."}</p>
+          </article>
+        </div>
+      </details>
+    </section>
+  );
 }
 
 function betaCoverageGates(readiness?: DamReadinessResult | null) {
@@ -134,7 +411,7 @@ function BetaCommandCenter({ readiness, compact = false }: { readiness?: DamRead
   if (compact) {
     return (
       <section className="ed-card ed-beta-command-center is-compact">
-        <header className="ed-card-head"><div><h3>Beta Go/No-Go</h3><p>{recommendation}</p></div><span className={`ed-beta-verdict ${statusClass}`}>{beta?.ready ? "Go" : "Hold"}</span></header>
+        <header className="ed-card-head"><div><h3>Launch evidence</h3><p>{recommendation}</p></div><AdminStatusBadge tone={beta?.ready ? "Healthy" : blocked.length ? "Critical" : "Warning"} label={beta?.ready ? "Go" : "Hold"} /></header>
         <div className="ed-beta-mini-grid">
           <span><strong>{passes.length}</strong><small>pass</small></span>
           <span><strong>{warnings.length}</strong><small>warn</small></span>
@@ -146,13 +423,13 @@ function BetaCommandCenter({ readiness, compact = false }: { readiness?: DamRead
   }
 
   return (
-    <section className="ed-card ed-admin-module ed-beta-command-center">
+    <section className="ed-card ed-admin-module ed-beta-command-center" aria-label="Beta Command Center launch readiness">
       <header className="ed-card-head">
         <div>
-          <h3>Beta Command Center</h3>
+          <h3>Launch readiness</h3>
           <p>Go/no-go evidence for teammate testing. Blocks are invite stoppers; warnings are rehearsal follow-ups.</p>
         </div>
-        <span className={`ed-beta-verdict ${statusClass}`}>{recommendation}</span>
+        <AdminStatusBadge tone={beta?.ready ? "Healthy" : blocked.length ? "Critical" : "Warning"} label={recommendation} />
       </header>
       <div className="ed-admin-stat-grid">
         <article><strong>{beta?.score || 0}%</strong><span>beta proof score</span><small>{beta?.generatedAt ? `generated ${new Date(beta.generatedAt).toLocaleString()}` : "not generated"}</small></article>
@@ -160,18 +437,21 @@ function BetaCommandCenter({ readiness, compact = false }: { readiness?: DamRead
         <article><strong>{passes.length}/{facts.length || 0}</strong><span>facts passing</span><small>from script, QA, env, catalog</small></article>
       </div>
       <div className="ed-beta-coverage-grid" aria-label="Beta coverage gates">
-        {coverageGates.map((gate) => <article className={`ed-beta-gate is-${gate.state}`} key={gate.id}><strong>{gate.value}</strong><span>{gate.label}</span><p>{gate.detail}</p></article>)}
+        {coverageGates.map((gate) => <article className={`ed-beta-gate is-${gate.state}`} key={gate.id}><AdminStatusBadge tone={factTone(gate)} label={gate.state === "pass" ? "Healthy" : gate.state === "block" ? "Critical" : "Warning"} /><strong>{gate.value}</strong><span>{gate.label}</span><p>{gate.detail}</p></article>)}
       </div>
-      <div className="ed-beta-fact-grid">
-        {facts.map((fact) => (
-          <article className={`ed-beta-fact ${betaFactClass(fact)}`} key={fact.id}>
-            <span>{betaFactIcon(fact)}{fact.state}</span>
-            <strong>{fact.label}</strong>
-            <p>{fact.detail}</p>
-            <small>{betaFactSourceLabel(fact.source)}</small>
-          </article>
-        ))}
-      </div>
+      <details className="ed-beta-fact-disclosure">
+        <summary>Read all readiness facts</summary>
+        <div className="ed-beta-fact-grid">
+          {facts.map((fact) => (
+            <article className={`ed-beta-fact ${betaFactClass(fact)}`} key={fact.id}>
+              <span>{betaFactIcon(fact)}{fact.state}</span>
+              <strong>{fact.label}</strong>
+              <p>{fact.detail}</p>
+              <small>{betaFactSourceLabel(fact.source)}</small>
+            </article>
+          ))}
+        </div>
+      </details>
       <section className="ed-beta-next-actions">
         <h4>Next actions</h4>
         {betaNextActions(readiness).map((action) => <p key={action}>{action}</p>)}
@@ -301,10 +581,21 @@ function FeedbackInboxModule() {
 
 function IntegrationTable({ rows = [] }: { rows?: IntegrationReadinessItem[] }) {
   return (
-    <table className="ed-table">
-      <thead><tr>{integrationReadinessColumns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
-      <tbody>{rows.map((row) => <tr key={row.id}><td>{row.label}</td><td>{row.owner}</td><td><StatusBadge status={integrationState(row)} /></td><td>{row.detail}</td></tr>)}</tbody>
-    </table>
+    <>
+      <div className="ed-mobile-card-list" aria-label="Integration readiness">
+        {rows.map((row) => (
+          <article key={row.id}>
+            <header><strong>{row.label}</strong><AdminStatusBadge tone={integrationTone(row)} label={integrationState(row)} /></header>
+            <p>{row.detail}</p>
+            <span>{row.owner}</span>
+          </article>
+        ))}
+      </div>
+      <table className="ed-table ed-desktop-table">
+        <thead><tr>{integrationReadinessColumns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+        <tbody>{rows.map((row) => <tr key={row.id}><td>{row.label}</td><td>{row.owner}</td><td><StatusBadge status={integrationState(row)} /></td><td>{row.detail}</td></tr>)}</tbody>
+      </table>
+    </>
   );
 }
 
@@ -313,8 +604,17 @@ function AuditTable({ readiness, onViewAll }: { readiness?: DamReadinessResult |
   return (
     <section className="ed-card">
       <header className="ed-card-head"><h3>Recent Audit Activity</h3>{onViewAll ? <button className="ed-link-button" type="button" onClick={onViewAll}>View all logs</button> : null}</header>
-      {actorRows.length ? <div className="ed-beta-audit-proof" aria-label="Actor-backed audit proof">{actorRows.map((row) => <p key={`proof-${row.id}`}><strong>{row.actor}</strong><span>{row.role} · {row.type} · {row.status}</span></p>)}</div> : null}
-      <table className="ed-table">
+      {actorRows.length ? <div className="ed-beta-audit-proof" aria-label="Actor audit proof">{actorRows.map((row) => <p key={`proof-${row.id}`}><strong>{row.actor}</strong><span>{row.role} · {row.type} · {row.status}</span></p>)}</div> : null}
+      <div className="ed-mobile-card-list" aria-label="Recent audit activity">
+        {(readiness?.auditLog.recent || []).slice(0, 10).map((row) => (
+          <article key={row.id}>
+            <header><strong>{row.type}</strong><AdminStatusBadge tone={row.status === "denied" || row.status === "blocked" ? "Warning" : row.status === "queued" ? "Info" : "Healthy"} label={row.status} /></header>
+            <p>{row.summary}</p>
+            <span>{row.actor || "Unknown"} · {row.role} · {row.createdAt}</span>
+          </article>
+        ))}
+      </div>
+      <table className="ed-table ed-desktop-table">
         <thead><tr><th>Time</th><th>Actor</th><th>Role</th><th>Action</th><th>Object</th><th>Summary</th></tr></thead>
         <tbody>{(readiness?.auditLog.recent || []).slice(0, 10).map((row) => <tr key={row.id}><td>{row.createdAt}</td><td>{row.actor || "Unknown"}</td><td>{row.role}</td><td>{row.type}</td><td>{row.assetId || row.resourceSpaceId || "Portal"}</td><td>{row.summary}</td></tr>)}</tbody>
       </table>
@@ -322,20 +622,32 @@ function AuditTable({ readiness, onViewAll }: { readiness?: DamReadinessResult |
   );
 }
 
-function OverviewModule({ readiness, onSelectModule }: { readiness?: DamReadinessResult | null; onSelectModule: (id: string) => void }) {
+function OverviewModule({ readiness, onSelectModule }: { readiness?: DamReadinessResult | null; onSelectModule: SelectAdminModule }) {
   return (
     <>
-      <BetaCommandCenter readiness={readiness} />
-      <CustodyMapPanel readiness={readiness} />
-      <div className="ed-kpi-grid is-four"><KpiCard label="Records" value={(readiness?.assetCount || 0).toLocaleString()} delta="ResourceSpace-backed" icon={Database} /><KpiCard label="Readiness" value={`${readiness?.score || 0}/100`} delta="policy score" icon={Shield} /><KpiCard label="Needs Review" value={(readiness?.metrics.needsReview || 0).toLocaleString()} delta="queue count" icon={FileText} /><KpiCard label="Audit Events" value={(readiness?.auditLog.count || 0).toLocaleString()} delta="portal log" icon={Box} /></div>
-      <section className="ed-card"><header className="ed-card-head"><div><h3>Integration Status</h3><p>ResourceSpace, Drive, S3, and portal readiness.</p></div><SourcePill source={readiness?.source} live={mediaSourceIsLive(readiness?.source)} /></header><IntegrationTable rows={readiness?.integrationReadiness || []} /></section>
-      <div className="ed-module-grid">{(readiness?.actionBacklog || []).slice(0, 6).map((item) => <section className="ed-card ed-module-card" key={item.id}><ShieldCheck size={22} /><h3>{item.label}</h3><p>{item.action}</p><small>{item.count.toLocaleString()} · {item.owner}</small></section>)}</div>
-      <AuditTable readiness={readiness} onViewAll={() => onSelectModule("audit-logs")} />
+      <section className="ed-admin-section" aria-labelledby="launch-readiness-section">
+        <header><div><span className="ed-section-eyebrow">Launch readiness</span><h3 id="launch-readiness-section" tabIndex={-1}>Go/No-Go evidence</h3></div><p>Exception-first beta controls before internal teammate testing.</p></header>
+        <BetaCommandCenter readiness={readiness} />
+      </section>
+      <section className="ed-admin-section" aria-labelledby="governance-policies-section">
+        <header><div><span className="ed-section-eyebrow">Governance policies</span><h3 id="governance-policies-section" tabIndex={-1}>Access boundaries and custody</h3></div><p>Source truth, policy counts, and role boundaries stay visible without enabling writeback.</p></header>
+        <CustodyMapPanel readiness={readiness} />
+        <div className="ed-kpi-grid is-four"><KpiCard label="Records" value={(readiness?.assetCount || 0).toLocaleString()} delta="ResourceSpace-backed" icon={Database} /><KpiCard label="Readiness" value={`${readiness?.score || 0}/100`} delta="policy score" icon={Shield} /><KpiCard label="Needs Review" value={(readiness?.metrics.needsReview || 0).toLocaleString()} delta="queue count" icon={FileText} /><KpiCard label="Audit Events" value={(readiness?.auditLog.count || 0).toLocaleString()} delta="portal log" icon={Box} /></div>
+        <div className="ed-module-grid">{(readiness?.actionBacklog || []).slice(0, 6).map((item) => <section className="ed-card ed-module-card" key={item.id}><AdminStatusBadge tone={item.severity === "critical" || item.severity === "high" ? "Critical" : item.severity === "medium" ? "Warning" : "Info"} label={item.severity} /><h3>{item.label}</h3><p>{item.action}</p><small>{item.count.toLocaleString()} · {item.owner}</small></section>)}</div>
+      </section>
+      <section className="ed-admin-section" aria-labelledby="audit-activity-section">
+        <header><div><span className="ed-section-eyebrow">Audit activity</span><h3 id="audit-activity-section" tabIndex={-1}>Recent actor-backed events</h3></div><p>Denied, queued, preview, and allowed actions remain auditable.</p></header>
+        <AuditTable readiness={readiness} onViewAll={() => onSelectModule("audit-logs")} />
+      </section>
+      <section className="ed-admin-section" aria-labelledby="system-health-section">
+        <header><div><span className="ed-section-eyebrow">System health</span><h3 id="system-health-section" tabIndex={-1}>Source and integration state</h3></div><p>Read-only states are intentional until ResourceSpace writeback is approved.</p></header>
+        <section className="ed-card"><header className="ed-card-head"><div><h3>Integration Status</h3><p>ResourceSpace, Drive, S3, and portal readiness.</p></div><SourcePill source={readiness?.source} live={mediaSourceIsLive(readiness?.source)} /></header><IntegrationTable rows={readiness?.integrationReadiness || []} /></section>
+      </section>
     </>
   );
 }
 
-function AdminModuleContent({ activeNav, readiness, onSelectModule }: { activeNav: string; readiness?: DamReadinessResult | null; onSelectModule: (id: string) => void }) {
+function AdminModuleContent({ activeNav, readiness, onSelectModule }: { activeNav: string; readiness?: DamReadinessResult | null; onSelectModule: SelectAdminModule }) {
   const metrics = readiness?.metrics;
   const integrations = readiness?.integrationReadiness || [];
   if (activeNav === "overview") return <OverviewModule readiness={readiness} onSelectModule={onSelectModule} />;
@@ -422,23 +734,50 @@ export function EnterpriseAdminPage() {
   const { role, ready } = useDemoRole();
   const [activeNav, setActiveNav] = useState(adminNavItems[0].id);
   const admin = useAdminReadiness(role);
+  function selectAdminNav(id: string, options: AdminNavSelectionOptions = {}) {
+    const nextNav = adminNavIds.has(id) ? id : DEFAULT_ADMIN_NAV;
+    const hash = options.hash || adminHashByNav.get(nextNav) || DEFAULT_ADMIN_HASH;
+    const focusTargetId = options.focusTargetId || adminFocusTargetByHash.get(hash) || "admin-active-module-title";
+    setActiveNav(nextNav);
+    replaceAdminHash(hash);
+    if (options.scroll !== false) window.setTimeout(() => focusAdminTarget(focusTargetId), 0);
+  }
+
+  useEffect(() => {
+    function syncFromHash() {
+      const hash = readAdminHash();
+      const nextNav = adminNavByHash.get(hash) || DEFAULT_ADMIN_NAV;
+      const canonicalHash = hash ? canonicalAdminHash(hash, nextNav) : DEFAULT_ADMIN_HASH;
+      const focusTargetId = adminFocusTargetByHash.get(canonicalHash) || "admin-active-module-title";
+      setActiveNav(nextNav);
+      if (hash !== canonicalHash) replaceAdminHash(canonicalHash);
+      if (hash) window.setTimeout(() => focusAdminTarget(focusTargetId), 0);
+    }
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
+  }, []);
+
   if (!ready) return <div className="enterprise-page"><LoadingCard label="Loading control center..." /></div>;
   if (role !== "DAM Admin") return <div className="enterprise-page"><section className="ed-card ed-access-block"><Lock size={28} /><h1>Governance requires DAM Admin role</h1><p>System governance, policies, user access, integrations, and audit controls are restricted to DAM Admins.</p><Link href={routeWithRole("/", role)}>Return to Asset Library</Link></section></div>;
   const readiness = admin.data;
   return (
     <div className="enterprise-page enterprise-admin-control">
+      <PageHeader title="Governance" subtitle="Launch readiness, policies, audit activity, and system health for the DAM beta." />
+      {admin.loading ? <LoadingCard /> : admin.error ? <ErrorCard message={admin.error} source={admin.source} /> : <LaunchReadinessSummary readiness={readiness} onSelectModule={selectAdminNav} />}
       <div className="ed-admin-grid">
-        <aside className="ed-panel ed-admin-nav"><strong>Administration</strong>{adminNavItems.map((item) => {
+        <aside className="ed-panel ed-admin-nav" aria-label="Admin section navigation"><strong>Section jump list</strong>{adminNavItems.map((item) => {
           const Icon = moduleIcons[item.id as keyof typeof moduleIcons] || Settings;
-          return <button className={activeNav === item.id ? "is-active" : ""} type="button" key={item.id} onClick={() => setActiveNav(item.id)}><Icon size={15} />{item.label}</button>;
+          return <button className={activeNav === item.id ? "is-active" : ""} type="button" key={item.id} aria-current={activeNav === item.id ? "page" : undefined} onClick={() => selectAdminNav(item.id)}><Icon size={15} />{item.label}</button>;
         })}</aside>
-        <section aria-label={`${adminNavLabel(activeNav)} administration module`}>
-          <PageHeader title={adminNavLabel(activeNav)} subtitle="DAM Control Center: manage system governance, policies, user access, and integrations." />
+        <section className="ed-admin-main" aria-labelledby="admin-active-module-title">
+          <header className="ed-admin-module-title"><span className="ed-section-eyebrow">Administration</span><h2 id="admin-active-module-title" tabIndex={-1}>{adminNavLabel(activeNav)}</h2><p>DAM Control Center module. Data is read-only unless a safe portal action explicitly says otherwise.</p></header>
           {admin.loading ? <LoadingCard /> : admin.error ? <ErrorCard message={admin.error} source={admin.source} /> : <>
-            <AdminModuleContent activeNav={activeNav} readiness={readiness} onSelectModule={setActiveNav} />
+            <AdminModuleContent activeNav={activeNav} readiness={readiness} onSelectModule={selectAdminNav} />
           </>}
         </section>
-        <aside className="ed-admin-rail"><BetaCommandCenter readiness={readiness} compact /><section className="ed-card"><h3>Policy Summary</h3><p>{readiness?.source.detail || "Readiness not loaded."}</p><div className="ed-big-check"><Check size={30} /></div>{policySummaryRows(readiness).map((row) => <p className="ed-row-between" key={row.label}><span>{row.label}</span><strong>{row.value.toLocaleString()}</strong></p>)}<ActionButton onClick={() => setActiveNav("rights-policies")}>Manage policies</ActionButton></section><section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3><button className="ed-link-button" type="button" onClick={() => setActiveNav("audit-logs")}>View all</button></header>{(readiness?.auditLog.recent || []).slice(0, 5).map((item) => <p className="ed-activity" key={item.id}><Bell size={16} />{item.summary}<small>{item.actor ? `${item.actor} · ` : ""}{item.role} · {item.createdAt}</small></p>)}</section><section className="ed-card"><h3>System Health</h3>{systemHealthRows(readiness).map((item) => <p className="ed-row-between" key={item.id}><span>{item.label}</span><StatusBadge status={item.state} /></p>)}<button className="ed-link-button" type="button" onClick={() => setActiveNav("system-settings")}>View system status</button></section></aside>
+        <aside className="ed-admin-rail"><BetaCommandCenter readiness={readiness} compact /><section className="ed-card"><h3>Policy Summary</h3><p>{readiness?.source.detail || "Readiness not loaded."}</p><div className="ed-big-check"><Check size={30} /></div>{policySummaryRows(readiness).map((row) => <p className="ed-row-between" key={row.label}><span>{row.label}</span><strong>{row.value.toLocaleString()}</strong></p>)}<ActionButton onClick={() => selectAdminNav("rights-policies")}>Manage policies</ActionButton></section><section className="ed-card"><header className="ed-card-head"><h3>Recent Activity</h3><button className="ed-link-button" type="button" onClick={() => selectAdminNav("audit-logs")}>View all</button></header>{(readiness?.auditLog.recent || []).slice(0, 5).map((item) => <p className="ed-activity" key={item.id}><Bell size={16} />{item.summary}<small>{item.actor ? `${item.actor} · ` : ""}{item.role} · {item.createdAt}</small></p>)}</section><section className="ed-card"><h3>System Health</h3>{systemHealthRows(readiness).map((item) => <p className="ed-row-between" key={item.id}><span>{item.label}</span><StatusBadge status={item.state} /></p>)}<button className="ed-link-button" type="button" onClick={() => selectAdminNav("system-settings")}>View system status</button></section></aside>
       </div>
     </div>
   );

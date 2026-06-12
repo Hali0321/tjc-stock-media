@@ -15,6 +15,8 @@ import { StatusBanner } from "@/components/StatusBanner";
 import { canReview } from "@/lib/permissions";
 import { StatusBadge, UsageBadge } from "@/components/StatusBadge";
 import { assetPresentation, detailImageUrl, provenanceSummary } from "@/lib/presentation";
+import { emptyReviewChecklist, reviewChecklistItems } from "@/lib/review-decision-presenter";
+import { buildReviewDecisionLanes, buildReviewDecisionRequirements, formatMissingReviewEvidence, missingReviewActionEvidence, reviewNextCheckLabel } from "@/lib/review-workbench";
 import { toastPendingWriteQueued, toastReviewQueued, toastSaveFailed } from "@/lib/tjc-toasts";
 import { missingReviewFields, reviewActions, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import type { MediaSourceStatus, ReviewEvidenceChecklist, ReviewWriteRecordSummary, StockMediaAsset } from "@/lib/types";
@@ -80,35 +82,6 @@ const advancedMetricCards: Array<{ key: keyof Governance; label: string }> = [
 const factItemClass = "border-t border-tjc-line/70 pt-3 first:border-t-0 first:pt-0";
 const factTermClass = "text-xs font-semibold text-tjc-evergreen";
 const factDescClass = "mt-1 break-words text-sm leading-relaxed text-[#4d554d]";
-const checklistLabels: Array<[keyof ReviewEvidenceChecklist, string]> = [
-  ["sourceConfirmed", "Source confirmed"],
-  ["rightsConfirmed", "Owner/license confirmed"],
-  ["attributionConfirmed", "Attribution confirmed"],
-  ["peopleVisibilityConfirmed", "People visibility confirmed"],
-  ["childrenYouthChecked", "Children/youth checked"],
-  ["usageScopeSelected", "Usage scope selected"],
-  ["derivativeAvailable", "Derivative available"],
-  ["sensitiveContextChecked", "Sensitive context checked"],
-  ["creditRequirementChecked", "Credit requirement checked"],
-  ["expirationRereviewSet", "Expiration/re-review set"],
-  ["proofLinkAttached", "Proof link attached"]
-];
-const checklistLabelByField = Object.fromEntries(checklistLabels) as Record<keyof ReviewEvidenceChecklist, string>;
-
-const emptyChecklist: ReviewEvidenceChecklist = {
-  sourceConfirmed: false,
-  rightsConfirmed: false,
-  attributionConfirmed: false,
-  peopleVisibilityConfirmed: false,
-  childrenYouthChecked: false,
-  usageScopeSelected: false,
-  derivativeAvailable: false,
-  sensitiveContextChecked: false,
-  creditRequirementChecked: false,
-  expirationRereviewSet: false,
-  proofLinkAttached: false
-};
-
 type ReviewAction = (typeof reviewActions)[number];
 
 function normalizeInitialQueue(value?: string): ReviewQueueId {
@@ -117,30 +90,6 @@ function normalizeInitialQueue(value?: string): ReviewQueueId {
 
 function sourceSummary(asset: StockMediaAsset) {
   return provenanceSummary(asset, "Reviewer").publicLabel || asset.collection || "Source pending";
-}
-
-function reviewNextCheckLabel(asset: StockMediaAsset) {
-  const missing = missingReviewFields(asset);
-  const risks = reviewRiskFlags(asset);
-  if (missing.includes("source")) return "Verify source";
-  if (missing.includes("people/minors")) return "Check people/minors";
-  if (missing.includes("consent") || risks.includes("Rights unclear")) return "Confirm rights";
-  if (missing.includes("usage guidance")) return "Add guidance";
-  if (missing.includes("reviewer") || missing.includes("review date")) return "Record reviewer";
-  return "Decision ready";
-}
-
-function reviewDecisionLanes(asset: StockMediaAsset) {
-  const missing = missingReviewFields(asset);
-  const risks = reviewRiskFlags(asset);
-  const lane = (label: string, blocked: boolean, detail: string) => ({ label, blocked, detail });
-  return [
-    lane("Rights", missing.includes("consent") || risks.includes("Rights unclear") || !asset.rightsStatus, asset.rightsStatus || "Rights evidence needed"),
-    lane("People/minors", missing.includes("people/minors") || /child|youth|minor/i.test(asset.peopleRisk || ""), asset.peopleRisk || "Visibility unknown"),
-    lane("Source", missing.includes("source"), missing.includes("source") ? "Source evidence needed" : "Source noted"),
-    lane("Derivative", missing.includes("derivative"), asset.imageUrls?.download || asset.downloadPolicy.includes("approved-copy") ? "Approved copy available" : "Approved rendition missing"),
-    lane("Usage", missing.includes("usage guidance"), asset.usageGuidance || asset.usageScope)
-  ];
 }
 
 function AuditPreviewPanel({ auditPreview }: { auditPreview: AuditPreview }) {
@@ -168,7 +117,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   const [activeQueue, setActiveQueue] = useState<ReviewQueueId>(() => normalizeInitialQueue(initialQueue));
   const [auditPreview, setAuditPreview] = useState<AuditPreview | null>(null);
   const [reviewNote, setReviewNote] = useState("");
-  const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyChecklist);
+  const [checklist, setChecklist] = useState<ReviewEvidenceChecklist>(emptyReviewChecklist);
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
   const [activeInspectorTab, setActiveInspectorTab] = useState<ReviewInspectorTab>("Overview");
   const [visibleReviewCount, setVisibleReviewCount] = useState(desktopReviewRowsPageSize);
@@ -233,7 +182,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
 
   useEffect(() => {
     setReviewNote("");
-    setChecklist(emptyChecklist);
+    setChecklist(emptyReviewChecklist);
     setPendingAction(null);
     setAuditPreview(null);
   }, [activeQueue, selectedId]);
@@ -285,29 +234,6 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     }
   }, [data?.assets, selectedId, visibleReviewCount]);
 
-  function missingEvidenceFor(action: ReviewAction) {
-    const required: Array<keyof ReviewEvidenceChecklist> = [
-      "sourceConfirmed",
-      "rightsConfirmed",
-      "peopleVisibilityConfirmed",
-      "childrenYouthChecked",
-      "usageScopeSelected"
-    ];
-    if (action.backend === "Approve Public") {
-      required.push(
-        "derivativeAvailable",
-        "sensitiveContextChecked",
-        "creditRequirementChecked",
-        "attributionConfirmed",
-        "expirationRereviewSet",
-        "proofLinkAttached"
-      );
-    }
-    const missing = required.filter((field) => !checklist[field]).map((field) => String(field));
-    if (reviewNote.trim().length <= 10) missing.push("reviewNote");
-    return missing;
-  }
-
   function toggleChecklist(field: keyof ReviewEvidenceChecklist) {
     setChecklist((current) => ({ ...current, [field]: !current[field] }));
   }
@@ -340,7 +266,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
   }, [reviewer, data?.assets.length, activeQueue]);
 
   function requestAction(action: ReviewAction) {
-    const missing = missingEvidenceFor(action);
+    const missing = missingReviewActionEvidence(action.backend, checklist, reviewNote);
     if (missing.length) {
       setMessage("Review evidence is incomplete. Add required checklist items and a review note before submitting.");
       toastSaveFailed("Checklist and reviewer note are required before queueing.");
@@ -389,7 +315,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         toastPendingWriteQueued({ label: "View queue status", onClick: () => setActiveInspectorTab("Queue") });
         setActiveInspectorTab("Queue");
         setReviewNote("");
-        setChecklist(emptyChecklist);
+        setChecklist(emptyReviewChecklist);
         setPendingAction(null);
       } else {
         toastSaveFailed(body.error || "No review queue update was attempted.");
@@ -402,26 +328,19 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
     }
   }
 
-  const confirmedChecklistLabels = checklistLabels.filter(([field]) => checklist[field]).map(([, label]) => label);
+  const confirmedChecklistLabels = reviewChecklistItems.filter((item) => checklist[item.field]).map((item) => item.label);
   const selectedAuditPreview = selectedAsset && auditPreview?.assetId === selectedAsset.id ? auditPreview : null;
-  const completedEvidenceCount = checklistLabels.filter(([field]) => checklist[field]).length;
-  const reviewNoteReady = reviewNote.trim().length > 10;
-  const decisionRequirements = [
-    ...checklistLabels.map(([field, label]) => ({ id: String(field), label, complete: checklist[field] })),
-    { id: "reviewNote", label: "Review note added", complete: reviewNoteReady }
-  ];
-  const completedRequirementCount = decisionRequirements.filter((item) => item.complete).length;
-  const missingRequirementLabels = decisionRequirements.filter((item) => !item.complete).map((item) => item.label);
-  const formatMissingEvidence = (missing: string[]) => missing
-    .map((field) => field === "reviewNote" ? "Review note added" : checklistLabelByField[field as keyof ReviewEvidenceChecklist] || field)
-    .join(", ");
+  const completedEvidenceCount = reviewChecklistItems.filter((item) => checklist[item.field]).length;
+  const decisionRequirements = buildReviewDecisionRequirements(checklist, reviewNote);
+  const completedRequirementCount = decisionRequirements.completed;
+  const missingRequirementLabels = decisionRequirements.missingLabels;
   const reviewEvidenceControls = (
     <div className="min-w-0 max-w-full" data-component="ReviewActionEvidencePanel">
-      <section className={cn("rounded-xl border p-3", completedRequirementCount === decisionRequirements.length ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff8e8] text-[#725216]")} aria-label="Approval lock state">
+      <section className={cn("rounded-xl border p-3", completedRequirementCount === decisionRequirements.total ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff8e8] text-[#725216]")} aria-label="Approval lock state">
         <span className="block text-xs font-black uppercase tracking-[.05em]">Approval lock</span>
-        <strong className="mt-1 block text-lg font-black leading-tight">{completedRequirementCount === decisionRequirements.length ? "Evidence complete" : "Approval locked"}</strong>
+        <strong className="mt-1 block text-lg font-black leading-tight">{completedRequirementCount === decisionRequirements.total ? "Evidence complete" : "Approval locked"}</strong>
         <p className="mt-1 text-sm font-semibold leading-relaxed">
-          {completedRequirementCount}/{decisionRequirements.length} required checks complete. {missingRequirementLabels.length ? `Still missing: ${missingRequirementLabels.slice(0, 3).join(", ")}${missingRequirementLabels.length > 3 ? "..." : ""}.` : "Decision can be queued for media-team follow-up."}
+          {completedRequirementCount}/{decisionRequirements.total} required checks complete. {missingRequirementLabels.length ? `Still missing: ${missingRequirementLabels.slice(0, 3).join(", ")}${missingRequirementLabels.length > 3 ? "..." : ""}.` : "Decision can be queued for media-team follow-up."}
         </p>
       </section>
       <h3 className="mt-4 text-sm font-semibold text-tjc-evergreen">Review evidence</h3>
@@ -437,7 +356,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       </label>
       <div className="mt-3">
         <DamEvidenceMatrix
-          items={checklistLabels.map(([field, label]) => ({ id: field, label, complete: checklist[field] }))}
+          items={reviewChecklistItems.map((item) => ({ id: item.field, label: item.label, complete: checklist[item.field] }))}
           onToggle={(field) => toggleChecklist(field as keyof ReviewEvidenceChecklist)}
         />
       </div>
@@ -446,11 +365,11 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
         <strong className="block text-[#5c3c05]">Public/external approval lock</strong>
         <span>No evidence = no public/external download. Proof link, attribution, expiration/re-review, sensitive context, and approved derivative must be checked before public approval.</span>
       </section>
-      <DamReviewDecisionLockPanel missingLabels={missingRequirementLabels} completed={completedRequirementCount} total={decisionRequirements.length} />
+      <DamReviewDecisionLockPanel missingLabels={missingRequirementLabels} completed={completedRequirementCount} total={decisionRequirements.total} />
       <DamDecisionActions>
         {reviewActions.map((action) => {
-          const missing = missingEvidenceFor(action);
-          const title = missing.length ? `Missing: ${formatMissingEvidence(missing)}` : "Review evidence and queue decision for sync";
+          const missing = missingReviewActionEvidence(action.backend, checklist, reviewNote);
+          const title = missing.length ? `Missing: ${formatMissingReviewEvidence(missing)}` : "Review evidence and queue decision for sync";
           const icon = action.backend === "Do Not Use" ? <ShieldX size={15} strokeWidth={1.8} aria-hidden="true" /> : <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />;
           if (highRiskActionIds.has(action.id)) {
             return (
@@ -610,7 +529,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
       <div className="mt-3">
         <TrustSignalStrip
           signals={[
-            { label: "Evidence lock", value: `${completedRequirementCount}/${decisionRequirements.length} checks`, tone: completedRequirementCount === decisionRequirements.length ? "approved" : "blocked" },
+            { label: "Evidence lock", value: `${completedRequirementCount}/${decisionRequirements.total} checks`, tone: completedRequirementCount === decisionRequirements.total ? "approved" : "blocked" },
             { label: "Active queue", value: activeQueueSummary?.label || "Loading queue", tone: "info" },
             { label: "Source access", value: "Originals restricted", tone: "blocked" },
             { label: "Pending write", value: "Not final ResourceSpace truth", tone: "review" }
@@ -739,7 +658,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                   <span className="text-xs font-semibold text-tjc-muted">Typed review evidence</span>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {reviewDecisionLanes(selectedAsset).map((lane) => (
+                  {buildReviewDecisionLanes(selectedAsset).map((lane) => (
                     <div className={cn("rounded-md border px-2.5 py-2 text-xs", lane.blocked ? "border-[#ead6a8] bg-[#fff8e8] text-[#725216]" : "border-[#b8d9c6] bg-white text-[#22563a]")} key={lane.label}>
                       <strong className="block font-black">{lane.label}</strong>
                       <span className="mt-1 block truncate font-semibold">{lane.detail}</span>
@@ -768,7 +687,7 @@ export function ReviewPage({ initialQueue = "pending" }: { initialQueue?: string
                         <span className="mt-1 block text-xs font-semibold text-tjc-muted">Approval stays locked until required checks and reviewer notes are complete.</span>
                       </div>
                       <span className="rounded-md border border-[#d6dfd8] bg-white px-2.5 py-1 text-xs font-black text-tjc-evergreen">
-                        {completedEvidenceCount}/{checklistLabels.length}
+                        {completedEvidenceCount}/{reviewChecklistItems.length}
                       </span>
                     </div>
                   </summary>

@@ -59,15 +59,16 @@ const reviewReasons = [
 ];
 
 const quickLinks = [
-  { title: "Collections", detail: "Browse ministry collections and kits", href: "/collections", icon: FolderOpen },
-  { title: "Recent uploads", detail: "View recently uploaded media", href: "/upload", icon: UploadCloud },
-  { title: "Source-file access", detail: "Submit or check source-file requests", href: "/guide#request-review", icon: FileLock2 },
-  { title: "Review requests", detail: "Track review and access requests", href: "/review", icon: FileText }
+  { title: "Collections", detail: "Open ministry collections and kits", href: "/collections", icon: FolderOpen },
+  { title: "Recent uploads", detail: "Open upload intake and recent media", href: "/upload", icon: UploadCloud },
+  { title: "Source-file access", detail: "Jump to review request guidance", href: "/guide#request-review", icon: FileLock2 },
+  { title: "Review requests", detail: "Open review and access queue", href: "/review", icon: FileText }
 ];
 
 const policies = [
   { title: "Usage policy", detail: "Approved uses and restrictions" },
   { title: "Rights & consent", detail: "Copyright, consent, and licensing" },
+  { title: "Official TJC Identity Site ↗", detail: "Logo, color, typography, and identity guidance.", href: "https://identity.tjc.org", external: true },
   { title: "Public use rules", detail: "Social, web, and external distribution" },
   { title: "Metadata standards", detail: "Naming, tagging, and descriptions" }
 ];
@@ -91,7 +92,7 @@ const faqs: HelpFaq[] = [
   }
 ];
 
-export function GuidePage() {
+export function GuidePage({ policyCenter = false }: { policyCenter?: boolean }) {
   const [query, setQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -112,8 +113,8 @@ export function GuidePage() {
       <main className="help-center-main">
         <section className="help-center-hero" aria-labelledby="help-center-title">
           <div>
-            <h1 id="help-center-title">Media Help Center</h1>
-            <p>Find the right media, check approval and usage rights, and request DAM review when additional access is needed.</p>
+            <h1 id="help-center-title">{policyCenter ? "Policy Center" : "Media Help Center"}</h1>
+            <p>{policyCenter ? "Policy-safe DAM guidance for reuse, rights, consent, and metadata standards." : "Find approved media, check reuse status, and request review when needed."}</p>
           </div>
           <form className="help-center-search" role="search">
             <Search size={19} strokeWidth={1.9} aria-hidden="true" />
@@ -237,7 +238,7 @@ export function GuidePage() {
                 <Link href={item.href} key={item.title}>
                   <LinkIcon size={21} strokeWidth={1.8} aria-hidden="true" />
                   <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-                  <ChevronDown size={16} strokeWidth={1.7} aria-hidden="true" />
+                  <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
                 </Link>
               );
             })}
@@ -248,9 +249,10 @@ export function GuidePage() {
           <h2>Policies &amp; Guidelines</h2>
           <div className="help-link-list is-policy">
             {policies.map((item) => (
-              <Link href="/guide" key={item.title}>
+              <Link href={item.href || "/guide"} key={item.title} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}>
                 <BookOpen size={20} strokeWidth={1.8} aria-hidden="true" />
                 <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+                {item.external ? <ExternalLink size={15} strokeWidth={1.8} aria-hidden="true" /> : null}
               </Link>
             ))}
           </div>

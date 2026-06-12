@@ -23,8 +23,10 @@ import {
   buildSavedViews,
   buildZeroResultInsights
 } from "@/lib/catalog-summaries";
+import { assetResourceRef } from "@/lib/asset-refs";
 import { buildCatalogDiscovery, discoveryScore, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { getActiveMediaSource } from "@/lib/media-source";
+import { listPendingReviewWrites } from "@/lib/pending-review-writes";
 import { safeBoundedInt } from "@/lib/persisted-record-safety";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { assetMatchesReviewQueue, missingReviewFields, reviewQueues, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
@@ -258,12 +260,19 @@ export async function getReviewQueue(role: DemoRole, queueId: ReviewQueueId = "p
   const { assets, status } = await getActiveMediaSource();
   const canReview = decideAccess(role, "viewReviewQueue").allowed;
   const duplicateGroupCounts = buildDuplicateGroupCounts(assets);
+  const pendingWriteResourceIds = new Set(
+    listPendingReviewWrites()
+      .filter((record) => !["cancelled", "superseded", "synced_to_resourcespace"].includes(record.syncState))
+      .map((record) => record.resourceId)
+  );
+  const hasPendingReviewWrite = (asset: StockMediaAsset) => pendingWriteResourceIds.has(assetResourceRef(asset));
+  const matchesQueue = (asset: StockMediaAsset, id: ReviewQueueId) => assetMatchesReviewQueue(asset, id, duplicateGroupCounts) || (id === "pending" && hasPendingReviewWrite(asset));
   const reviewable = canReview
     ? assets
-        .filter((asset) => reviewQueues.some((queue) => assetMatchesReviewQueue(asset, queue.id, duplicateGroupCounts)))
+        .filter((asset) => hasPendingReviewWrite(asset) || reviewQueues.some((queue) => assetMatchesReviewQueue(asset, queue.id, duplicateGroupCounts)))
         .sort((a, b) => reviewRiskFlags(b, duplicateGroupCounts).length - reviewRiskFlags(a, duplicateGroupCounts).length || statusWeight(a) - statusWeight(b) || a.title.localeCompare(b.title))
     : [];
-  const selected = reviewable.filter((asset) => assetMatchesReviewQueue(asset, queueId, duplicateGroupCounts));
+  const selected = reviewable.filter((asset) => matchesQueue(asset, queueId));
   const reviewCounts = countAssetGovernance(reviewable);
   const allCounts = countAssetGovernance(assets);
   return {
@@ -271,7 +280,7 @@ export async function getReviewQueue(role: DemoRole, queueId: ReviewQueueId = "p
     allAssets: reviewable.slice(0, 120).map((asset) => assetWithRoleImageUrls(asset, role)),
     source: status,
     governance: {
-      pendingReview: reviewable.filter((asset) => assetMatchesReviewQueue(asset, "pending", duplicateGroupCounts)).length,
+      pendingReview: reviewable.filter((asset) => matchesQueue(asset, "pending")).length,
       childrenYouth: reviewCounts.childrenYouth,
       missingSource: reviewCounts.missingSource,
       rightsReview: reviewCounts.rightsReview,
@@ -288,7 +297,7 @@ export async function getReviewQueue(role: DemoRole, queueId: ReviewQueueId = "p
       id: queue.id,
       label: queue.label,
       description: queue.description,
-      count: reviewable.filter((asset) => assetMatchesReviewQueue(asset, queue.id, duplicateGroupCounts)).length
+      count: reviewable.filter((asset) => matchesQueue(asset, queue.id)).length
     }))
   };
 }

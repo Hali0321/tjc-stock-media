@@ -5,7 +5,7 @@ import { fetchDamJson, sourceFromPayload, type DamApiPayload } from "@/lib/dam-a
 import type { BrandKitGovernance } from "@/lib/brand-kit-governance";
 import { mediaSourceIsLive, mediaSourceKind, type MediaSourceKind } from "@/lib/media-source/truth";
 import { canReview } from "@/lib/permissions";
-import type { DamReadinessResult, DemoRole, MediaSourceStatus, SearchResult, StockMediaAsset } from "@/lib/types";
+import type { DamReadinessResult, DemoRole, MediaSourceStatus, ReviewWriteRecordSummary, SearchResult, StockMediaAsset } from "@/lib/types";
 
 type ApiSourceKind = MediaSourceKind;
 
@@ -36,9 +36,23 @@ export type ReviewQueueResponse = {
   live?: boolean;
   governance: Record<string, number>;
   queues: Array<{ id: string; label: string; description: string; count: number }>;
-  pendingWrites: Record<string, unknown>;
+  pendingWrites: Record<string, ReviewWriteRecordSummary>;
   resourceSpaceUrls: Record<string, string>;
   canReview: boolean;
+};
+
+export type ReviewRequestResponse = {
+  ok?: boolean;
+  id?: string;
+  message?: string;
+  error?: string;
+  pendingWriteId?: string;
+  pendingWrite?: ReviewWriteRecordSummary;
+  syncState?: string;
+  mode?: string;
+  requestRecorded?: boolean;
+  source?: MediaSourceStatus;
+  live?: boolean;
 };
 
 export type BrandKitResponse = {
@@ -176,6 +190,20 @@ export function useAssetDetail(id: string, role: DemoRole) {
 export function useReviewQueue(role: DemoRole, queue = "pending") {
   const url = canReview(role) ? `/api/review?role=${encodeURIComponent(role)}&queue=${encodeURIComponent(queue)}` : null;
   return useJsonApi<ReviewQueueResponse>(url, role);
+}
+
+export function useReviewRequest(id: string, role: DemoRole) {
+  const requestReview = useCallback(async ({ notes }: { notes?: string } = {}) => {
+    const response = await fetch("/api/review-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ role, id, notes })
+    });
+    const payload = await response.json().catch(() => ({ ok: false, error: `Review request failed with ${response.status}` }));
+    return payload as ReviewRequestResponse;
+  }, [id, role]);
+
+  return { requestReview };
 }
 
 export function useInsights(role: DemoRole) {

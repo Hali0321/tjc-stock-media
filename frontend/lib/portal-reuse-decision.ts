@@ -100,6 +100,38 @@ function meaningfulValue(value?: string) {
   return Boolean(value && !/^(unknown|not exported|not applicable|none|n\/a)$/i.test(value.trim()));
 }
 
+const explicitRightsConcernPattern = /rights unclear|concern|not confirmed|needs review|review required|do not use|blocked/i;
+const trustedLmPhotosPattern = /\blm[\s.-]*photos\b|lm\.photos@tjc\.org/i;
+
+function isTrustedLmPhotosApprovedAsset(asset: StockMediaAsset) {
+  const sourceText = [
+    asset.sourceAccount,
+    asset.sourceSystem,
+    asset.sourcePlatform,
+    asset.sourceAlbumPath,
+    asset.collection,
+    ...(asset.sourceAlbumMemberships || []),
+    ...(asset.tags || []),
+    ...(asset.tjcTerms || [])
+  ].filter(Boolean).join(" ");
+
+  return Boolean(
+    asset.mediaType === "photo" &&
+      asset.status === "Approved Public" &&
+      asset.downloadPolicy === "approved-copy-allowed" &&
+      (asset.usageScope === "Public" || asset.usageScope === "Public and Internal") &&
+      trustedLmPhotosPattern.test(sourceText) &&
+      assetReviewComplete(asset) &&
+      Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown") &&
+      !assetNeedsRightsReview(asset) &&
+      !assetIsBlocked(asset) &&
+      !assetIsArchiveOnly(asset) &&
+      !assetHasChildrenYouthRisk(asset) &&
+      !assetHasSensitiveContext(asset) &&
+      !explicitRightsConcernPattern.test(`${asset.rightsStatus || ""} ${asset.consentStatus || ""} ${asset.rightsNotes || ""}`)
+  );
+}
+
 function isReviewer(role: DemoRole) {
   return reviewerRoles.includes(role);
 }
@@ -121,25 +153,29 @@ function plainViewerReason(blockers: ReuseBlocker[]) {
 }
 
 export function metadataConfidence(asset: StockMediaAsset): MetadataConfidence {
+  const trustedPublicImport = isTrustedLmPhotosApprovedAsset(asset);
   return {
-    source: assetHasSourceProvenance(asset) ? "verified" : "missing",
+    source: trustedPublicImport || assetHasSourceProvenance(asset) ? "verified" : "missing",
     peopleMinors: assetHasChildrenYouthRisk(asset)
       ? "children_youth_possible"
-      : asset.peopleRisk && asset.peopleRisk !== "Unknown"
+      : trustedPublicImport || (asset.peopleRisk && asset.peopleRisk !== "Unknown")
         ? "reviewed"
         : "unknown",
-    rights: assetNeedsRightsReview(asset)
+    rights: trustedPublicImport
+      ? "approved"
+      : assetNeedsRightsReview(asset)
       ? meaningfulValue(asset.rightsStatus) || meaningfulValue(asset.rightsNotes)
         ? "review_required"
         : "unknown"
       : "approved",
     usageGuidance: assetNeedsUsageGuidance(asset) ? "missing" : "present",
-    review: assetReviewComplete(asset) ? "complete" : "pending"
+    review: trustedPublicImport || assetReviewComplete(asset) ? "complete" : "pending"
   };
 }
 
 export function reuseBlockers(asset: StockMediaAsset) {
   const blockers: ReuseBlocker[] = [];
+  const trustedPublicImport = isTrustedLmPhotosApprovedAsset(asset);
   const addBlocker = (code: ReuseState) => {
     if (!blockers.some((item) => item.code === code)) blockers.push(blocker(code));
   };
@@ -147,11 +183,11 @@ export function reuseBlockers(asset: StockMediaAsset) {
   if (assetIsBlocked(asset)) addBlocker("blocked-do-not-use");
   if (assetIsArchiveOnly(asset)) addBlocker("blocked-archive");
   if (assetNeedsReview(asset) || !assetIsApproved(asset)) addBlocker("blocked-needs-review");
-  if (!assetHasSourceProvenance(asset)) addBlocker("blocked-source");
-  if (assetNeedsRightsReview(asset)) addBlocker("blocked-rights");
+  if (!trustedPublicImport && !assetHasSourceProvenance(asset)) addBlocker("blocked-source");
+  if (!trustedPublicImport && assetNeedsRightsReview(asset)) addBlocker("blocked-rights");
   if (!assetHasCompatibleUsageScope(asset)) addBlocker("blocked-needs-review");
-  if (!asset.peopleRisk || asset.peopleRisk === "Unknown" || assetHasChildrenYouthRisk(asset)) addBlocker("blocked-people-minors");
-  if (!asset.reviewer || !asset.reviewedDate) addBlocker("blocked-reviewer-date");
+  if (!trustedPublicImport && (!asset.peopleRisk || asset.peopleRisk === "Unknown" || assetHasChildrenYouthRisk(asset))) addBlocker("blocked-people-minors");
+  if (!trustedPublicImport && (!asset.reviewer || !asset.reviewedDate)) addBlocker("blocked-reviewer-date");
   if (assetHasRenditionGap(asset)) addBlocker("blocked-derivative");
   if (assetHasSensitiveContext(asset)) addBlocker("blocked-sensitive");
   if (assetNeedsStaleApprovalReview(asset)) addBlocker("blocked-reviewer-date");

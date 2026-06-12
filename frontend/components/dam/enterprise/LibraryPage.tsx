@@ -1,20 +1,222 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowRight, CheckCircle2, ChevronDown, Download, Folder, MoreHorizontal, Search, Share2, Sparkles, Target } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Archive, CheckCircle2, ChevronLeft, ChevronRight, Filter, Folder, Grid3X3, List, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { usePagination } from "@/components/hooks/use-pagination";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
-import { buildDamMissionControl, type MissionControlTone } from "@/lib/dam-mission-control";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import type { CatalogSort, StockMediaAsset } from "@/lib/types";
 import { sourceNoun } from "@/lib/enterprise-display";
 import { routeWithRole } from "@/lib/role-routes";
-import { ActionButton, AssetCard, ErrorCard, IconButton, InspectorDrawer, LoadingCard, PageHeader, SavedViewPanel, SourcePill } from "./EnterpriseShared";
+import { ActionButton, AssetCard, AssetQuickLookDrawer, DamSegmentedNav, DamToolbar, ErrorCard, InspectorDrawer, LoadingCard, PageHeader, SavedViewPanel, SourcePill } from "./EnterpriseShared";
 
-function missionToneClass(tone: MissionControlTone) {
-  if (tone === "ready") return "is-ready";
-  if (tone === "risk") return "is-risk";
-  if (tone === "watch") return "is-watch";
-  return "is-info";
+const PAGE_SIZE_OPTIONS = [15, 30, 60, 120];
+
+function AppliedFilterBar({
+  query,
+  viewLabel,
+  collectionLabel,
+  filters,
+  resultCount,
+  onClearQuery,
+  onClearView,
+  onClearCollection,
+  onRemoveFilter,
+  onClearAll,
+  onOpenFilters
+}: {
+  query: string;
+  viewLabel?: string;
+  collectionLabel?: string;
+  filters: string[];
+  resultCount?: number;
+  onClearQuery: () => void;
+  onClearView: () => void;
+  onClearCollection: () => void;
+  onRemoveFilter: (filter: string) => void;
+  onClearAll: () => void;
+  onOpenFilters: () => void;
+}) {
+  const chips = [
+    ...(query ? [{ key: "query", label: `Search: ${query}`, onRemove: onClearQuery }] : []),
+    ...(viewLabel ? [{ key: "view", label: `Saved view: ${viewLabel}`, onRemove: onClearView }] : []),
+    ...(collectionLabel ? [{ key: "collection", label: `Collection: ${collectionLabel}`, onRemove: onClearCollection }] : []),
+    ...filters.map((filter) => ({ key: `filter-${filter}`, label: filter.replace(/\b\w/g, (letter) => letter.toUpperCase()), onRemove: () => onRemoveFilter(filter) }))
+  ];
+
+  return (
+    <section className="ed-applied-filter-bar" aria-label="Applied filters">
+      <button className="ed-mobile-filter-trigger" type="button" onClick={onOpenFilters}>
+        <SlidersHorizontal size={15} aria-hidden="true" />
+        Filters
+        {chips.length ? <em>{chips.length}</em> : null}
+      </button>
+      <div>
+        <strong>{typeof resultCount === "number" ? `${resultCount.toLocaleString()} results` : "Results"}</strong>
+        <span>{chips.length ? `${chips.length} active filter${chips.length === 1 ? "" : "s"}` : "No filters applied"}</span>
+      </div>
+      <div className="ed-applied-chips">
+        {chips.map((chip) => (
+          <button type="button" key={chip.key} onClick={chip.onRemove}>
+            {chip.label}
+            <span aria-hidden="true">×</span>
+          </button>
+        ))}
+        {chips.length ? <button className="is-clear" type="button" onClick={onClearAll}>Clear all</button> : null}
+      </div>
+      <button className="ed-more-filters" type="button" onClick={onOpenFilters}>
+        <Filter size={15} aria-hidden="true" />
+        More filters
+      </button>
+    </section>
+  );
+}
+
+function LibraryPaginationControls({
+  rangeStart,
+  rangeEnd,
+  total,
+  pageSize,
+  onPage,
+  onPageSizeChange,
+  loading = false,
+  variant = "primary"
+}: {
+  rangeStart: number;
+  rangeEnd: number;
+  total: number;
+  pageSize: number;
+  onPage: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  loading?: boolean;
+  variant?: "primary" | "secondary";
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
+  const currentPage = total ? Math.max(1, Math.ceil(rangeStart / Math.max(1, pageSize))) : 1;
+  const isSecondary = variant === "secondary";
+  const { pages, showLeftEllipsis, showRightEllipsis } = usePagination({
+    currentPage,
+    totalPages,
+    paginationItemsToDisplay: isSecondary ? 3 : 5,
+  });
+  const pageText = `Page ${currentPage.toLocaleString()} of ${totalPages.toLocaleString()}`;
+  const compactRangeText = total
+    ? `Showing ${rangeStart.toLocaleString()}\u2013${rangeEnd.toLocaleString()}`
+    : "No matching assets";
+  const summaryText = total
+    ? `Showing ${rangeStart.toLocaleString()}\u2013${rangeEnd.toLocaleString()} of ${total.toLocaleString()} \u00b7 ${pageText}`
+    : "No matching assets";
+
+  return (
+    <div className={cn("ed-library-pagination", isSecondary ? "is-secondary" : "is-primary")} aria-label={isSecondary ? "Secondary library pagination" : "Library pagination"}>
+      <div className="ed-library-pagination-summary">
+        <strong>
+          {loading ? "Loading results" : (
+            <>
+              <span className="ed-page-range-full">{summaryText}</span>
+              <span className="ed-page-range-short">{compactRangeText}</span>
+            </>
+          )}
+        </strong>
+      </div>
+
+      {!isSecondary ? <label className="ed-library-page-size">
+        <span>Per page</span>
+        <select
+          value={pageSize}
+          onChange={(event) => onPageSizeChange(Number(event.target.value))}
+          aria-label="Results per page"
+          disabled={loading}
+        >
+          {PAGE_SIZE_OPTIONS.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </label> : null}
+
+      <Pagination className="ed-library-pagination-nav">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              disabled={loading || currentPage <= 1}
+              onClick={() => onPage(currentPage - 1)}
+            >
+              <ChevronLeft size={15} strokeWidth={1.9} aria-hidden="true" />
+              <span>Previous</span>
+            </PaginationPrevious>
+          </PaginationItem>
+          {!isSecondary ? (
+            <PaginationItem className="ed-library-page-status-mobile-item">
+              <span className="ed-library-page-status">{pageText}</span>
+            </PaginationItem>
+          ) : null}
+
+          {!isSecondary && showLeftEllipsis ? (
+            <>
+              <PaginationItem className="ed-library-numbered-page">
+                <PaginationLink disabled={loading} onClick={() => onPage(1)}>1</PaginationLink>
+              </PaginationItem>
+              <PaginationItem className="ed-library-numbered-page">
+                <PaginationEllipsis />
+              </PaginationItem>
+            </>
+          ) : null}
+
+          {!isSecondary ? pages.map((page) => (
+            <PaginationItem className="ed-library-numbered-page" key={page}>
+              <PaginationLink
+                disabled={loading || page === currentPage}
+                isActive={page === currentPage}
+                onClick={() => onPage(page)}
+              >
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          )) : null}
+
+          {!isSecondary && showRightEllipsis ? (
+            <>
+              <PaginationItem className="ed-library-numbered-page">
+                <PaginationEllipsis />
+              </PaginationItem>
+              <PaginationItem className="ed-library-numbered-page">
+                <PaginationLink disabled={loading} onClick={() => onPage(totalPages)}>
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            </>
+          ) : null}
+
+          <PaginationItem>
+            <PaginationNext
+              disabled={loading || currentPage >= totalPages}
+              onClick={() => onPage(currentPage + 1)}
+            >
+              <span>Next</span>
+              <ChevronRight size={15} strokeWidth={1.9} aria-hidden="true" />
+            </PaginationNext>
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  );
 }
 
 export function EnterpriseLibraryPage() {
@@ -23,21 +225,34 @@ export function EnterpriseLibraryPage() {
   const [view, setView] = useState("");
   const [collection, setCollection] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
-  const [sort, setSort] = useState<CatalogSort>("Approved first");
+  const [sort, setSort] = useState<CatalogSort>("Newest");
+  const [limit, setLimit] = useState(15);
   const [offset, setOffset] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [quickLookId, setQuickLookId] = useState<string | null>(null);
   const [libraryMessage, setLibraryMessage] = useState("");
-  const limit = 15;
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const search = useAssetsSearch({ role, query, filters, view: view || undefined, collection: collection || undefined, sort, limit, offset });
   const assets = search.data?.assets || [];
   const discovery = search.data?.discovery;
   const noResultHelp = discovery?.noResultHelp;
-  const mission = buildDamMissionControl({ result: search.data, role, selectedCount: selectedIds.length });
+  const savedViewLabel = search.data?.savedViews?.find((item) => item.id === view)?.label;
+  const collectionLabel = search.data?.collections?.find((item) => item.id === collection)?.name;
+  const activeFilterCount = (query ? 1 : 0) + (view ? 1 : 0) + (collection ? 1 : 0) + filters.length;
+  const filterCounts = useMemo(() => {
+    const entries = discovery?.suggestedFilters?.map((item) => [item.filter, item.count] as const) || [];
+    return Object.fromEntries(entries);
+  }, [discovery?.suggestedFilters]);
   useEffect(() => {
-    if (!selectedId && assets[0]) {
+    if (!assets[0]) return;
+    if (!selectedId) {
       setSelectedId(assets[0].id);
       setSelectedIds([assets[0].id]);
+      return;
+    }
+    if (!assets.some((asset) => asset.id === selectedId)) {
+      setSelectedId(assets[0].id);
     }
   }, [assets, selectedId]);
   useEffect(() => {
@@ -46,15 +261,21 @@ export function EnterpriseLibraryPage() {
     setSelectedIds([]);
   }, [query, filters, view, collection, sort, role]);
   const selected = assets.find((asset) => asset.id === selectedId) || assets[0];
+  const quickLookAsset = assets.find((asset) => asset.id === quickLookId) || null;
   const pagination = search.data?.pagination;
   const toggleAsset = (asset: StockMediaAsset) => {
     setSelectedId(asset.id);
     setSelectedIds((current) => current.includes(asset.id) ? current.filter((id) => id !== asset.id) : [...current, asset.id]);
   };
+  const openQuickLook = (asset: StockMediaAsset) => {
+    setSelectedId(asset.id);
+    setSelectedIds((current) => current.includes(asset.id) ? current : [...current, asset.id]);
+    setQuickLookId(asset.id);
+  };
   const announceLibraryAction = (message: string) => setLibraryMessage(message);
   const saveCurrentSearch = async () => {
     if (!query && !view && !collection && !filters.length) {
-      announceLibraryAction("Choose a query, saved view, collection, or filter before saving this beta search.");
+      announceLibraryAction("Choose a query, saved view, collection, or filter before saving this search.");
       return;
     }
     const response = await fetch(`/api/saved-searches?role=${encodeURIComponent(role)}`, {
@@ -74,7 +295,7 @@ export function EnterpriseLibraryPage() {
       announceLibraryAction(payload.error || "Saved search failed.");
       return;
     }
-    announceLibraryAction(`Saved "${payload.search?.title || "search"}" to ${payload.storageMode || "local-json"}. Durable team saved views need backend storage.`);
+    announceLibraryAction(`Saved "${payload.search?.title || "search"}" to ${payload.storageMode || "local-json"}. Team-wide saved views need backend storage.`);
   };
   const toggleFilter = (filter: string) => {
     setFilters((current) => current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]);
@@ -95,129 +316,96 @@ export function EnterpriseLibraryPage() {
     setView("");
     setCollection("");
     setFilters([]);
-    setSort("Approved first");
+    setSort("Newest");
   };
-  const runMissionAction = (action: (typeof mission.actions)[number]) => {
-    if (action.filter) {
-      setFilters((current) => current.includes(action.filter!) ? current : [...current, action.filter!]);
-      announceLibraryAction(`${action.label}: applied ${action.filter}.`);
-      return;
-    }
-    if (action.query) {
-      setQuery(action.query);
-      announceLibraryAction(`${action.label}: searching ${action.query}.`);
-      return;
-    }
-    if (action.href) {
-      window.location.href = routeWithRole(action.href, role);
-      return;
-    }
-    announceLibraryAction(action.detail);
-  };
+  const filterPanel = (
+    <SavedViewPanel
+      savedViews={search.data?.savedViews}
+      collections={search.data?.collections}
+      visibleAssets={assets}
+      source={search.source}
+      activeView={view}
+      activeCollection={collection}
+      activeFilters={filters}
+      filterCounts={filterCounts}
+      onViewSelect={(id) => { setView(id); setCollection(""); setQuery(""); setFilters([]); setFiltersOpen(false); }}
+      onCollectionSelect={(id) => { setCollection(collection === id ? "" : id); setView(""); setQuery(""); setFiltersOpen(false); }}
+      onSavedViewsExpand={() => announceLibraryAction("Saved views are listed from the current DAM catalog. Use Save this search to keep the current query where storage is configured.")}
+      onFacetSelect={(label) => announceLibraryAction(`${label} requires ResourceSpace field mapping before it can filter results.`)}
+      onFilterToggle={toggleFilter}
+      onClearFilters={() => setFilters([])}
+    />
+  );
   return (
     <div className="enterprise-page enterprise-library">
-      <PageHeader title="Asset Library" count={search.data ? `${search.data.total.toLocaleString()} assets` : undefined} actions={<><ActionButton onClick={() => announceLibraryAction("Saved views are available in the left panel. Choose one to update the library query.")}>Saved views <ChevronDown size={14} /></ActionButton><ActionButton tone="primary" onClick={() => void saveCurrentSearch()}>Save this search</ActionButton><IconButton label="More" onClick={() => announceLibraryAction("More library actions are limited to backend-gated download, package, and share workflows in this beta.")}><MoreHorizontal size={17} /></IconButton></>} />
+      <PageHeader
+        title="Library"
+        subtitle="Browse approved and source-tracked media for ministry use."
+      />
       {libraryMessage ? <p className="ed-inline-success">{libraryMessage}</p> : null}
       <section className="ed-approved-banner"><CheckCircle2 size={24} /><div><strong>{search.live ? `Showing ${sourceNoun(search.source)}-backed records` : `${sourceNoun(search.source)} disconnected or read-only`}</strong><span>{search.source?.detail || "The UI is waiting for the backend DAM source."}</span></div><SourcePill source={search.source} live={search.live} /><button type="button" onClick={() => announceLibraryAction("Source banner kept visible for tester safety; it cannot be dismissed in this beta.")}>×</button></section>
-      {search.data ? (
-        <section className="ed-mission-control" aria-label="DAM mission control">
-          <div className="ed-mission-score">
-            <span><Target size={15} aria-hidden="true" /> DAM Mission Control</span>
-            <strong>{mission.score}</strong>
-            <em>{mission.label}</em>
-          </div>
-          <div className="ed-mission-main">
-            <div>
-              <h2>{mission.summary}</h2>
-              <p>{mission.selectedSummary}</p>
-            </div>
-            <div className="ed-mission-lanes">
-              {mission.lanes.map((lane) => (
-                <button
-                  className={missionToneClass(lane.tone)}
-                  type="button"
-                  key={lane.id}
-                  onClick={() => lane.filter ? toggleFilter(lane.filter) : announceLibraryAction(lane.detail)}
-                >
-                  <span>{lane.label}</span>
-                  <strong>{lane.value}</strong>
-                  <small>{lane.detail}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-          <aside className="ed-mission-actions">
-            <div>
-              <span>Spotlight</span>
-              {mission.spotlight.href ? <a href={routeWithRole(mission.spotlight.href, role)}>{mission.spotlight.title}</a> : <strong>{mission.spotlight.title}</strong>}
-              <small>{mission.spotlight.detail}</small>
-            </div>
-            <nav aria-label="Recommended DAM actions">
-              {mission.actions.map((action) => (
-                <button className={`is-${action.priority}`} type="button" key={action.id} onClick={() => runMissionAction(action)}>
-                  <span>{action.label}</span>
-                  <small>{action.detail}</small>
-                  <ArrowRight size={14} aria-hidden="true" />
-                </button>
-              ))}
-            </nav>
-          </aside>
-        </section>
+      <DamSegmentedNav
+        label="Library workspace views"
+        activeId="assets"
+        items={[
+          { id: "assets", label: "Assets", icon: Grid3X3, href: routeWithRole("/", role) },
+          { id: "collections", label: "Collections", icon: Folder, href: routeWithRole("/collections", role) },
+          { id: "packages", label: "Packages", icon: Archive, href: routeWithRole("/packages", role) },
+          { id: "rights", label: "Rights", icon: ShieldCheck, href: routeWithRole("/review?queue=rights-review", role) }
+        ]}
+      />
+      <DamToolbar
+        label="Library asset toolbar"
+        searchValue={query}
+        searchPlaceholder="Search ResourceSpace title, filename, collection, ID..."
+        onSearchChange={setQuery}
+        onClearSearch={() => setQuery("")}
+        onOpenFilters={() => setFiltersOpen(true)}
+        filterCount={activeFilterCount}
+        selectedCount={selectedIds.length}
+        sortControl={<div className="ed-library-view-controls"><div className="ed-view-toggle" aria-label="Asset view mode"><button type="button" className="is-active" aria-label="Grid view"><Grid3X3 size={15} aria-hidden="true" /></button><button type="button" aria-label="List view"><List size={15} aria-hidden="true" /></button></div><label><span className="sr-only">Sort assets</span><select className="ed-input" value={sort} onChange={(event) => setSort(event.target.value as CatalogSort)}><option>Approved first</option><option>Recently approved</option><option>Newest</option><option>A-Z</option></select></label></div>}
+        quickFilters={[{ id: "approved public", label: "Approved" }, { id: "portal ready", label: "Public use" }, { id: "no people", label: "No people" }, { id: "landscape", label: "Landscape" }, { id: "photo", label: "Photo" }].map((item) => ({ id: item.id, label: item.label, active: filters.includes(item.id), onClick: () => toggleFilter(item.id) }))}
+      />
+      <AppliedFilterBar
+        query={query}
+        viewLabel={savedViewLabel}
+        collectionLabel={collectionLabel}
+        filters={filters}
+        resultCount={search.data?.total}
+        onClearQuery={() => setQuery("")}
+        onClearView={() => setView("")}
+        onClearCollection={() => setCollection("")}
+        onRemoveFilter={toggleFilter}
+        onClearAll={clearAll}
+        onOpenFilters={() => setFiltersOpen(true)}
+      />
+      {pagination ? (
+        <LibraryPaginationControls
+          rangeStart={pagination.rangeStart}
+          rangeEnd={pagination.rangeEnd}
+          total={search.data?.total || 0}
+          pageSize={limit}
+          loading={search.loading}
+          onPage={(page) => setOffset(Math.max(0, (page - 1) * limit))}
+          onPageSizeChange={(nextLimit) => {
+            setLimit(nextLimit);
+            setOffset(0);
+          }}
+        />
       ) : null}
-      <form className="ed-library-search" role="search" onSubmit={(event) => event.preventDefault()}>
-        <Search size={17} aria-hidden="true" />
-        <label className="sr-only" htmlFor="library-local-search">Search media assets</label>
-        <input id="library-local-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${sourceNoun(search.source)} title, keyword, collection, source, or filename...`} />
-        {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
-      </form>
-      {discovery ? (
-        <section className="ed-smart-discovery" aria-label="Smart discovery">
-          <div>
-            <span><Sparkles size={15} aria-hidden="true" /> Smart discovery</span>
-            <strong>{discovery.summary}</strong>
-            <small>{discovery.scoreHint}</small>
-          </div>
-          {discovery.expandedTerms.length ? (
-            <p>{discovery.expandedTerms.slice(0, 6).map((term) => <button type="button" key={term} onClick={() => runSuggestedQuery(term)}>{term}</button>)}</p>
-          ) : null}
-          {discovery.suggestedFilters.length ? (
-            <nav aria-label="Suggested filters">
-              {discovery.suggestedFilters.map((item) => (
-                <button
-                  type="button"
-                  className={filters.includes(item.filter) ? "is-active" : ""}
-                  key={item.filter}
-                  onClick={() => toggleFilter(item.filter)}
-                >
-                  {item.label} <span>{item.count.toLocaleString()}</span>
-                </button>
-              ))}
-            </nav>
-          ) : null}
-        </section>
-      ) : null}
-      <div className="ed-filter-bar">
-        <label><span className="sr-only">Sort assets</span><select className="ed-input" value={sort} onChange={(event) => setSort(event.target.value as CatalogSort)}><option>Approved first</option><option>Recently approved</option><option>Newest</option><option>A-Z</option></select></label>
-        {["portal ready", "approved public", "no people", "landscape", "photo"].map((item) => <button className={filters.includes(item) ? "is-active" : ""} type="button" key={item} onClick={() => toggleFilter(item)}>{item}<ChevronDown size={14} /></button>)}
-        <button type="button" onClick={clearAll}>Clear all</button>
-      </div>
-      {filters.length ? <p className="ed-active-filters">{filters.map((filter) => <button type="button" key={filter} onClick={() => toggleFilter(filter)}>{filter} ×</button>)}</p> : null}
       {search.loading ? <LoadingCard /> : search.error ? <ErrorCard message={search.error} source={search.source} /> : (
         <div className="ed-library-grid">
-          <SavedViewPanel
-            savedViews={search.data?.savedViews}
-            collections={search.data?.collections}
-            source={search.source}
-            activeView={view}
-            activeCollection={collection}
-            onViewSelect={(id) => { setView(id); setCollection(""); setQuery(""); }}
-            onCollectionSelect={(id) => { setCollection(collection === id ? "" : id); setView(""); setQuery(""); }}
-            onSavedViewsExpand={() => announceLibraryAction("Saved view management is local-only for this beta. Use listed views to test search behavior.")}
-            onFacetSelect={(label) => announceLibraryAction(`${label} facet selected. Stable facet filtering waits for ResourceSpace field mapping.`)}
-          />
+          <div className="ed-desktop-filter-rail">{filterPanel}</div>
           <main className="ed-asset-workspace">
-            <div className="ed-bulk-toolbar"><strong>{selectedIds.length} selected</strong><button type="button" onClick={() => announceLibraryAction("Bulk download stays backend-gated. Open a record to request an approved copy.")}><Download size={15} />Download</button><button type="button" onClick={() => announceLibraryAction("Collection edits are not written back in beta. Use Package Builder for portal-local refs.")}><Folder size={15} />Add to collection</button><button type="button" onClick={() => announceLibraryAction("Share links are disabled until identity and access policy are connected.")}><Share2 size={15} />Share</button><button type="button" onClick={() => announceLibraryAction("Bulk more actions are disabled until backend policy actions are connected.")}><MoreHorizontal size={15} />More</button><button type="button" onClick={() => setSelectedIds(assets.map((asset) => asset.id))}>Select visible</button></div>
-            {assets.length ? <div className="ed-grid">{assets.map((asset) => <AssetCard asset={asset} selected={selectedIds.includes(asset.id)} onSelect={() => toggleAsset(asset)} key={asset.id} />)}</div> : (
+            {assets.length ? <div className="ed-grid">{assets.map((asset) => (
+              <AssetCard
+                asset={asset}
+                selected={selectedIds.includes(asset.id)}
+                onSelect={() => toggleAsset(asset)}
+                onQuickLook={() => openQuickLook(asset)}
+                key={asset.id}
+              />
+            ))}</div> : (
               <section className="ed-empty-state">
                 <Search size={24} />
                 <h2>{noResultHelp?.title || `No ${sourceNoun(search.source)} records match this search`}</h2>
@@ -240,11 +428,45 @@ export function EnterpriseLibraryPage() {
                 <ActionButton onClick={clearAll}>Clear all</ActionButton>
               </section>
             )}
-            {pagination ? <div className="ed-bulk-toolbar" aria-label="Library pagination"><strong>Showing {pagination.rangeStart.toLocaleString()}-{pagination.rangeEnd.toLocaleString()} of {search.data?.total.toLocaleString()}</strong><button type="button" disabled={!pagination.hasPrevious} onClick={() => setOffset(pagination.previousOffset)}>Previous</button><button type="button" disabled={!pagination.hasNext} onClick={() => setOffset(pagination.nextOffset)}>Next</button></div> : null}
+            {pagination ? (
+              <LibraryPaginationControls
+                rangeStart={pagination.rangeStart}
+                rangeEnd={pagination.rangeEnd}
+                total={search.data?.total || 0}
+                pageSize={limit}
+                loading={search.loading}
+                variant="secondary"
+                onPage={(page) => setOffset(Math.max(0, (page - 1) * limit))}
+                onPageSizeChange={(nextLimit) => {
+                  setLimit(nextLimit);
+                  setOffset(0);
+                }}
+              />
+            ) : null}
           </main>
           <InspectorDrawer asset={selected} source={search.source} live={search.live} />
         </div>
       )}
+      <AssetQuickLookDrawer
+        asset={quickLookAsset || undefined}
+        open={Boolean(quickLookAsset)}
+        onOpenChange={(open) => {
+          if (!open) setQuickLookId(null);
+        }}
+        source={search.source}
+        live={search.live}
+      />
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <SheetContent side="left" className="ed-mobile-filter-sheet w-[min(92vw,24rem)] max-w-none gap-0 border-r border-[#d8e2dc] bg-[#fbfdfb] p-0">
+          <SheetHeader className="border-b border-[#d8e2dc] px-4 py-4">
+            <SheetTitle className="text-base font-black text-tjc-ink">Filters</SheetTitle>
+            <SheetDescription className="text-sm font-semibold text-tjc-muted">
+              Refine assets by saved views, rights, source, people visibility, and media properties.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="ed-mobile-filter-body">{filterPanel}</div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -210,13 +210,13 @@ export function buildIntegrationReadiness({
     },
     {
       id: "brand-kit-collections",
-      label: "Brand Kit collection mapping",
+      label: "ResourceSpace-managed identity assets",
       ready: brandHubConfigured,
       owner: "DAM Admin",
       state: brandHubConfigured ? "Degraded" : "Pending setup",
       detail: brandHubConfigured
-        ? "BRAND_KIT_MVP_2024_COLLECTION_ID is configured. Verify ResourceSpace collection assets and download gates."
-        : "Set BRAND_KIT_MVP_2024_COLLECTION_ID before Brand Hub downloads appear."
+        ? "BRAND_KIT_MVP_2024_COLLECTION_ID is configured. Verify mapped assets have real ResourceSpace review and audit needs."
+        : "Do not mirror logo/template downloads in the DAM. Link to identity.tjc.org unless assets require ResourceSpace review/audit."
     },
     {
       id: "package-publishing",

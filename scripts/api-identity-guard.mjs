@@ -115,6 +115,15 @@ if (/highestTrustedRole\(directRole,\s*mappedRole\(groups\),\s*highestRole\(grou
 if (/roleRank|\.indexOf\(next\)\s*>\s*.*\.indexOf\(best\)/.test(requestIdentitySource)) {
   failures.push("frontend/lib/request-identity.ts must not hand-roll SSO role precedence ranking");
 }
+if (!requestIdentitySource.includes("productionRuntime()") || !requestIdentitySource.includes("production-client-role-ignored")) {
+  failures.push("frontend/lib/request-identity.ts must ignore client role overrides in production");
+}
+if (!requestIdentitySource.includes('overridePolicy !== "download-gate"') || !requestIdentitySource.includes("client-role-disabled")) {
+  failures.push("frontend/lib/request-identity.ts must centralize download-gate client role override policy");
+}
+if (!requestIdentitySource.includes("trusted-sso-authoritative")) {
+  failures.push("frontend/lib/request-identity.ts must ignore client role overrides when trusted SSO headers are enabled");
+}
 
 if (failures.length) {
   console.error("API identity guard failed:");

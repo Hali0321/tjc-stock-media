@@ -38,6 +38,14 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     [role, ready]
   );
 
+  if (!ready) {
+    return (
+      <RoleContext.Provider value={value}>
+        <div className="min-h-dvh bg-[#f7f5ee]" aria-label="Loading role" />
+      </RoleContext.Provider>
+    );
+  }
+
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 }
 

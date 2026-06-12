@@ -4,6 +4,101 @@ import { trustedSsoHeadersEnabled } from "@/lib/env";
 import { normalizePersistedDisplayText } from "@/lib/request-validation";
 import type { DamUser, DemoRole } from "@/lib/types";
 
+export type DamSessionAdapter = "route" | "workflow" | "script-test";
+export type ClientRoleOverridePolicy = "local-beta" | "download-gate";
+export type ClientRoleOverrideSource = "query" | "body" | "script";
+
+export type ClientRoleOverrideDecision = {
+  requestedRole: string | null;
+  role: string | null;
+  source: ClientRoleOverrideSource | null;
+  policy: ClientRoleOverridePolicy;
+  allowed: boolean;
+  ignored: boolean;
+  denied: boolean;
+  reasonCode: string | null;
+};
+
+export type RequestIdentityOptions = {
+  explicitRole?: string | null;
+  adapter?: DamSessionAdapter;
+  overridePolicy?: ClientRoleOverridePolicy;
+  overrideSource?: ClientRoleOverrideSource;
+};
+
+function requestIsLocalhost(request: NextRequest) {
+  return ["localhost", "127.0.0.1", "::1"].includes(request.nextUrl.hostname);
+}
+
+function productionRuntime() {
+  return process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+}
+
+function downloadBodyDemoRolesAllowed() {
+  return process.env.DOWNLOAD_GATE_ALLOW_DEMO_ROLES === "1" && !productionRuntime();
+}
+
+function downloadQueryDemoRolesAllowed(request: NextRequest) {
+  if (productionRuntime()) return false;
+  return downloadBodyDemoRolesAllowed() || requestIsLocalhost(request);
+}
+
+function normalizeIdentityOptions(explicitRoleOrOptions?: string | null | RequestIdentityOptions): Required<RequestIdentityOptions> {
+  if (typeof explicitRoleOrOptions === "object" && explicitRoleOrOptions !== null) {
+    return {
+      explicitRole: explicitRoleOrOptions.explicitRole ?? null,
+      adapter: explicitRoleOrOptions.adapter ?? "route",
+      overridePolicy: explicitRoleOrOptions.overridePolicy ?? "local-beta",
+      overrideSource: explicitRoleOrOptions.overrideSource ?? "query"
+    };
+  }
+  return {
+    explicitRole: explicitRoleOrOptions ?? null,
+    adapter: "route",
+    overridePolicy: "local-beta",
+    overrideSource: "query"
+  };
+}
+
+export function resolveClientRoleOverride(
+  request: NextRequest,
+  explicitRoleOrOptions?: string | null | RequestIdentityOptions
+): ClientRoleOverrideDecision {
+  const options = normalizeIdentityOptions(explicitRoleOrOptions);
+  const requestedRole = typeof options.explicitRole === "string" && options.explicitRole.trim()
+    ? options.explicitRole
+    : null;
+  const base: ClientRoleOverrideDecision = {
+    requestedRole,
+    role: null,
+    source: requestedRole ? options.overrideSource : null,
+    policy: options.overridePolicy,
+    allowed: false,
+    ignored: false,
+    denied: false,
+    reasonCode: null
+  };
+  if (!requestedRole) return base;
+  if (trustedSsoHeadersEnabled()) {
+    return { ...base, ignored: true, reasonCode: "trusted-sso-authoritative" };
+  }
+
+  if (options.overridePolicy !== "download-gate") {
+    return { ...base, role: requestedRole, allowed: true };
+  }
+
+  if (productionRuntime()) {
+    return { ...base, ignored: true, reasonCode: "production-client-role-ignored" };
+  }
+  if (options.overrideSource === "query" && downloadQueryDemoRolesAllowed(request)) {
+    return { ...base, role: requestedRole, allowed: true };
+  }
+  if (options.overrideSource === "body" && downloadBodyDemoRolesAllowed()) {
+    return { ...base, role: requestedRole, allowed: true };
+  }
+  return { ...base, denied: true, reasonCode: "client-role-disabled" };
+}
+
 function roleFromTrustedValue(value?: string | null): DemoRole | null {
   if (!value) return null;
   const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -62,7 +157,9 @@ function mappedRole(groups: string[]) {
   }, null);
 }
 
-export function requestIdentity(request: NextRequest, explicitRole?: string | null): DamUser {
+export function requestIdentity(request: NextRequest, explicitRoleOrOptions?: string | null | RequestIdentityOptions): DamUser {
+  const override = resolveClientRoleOverride(request, explicitRoleOrOptions);
+  const explicitRole = override.role;
   const headers = request.headers;
   const localFallbackRole = normalizeRole(explicitRole);
   if (!trustedSsoHeadersEnabled()) {

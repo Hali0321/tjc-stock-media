@@ -5,7 +5,6 @@ import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
 import { createDamRouteSession } from "@/lib/dam-route-session";
 import { consumeDownloadTicket, mintDownloadTicket } from "@/lib/download-tickets";
-import { downloadGateDemoRolesAllowed, trustedSsoHeadersEnabled } from "@/lib/env";
 import {
   approvedCopyDownloadedAuditEvent,
   approvedCopyImageResponse,
@@ -23,22 +22,24 @@ import { normalizeAssetId } from "@/lib/request-validation";
 
 export const dynamic = "force-dynamic";
 
-function localDemoRoleOverridesAllowed(request: NextRequest) {
-  if (trustedSsoHeadersEnabled()) return false;
-  if (downloadGateDemoRolesAllowed()) return true;
-  return ["localhost", "127.0.0.1", "::1"].includes(request.nextUrl.hostname);
-}
-
-function explicitRoleForDownloadRequest(request: NextRequest, explicitRole?: string | null) {
-  if (!explicitRole) return null;
-  return localDemoRoleOverridesAllowed(request) ? explicitRole : null;
-}
-
-function exposedRoleOverrideDenied(request: NextRequest, explicitRole?: string | null) {
-  return Boolean(explicitRole && !trustedSsoHeadersEnabled() && !localDemoRoleOverridesAllowed(request));
-}
-
-function roleOverrideDeniedResponse() {
+function roleOverrideDeniedResponse(session: ReturnType<typeof createDamRouteSession>, assetId: string) {
+  try {
+    appendRequiredAuditEvent({
+      type: "denied_download",
+      role: session.role,
+      actor: session.identity.id,
+      assetId,
+      status: "denied",
+      summary: "Download gate denied client-supplied role override.",
+      details: {
+        reasonCode: session.roleOverride.reasonCode || "client-role-disabled",
+        overrideSource: session.roleOverride.source,
+        requestedRole: session.roleOverride.requestedRole
+      }
+    });
+  } catch {
+    return auditRequiredErrorResponse();
+  }
   return NextResponse.json(
     {
       allowed: false,
@@ -113,13 +114,17 @@ function downloadTicketDeniedResponse({
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
   const explicitRole = request.nextUrl.searchParams.get("role");
-  if (exposedRoleOverrideDenied(request, explicitRole)) return roleOverrideDeniedResponse();
-  const session = createDamRouteSession(request, explicitRoleForDownloadRequest(request, explicitRole));
+  const session = createDamRouteSession(request, {
+    explicitRole,
+    overridePolicy: "download-gate",
+    overrideSource: "query"
+  });
   const role = session.role;
   if (!id) {
     const error = downloadMalformedIdError();
     return NextResponse.json(error.body, { status: error.status });
   }
+  if (session.roleOverride.denied) return roleOverrideDeniedResponse(session, id);
   const { asset, source } = await getAssetRecordById(id);
 
   if (!asset) {
@@ -167,12 +172,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
   const input = await readDownloadGateInput(request);
-  if (exposedRoleOverrideDenied(request, input.role)) return roleOverrideDeniedResponse();
-  const session = createDamRouteSession(request, explicitRoleForDownloadRequest(request, input.role));
+  const queryRole = request.nextUrl.searchParams.get("role");
+  const explicitRole = queryRole || input.role || null;
+  const session = createDamRouteSession(request, {
+    explicitRole,
+    overridePolicy: "download-gate",
+    overrideSource: queryRole ? "query" : "body"
+  });
   const role = session.role;
   if (!id) {
     return NextResponse.json({ allowed: false, error: "Malformed asset id." }, { status: 400 });
   }
+  if (session.roleOverride.denied) return roleOverrideDeniedResponse(session, id);
 
   const { asset, source } = await getAssetRecordById(id);
   const envelope = session.sourceEnvelope(source);
@@ -328,9 +339,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     sourceLabel: auditSource.label
   });
 
+  const roleParam =
+    session.roleOverride.allowed && session.roleOverride.role
+      ? `&role=${encodeURIComponent(session.roleOverride.role)}`
+      : "";
+
   return NextResponse.json({
     allowed: true,
-    downloadUrl: `/api/download/${encodeURIComponent(asset.id)}?role=${encodeURIComponent(role)}&variant=${encodeURIComponent(input.variant)}&ticket=${encodeURIComponent(ticket.ticket)}`,
+    downloadUrl: `/api/download/${encodeURIComponent(asset.id)}?variant=${encodeURIComponent(input.variant)}&ticket=${encodeURIComponent(ticket.ticket)}${roleParam}`,
     auditId: audit.id,
     ticketExpiresAt: ticket.expiresAt,
     ...envelope,

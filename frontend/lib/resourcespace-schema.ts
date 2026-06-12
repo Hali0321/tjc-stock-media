@@ -210,6 +210,7 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     sourcePlatform: value(row, "source_platform") || undefined,
     sourceSystem: value(row, "source_system") || undefined,
     sourceAccount: value(row, "source_account") || undefined,
+    sourceAlbum: value(row, "source_album", "import_batch", "event_or_topic", "event_name") || undefined,
     sourceAlbumPath: value(row, "source_album_path") || undefined,
     sourceAlbumMemberships: splitResourceSpaceList(value(row, "source_album_memberships")),
     eventName: value(row, "event_name", "event_or_topic") || undefined,
@@ -245,6 +246,12 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     fileExtension: value(row, "file_extension", "original_extension", "file_format") || undefined,
     fileSizeBytes,
     tags: splitResourceSpaceList(value(row, "visible_content_tags", "human_tags_final")),
-    tjcTerms: splitResourceSpaceList(value(row, "tjc_terms", "TJC_terms"))
+    tjcTerms: splitResourceSpaceList(value(row, "tjc_terms", "TJC_terms")),
+    aiTitleSuggestion: value(row, "ai_title_suggestion") || undefined,
+    aiVisibleTagSuggestions: splitResourceSpaceList(value(row, "ai_visible_tag_suggestions")),
+    aiTjcTermSuggestions: splitResourceSpaceList(value(row, "ai_tjc_term_suggestions")),
+    aiQualitySuggestion: value(row, "ai_quality_suggestion") || undefined,
+    aiPeopleOrMinorFlag: value(row, "ai_people_or_minor_flag") || undefined,
+    humanAiDecision: value(row, "human_ai_decision") || undefined
   };
 }

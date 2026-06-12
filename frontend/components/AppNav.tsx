@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Box, ClipboardList, Grid3X3, HelpCircle, Library, PackageCheck, Settings, type LucideIcon } from "lucide-react";
+import { BarChart3, Box, ClipboardList, Grid3X3, HelpCircle, Library, Settings, type LucideIcon } from "lucide-react";
 import { routeWithRole } from "@/lib/role-routes";
 import type { DemoRole } from "@/lib/types";
 import { cn } from "@/lib/ui";
@@ -22,7 +22,6 @@ const appNav: AppNavItem[] = [
   { href: "/collections", label: "Collections", mobileLabel: "Collections", icon: Grid3X3, group: "Browse" },
   { href: "/packages", label: "Package Builder", mobileLabel: "Builder", icon: Box, group: "Workflow" },
   { href: "/guide", label: "Help Guide", mobileLabel: "Guide", icon: HelpCircle, group: "Workflow" },
-  { href: "/brand-hub", label: "Brand Hub", mobileLabel: "Brand", icon: PackageCheck, group: "Workflow" },
   { href: "/review", label: "Review", mobileLabel: "Review", icon: ClipboardList, group: "Operations", reviewerOnly: true },
   { href: "/insights", label: "Insights", mobileLabel: "Insights", icon: BarChart3, group: "Operations" },
   { href: "/admin", label: "Admin", mobileLabel: "Admin", icon: Settings, group: "Operations", adminOnly: true },

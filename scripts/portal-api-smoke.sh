@@ -3,7 +3,197 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:3008}"
 TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
+API_SMOKE_EXPORT=".runtime/exports/zzzzzz-portal-api-smoke-$$.csv"
+cleanup() {
+  rm -rf "$TMP_DIR"
+  rm -f "$API_SMOKE_EXPORT"
+}
+trap cleanup EXIT
+
+ensure_api_smoke_export_script='
+const fs = require("fs");
+const path = require("path");
+const root = process.cwd();
+const out = path.join(root, process.env.API_SMOKE_EXPORT);
+fs.mkdirSync(path.dirname(out), { recursive: true });
+
+const header = [
+  "resource_id",
+  "title",
+  "publish_status",
+  "usage_scope",
+  "source_album",
+  "source_system",
+  "source_platform",
+  "source_account",
+  "source_album_path",
+  "source_album_memberships",
+  "people_visible",
+  "rights_status",
+  "consent_status",
+  "reviewed_by",
+  "reviewed_date",
+  "image_dimensions",
+  "visible_content_tags",
+  "tjc_terms",
+  "usage_terms",
+  "approval_notes",
+  "file_extension",
+  "source_path",
+  "master_drive_path",
+  "original_filename",
+  "checksum_sha256",
+  "file_size",
+  "captured_date",
+  "event_name",
+  "duplicate_group",
+  "duplicate_role"
+];
+
+function row(overrides) {
+  const base = {
+    resource_id: "",
+    title: "",
+    publish_status: "Needs Review",
+    usage_scope: "Do Not Publish",
+    source_album: "API Smoke",
+    source_system: "ResourceSpace export",
+    source_platform: "ResourceSpace",
+    source_account: "lm.photos@tjc.org",
+    source_album_path: "/private/api-smoke/source-album",
+    source_album_memberships: "API Smoke",
+    people_visible: "",
+    rights_status: "Needs review",
+    consent_status: "Unknown",
+    reviewed_by: "",
+    reviewed_date: "",
+    image_dimensions: "2400 x 1600",
+    visible_content_tags: "Bible|worship",
+    tjc_terms: "Sabbath Service|Religious Education",
+    usage_terms: "website|slides",
+    approval_notes: "API smoke fixture",
+    file_extension: "jpg",
+    source_path: "/private/api-smoke/source.jpg",
+    master_drive_path: "/private/api-smoke/master.jpg",
+    original_filename: "api-smoke-source.jpg",
+    checksum_sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    file_size: "123456",
+    captured_date: "2026-06-01",
+    event_name: "API Smoke",
+    duplicate_group: "",
+    duplicate_role: ""
+  };
+  return { ...base, ...overrides };
+}
+
+const rows = [
+  row({
+    resource_id: "367",
+    title: "Bible Teaching Background",
+    publish_status: "Approved Public",
+    usage_scope: "Public",
+    source_album: "Sabbath Service",
+    people_visible: "no",
+    rights_status: "Rights approved",
+    consent_status: "Consent confirmed",
+    reviewed_by: "API Smoke Reviewer",
+    reviewed_date: "2026-06-01",
+    visible_content_tags: "Bible|website|landscape",
+    tjc_terms: "Sabbath Service|Religious Education",
+    usage_terms: "website|slides|newsletter",
+    approval_notes: "TJC-owned rights approved for public smoke verification",
+    original_filename: "api_smoke_367.jpg",
+    checksum_sha256: "3673673673673673673673673673673673673673673673673673673673673673"
+  }),
+  row({
+    resource_id: "368",
+    title: "Bench Bible",
+    publish_status: "Approved Public",
+    usage_scope: "Public",
+    source_account: "qa.blocker@example.test",
+    source_album: "Sabbath Service",
+    people_visible: "",
+    rights_status: "Unknown",
+    consent_status: "Unknown",
+    reviewed_by: "API Smoke Reviewer",
+    reviewed_date: "2026-06-01",
+    visible_content_tags: "Bible|study",
+    tjc_terms: "Sabbath Service|Religious Education",
+    usage_terms: "website|slides",
+    approval_notes: "Approved-status fixture with rights/people review blockers",
+    original_filename: "bench_bible.jpg",
+    checksum_sha256: "3683683683683683683683683683683683683683683683683683683683683683"
+  }),
+  row({
+    resource_id: "644",
+    title: "2012 Photo 644",
+    publish_status: "Needs Review",
+    usage_scope: "Do Not Publish",
+    source_album: "Incoming Fellowship",
+    source_account: "media.intake@tjc.org",
+    people_visible: "yes",
+    rights_status: "Needs review",
+    consent_status: "Unknown",
+    reviewed_by: "",
+    reviewed_date: "",
+    visible_content_tags: "people|fellowship|context-safe",
+    tjc_terms: "Fellowship|Testimony",
+    usage_terms: "context-safe|internal review",
+    approval_notes: "Needs reviewer approval before reuse",
+    original_filename: "api_smoke_644.jpg",
+    checksum_sha256: "6446446446446446446446446446446446446446446446446446446446446446"
+  })
+];
+
+for (let index = 1; index <= 18; index += 1) {
+  rows.push(row({
+    resource_id: String(700 + index),
+    title: `Alpha Public ${String(index).padStart(2, "0")}`,
+    publish_status: "Approved Public",
+    usage_scope: "Public",
+    source_album: index % 2 ? "Newsletter" : "Website Hero",
+    people_visible: "no",
+    rights_status: "Rights approved",
+    consent_status: "Consent confirmed",
+    reviewed_by: "API Smoke Reviewer",
+    reviewed_date: "2026-06-01",
+    visible_content_tags: index % 2 ? "flower|newsletter|stock-safe" : "Bible|website|stock-safe",
+    tjc_terms: index % 2 ? "Sabbath Service|Hymns of Praise" : "Sabbath Service|Religious Education",
+    usage_terms: "website|slides|newsletter|stock-safe",
+    approval_notes: "Public-approved pagination/sort fixture",
+    original_filename: `alpha_public_${index}.jpg`,
+    checksum_sha256: `${String(index).padStart(2, "0")}`.repeat(32).slice(0, 64)
+  }));
+}
+
+for (let index = 1; index <= 2100; index += 1) {
+  rows.push(row({
+    resource_id: String(200000 + index),
+    title: `People Unknown Review ${String(index).padStart(4, "0")}`,
+    publish_status: "Needs Review",
+    usage_scope: "Do Not Publish",
+    source_album: "People Unknown Review",
+    source_account: "media.intake@tjc.org",
+    people_visible: "",
+    rights_status: "Needs review",
+    consent_status: "Unknown",
+    visible_content_tags: "people|review",
+    tjc_terms: "Fellowship",
+    usage_terms: "internal review",
+    approval_notes: "People/minors unknown review queue fixture",
+    original_filename: `people_unknown_${index}.jpg`,
+    checksum_sha256: `b${String(index).padStart(63, "0")}`.slice(0, 64)
+  }));
+}
+
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, "\"\"")}"`;
+}
+fs.writeFileSync(out, `${header.map(csvCell).join(",")}\n${rows.map((item) => header.map((key) => csvCell(item[key])).join(",")).join("\n")}\n`);
+console.error(`PASS: generated API smoke metadata export fixture ${out} (${rows.length} rows)`);
+'
+
+API_SMOKE_EXPORT="$API_SMOKE_EXPORT" node -e "$ensure_api_smoke_export_script"
 
 http_code() {
   local output="$1"
@@ -99,6 +289,7 @@ const forbiddenKeys = new Set([
   "reuseDecision",
   "reviewer",
   "sourceAccount",
+  "sourceAlbum",
   "sourcePlatform",
   "sourceSystem",
   "workflowState",

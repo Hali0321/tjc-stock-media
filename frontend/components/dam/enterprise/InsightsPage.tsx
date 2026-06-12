@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Calendar, CheckCircle2, Clock3, Database, Download, Eye, FileText, Filter, FolderOpen, ImageIcon, Info, Package, Search, Share2, Shield, Star, Tags, UploadCloud } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Calendar, CheckCircle2, Clock3, Database, Download, Eye, FileText, Filter, FolderOpen, ImageIcon, Info, Search, Share2, Shield, Star, Tags, UploadCloud } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
 import { assetRecordRef, assetType, displayTitle, formatBytes, sourceLabel } from "@/lib/enterprise-display";
 import { buildInsightsCommandCenter } from "@/lib/insights-command-center";
-import { insightHealthRows, insightKpis } from "@/lib/insights-dashboard";
+import { insightHealthRows } from "@/lib/insights-dashboard";
 import { routeWithRole } from "@/lib/role-routes";
 import type { SearchResult, StockMediaAsset } from "@/lib/types";
 import { ActionButton, AssetThumb, ErrorCard, LoadingCard, PageHeader, StatusBadge } from "./EnterpriseShared";
@@ -37,6 +38,17 @@ type InsightFilterState = {
   health: boolean;
 };
 
+type PriorityAction = {
+  id: string;
+  title: string;
+  severity: string;
+  count: string;
+  reason: string;
+  href?: string;
+  actionLabel?: string;
+  tone: "critical" | "medium" | "ready" | "neutral";
+};
+
 const insightPeriods: Array<{ id: InsightPeriodId; label: string; helper: string }> = [
   { id: "current-export", label: "Current export", helper: "ResourceSpace counts from the latest metadata export." },
   { id: "events-14d", label: "Last 14 days", helper: "Portal usage panels use dated SQLite events when available." },
@@ -48,6 +60,20 @@ const defaultInsightFilters: InsightFilterState = {
   usage: true,
   source: true,
   health: true
+};
+
+const metadataInsightFilters: InsightFilterState = {
+  review: true,
+  usage: false,
+  source: false,
+  health: true
+};
+
+const rightsUsageInsightFilters: InsightFilterState = {
+  review: true,
+  usage: true,
+  source: false,
+  health: false
 };
 
 function MetricRows({ rows }: { rows: MetricRow[] }) {
@@ -94,6 +120,15 @@ function InsightPanel({ title, action, actionHref, className = "", children }: {
 
 function SampleLabel({ children }: { children: ReactNode }) {
   return <p className="ed-sample-label">{children}</p>;
+}
+
+function formatCount(value?: number) {
+  return (value || 0).toLocaleString();
+}
+
+function percent(value: number, total: number) {
+  if (!total) return 0;
+  return Math.max(0, Math.min(100, Math.round((value / total) * 100)));
 }
 
 function PeriodMenu({
@@ -275,23 +310,134 @@ function CategoryDonut({ assets, visibleTotal }: { assets: StockMediaAsset[]; vi
   );
 }
 
-function CommandCenterPanel({ result }: { result?: SearchResult }) {
-  const center = buildInsightsCommandCenter(result);
+function ReadinessSummary({ counts, result }: { counts: SearchResult["counts"]; result?: SearchResult }) {
+  const { role } = useDemoRole();
+  const rawTotal = counts?.rawTotal || counts?.visibleToRole || counts?.totalMatching || 0;
+  const portalReady = counts?.portalReady || 0;
+  const readiness = percent(portalReady, rawTotal);
+  const rightsReview = counts?.rightsReview || 0;
+  const missingMetadata = counts?.pendingReview || 0;
+  const needsReview = counts?.needsReview || 0;
+  const metadataScore = result?.metadataHealth?.averageScore || 0;
+  const nextStep = rightsReview
+    ? "Next: clear rights-risk queue"
+    : missingMetadata
+      ? "Next: improve metadata health"
+      : needsReview
+        ? "Next: process review queue"
+        : "Next: expand Portal Ready supply";
+  const facts = [
+    ["Total records", formatCount(rawTotal)],
+    ["Needs review", formatCount(needsReview)],
+    ["Rights review", formatCount(rightsReview)],
+    ["Missing metadata", formatCount(missingMetadata)],
+    ["Portal ready", formatCount(portalReady)]
+  ];
   return (
-    <section className="ed-card ed-insight-command-center">
+    <section className="ed-card ed-readiness-summary">
+      <div className="ed-readiness-primary">
+        <div>
+          <span>Portal readiness</span>
+          <strong>{readiness}%</strong>
+          <p>{formatCount(portalReady)} of {formatCount(rawTotal)} assets are Portal Ready</p>
+          <em>{nextStep}</em>
+        </div>
+        <a className="ed-action is-primary" href={routeWithRole(rightsReview ? "/review?queue=rights-review" : "/review", role)}>Open review queue</a>
+      </div>
+      <div className="ed-readiness-meter" aria-label={`${readiness}% portal ready`}><span style={{ width: `${readiness}%` }} /></div>
+      <div className="ed-readiness-facts">
+        {facts.map(([label, value]) => <p key={label}><span>{label}</span><strong>{value}</strong></p>)}
+      </div>
+      <div className="ed-readiness-context">
+        <p><Shield size={15} /> Review/risk workload: {formatCount(needsReview + rightsReview)} records need reviewer attention.</p>
+        <p><Tags size={15} /> Metadata health: {metadataScore}% average score.</p>
+      </div>
+    </section>
+  );
+}
+
+function PriorityActions({ result }: { result?: SearchResult }) {
+  const { role } = useDemoRole();
+  const center = buildInsightsCommandCenter(result);
+  const counts = result?.counts;
+  const metadata = result?.metadataHealth;
+  const usage = result?.usageAnalytics;
+  const usageConnected = Boolean(usage?.enabled && usage.totalEvents);
+  const searchGaps = result?.zeroResultInsights?.length || 0;
+  const rawTotal = counts?.rawTotal || counts?.visibleToRole || counts?.totalMatching || 0;
+  const metadataNeeds = counts?.pendingReview || metadata?.reviewPending || 0;
+  const canOpenAdmin = role === "DAM Admin";
+  const actions: PriorityAction[] = [
+    {
+      id: "rights",
+      title: "Clear rights-risk queue",
+      severity: (counts?.rightsReview || 0) ? "Action needed" : "Healthy",
+      count: `${formatCount(counts?.rightsReview)} records`,
+      reason: (counts?.rightsReview || 0) ? "Rights, consent, or proof review blocks public reuse." : "No rights-risk records in current export.",
+      href: "/review?queue=rights-review",
+      actionLabel: "Review rights",
+      tone: (counts?.rightsReview || 0) ? "medium" : "ready"
+    },
+    {
+      id: "usage-guidance",
+      title: "Fill usage guidance",
+      severity: (metadata?.needsUsage || 0) ? "Action needed" : "Healthy",
+      count: `${formatCount(metadata?.needsUsage)} gaps`,
+      reason: (metadata?.needsUsage || 0) ? "Self-serve users need clear reuse scope before download decisions." : "Usage guidance coverage is ready for current records.",
+      href: "/guide#policies",
+      actionLabel: "Open policy center",
+      tone: (metadata?.needsUsage || 0) ? "medium" : "ready"
+    },
+    {
+      id: "metadata",
+      title: "Improve metadata health",
+      severity: metadataNeeds ? "Action needed" : "Healthy",
+      count: `${formatCount(metadataNeeds)} records`,
+      reason: metadataNeeds ? "Missing fields reduce search quality and reviewer confidence." : "Current export has no missing metadata workload.",
+      href: "/review?queue=metadata",
+      actionLabel: "Open metadata queue",
+      tone: metadataNeeds ? "medium" : "ready"
+    },
+    {
+      id: "usage-analytics",
+      title: "Connect usage analytics",
+      severity: usageConnected ? "Connected" : "Pending setup",
+      count: usageConnected ? `${formatCount(usage?.totalEvents)} events` : "Not connected",
+      reason: usageConnected ? "Usage panels are reading recorded portal events." : "Search and asset usage panels stay secondary until instrumentation is connected.",
+      href: canOpenAdmin ? "/admin#integrations" : undefined,
+      actionLabel: canOpenAdmin ? "Open source diagnostics" : undefined,
+      tone: usageConnected ? "ready" : "medium"
+    },
+    {
+      id: "search-gaps",
+      title: "Tune no-result searches",
+      severity: searchGaps ? "Action needed" : "Watching",
+      count: searchGaps ? `${formatCount(searchGaps)} intents` : `${formatCount(rawTotal)} indexed`,
+      reason: searchGaps ? "Some search intents should map to saved views or clearer taxonomy." : "No no-result search issues are available in current data.",
+      href: "/?view=saved",
+      actionLabel: "Open saved views",
+      tone: searchGaps ? "medium" : "neutral"
+    }
+  ];
+  return (
+    <section className="ed-card ed-priority-actions">
       <header>
         <div>
-          <span>Enterprise DAM command center</span>
-          <h3>{center.scoreLabel}</h3>
+          <h3>Priority actions</h3>
           <p>{center.summary}</p>
         </div>
-        <strong>{center.score}<small>/100</small></strong>
+        <span>{center.scoreLabel} · {center.score}/100</span>
       </header>
-      <div className="ed-command-signals">
-        {center.signals.map((signal) => <p className={`is-${signal.tone}`} key={signal.label}><span>{signal.label}</span><strong>{signal.value}</strong><small>{signal.target}</small></p>)}
-      </div>
-      <div className="ed-command-actions">
-        {center.actions.map((item) => <a className={`is-${item.priority}`} href={item.href} key={item.id}><span>{item.priority}</span><strong>{item.title}</strong><small>{item.detail}</small></a>)}
+      <div className="ed-priority-action-grid">
+        {actions.map((item) => (
+          <article className={`is-${item.tone}`} key={item.id}>
+            <span>{item.severity}</span>
+            <strong>{item.title}</strong>
+            <em>{item.count}</em>
+            <p>{item.reason}</p>
+            {item.href && item.actionLabel ? <a href={routeWithRole(item.href, role)}>{item.actionLabel}</a> : null}
+          </article>
+        ))}
       </div>
     </section>
   );
@@ -314,42 +460,34 @@ function AdminInsights({
   filters: InsightFilterState;
   result?: SearchResult;
 }) {
+  const { role } = useDemoRole();
   const rawTotal = counts?.rawTotal || counts?.visibleToRole || counts?.totalMatching || 0;
   const reviewRows: MetricRow[] = [
     { label: "Needs Review", value: counts?.needsReview || 0, total: rawTotal, tone: "orange" },
-    { label: "Rights Review", value: counts?.rightsReview || 0, total: rawTotal, tone: "red" },
+    { label: "Rights Review", value: counts?.rightsReview || 0, total: rawTotal, tone: "orange" },
     { label: "Missing Metadata", value: counts?.pendingReview || 0, total: rawTotal, tone: "orange" },
     { label: "Children/Youth", value: counts?.childrenYouth || 0, total: rawTotal, tone: "indigo" }
   ];
   const riskRows = [
-    ["Rights review overdue", counts?.rightsReview || 0, "red"],
-    ["Metadata critical", counts?.pendingReview || 0, "orange"],
+    ["Rights review", counts?.rightsReview || 0, "orange"],
+    ["Metadata gaps", counts?.pendingReview || 0, "orange"],
     ["Policy exceptions", counts?.blocked || 0, "green"],
     ["Unmapped fields", counts?.missingSource || 0, "indigo"]
   ] as const;
-  const stats: InsightStat[] = insightKpis(counts).map((item) => ({
-    label: item.label === "ResourceSpace Records" ? "Total Records" : item.label === "Blocked / Risk" ? "Rights Review" : item.label,
-    value: item.value,
-    detail: item.delta,
-    meta: "ResourceSpace / portal period",
-    tone: item.danger ? "red" : item.label.includes("Portal") ? "teal" : item.label.includes("Needs") ? "orange" : "blue",
-    icon: item.icon
-  }));
   return (
     <>
-      <div className="ed-insight-stat-grid">{stats.map((stat) => <InsightStatCard key={stat.label} stat={stat} />)}</div>
-      <CommandCenterPanel result={result} />
+      <ReadinessSummary counts={counts} result={result} />
+      <PriorityActions result={result} />
       <div className="ed-insights-board is-admin">
         {filters.review ? <InsightPanel title="Review Workload" action="Open review queue" actionHref="/review"><MetricRows rows={reviewRows} /></InsightPanel> : null}
-        {filters.review ? <InsightPanel title="Governance / Risk Summary" action="Open admin" actionHref="/admin"><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel> : null}
-        {filters.usage ? <InsightPanel title="Top Searched Terms"><TopicsList usage={usage} savedViews={[]} />{!hasUsageRows ? <SampleLabel>Sample data until search logging is connected</SampleLabel> : null}</InsightPanel> : null}
+        {filters.review ? <InsightPanel title="Governance / Risk Summary" action={role === "DAM Admin" ? "Open admin" : undefined} actionHref={role === "DAM Admin" ? "/admin" : undefined}><div className="ed-risk-list">{riskRows.map(([label, value, tone]) => <p key={label} className={`is-${tone}`}><span>{label}</span><strong>{value.toLocaleString()}</strong></p>)}</div><small>Based on current period export</small></InsightPanel> : null}
         {filters.usage ? <InsightPanel title="Top Assets"><TopAssetsList assets={assets} usage={usage} />{!usage?.topAssets?.length ? <SampleLabel>Sample data until usage logging is connected</SampleLabel> : null}</InsightPanel> : null}
         {filters.source ? <InsightPanel title="Source Health / Integration Status"><SourceHealth total={rawTotal} usageTotal={usage?.totalEvents || 0} sourceLabelText={sourceText} /><p className="ed-footnote"><Info size={14} /> Operational diagnostics visible to reviewer/admin roles.</p></InsightPanel> : null}
-        {filters.usage ? <InsightPanel title="Trends" className="is-wide"><TrendPanel usage={usage} /></InsightPanel> : null}
         {filters.source ? <InsightPanel title="Content Snapshot"><ContentSnapshot assets={assets} /><p className="ed-footnote"><Info size={14} /> Based on current result page.</p></InsightPanel> : null}
       </div>
       {!Object.values(filters).some(Boolean) ? <section className="ed-card ed-analytics-empty"><Filter size={22} /><strong>No insight sections selected</strong><p>Turn on at least one filter to show operational panels.</p></section> : null}
       {filters.health ? <section className="ed-card"><h3>Asset Health & Governance</h3><div className="ed-health-grid">{insightHealthRows(counts).map((row) => <article key={row.label}><strong>{row.value.toLocaleString()}</strong><span>{row.label}</span><meter className={`is-${row.tone}`} min={0} max={Math.max(rawTotal, row.value, 1)} value={row.value} /></article>)}</div></section> : null}
+      {filters.usage ? <section className="ed-analytics-setup"><header><div><h3>Analytics setup</h3><p>Usage panels stay secondary until portal instrumentation records durable search and asset events.</p></div><span>{hasUsageRows ? "Connected" : "Data not connected yet"}</span></header><div className="ed-analytics-setup-grid"><section className="ed-card ed-analytics-setup-panel"><header className="ed-card-head"><h3>Trends</h3></header><TrendPanel usage={usage} /></section><section className="ed-card ed-analytics-setup-panel"><header className="ed-card-head"><h3>Top searched terms</h3></header><TopicsList usage={usage} savedViews={[]} />{!hasUsageRows ? <SampleLabel>Sample data until search logging is connected</SampleLabel> : null}</section></div></section> : null}
     </>
   );
 }
@@ -387,8 +525,8 @@ function ViewerInsights({
     ["Find videos for events or ministries", "Events, testimonies, and ministry highlights", Search, "/?q=video%20events"]
   ] as const;
   const reuseGuide = [
-    ["Use approved assets", "All media in this library is reviewed for accuracy and brand alignment."],
-    ["Follow brand guidelines", "Maintain consistency in logo use, colors, and typography."],
+    ["Use approved assets", "All media in this library is reviewed for rights and reuse scope."],
+    ["Follow TJC Identity", "Use identity.tjc.org for logo, color, and template guidance."],
     ["Credit when required", "Some assets require attribution. Check asset details."],
     ["When in doubt, ask", "Contact your brand or communications team for help."]
   ];
@@ -406,7 +544,7 @@ function ViewerInsights({
         <InsightPanel title="Frequently Used Topics" action="Browse all topics" actionHref="/?view=saved"><TopicsList usage={usage} savedViews={savedViews} /></InsightPanel>
         <InsightPanel title="Recently Viewed Assets"><div className="ed-recent-assets">{assets.slice(0, 5).map((asset) => <article key={asset.id}><AssetThumb asset={asset} /><strong>{displayTitle(asset)}<small>{assetType(asset)} · {formatBytes(asset.fileSizeBytes)}</small></strong><span>Visible</span></article>)}</div></InsightPanel>
         <InsightPanel title="Top Categories" action="Explore all categories" actionHref="/collections"><CategoryDonut assets={assets} visibleTotal={visible} /></InsightPanel>
-        <InsightPanel title="Approved Media Reuse Guide" action="View brand guidelines" actionHref="/brand-hub">{reuseGuide.map(([title, detail]) => <p className="ed-guide-row" key={title}><CheckCircle2 size={16} /><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
+        <InsightPanel title="Approved Media Reuse Guide" action="View policies" actionHref="/guide#policies">{reuseGuide.map(([title, detail]) => <p className="ed-guide-row" key={title}><CheckCircle2 size={16} /><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
         <InsightPanel title="Tips & Shortcuts" action="View help center" actionHref="/guide">{tips.map(([title, detail, Icon]) => <p className="ed-tip-row" key={title}><i><Icon size={16} /></i><strong>{title}<small>{detail}</small></strong></p>)}</InsightPanel>
       </div>
     </>
@@ -415,6 +553,10 @@ function ViewerInsights({
 
 export function EnterpriseInsightsPage() {
   const { role } = useDemoRole();
+  const searchParams = useSearchParams();
+  const activePanel = searchParams.get("panel");
+  const metadataPanel = activePanel === "metadata";
+  const rightsUsagePanel = activePanel === "rights-usage";
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [activePeriod, setActivePeriod] = useState<InsightPeriodId>("current-export");
@@ -425,9 +567,19 @@ export function EnterpriseInsightsPage() {
   const usage = insights.data?.usageAnalytics;
   const hasUsageRows = Boolean(usage?.topSearches.length || usage?.topAssets.length);
   const operationalView = role === "Reviewer" || role === "DAM Admin";
-  const title = operationalView ? "Insights / Analytics" : "Insights / My Library";
-  const subtitle = operationalView ? "Operational visibility across your digital asset lifecycle." : "Role-safe overview of your visible media, saved views, and collections.";
+  const title = metadataPanel ? "Metadata" : rightsUsagePanel ? "Rights & Usage" : "Insights";
+  const subtitle = metadataPanel
+    ? "Track field coverage, missing metadata, and reviewer-ready record quality."
+    : rightsUsagePanel
+      ? "Review rights evidence, use scope, consent, and gated-copy decisions."
+    : operationalView ? "Monitor library readiness, review workload, and governance signals." : "Role-safe overview of your visible media, saved views, and collections.";
   const activePeriodLabel = insightPeriods.find((period) => period.id === activePeriod)?.label || "Current export";
+
+  useEffect(() => {
+    setFilters(metadataPanel ? metadataInsightFilters : rightsUsagePanel ? rightsUsageInsightFilters : defaultInsightFilters);
+    setFiltersOpen(false);
+  }, [metadataPanel, rightsUsagePanel]);
+
   const exportInsights = () => {
     if (!insights.data) {
       setExportStatus("Insights are still loading. Export will be available after data loads.");
@@ -467,7 +619,7 @@ export function EnterpriseInsightsPage() {
       {periodMenuOpen ? <PeriodPickerPanel activePeriod={activePeriod} onSelect={(period) => { setActivePeriod(period); setPeriodMenuOpen(false); setExportStatus(`${insightPeriods.find((item) => item.id === period)?.label || "Current export"} selected. ResourceSpace counts remain latest export.`); }} /> : null}
       {filtersOpen && operationalView ? <InsightFilterPanel filters={filters} onChange={setFilters} onReset={() => setFilters(defaultInsightFilters)} /> : null}
       {exportStatus ? <p className="ed-inline-success ed-insight-status">{exportStatus}</p> : null}
-      <section className={operationalView ? "ed-approved-banner" : "ed-role-safe-banner"}>{operationalView ? <Database size={22} /> : <Info size={22} />}<div><strong>{operationalView ? sourceLabel(insights.source) : "Role-safe insights"}</strong><span>{operationalView ? (insights.source?.detail || "Media library source unavailable.") : "These insights reflect only the content you can view based on your role and permissions."}</span></div><span>{operationalView ? (hasUsageRows ? "Usage rows from portal analytics" : "Sample analytics where event rows are unavailable") : "Operational diagnostics are hidden for this role."}</span></section>
+      <section className={operationalView ? "ed-approved-banner" : "ed-role-safe-banner"}>{operationalView ? <Database size={22} /> : <Info size={22} />}<div><strong>{operationalView ? sourceLabel(insights.source) : "Role-safe insights"}</strong><span>{operationalView ? (insights.source?.detail || "Media library source unavailable.") : "These insights reflect only the content you can view based on your role and permissions."}</span></div><span>{operationalView ? (hasUsageRows ? "Usage rows from portal analytics" : "Usage analytics not connected") : "Operational diagnostics are hidden for this role."}</span></section>
       {insights.loading ? <LoadingCard /> : insights.error ? <ErrorCard message={insights.error} source={insights.source} /> : <>
         {operationalView
           ? <AdminInsights counts={counts!} usage={usage} assets={insights.data?.assets || []} sourceText={sourceLabel(insights.source)} hasUsageRows={hasUsageRows} filters={filters} result={insights.data || undefined} />

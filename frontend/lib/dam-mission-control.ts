@@ -119,7 +119,7 @@ export function buildDamMissionControl({
       "Clear highest-risk review debt",
       `${count(rightsReview + childrenYouth)} records need rights, people, or youth confidence.`,
       role === "Viewer" || role === "Contributor" ? "next" : "now",
-      { href: "/review?queue=rights" }
+      { href: "/review?queue=rights-review" }
     ));
   }
   if (missingSource) {

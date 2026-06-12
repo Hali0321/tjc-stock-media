@@ -37,6 +37,19 @@ require_dir() {
   fi
 }
 
+require_text() {
+  local file="$1"
+  local text="$2"
+  local label="$3"
+  if [ ! -f "$file" ]; then
+    fail "missing file before text check: $file ($label)"
+  elif grep -Fqi "$text" "$file"; then
+    pass "text present: $label"
+  else
+    fail "missing text: $label"
+  fi
+}
+
 if command -v docker >/dev/null 2>&1; then
   compose_env=".env"
   compose_file="docker-compose.yml"
@@ -75,6 +88,7 @@ require_file "docs/team-beta-feedback-incident-runbook.md"
 require_file "docs/team-beta-research-synthesis.md"
 require_file "docs/team-beta-rights-playbook.md"
 require_file "docs/team-beta-qa-matrix.md"
+require_file "docs/teammate-beta-invite-pack.md"
 require_file "frontend/lib/beta-readiness-facts.ts"
 require_file "scripts/backup.sh"
 require_file "scripts/restore-test.sh"
@@ -100,6 +114,26 @@ require_file "scripts/team-beta-signoff-guard.mjs"
 require_file "scripts/team-beta-signoff-guard-test.mjs"
 require_file "frontend/app/api/beta-feedback/export/route.ts"
 require_file "frontend/app/api/saved-searches/route.ts"
+
+beta_invite_pack="docs/teammate-beta-invite-pack.md"
+beta_ui_file="frontend/components/BetaPrototypeTools.tsx"
+if [ -f "$beta_invite_pack" ]; then
+  pass "beta invite pack available before role-switch copy check"
+else
+  fail "missing required beta invite pack before role-switch copy check: $beta_invite_pack"
+fi
+
+for phrase in \
+  "simulated QA access" \
+  "beta testing only" \
+  "not production auth" \
+  "not SSO" \
+  "not real user impersonation" \
+  "not permission delegation"
+do
+  require_text "$beta_invite_pack" "$phrase" "invite pack beta role-switch copy: $phrase"
+  require_text "$beta_ui_file" "$phrase" "visible app beta role-switch copy: $phrase"
+done
 
 if grep -q 'Beta Command Center' frontend/components/dam/enterprise/AdminPage.tsx \
   && grep -q 'Actor audit proof' frontend/components/dam/enterprise/AdminPage.tsx \
@@ -327,9 +361,18 @@ else
   fail "batch approval confirmation guard missing"
 fi
 
-if grep -qi 'Beta access role' frontend/components/dam/DamShell.tsx \
-  && grep -qi 'Role switch is simulated for QA only' frontend/components/BetaPrototypeTools.tsx \
-  && grep -Eqi 'role switch (is )?simulated|beta QA only|QA only' docs/teammate-test-guide.md docs/teammate-beta-invite-pack.md; then
+if grep -Fqi 'simulated QA access' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Fqi 'beta testing only' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Fqi 'not production auth' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Fqi 'not SSO' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Fqi 'not real user impersonation' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Fqi 'not permission delegation' frontend/components/BetaPrototypeTools.tsx \
+  && grep -Fqi 'simulated QA access' docs/teammate-beta-invite-pack.md \
+  && grep -Fqi 'beta testing only' docs/teammate-beta-invite-pack.md \
+  && grep -Fqi 'not production auth' docs/teammate-beta-invite-pack.md \
+  && grep -Fqi 'not SSO' docs/teammate-beta-invite-pack.md \
+  && grep -Fqi 'not real user impersonation' docs/teammate-beta-invite-pack.md \
+  && grep -Fqi 'not permission delegation' docs/teammate-beta-invite-pack.md; then
   pass "beta role switch is labeled as simulated QA access"
 else
   fail "beta role switch simulated-QA copy missing"

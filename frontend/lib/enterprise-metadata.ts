@@ -53,7 +53,7 @@ export function inspectorMetadataRows({
     ["File type", assetType(asset)],
     ["Dimensions", metadataValue(asset.imageDimensions)],
     ["File size", formatBytes(asset.fileSizeBytes)],
-    ["Created by", metadataValue(asset.sourceAccount)],
+    ["Created by", "Media team"],
     ["Capture date", metadataValue(asset.capturedDate)],
     ["Collection", metadataValue(asset.collection)],
     ["Keywords", assetKeywordText(asset)]
@@ -64,7 +64,7 @@ export function assetDetailMetadataRows(asset: StockMediaAsset, role: DemoRole):
   return [
     ["Title", metadataValue(asset.title)],
     ["Description", metadataValue(asset.usageGuidance)],
-    ["Creator", metadataValue(asset.sourceAccount)],
+    ["Creator", role === "DAM Admin" ? metadataValue(asset.sourceAccount) : "Media team"],
     ["Capture Date", metadataValue(asset.capturedDate)],
     ["Collection", metadataValue(asset.collection)],
     ["Categories", metadataValue(asset.tjcTerms)],
@@ -74,8 +74,8 @@ export function assetDetailMetadataRows(asset: StockMediaAsset, role: DemoRole):
     ["Dimensions", metadataValue(asset.imageDimensions)],
     ["File Size", formatBytes(asset.fileSizeBytes)],
     ["Uploaded", metadataValue(asset.importDate)],
-    ["Uploaded By", metadataValue(asset.sourceAccount)],
-    ["Source", metadataValue(asset.sourceSystem)],
+    ["Uploaded By", role === "DAM Admin" ? metadataValue(asset.sourceAccount) : "Media team"],
+    ["Source", role === "DAM Admin" ? metadataValue(asset.sourceSystem) : "DAM record"],
     ...(role === "DAM Admin"
       ? [
           ["Checksum", metadataValue(asset.checksumSha256)] as MetadataRow,
@@ -114,7 +114,7 @@ export function reviewMetadataRows({
     ["File Type", assetType(asset)],
     ["Dimensions", metadataValue(asset.imageDimensions)],
     ["File Size", formatBytes(asset.fileSizeBytes)],
-    ["Uploaded By", metadataValue(asset.sourceAccount)]
+    ["Uploaded By", "Media team"]
   ];
 }
 
@@ -131,7 +131,7 @@ export function reviewEvidenceRows({
     ["ResourceSpace ID", metadataValue(assetRecordRef(asset))],
     ["Assigned to", "Reviewer queue"],
     ["Policy", metadataValue(asset.downloadPolicy)],
-    ["Source", metadataValue(asset.sourceSystem)],
+    ["Record source", "DAM record"],
     ["Current ResourceSpace status", currentStatus],
     ["Portal pending decision", pendingStatus || "None"]
   ];

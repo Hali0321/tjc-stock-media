@@ -1,8 +1,9 @@
 import type { EnterpriseStatus } from "@/lib/enterprise-status";
 import { buildDuplicateGroupCounts } from "@/lib/asset-governance";
-import { buildReviewEvidenceDecision, reviewDecisionMissingLabels } from "@/lib/review-decision-presenter";
+import { buildReviewEvidenceDecision, reviewChecklistItems, reviewChecklistLabelByField, reviewDecisionMissingLabels, reviewEvidenceCompletion } from "@/lib/review-decision-presenter";
 import type { ReviewEvidenceChecklist, StockMediaAsset } from "@/lib/types";
-import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
+import { missingReviewEvidence } from "@/lib/review-evidence";
+import { missingReviewFields, reviewRiskFlags, type ReviewActionBackend } from "@/lib/workflow-policy";
 
 export type ReviewDecisionAction = {
   id: string;
@@ -15,6 +16,17 @@ export type ReviewDecisionAction = {
 };
 
 export const reviewWorkbenchTabs = ["Details", "Metadata", "Rights & Checks", "Comments", "Activity", "History"];
+
+export const reviewEvidenceGroups: Array<{
+  title: string;
+  fields: Array<keyof ReviewEvidenceChecklist>;
+}> = [
+  { title: "Source", fields: ["sourceConfirmed", "proofLinkAttached"] },
+  { title: "Rights", fields: ["rightsConfirmed", "attributionConfirmed", "creditRequirementChecked"] },
+  { title: "People/minors", fields: ["peopleVisibilityConfirmed", "childrenYouthChecked"] },
+  { title: "Usage", fields: ["usageScopeSelected", "sensitiveContextChecked", "expirationRereviewSet"] },
+  { title: "Delivery", fields: ["derivativeAvailable"] }
+];
 
 export const reviewDecisionActions: ReviewDecisionAction[] = [
   {
@@ -59,6 +71,26 @@ export type PendingReviewDecisionSummary = {
   action: string;
 };
 
+export type ReviewMetricTone = "neutral" | "warning" | "ready";
+
+export type ReviewQueueMetric = {
+  label: string;
+  value: string;
+  detail: string;
+  tone: ReviewMetricTone;
+};
+
+export type ReviewSignal = {
+  label: string;
+  count: number;
+};
+
+export type ReviewDecisionLane = {
+  label: string;
+  blocked: boolean;
+  detail: string;
+};
+
 export type ReviewQueueIntelligence = {
   label: string;
   value: string;
@@ -82,6 +114,89 @@ export function reviewWaitingDays(asset?: StockMediaAsset, now = Date.now()) {
   const value = reviewDateValue(asset);
   if (!value) return 0;
   return Math.max(0, Math.floor((now - value) / 86_400_000));
+}
+
+export function checklistActionLabel(field: keyof ReviewEvidenceChecklist, complete: boolean) {
+  if (complete) return "View details";
+  if (field === "proofLinkAttached") return "Add evidence";
+  if (field === "sourceConfirmed" || field === "usageScopeSelected" || field === "derivativeAvailable") return "Open";
+  return "Mark checked";
+}
+
+function rightsEvidenceMissing(asset: StockMediaAsset) {
+  const missing = missingReviewFields(asset);
+  return missing.includes("consent") || missing.includes("rights notes") || reviewRiskFlags(asset).includes("Rights unclear");
+}
+
+export function buildReviewQueueMetrics(assets: StockMediaAsset[]): ReviewQueueMetric[] {
+  const rightsUnclear = assets.filter((asset) => /unknown|needs review|review required|missing|unclear/i.test(`${asset.rightsStatus || ""} ${asset.consentStatus || ""}`)).length;
+  const missingEvidence = assets.filter((asset) => missingReviewFields(asset).length > 0).length;
+  const likelyReady = assets.filter((asset) => reviewMetadataCompleteness(asset).percent >= 75 && missingReviewFields(asset).length <= 1).length;
+  return [
+    { label: "Needs review", value: assets.length.toLocaleString(), detail: "Records in current queue", tone: "neutral" },
+    { label: "Rights unclear", value: rightsUnclear.toLocaleString(), detail: "Rights or consent require reviewer attention", tone: rightsUnclear ? "warning" : "ready" },
+    { label: "Missing evidence", value: missingEvidence.toLocaleString(), detail: "Exported metadata gaps remain", tone: missingEvidence ? "warning" : "ready" },
+    { label: "Ready / likely ready", value: likelyReady.toLocaleString(), detail: "Strong metadata with few gaps", tone: likelyReady ? "ready" : "neutral" }
+  ];
+}
+
+export function buildReviewSignals(assets: StockMediaAsset[]): ReviewSignal[] {
+  const count = (matcher: (asset: StockMediaAsset) => boolean) => assets.filter(matcher).length;
+  return [
+    { label: "Missing copyright evidence", count: count(rightsEvidenceMissing) },
+    { label: "People/minors unknown", count: count((asset) => !asset.peopleRisk || asset.peopleRisk === "Unknown" || asset.peopleRisk === "Possible minors") },
+    { label: "Source access restricted", count: count((asset) => /restricted|read.?only|export/i.test(`${asset.sourceSystem || ""} ${asset.downloadPolicy || ""}`)) },
+    { label: "Rights review needed", count: count((asset) => reviewRiskFlags(asset).includes("Rights unclear")) },
+    { label: "Usage scope needed", count: count((asset) => !asset.usageScope || /unknown|review/i.test(asset.usageScope)) },
+    { label: "Internal only", count: count((asset) => asset.status === "Approved Internal" || asset.usageScope === "Internal") },
+    { label: "Archive candidates", count: count((asset) => asset.status === "Searchable Archive" || asset.usageScope === "Archive Only") },
+    { label: "Duplicate candidates", count: count((asset) => reviewRiskFlags(asset).includes("Duplicate candidate") || reviewRiskFlags(asset).includes("Possible duplicate")) }
+  ];
+}
+
+export function reviewNextCheckLabel(asset: StockMediaAsset) {
+  const missing = missingReviewFields(asset);
+  const risks = reviewRiskFlags(asset);
+  if (missing.includes("source")) return "Verify source";
+  if (missing.includes("people/minors")) return "Check people/minors";
+  if (missing.includes("consent") || risks.includes("Rights unclear")) return "Confirm rights";
+  if (missing.includes("usage guidance")) return "Add guidance";
+  if (missing.includes("reviewer") || missing.includes("review date")) return "Record reviewer";
+  return "Decision ready";
+}
+
+export function buildReviewDecisionLanes(asset: StockMediaAsset): ReviewDecisionLane[] {
+  const missing = missingReviewFields(asset);
+  const risks = reviewRiskFlags(asset);
+  const lane = (label: string, blocked: boolean, detail: string): ReviewDecisionLane => ({ label, blocked, detail });
+  return [
+    lane("Rights", missing.includes("consent") || risks.includes("Rights unclear") || !asset.rightsStatus, asset.rightsStatus || "Rights evidence needed"),
+    lane("People/minors", missing.includes("people/minors") || /child|youth|minor/i.test(asset.peopleRisk || ""), asset.peopleRisk || "Visibility unknown"),
+    lane("Source", missing.includes("source"), missing.includes("source") ? "Source evidence needed" : "Source noted"),
+    lane("Derivative", missing.includes("derivative"), asset.imageUrls?.download || asset.downloadPolicy.includes("approved-copy") ? "Approved copy available" : "Approved rendition missing"),
+    lane("Usage", missing.includes("usage guidance"), asset.usageGuidance || asset.usageScope)
+  ];
+}
+
+export function buildReviewDecisionRequirements(checklist: ReviewEvidenceChecklist, note: string) {
+  const completion = reviewEvidenceCompletion(checklist, note);
+  return {
+    rows: completion.rows,
+    completed: completion.completed,
+    total: completion.total,
+    missingLabels: completion.missingLabels,
+    noteReady: note.trim().length > 10
+  };
+}
+
+export function formatMissingReviewEvidence(missing: string[]) {
+  return missing
+    .map((field) => field === "reviewNote" ? "Review note added" : reviewChecklistLabelByField[field as keyof ReviewEvidenceChecklist] || field)
+    .join(", ");
+}
+
+export function missingReviewActionEvidence(action: ReviewActionBackend, checklist: ReviewEvidenceChecklist, note: string) {
+  return missingReviewEvidence(action, checklist, note);
 }
 
 function countLabel(count: number, singular: string, plural = `${singular}s`) {

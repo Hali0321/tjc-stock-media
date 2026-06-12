@@ -159,6 +159,7 @@ const forbiddenKeys = new Set([
   "reuseDecision",
   "reviewer",
   "sourceAccount",
+  "sourceAlbum",
   "sourcePlatform",
   "sourceSystem",
   "workflowState",

@@ -1,10 +1,10 @@
 import { appendAuditEvent } from "@/lib/audit-log";
 import { assetResourceRef } from "@/lib/asset-refs";
 import { getAssetRecordById } from "@/lib/catalog";
+import { createDamWorkflowSession } from "@/lib/dam-route-session";
 import { sourceEnvelope } from "@/lib/media-source/session";
 import { updateResourceReviewStatus } from "@/lib/media-source/resourcespace-api";
 import { canReview } from "@/lib/permissions";
-import { requestIdentity } from "@/lib/request-identity";
 import { normalizeAssetId, normalizeDisplayTextField, readJsonObject } from "@/lib/request-validation";
 import { missingReviewEvidence, normalizeReviewChecklist, queuePendingReviewDecision } from "@/lib/review-decision";
 import { recordUsageEvent } from "@/lib/usage-analytics";
@@ -32,7 +32,8 @@ export async function readReviewActionRequestBody(request: { json(): Promise<unk
 }
 
 export async function runReviewActionWorkflow(request: NextRequest, body: ReviewActionRequestBody): Promise<ReviewActionWorkflowResult> {
-  const identity = requestIdentity(request, body.role);
+  const session = createDamWorkflowSession(request, body.role);
+  const identity = session.identity;
   const role = identity.role;
   const assetId = normalizeAssetId(body.id);
 

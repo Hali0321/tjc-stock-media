@@ -27,6 +27,7 @@ export const publicHiddenAssetKeys = [
   "resourceSpaceId",
   "reuseDecision",
   "reviewer",
+  "sourceAlbum",
   "sourceAccount",
   "sourcePlatform",
   "sourceSystem",

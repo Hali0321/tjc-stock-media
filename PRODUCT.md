@@ -32,6 +32,7 @@ TJC Stock Media is not:
 - Replacement for ResourceSpace as source of truth.
 - Decorative church media showcase.
 - Generic enterprise DAM clone.
+- TJC Identity replacement or duplicate logo/template download hub.
 
 ## Primary Users
 
@@ -220,6 +221,22 @@ Create structured upload/source-link sessions with required metadata, people/rig
 ### Governance
 
 Manage launch gate, metadata quality, rights/release risk, people/minors risk, ResourceSpace mapping, pending writes, integrations, ingest health, renditions, duplicates, taxonomy, users/roles, policy, and audit.
+
+### Team Beta Navigation
+
+Primary team-beta navigation stays focused on media work:
+
+- Library
+- Collections
+- Review Queue
+- Packages
+- Upload
+- Metadata
+- Rights & Usage
+- Policy Center
+- Insights
+
+Brand Hub is not a primary navigation mode for team beta. Brand guidance appears as a small `TJC Identity` link or card that opens `https://identity.tjc.org`. Local usage reminders belong in Policy Center or Upload guidance. Logo/template downloads should not be duplicated inside the DAM unless those files are ResourceSpace-managed assets with review or audit needs.
 
 ## Launch Blockers
 

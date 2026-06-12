@@ -137,6 +137,7 @@ const forbiddenKeys = new Set([
   "reuseDecision",
   "reviewer",
   "sourceAccount",
+  "sourceAlbum",
   "sourceAlbumPath",
   "sourceAlbumMemberships",
   "sourceLink",
