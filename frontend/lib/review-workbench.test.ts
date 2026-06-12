@@ -6,6 +6,7 @@ import { resolvePackageSections } from "@/lib/package-drafts";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { emptyReviewChecklist } from "@/lib/review-decision-presenter";
+import { missingDomainReviewEvidence } from "@/lib/review-evidence";
 import {
   buildReviewDecisionLanes,
   buildReviewDecisionRequirements,
@@ -237,6 +238,91 @@ describe("Phase 1B intake routing primitives", () => {
     ]));
     expect(buildPortalReuseDecision(risky, "Viewer").reuse.state).not.toBe("portal-ready");
     expect(reasons.every((reason) => reason.nonPublishing)).toBe(true);
+  });
+});
+
+describe("Phase 2 TJC domain governance gates", () => {
+  const completeChecklist = {
+    sourceConfirmed: true,
+    rightsConfirmed: true,
+    attributionConfirmed: true,
+    peopleVisibilityConfirmed: true,
+    childrenYouthChecked: true,
+    usageScopeSelected: true,
+    derivativeAvailable: true,
+    sensitiveContextChecked: true,
+    creditRequirementChecked: true,
+    expirationRereviewSet: true,
+    proofLinkAttached: true
+  };
+
+  it("blocks public approval for youth/minors until consent and RE/minors review exist", () => {
+    const youth = asset({
+      sensitivityClass: "youth-sensitive",
+      peopleRisk: "Possible minors",
+      consentStatus: "Unknown",
+      consentReleaseRecordId: undefined,
+      domainReviewer: undefined
+    });
+
+    expect(missingDomainReviewEvidence(youth, "Approve Public", completeChecklist, "Evidence note with enough detail.")).toEqual(expect.arrayContaining([
+      "consentReleaseRecord",
+      "domainReviewer:RE/minors"
+    ]));
+
+    const cleared = { ...youth, consentReleaseRecordId: "release-1001", domainReviewer: "RE/minors" as const };
+    expect(missingDomainReviewEvidence(cleared, "Approve Public", completeChecklist, "Evidence note with enough detail.")).not.toContain("domainReviewer:RE/minors");
+  });
+
+  it("blocks sacrament, hymn/music, and testimony public approval without domain evidence", () => {
+    const risky = asset({
+      sensitivityClass: "sacrament-sensitive",
+      doctrineSacramentTheme: "Holy Communion",
+      hymnNumberOrTitle: "Hymn 469",
+      rightsBasis: "unknown",
+      approvedChannels: [],
+      requiredNotice: undefined,
+      testimonyTheme: "healing",
+      domainReviewer: undefined,
+      rightsNotes: "Review before sharing."
+    });
+
+    const missing = missingDomainReviewEvidence(risky, "Approve Public", completeChecklist, "short");
+
+    expect(missing).toEqual(expect.arrayContaining([
+      "domainReviewer:doctrine",
+      "musicRightsBasis",
+      "musicApprovedChannel",
+      "musicRequiredNotice",
+      "domainReviewer:music-rights",
+      "domainReviewer:pastoral-sensitivity",
+      "pastoralSensitivityNote"
+    ]));
+    expect(buildPortalReuseDecision(risky, "Viewer").reuse.state).not.toBe("portal-ready");
+  });
+
+  it("keeps AI and smart suggestions as non-final review debt", () => {
+    const suggested = asset({
+      aiVisibleTagSuggestions: ["baptism"],
+      suggestedTags: ["worship-ready"],
+      controlledVocabularySource: "review-suggestion",
+      humanAiDecision: undefined
+    });
+
+    expect(missingDomainReviewEvidence(suggested, "Approve Public", completeChecklist, "Evidence note with enough detail.")).toContain("humanAiDecision");
+    expect(buildPortalReuseDecision(suggested, "Viewer").reuse.state).not.toBe("portal-ready");
+
+    const decided = { ...suggested, humanAiDecision: "edited by reviewer" };
+    expect(missingDomainReviewEvidence(decided, "Approve Public", completeChecklist, "Evidence note with enough detail.")).not.toContain("humanAiDecision");
+  });
+
+  it("does not add domain blockers to non-public review actions", () => {
+    const hymn = asset({
+      hymnNumberOrTitle: "Hymn 469",
+      rightsBasis: "unknown"
+    });
+
+    expect(missingDomainReviewEvidence(hymn, "Request More Info", completeChecklist, "Ask for music-rights proof.")).toEqual([]);
   });
 });
 

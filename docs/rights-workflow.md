@@ -52,6 +52,24 @@ into Portal Ready. TJC recognition terms such as baptism, Holy Communion, Hymns
 of Praise, sermon, testimony, RE, doctrine, language, or version/edition route
 to safer review queues only.
 
+## Domain Evidence Gates
+
+Public approval must be blocked, or degraded back to review, when domain evidence
+is missing or expired:
+
+| Domain | Required evidence before public/channel reuse |
+|---|---|
+| Minors/youth | Consent/release record or documented exception, people/minors review, and `domain_reviewer = RE/minors`. |
+| Doctrine/sacrament | Sensitive-context evidence and `domain_reviewer = doctrine`. |
+| Hymn/music | Rights basis, approved channel, required notice when applicable, rights/credit evidence, and `domain_reviewer = music-rights`. |
+| Testimony/pastoral | Sensitive-context evidence, audit-safe reviewer note, and `domain_reviewer = pastoral-sensitivity`. |
+| Lifecycle | Approval, rights, consent, embargo, withdrawal, and recheck dates must be current. |
+| AI/smart suggestions | Human accept/edit/reject decision before suggestions can influence final metadata. |
+
+These checks block portal reuse and public review actions. They do not write
+ResourceSpace approval by themselves, and they do not turn pending portal writes
+into authoritative ResourceSpace truth.
+
 ## Quality vs Rights vs Publishing
 
 Do not use one field to mean everything.

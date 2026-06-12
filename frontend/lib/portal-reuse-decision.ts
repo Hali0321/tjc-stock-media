@@ -5,10 +5,12 @@ import {
   assetHasConsentEvidence,
   assetHasDomainReviewClearance,
   assetHasHymnMusicRisk,
+  assetHasPastoralSensitivityEvidence,
   assetHasPublicChannelClearance,
   assetHasRenditionGap,
   assetHasSensitiveContext,
   assetHasSourceProvenance,
+  assetHasUnresolvedAiSuggestionDebt,
   assetLifecycleIsCurrent,
   assetIsArchiveOnly,
   assetIsBlocked,
@@ -200,8 +202,10 @@ export function reuseBlockers(asset: StockMediaAsset) {
   if (assetHasRenditionGap(asset)) addBlocker("blocked-derivative");
   if (assetHasSensitiveContext(asset)) addBlocker("blocked-sensitive");
   if (!assetHasDomainReviewClearance(asset)) addBlocker("blocked-sensitive");
+  if (!assetHasPastoralSensitivityEvidence(asset)) addBlocker("blocked-sensitive");
   if (assetHasHymnMusicRisk(asset) && (!asset.requiredNotice || !asset.approvedChannels?.length)) addBlocker("blocked-rights");
   if (!assetHasPublicChannelClearance(asset)) addBlocker("blocked-rights");
+  if (assetHasUnresolvedAiSuggestionDebt(asset)) addBlocker("blocked-needs-review");
   if (assetNeedsStaleApprovalReview(asset)) addBlocker("blocked-reviewer-date");
   return blockers;
 }

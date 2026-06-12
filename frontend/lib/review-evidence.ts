@@ -1,5 +1,18 @@
 import type { ReviewActionBackend } from "@/lib/workflow-policy";
 import { safeBoolean } from "@/lib/persisted-record-safety";
+import {
+  assetHasChildrenYouthRisk,
+  assetHasConsentEvidence,
+  assetHasDomainReviewClearance,
+  assetHasExplicitPublicRightsBasis,
+  assetHasHymnMusicRisk,
+  assetHasPastoralSensitivityEvidence,
+  assetHasPublicChannelClearance,
+  assetHasSacramentRisk,
+  assetHasTestimonyRisk,
+  assetHasUnresolvedAiSuggestionDebt,
+  assetLifecycleIsCurrent
+} from "@/lib/asset-governance";
 import type { ReviewEvidenceChecklist, StockMediaAsset } from "@/lib/types";
 
 export const reviewChecklistItems: Array<{ field: keyof ReviewEvidenceChecklist; label: string; missingLabel: string; hint: string }> = [
@@ -76,6 +89,40 @@ export function missingReviewEvidence(action: ReviewActionBackend, checklist: Re
   const missing = requiredReviewEvidence(action).filter((field) => !checklist[field]).map((field) => String(field));
   if (note.trim().length <= 10) missing.push("reviewNote");
   return missing;
+}
+
+export function missingDomainReviewEvidence(asset: StockMediaAsset, action: ReviewActionBackend, checklist: ReviewEvidenceChecklist, note: string) {
+  if (action !== "Approve Public") return [];
+  const missing: string[] = [];
+  const normalized = normalizeReviewChecklist(checklist);
+  const reviewNote = note.trim();
+
+  if (assetHasChildrenYouthRisk(asset)) {
+    if (!assetHasConsentEvidence(asset)) missing.push("consentReleaseRecord");
+    if (asset.domainReviewer !== "RE/minors") missing.push("domainReviewer:RE/minors");
+    if (!normalized.childrenYouthChecked || !normalized.peopleVisibilityConfirmed) missing.push("childrenYouthEvidence");
+  }
+  if (assetHasSacramentRisk(asset)) {
+    if (asset.domainReviewer !== "doctrine") missing.push("domainReviewer:doctrine");
+    if (!normalized.sensitiveContextChecked) missing.push("doctrineSacramentEvidence");
+  }
+  if (assetHasHymnMusicRisk(asset)) {
+    if (!assetHasExplicitPublicRightsBasis(asset)) missing.push("musicRightsBasis");
+    if (!assetHasPublicChannelClearance(asset) || !asset.approvedChannels?.length) missing.push("musicApprovedChannel");
+    if (!asset.requiredNotice) missing.push("musicRequiredNotice");
+    if (asset.domainReviewer !== "music-rights") missing.push("domainReviewer:music-rights");
+    if (!normalized.rightsConfirmed || !normalized.creditRequirementChecked) missing.push("musicRightsEvidence");
+  }
+  if (assetHasTestimonyRisk(asset)) {
+    if (asset.domainReviewer !== "pastoral-sensitivity") missing.push("domainReviewer:pastoral-sensitivity");
+    if (!normalized.sensitiveContextChecked) missing.push("pastoralSensitivityEvidence");
+    if (!assetHasPastoralSensitivityEvidence(asset) && reviewNote.length <= 20) missing.push("pastoralSensitivityNote");
+  }
+  if (!assetLifecycleIsCurrent(asset)) missing.push("lifecycleCurrentEvidence");
+  if (!assetHasDomainReviewClearance(asset)) missing.push("domainReviewerClearance");
+  if (assetHasUnresolvedAiSuggestionDebt(asset)) missing.push("humanAiDecision");
+
+  return Array.from(new Set(missing));
 }
 
 export function initialReviewChecklistForAsset(asset?: StockMediaAsset): ReviewEvidenceChecklist {

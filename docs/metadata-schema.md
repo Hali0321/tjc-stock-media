@@ -141,6 +141,21 @@ Smart routing reasons are explainable hints:
 Routing never sets final rights, consent, minors, doctrine, hymn clearance,
 public approval, reviewer identity, or Portal Ready state.
 
+## Domain Evidence Enforcement
+
+The portal policy layer treats the mature fields below as ResourceSpace-backed
+evidence. Missing values create blockers; they do not let the portal infer truth.
+
+| Evidence | Blocking behavior |
+|---|---|
+| `consent_release_record_id` | Required for youth/minor public reuse unless consent is documented as not applicable or exception-approved. |
+| `domain_reviewer` | Must match the risk domain: RE/minors, doctrine, music-rights, or pastoral-sensitivity. |
+| `rights_basis` | Required for public reuse; `unknown` and internal-only fair use are not public-safe. |
+| `approved_channels` | Must include the intended public channel; archive-only/internal channels do not make an asset stock-safe. |
+| `required_notice` | Required for hymn/music/publication/third-party reuse where notice is needed. |
+| `approval_recheck_date`, `rights_expiration_date`, `consent_expiration_date`, `withdrawal_status` | Expired, stale, embargoed, withdrawn, or takedown-requested records degrade to review. |
+| `human_ai_decision` | AI and smart suggestions remain review debt until accepted, edited, or rejected by a human. |
+
 - `public safe` in search or UI means Portal Ready, not raw `Approved Public`.
 - Portal Ready requires source/provenance, rights basis, people/minors state,
   reviewer/date, compatible usage scope, approved derivative, current lifecycle,

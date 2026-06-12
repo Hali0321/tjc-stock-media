@@ -112,9 +112,29 @@ export function assetHasTestimonyRisk(asset: StockMediaAsset) {
   return asset.sensitivityClass === "testimony-sensitive" || testimonyPattern.test(maturePolicyText(asset));
 }
 
+export function assetHasUnresolvedAiSuggestionDebt(asset: StockMediaAsset) {
+  const hasSuggestion = Boolean(
+    asset.aiTitleSuggestion ||
+      asset.aiVisibleTagSuggestions?.length ||
+      asset.aiTjcTermSuggestions?.length ||
+      asset.aiQualitySuggestion ||
+      asset.aiPeopleOrMinorFlag ||
+      asset.suggestedTags?.length ||
+      asset.duplicateSimilarityHint
+  );
+  if (!hasSuggestion) return false;
+  return !/accepted|edited|rejected/i.test(asset.humanAiDecision || "");
+}
+
 export function assetHasConsentEvidence(asset: StockMediaAsset) {
   if (asset.consentReleaseRecordId?.trim()) return true;
   return /confirmed|not applicable|documented exception/i.test(`${asset.consentStatus || ""} ${asset.rightsNotes || ""}`);
+}
+
+export function assetHasPastoralSensitivityEvidence(asset: StockMediaAsset) {
+  if (!assetHasTestimonyRisk(asset)) return true;
+  if (asset.domainReviewer !== "pastoral-sensitivity") return false;
+  return Boolean(asset.rightsNotes && !reviewPlaceholderPattern.test(asset.rightsNotes));
 }
 
 export function assetHasPublicChannelClearance(asset: StockMediaAsset) {
@@ -125,6 +145,10 @@ export function assetHasPublicChannelClearance(asset: StockMediaAsset) {
 export function assetHasAcceptableRightsBasis(asset: StockMediaAsset) {
   if (asset.rightsBasis && asset.rightsBasis !== "unknown" && asset.rightsBasis !== "fair-use-internal-only") return true;
   return rightsClearPattern.test(`${asset.rightsStatus || ""} ${asset.rightsNotes || ""}`);
+}
+
+export function assetHasExplicitPublicRightsBasis(asset: StockMediaAsset) {
+  return Boolean(asset.rightsBasis && asset.rightsBasis !== "unknown" && asset.rightsBasis !== "fair-use-internal-only");
 }
 
 export function assetHasDomainReviewClearance(asset: StockMediaAsset) {
@@ -176,7 +200,8 @@ export function assetNeedsRightsReview(asset: StockMediaAsset) {
   if (assetIsBlocked(asset)) return true;
   if (asset.status === "Approved Public" && !assetHasAcceptableRightsBasis(asset)) return true;
   if (assetHasChildrenYouthRisk(asset) && !assetHasConsentEvidence(asset)) return true;
-  if (assetHasHymnMusicRisk(asset) && (!assetHasAcceptableRightsBasis(asset) || !asset.requiredNotice || !asset.approvedChannels?.length)) return true;
+  if (assetHasHymnMusicRisk(asset) && (!assetHasExplicitPublicRightsBasis(asset) || !asset.requiredNotice || !asset.approvedChannels?.length)) return true;
+  if (!assetLifecycleIsCurrent(asset)) return true;
   if (rightsConcernPattern.test(rightsStatus) || rightsConcernPattern.test(consentStatus)) return true;
   if (rightsClearPattern.test(rightsText)) return false;
   if (assetIsApproved(asset)) return true;
@@ -264,10 +289,12 @@ export function assetPortalBlockers(asset: StockMediaAsset) {
   if (assetHasRenditionGap(asset)) blockers.push("Approved derivatives missing");
   if (assetHasSensitiveContext(asset)) blockers.push("Sensitive context review required");
   if (!assetHasDomainReviewClearance(asset)) blockers.push("Domain reviewer clearance missing");
+  if (assetHasTestimonyRisk(asset) && !assetHasPastoralSensitivityEvidence(asset)) blockers.push("Pastoral sensitivity notes missing");
   if (assetHasHymnMusicRisk(asset) && !asset.requiredNotice) blockers.push("Required notice missing");
   if (assetHasHymnMusicRisk(asset) && !asset.approvedChannels?.length) blockers.push("Hymn/music channel clearance missing");
   if (!assetHasPublicChannelClearance(asset)) blockers.push("Approved channels do not include public reuse");
   if (assetNeedsStaleApprovalReview(asset)) blockers.push("Approval is stale");
+  if (assetHasUnresolvedAiSuggestionDebt(asset)) blockers.push("AI/suggestion review pending");
   return blockers;
 }
 
@@ -295,6 +322,7 @@ export function assetGovernancePassport(asset: StockMediaAsset): AssetGovernance
     asset.duplicateGroup && "Duplicate group needs canonical decision",
     asset.duplicateSimilarityHint && "Near-duplicate similarity hint needs reviewer/admin decision",
     asset.suggestedTags?.length && asset.controlledVocabularySource !== "approved-historical-tjc" && "Suggested tags need controlled vocabulary review",
+    assetHasUnresolvedAiSuggestionDebt(asset) && "AI/smart suggestions need human accept/edit/reject decision",
     assetNeedsUsageGuidance(asset) && "Usage guidance missing",
     assetNeedsStaleApprovalReview(asset) && "Approval recheck due",
     ...validateAssetMetadataContract(asset).warnings.map((field) => `Metadata contract warning: ${field}`)

@@ -1,7 +1,11 @@
 import type { StockMediaAsset } from "@/lib/types";
 import {
   assetHasChildrenYouthRisk,
+  assetHasHymnMusicRisk,
+  assetHasSacramentRisk,
   assetHasTaxonomyDrift,
+  assetHasTestimonyRisk,
+  assetHasUnresolvedAiSuggestionDebt,
   assetIsDuplicateCandidate,
   assetIsArchiveOnly,
   assetIsApproved,
@@ -107,6 +111,9 @@ function meaningfulMetadataValue(value?: string) {
 export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: Map<string, number>) {
   const flags: string[] = [];
   if (assetHasChildrenYouthRisk(asset)) flags.push("Children/youth");
+  if (assetHasSacramentRisk(asset)) flags.push("Doctrine/sacrament review");
+  if (assetHasHymnMusicRisk(asset)) flags.push("Music/hymn rights review");
+  if (assetHasTestimonyRisk(asset)) flags.push("Testimony/pastoral sensitivity review");
   if (asset.peopleRisk === "Adults visible") flags.push("People visible");
   if (!asset.peopleRisk || asset.peopleRisk === "Unknown") flags.push("People/minors status unresolved");
   if (assetNeedsSourceReview(asset)) flags.push("Missing source");
@@ -117,6 +124,7 @@ export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: M
   if (assetNeedsAiEnrichment(asset)) flags.push("Metadata enrichment");
   if (assetHasTaxonomyDrift(asset)) flags.push("Taxonomy drift");
   if (assetNeedsStaleApprovalReview(asset)) flags.push("Stale approval");
+  if (assetHasUnresolvedAiSuggestionDebt(asset)) flags.push("AI/smart suggestion review");
   if (asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES) flags.push("Large media");
   routeAssetForReview(asset).forEach((reason) => flags.push(reason.label));
   if (meaningfulMetadataValue(asset.sensitiveContext)) flags.push("Sensitive context");
