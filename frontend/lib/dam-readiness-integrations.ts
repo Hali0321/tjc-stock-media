@@ -122,11 +122,11 @@ export function buildIntegrationReadiness({
     {
       id: "audit-log",
       label: "Portal audit log",
-      ready: auditEvents.count > 0,
+      ready: auditEvents.count > 0 && auditEvents.storage.durable,
       owner: "Portal",
-      state: auditEvents.count > 0 ? "Operational" : "Pending setup",
+      state: auditEvents.storage.durable ? (auditEvents.count > 0 ? "Operational" : "Degraded") : auditEvents.count > 0 ? "Degraded" : "Pending setup",
       detail: auditEvents.count
-        ? `${auditEvents.count.toLocaleString()} recent audit event${auditEvents.count === 1 ? "" : "s"}. Latest event: ${auditEvents.latestAt || "none"}.`
+        ? `${auditEvents.count.toLocaleString()} recent audit event${auditEvents.count === 1 ? "" : "s"}. Latest event: ${auditEvents.latestAt || "none"}. ${auditEvents.storage.detail}`
         : "No local portal audit events recorded yet. Production still needs durable identity-backed audit storage."
     },
     {

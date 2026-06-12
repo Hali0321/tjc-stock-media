@@ -18,6 +18,9 @@ only.
 - Portal code validates this contract. Missing required identity/provenance,
   approval, or derivative fields degrade readiness; AI suggestion fields never
   become final human-approved metadata by inference.
+- Portal audit events are accountability evidence only. ResourceSpace remains
+  the authoritative metadata/review record, and local `.runtime` audit JSONL is
+  not production-durable storage.
 
 ## Source / Provenance
 
@@ -117,6 +120,32 @@ only.
 | `domain_reviewer` | Doctrine, music rights, RE/minors, pastoral sensitivity, archive, or DAM reviewer responsible for specialized approval. |
 
 ## Mature Policy Rules
+
+## Audit / Accountability Primitives
+
+Portal audit records may support accountability for asset views, sensitive
+asset views, download gates, approved-copy downloads, blocked downloads, review
+changes, ResourceSpace write attempts, package decisions, original-access
+requests, rendition requests, duplicate review, taxonomy review, and saved-search
+signals.
+
+Audit records do not grant permission, do not approve media, and do not replace
+ResourceSpace truth. They must describe whether a decision was allowed, denied,
+blocked, queued, or previewed. ResourceSpace write attempts must distinguish
+attempt, success, and failure; queued portal writes remain pending until the live
+ResourceSpace API confirms and the record can be re-read.
+
+Viewer and Contributor audit read models must redact source paths, master paths,
+checksums, ResourceSpace IDs and field internals, signed URLs, original
+filenames, import batches, private evidence, and private notes. Reviewer and DAM
+Admin views may keep operational summaries and ResourceSpace reference IDs where
+needed for governance, but custody paths, signed URLs, checksums, and private
+evidence stay out of generic audit exports.
+
+Current portal audit storage is local runtime JSONL under `.runtime`. It is
+useful for local accountability and beta rehearsals, but production launch still
+requires durable identity-backed storage, retention policy, restore proof, and
+admin export rules.
 
 ## Intake And Routing Primitives
 

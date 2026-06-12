@@ -81,6 +81,30 @@ records only. Raw `Approved Public` records with missing rights basis, consent,
 domain reviewer, approved channel, derivative, or current lifecycle evidence stay
 in review/debt views instead of broad reuse views.
 
+## Audit / Accountability Boundary
+
+Portal audit events explain who attempted or completed governed actions. They
+are accountability evidence, not ResourceSpace approval truth and not a
+permission source.
+
+Audit should cover asset views, sensitive asset views, download gates,
+approved-copy downloads, blocked downloads, review changes, ResourceSpace write
+attempts/success/failure, package decisions, original-access decisions,
+rendition requests, duplicate review, taxonomy review, and saved-search signals
+as those workflows become real. Future workflows must record blocked/denied
+decisions as clearly as approved decisions.
+
+Viewer and Contributor audit read models must not expose source paths, master
+paths, checksums, ResourceSpace IDs or internals, signed URLs, original
+filenames, import batches, private evidence, or private notes. Reviewer and DAM
+Admin views may include operational summaries needed for governance, but generic
+exports still avoid custody paths, signed URLs, checksums, and private evidence.
+
+Local `.runtime` audit JSONL is useful for private beta accountability only.
+Production requires durable identity-backed audit storage, retention policy,
+restore proof, and export/redaction review before audit can be called
+production-ready.
+
 ## Quality vs Rights vs Publishing
 
 Do not use one field to mean everything.

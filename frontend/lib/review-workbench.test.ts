@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { auditAccountabilityArea, auditEventForRolePayload, auditStorageReadiness, type AuditEventRecord } from "@/lib/audit-log";
 import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildDiscoveryQuery, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { intentDefinitions, matchesCatalogFilter, savedViewDefinitions } from "@/lib/catalog-language";
@@ -444,6 +445,74 @@ describe("Phase 3 mature DAM search primitives", () => {
     expect(viewer.resourceSpaceId).toBeUndefined();
     expect(viewer.sourceFolder).toBeUndefined();
     expect(viewer.importBatch).toBeUndefined();
+  });
+});
+
+describe("Phase 4 audit accountability primitives", () => {
+  const auditEvent: AuditEventRecord = {
+    id: "audit-1",
+    type: "resourcespace_write_failed",
+    createdAt: "2026-06-12T10:00:00.000Z",
+    role: "Reviewer",
+    actor: "reviewer@example.org",
+    assetId: "asset-1",
+    resourceSpaceId: "1001",
+    status: "blocked",
+    summary: "ResourceSpace write failed after source path check.",
+    details: {
+      sourcePath: "/Shared Drives/private/source.jpg",
+      masterDrivePath: "/Shared Drives/master/source.jpg",
+      checksumSha256: "secret-checksum",
+      resourceSpaceInternalField: "field99",
+      signedUrl: "https://example.test/signed?token=secret",
+      originalFilename: "private-file.jpg",
+      importBatch: "Batch 01",
+      privateEvidence: "release note",
+      privateNotes: "Pastoral details",
+      action: "queued for review",
+      reason: "writeback disabled"
+    }
+  };
+
+  it("redacts audit read models for Viewer and Contributor", () => {
+    const viewer = auditEventForRolePayload("Viewer", auditEvent);
+    const contributor = auditEventForRolePayload("Contributor", auditEvent);
+
+    expect(viewer.resourceSpaceId).toBeUndefined();
+    expect(viewer.summary).toContain("media library");
+    expect(viewer.details).toEqual({ action: "queued for review", reason: "writeback disabled" });
+    expect(contributor.resourceSpaceId).toBeUndefined();
+    expect(contributor.details).toEqual({ action: "queued for review", reason: "writeback disabled" });
+  });
+
+  it("keeps reviewer/admin audit summaries useful without exposing custody secrets", () => {
+    const reviewer = auditEventForRolePayload("Reviewer", auditEvent);
+    const admin = auditEventForRolePayload("DAM Admin", auditEvent);
+
+    expect(reviewer.resourceSpaceId).toBe("1001");
+    expect(reviewer.details).toEqual({
+      action: "queued for review",
+      reason: "writeback disabled"
+    });
+    expect(admin.resourceSpaceId).toBe("1001");
+    expect(admin.details?.resourceSpaceInternalField).toBeUndefined();
+    expect(admin.details?.sourcePath).toBeUndefined();
+    expect(admin.details?.signedUrl).toBeUndefined();
+    expect(admin.details?.privateEvidence).toBeUndefined();
+  });
+
+  it("classifies future accountability events without making audit a truth source", () => {
+    const storage = auditStorageReadiness();
+
+    expect(auditAccountabilityArea("original_access_requested")).toBe("original-access");
+    expect(auditAccountabilityArea("rendition_request_recorded")).toBe("rendition");
+    expect(auditAccountabilityArea("duplicate_candidate_reviewed")).toBe("duplicate");
+    expect(storage).toMatchObject({
+      mode: "local-runtime-jsonl",
+      durable: false,
+      productionReady: false,
+      truthBoundary: "portal-accountability-only"
+    });
   });
 });
 
