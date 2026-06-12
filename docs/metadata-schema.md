@@ -156,6 +156,24 @@ evidence. Missing values create blockers; they do not let the portal infer truth
 | `approval_recheck_date`, `rights_expiration_date`, `consent_expiration_date`, `withdrawal_status` | Expired, stale, embargoed, withdrawn, or takedown-requested records degrade to review. |
 | `human_ai_decision` | AI and smart suggestions remain review debt until accepted, edited, or rejected by a human. |
 
+## Search Facets And Saved Views
+
+Search facets are read-model filters over ResourceSpace-backed metadata. They
+help coworkers find records; they do not create approval truth, permission truth,
+or new DAM records.
+
+Supported mature facets include collection/section terms, visible tags, TJC
+terms, media type, orientation, file extension, ministry/event terms,
+church/region, language, reuse tier, rights basis, approved channels,
+sensitivity class, consent state, derivative readiness, review status, and
+lifecycle states such as archive, withdrawn, embargoed, expired, or recheck due.
+
+`public safe` must map to Portal Ready. It must not mean raw `Approved Public`.
+Saved views such as Portal Ready, consent review, music-rights review,
+doctrine/sacrament review, lifecycle review, and archive/preservation are query
+definitions only. Each result still passes role visibility, per-asset reuse
+policy, redaction, and download gates.
+
 - `public safe` in search or UI means Portal Ready, not raw `Approved Public`.
 - Portal Ready requires source/provenance, rights basis, people/minors state,
   reviewer/date, compatible usage scope, approved derivative, current lifecycle,

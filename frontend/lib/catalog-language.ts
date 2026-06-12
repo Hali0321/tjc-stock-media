@@ -1,10 +1,13 @@
 import {
+  assetHasChildrenYouthRisk,
   assetHasRenditionGap,
   assetHasTaxonomyDrift,
   assetIsApproved,
+  assetIsArchiveOnly,
   assetIsDuplicateCandidate,
   assetIsPortalReady,
   assetNeedsAiEnrichment,
+  assetNeedsRightsReview,
   assetNeedsReview,
   assetNeedsSourceReview,
   assetNeedsStaleApprovalReview
@@ -12,7 +15,7 @@ import {
 import { assetSearchTerms } from "@/lib/tagging-model";
 import { safeEnumValue, safeNonNegativeInt } from "@/lib/persisted-record-safety";
 import { reviewRiskFlags } from "@/lib/workflow-policy";
-import type { CatalogSort, StockMediaAsset } from "@/lib/types";
+import type { ApprovedChannel, CatalogSort, StockMediaAsset } from "@/lib/types";
 
 export type SavedViewDefinition = {
   id: string;
@@ -52,6 +55,52 @@ export function assetHaystack(asset: StockMediaAsset) {
 export function includesAny(asset: StockMediaAsset, terms: string[]) {
   const haystack = assetHaystack(asset);
   return terms.some((term) => haystack.includes(term.toLowerCase()));
+}
+
+function assetTextValues(asset: StockMediaAsset) {
+  return [
+    asset.collection,
+    asset.eventName,
+    asset.eventSeries,
+    asset.church,
+    asset.region,
+    asset.publicationTitle,
+    asset.language,
+    asset.versionOrEdition,
+    asset.fileExtension,
+    asset.reuseTier,
+    asset.visibilityTier,
+    asset.sensitivityClass,
+    asset.rightsBasis,
+    asset.domainReviewer,
+    asset.consentStatus,
+    asset.withdrawalStatus,
+    ...(asset.tags || []),
+    ...(asset.tjcTerms || []),
+    ...(asset.usageTerms || []),
+    ...(asset.approvedChannels || [])
+  ];
+}
+
+function assetHasFieldValue(asset: StockMediaAsset, value: string) {
+  const normalized = value.toLowerCase();
+  return assetTextValues(asset).some((item) => item?.toLowerCase() === normalized);
+}
+
+function assetHasFieldText(asset: StockMediaAsset, value: string) {
+  const normalized = value.toLowerCase();
+  return assetTextValues(asset).some((item) => item?.toLowerCase().includes(normalized));
+}
+
+function assetHasAnyChannel(asset: StockMediaAsset, channels: ApprovedChannel[]) {
+  return channels.some((channel) => asset.approvedChannels?.includes(channel));
+}
+
+function assetIsLifecycleReviewDebt(asset: StockMediaAsset) {
+  return Boolean(
+    asset.withdrawalStatus && asset.withdrawalStatus !== "active" ||
+      assetNeedsStaleApprovalReview(asset)
+  );
 }
 
 export function matchesCatalogQuery(asset: StockMediaAsset, query: string) {
@@ -161,11 +210,78 @@ export const savedViewDefinitions: SavedViewDefinition[] = [
     match: (asset) => asset.status === "Searchable Archive" || asset.usageScope === "Archive Only"
   },
   {
+    id: "archive-preservation",
+    label: "Archive / preservation",
+    description: "Preserved records searchable to reviewers/admins but not normal reusable media.",
+    reason: "Archive views preserve history without becoming permission truth.",
+    match: assetIsArchiveOnly
+  },
+  {
     id: "portal-ready",
     label: "Portal ready",
     description: "Public-approved assets with enough metadata and renditions for a share portal.",
     reason: "Combines approval, health score, children/youth risk, and derivative readiness.",
     match: assetIsPortalReady
+  },
+  {
+    id: "public-safe",
+    label: "Public safe",
+    description: "Governed reusable assets that pass portal-ready policy.",
+    reason: "Public safe means portal-ready, not raw Approved Public.",
+    match: assetIsPortalReady
+  },
+  {
+    id: "website-channel-ready",
+    label: "Website channel ready",
+    description: "Portal-ready media explicitly cleared for website use.",
+    reason: "Combines portal-ready policy with approved channel metadata.",
+    terms: ["website", "hero", "web"],
+    match: (asset) => assetIsPortalReady(asset) && asset.approvedChannels?.includes("website") === true
+  },
+  {
+    id: "social-channel-ready",
+    label: "Social channel ready",
+    description: "Portal-ready media explicitly cleared for social use.",
+    reason: "Combines portal-ready policy with approved channel metadata.",
+    terms: ["social", "instagram", "facebook"],
+    match: (asset) => assetIsPortalReady(asset) && asset.approvedChannels?.includes("social") === true
+  },
+  {
+    id: "music-rights-review",
+    label: "Music/hymn rights review",
+    description: "Hymn, music, choir, livestream, or worship audio/video records needing rights confidence.",
+    reason: "Finds records where music rights basis, channel, notice, or reviewer evidence may be missing.",
+    terms: ["hymn", "music", "choir", "livestream"],
+    match: (asset) => reviewRiskFlags(asset).includes("Music/hymn rights review") || assetHasFieldValue(asset, "music-rights")
+  },
+  {
+    id: "doctrine-sacrament-review",
+    label: "Doctrine/sacrament review",
+    description: "Baptism, Holy Communion, footwashing, Holy Spirit, and doctrine-sensitive records.",
+    reason: "Routes doctrine and sacrament context to domain review without approving reuse.",
+    terms: ["baptism", "holy communion", "footwashing", "sacrament"],
+    match: (asset) => reviewRiskFlags(asset).includes("Doctrine/sacrament review") || assetHasFieldValue(asset, "doctrine")
+  },
+  {
+    id: "consent-review",
+    label: "Consent review",
+    description: "People/minors records missing or needing consent evidence.",
+    reason: "Consent state remains review evidence, not a search guess.",
+    match: (asset) => assetHasChildrenYouthRisk(asset) || /unknown|missing|not confirmed|needs review/i.test(asset.consentStatus || "")
+  },
+  {
+    id: "rights-basis-review",
+    label: "Rights basis review",
+    description: "Records with unknown, internal-only, missing, or expiring rights basis.",
+    reason: "Keeps rights basis separate from raw approval state.",
+    match: (asset) => assetNeedsRightsReview(asset) || !asset.rightsBasis || asset.rightsBasis === "unknown" || asset.rightsBasis === "fair-use-internal-only"
+  },
+  {
+    id: "lifecycle-review",
+    label: "Lifecycle review",
+    description: "Expired, embargoed, withdrawn, takedown, or recheck-due records.",
+    reason: "Lifecycle state degrades assets to review instead of silently staying reusable.",
+    match: assetIsLifecycleReviewDebt
   },
   {
     id: "ai-enrichment",
@@ -251,18 +367,22 @@ export const collectionDefinitions: CollectionDefinition[] = [
 
 export const viewAliases = new Map([
   ["portal-ready", "approved-church-wide"],
+  ["public-safe", "portal-ready"],
   ["children-youth", "children-youth-review"]
 ]);
 
 export const intentDefinitions: SearchIntentDefinition[] = [
   { view: "website-hero", confidence: "exact", terms: ["website hero"] },
   { view: "website-hero", confidence: "synonym", terms: ["hero", "banner", "header"] },
-  { view: "portal-ready", confidence: "exact", terms: ["public safe", "safe for web"] },
+  { view: "portal-ready", confidence: "exact", terms: ["public safe", "safe for web", "governed reusable"] },
   { view: "no-people", confidence: "exact", terms: ["no people"] },
   { view: "children-youth-review", confidence: "synonym", terms: ["children", "youth", "minors", "minor"] },
   { view: "needs-review", confidence: "exact", terms: ["needs review", "review"] },
   { view: "internal-ministry", confidence: "exact", terms: ["internal"] },
-  { view: "archive-only", confidence: "exact", terms: ["archive"] }
+  { view: "archive-only", confidence: "exact", terms: ["archive"] },
+  { view: "music-rights-review", confidence: "exact", terms: ["hymn rights", "music rights"] },
+  { view: "doctrine-sacrament-review", confidence: "exact", terms: ["doctrine review", "sacrament review"] },
+  { view: "lifecycle-review", confidence: "exact", terms: ["expired approval", "embargoed", "withdrawn"] }
 ];
 
 export function matchesCatalogFilter(asset: StockMediaAsset, filter: string) {
@@ -281,15 +401,58 @@ export function matchesCatalogFilter(asset: StockMediaAsset, filter: string) {
   if (value === "possible minors" || value === "children/youth") return asset.peopleRisk === "Possible minors";
   if (value === "missing source") return assetNeedsSourceReview(asset);
   if (value === "rights review") return reviewRiskFlags(asset).includes("Rights unclear");
+  if (value === "rights basis review" || value === "rights basis missing") return assetNeedsRightsReview(asset) || !asset.rightsBasis || asset.rightsBasis === "unknown";
   if (value === "portal ready") return assetIsPortalReady(asset);
+  if (value === "public safe") return assetIsPortalReady(asset);
+  if (value === "stock-safe" || value === "stock safe") return asset.reuseTier === "stock-safe";
+  if (value === "context-safe" || value === "context safe") return asset.reuseTier === "context-safe";
+  if (value === "archive-only" || value === "archive only") return assetIsArchiveOnly(asset);
+  if (value === "public visibility") return asset.visibilityTier === "public";
+  if (value === "internal visibility" || value === "member visibility") return asset.visibilityTier === "internal/member";
+  if (value === "reviewer visibility" || value === "admin visibility") return asset.visibilityTier === "reviewer/admin";
+  if (value === "public domain") return asset.rightsBasis === "public-domain" || asset.rightsBasis === "jurisdiction-limited-public-domain";
+  if (value === "tjc-owned" || value === "tjc owned") return asset.rightsBasis === "TJC-owned";
+  if (value === "contributor license") return asset.rightsBasis === "contributor-license";
+  if (value === "hymn license" || value === "hymn permission") return asset.rightsBasis === "hymn-license" || asset.rightsBasis === "hymn-permission";
+  if (value === "fair use internal") return asset.rightsBasis === "fair-use-internal-only";
+  if (value === "unknown rights") return !asset.rightsBasis || asset.rightsBasis === "unknown";
+  if (value === "website channel" || value === "website-ready") return assetHasAnyChannel(asset, ["website"]);
+  if (value === "social channel" || value === "social-ready") return assetHasAnyChannel(asset, ["social"]);
+  if (value === "print channel" || value === "print-ready") return assetHasAnyChannel(asset, ["print"]);
+  if (value === "projection channel" || value === "projection-ready") return assetHasAnyChannel(asset, ["projection"]);
+  if (value === "livestream channel" || value === "livestream-ready") return assetHasAnyChannel(asset, ["livestream"]);
+  if (value === "internal training channel") return assetHasAnyChannel(asset, ["internal-training"]);
+  if (value === "limited share channel") return assetHasAnyChannel(asset, ["limited-share-link"]);
+  if (value === "public-safe sensitivity") return asset.sensitivityClass === "public-safe";
+  if (value === "member sensitive") return asset.sensitivityClass === "member-sensitive";
+  if (value === "sacrament sensitive" || value === "doctrine review") return asset.sensitivityClass === "sacrament-sensitive" || reviewRiskFlags(asset).includes("Doctrine/sacrament review");
+  if (value === "youth sensitive" || value === "minors consent") return asset.sensitivityClass === "youth-sensitive" || assetHasChildrenYouthRisk(asset);
+  if (value === "testimony sensitive" || value === "pastoral review") return asset.sensitivityClass === "testimony-sensitive" || reviewRiskFlags(asset).includes("Testimony/pastoral sensitivity review");
+  if (value === "internal governance") return asset.sensitivityClass === "internal-governance";
+  if (value === "archive restricted") return asset.sensitivityClass === "archive-restricted";
+  if (value === "consent confirmed") return /confirmed|not applicable|documented exception/i.test(`${asset.consentStatus || ""} ${asset.rightsNotes || ""}`);
+  if (value === "consent missing" || value === "consent review") return /unknown|missing|not confirmed|needs review/i.test(asset.consentStatus || "") || assetHasChildrenYouthRisk(asset);
   if (value === "ai enrichment" || value === "metadata enrichment") return assetNeedsAiEnrichment(asset);
   if (value === "taxonomy drift") return assetHasTaxonomyDrift(asset);
   if (value === "duplicate candidate") return assetIsDuplicateCandidate(asset);
-  if (value === "stale approval") return assetNeedsStaleApprovalReview(asset);
+  if (value === "stale approval" || value === "recheck due") return assetNeedsStaleApprovalReview(asset);
+  if (value === "expired" || value === "expired approval") return asset.withdrawalStatus === "expired" || Boolean(asset.expirationDate || asset.rightsExpirationDate || asset.consentExpirationDate) && assetNeedsStaleApprovalReview(asset);
+  if (value === "embargoed") return asset.withdrawalStatus === "embargoed" || Boolean(asset.embargoDate) && assetNeedsStaleApprovalReview(asset);
+  if (value === "withdrawn" || value === "takedown") return asset.withdrawalStatus === "withdrawn" || asset.withdrawalStatus === "takedown-requested";
+  if (value === "lifecycle review") return assetIsLifecycleReviewDebt(asset);
   if (value === "rendition gap") return assetHasRenditionGap(asset);
   if (value === "landscape") return width > height || assetHaystack(asset).includes("landscape");
   if (value === "portrait") return height > width || assetHaystack(asset).includes("portrait");
   if (value === "square") return Boolean(width && height && Math.abs(width - height) < Math.max(width, height) * 0.08) || assetHaystack(asset).includes("square");
+  if (value === "has region") return Boolean(asset.region);
+  if (value === "has church") return Boolean(asset.church);
+  if (value === "has language") return Boolean(asset.language);
+  if (value.startsWith("region:")) return asset.region?.toLowerCase() === value.slice("region:".length).trim();
+  if (value.startsWith("church:")) return asset.church?.toLowerCase() === value.slice("church:".length).trim();
+  if (value.startsWith("language:")) return asset.language?.toLowerCase() === value.slice("language:".length).trim();
+  if (value.startsWith("file:")) return asset.fileExtension?.toLowerCase().replace(/^\./, "") === value.slice("file:".length).trim().replace(/^\./, "");
+  if (value.startsWith("section:") || value.startsWith("collection:")) return assetHasFieldText(asset, value.split(":").slice(1).join(":").trim());
+  if (value.startsWith("ministry:") || value.startsWith("event:")) return assetHasFieldText(asset, value.split(":").slice(1).join(":").trim());
   if (value === "lm photos") return /lm photos/i.test(`${asset.sourceSystem || ""} ${asset.sourceAccount || ""}`);
   if (value === "resourcespace") return Boolean(asset.resourceSpaceId);
   if (value === "photographer") return Boolean(asset.sourceAccount);

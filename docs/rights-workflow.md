@@ -70,6 +70,17 @@ These checks block portal reuse and public review actions. They do not write
 ResourceSpace approval by themselves, and they do not turn pending portal writes
 into authoritative ResourceSpace truth.
 
+## Search And Saved-View Boundaries
+
+Search, filters, saved views, collections, package sections, and discovery
+suggestions are navigation aids. They cannot override per-asset rights, consent,
+domain review, lifecycle, derivative, redaction, or download gates.
+
+When a coworker searches for `public safe`, the portal must return Portal Ready
+records only. Raw `Approved Public` records with missing rights basis, consent,
+domain reviewer, approved channel, derivative, or current lifecycle evidence stay
+in review/debt views instead of broad reuse views.
+
 ## Quality vs Rights vs Publishing
 
 Do not use one field to mean everything.

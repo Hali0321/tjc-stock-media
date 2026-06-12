@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildDiscoveryQuery, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
+import { intentDefinitions, matchesCatalogFilter, savedViewDefinitions } from "@/lib/catalog-language";
 import { fileRequiresAdminIntake, intakeDefaultsToNeedsReview, routeAssetForReview, routeUploadIntakeForReview } from "@/lib/intake-routing";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { buildPackageGovernance } from "@/lib/package-governance";
+import { canSeeAsset } from "@/lib/permissions";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { emptyReviewChecklist } from "@/lib/review-decision-presenter";
 import { missingDomainReviewEvidence } from "@/lib/review-evidence";
@@ -348,6 +350,100 @@ describe("package governance and discovery", () => {
 
     expect(discovery.expandedTerms).toEqual(expect.arrayContaining(["bible", "worship"]));
     expect(matchesDiscoveryQuery(asset(), "sermon slides")).toBe(true);
+  });
+});
+
+describe("Phase 3 mature DAM search primitives", () => {
+  it("maps public-safe intent to portal-ready instead of raw Approved Public", () => {
+    const intent = intentDefinitions.find((item) => item.terms.includes("public safe"));
+    const view = savedViewDefinitions.find((item) => item.id === intent?.view);
+    const portalReady = asset({
+      rightsBasis: "TJC-owned",
+      approvedChannels: ["website", "social"],
+      reuseTier: "stock-safe",
+      visibilityTier: "public",
+      sensitivityClass: "public-safe",
+      rightsNotes: "Rights approved for website and social use."
+    });
+    const rawApproved = asset({
+      rightsBasis: undefined,
+      approvedChannels: [],
+      consentStatus: "Unknown",
+      rightsStatus: "Unknown",
+      rightsNotes: undefined
+    });
+
+    expect(intent?.view).toBe("portal-ready");
+    expect(view?.match(portalReady)).toBe(true);
+    expect(view?.match(rawApproved)).toBe(false);
+    expect(matchesCatalogFilter(rawApproved, "approved public")).toBe(true);
+    expect(matchesCatalogFilter(rawApproved, "public safe")).toBe(false);
+  });
+
+  it("keeps saved views behind role and per-asset visibility policy", () => {
+    const reviewOnly = asset({
+      status: "Needs Review",
+      usageScope: "Do Not Publish",
+      peopleRisk: "Unknown",
+      rightsStatus: "Needs review",
+      consentStatus: "Unknown"
+    });
+    const needsReviewView = savedViewDefinitions.find((item) => item.id === "needs-review");
+
+    expect(needsReviewView?.match(reviewOnly)).toBe(true);
+    expect(canSeeAsset("Viewer", reviewOnly)).toBe(false);
+    expect(canSeeAsset("Reviewer", reviewOnly)).toBe(true);
+  });
+
+  it("matches mature facets without creating new approval truth", () => {
+    const mature = asset({
+      reuseTier: "context-safe",
+      visibilityTier: "reviewer/admin",
+      rightsBasis: "hymn-permission",
+      approvedChannels: ["website", "projection"],
+      sensitivityClass: "testimony-sensitive",
+      consentStatus: "Unknown",
+      church: "Elizabeth",
+      region: "Northeast",
+      language: "Chinese",
+      fileExtension: "jpg",
+      eventSeries: "Evangelical Service",
+      withdrawalStatus: "embargoed",
+      approvalRecheckDate: "2020-01-01"
+    });
+
+    expect(matchesCatalogFilter(mature, "context-safe")).toBe(true);
+    expect(matchesCatalogFilter(mature, "website channel")).toBe(true);
+    expect(matchesCatalogFilter(mature, "hymn permission")).toBe(true);
+    expect(matchesCatalogFilter(mature, "testimony sensitive")).toBe(true);
+    expect(matchesCatalogFilter(mature, "consent review")).toBe(true);
+    expect(matchesCatalogFilter(mature, "region:northeast")).toBe(true);
+    expect(matchesCatalogFilter(mature, "church:elizabeth")).toBe(true);
+    expect(matchesCatalogFilter(mature, "language:chinese")).toBe(true);
+    expect(matchesCatalogFilter(mature, "file:jpg")).toBe(true);
+    expect(matchesCatalogFilter(mature, "event:evangelical")).toBe(true);
+    expect(matchesCatalogFilter(mature, "embargoed")).toBe(true);
+    expect(matchesCatalogFilter(mature, "public safe")).toBe(false);
+  });
+
+  it("keeps Viewer-safe payloads protected when search facets include private provenance", () => {
+    const governed = asset({
+      sourcePath: "/private/source.jpg",
+      masterDrivePath: "/Shared Drives/master.jpg",
+      checksumSha256: "secret-checksum",
+      resourceSpaceId: "1001",
+      sourceFolder: "/Shared Drives/private",
+      importBatch: "Batch 01"
+    });
+    const viewer = assetForRolePayload("Viewer", governed);
+
+    expect(matchesCatalogFilter(governed, "resourcespace")).toBe(true);
+    expect(viewer.sourcePath).toBeUndefined();
+    expect(viewer.masterDrivePath).toBeUndefined();
+    expect(viewer.checksumSha256).toBeUndefined();
+    expect(viewer.resourceSpaceId).toBeUndefined();
+    expect(viewer.sourceFolder).toBeUndefined();
+    expect(viewer.importBatch).toBeUndefined();
   });
 });
 

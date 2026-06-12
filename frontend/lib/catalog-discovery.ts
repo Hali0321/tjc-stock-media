@@ -126,7 +126,9 @@ function suggestedFilters(assets: StockMediaAsset[], activeFilters: string[] = [
   );
   const candidates: SearchResult["discovery"]["suggestedFilters"] = [
     { label: "Portal ready", filter: "portal ready", count: filterCount(assets, "portal ready", activeFilters), kind: "policy" },
-    { label: "Approved public", filter: "approved public", count: filterCount(assets, "approved public", activeFilters), kind: "policy" },
+    { label: "Public safe", filter: "public safe", count: filterCount(assets, "public safe", activeFilters), kind: "policy" },
+    { label: "Website channel", filter: "website channel", count: filterCount(assets, "website channel", activeFilters), kind: "policy" },
+    { label: "Consent review", filter: "consent review", count: filterCount(assets, "consent review", activeFilters), kind: "people" },
     { label: "No people", filter: "no people", count: filterCount(assets, "no people", activeFilters), kind: "people" },
     { label: "Photos", filter: "photo", count: filterCount(assets, "photo", activeFilters), kind: "media" },
     { label: "Graphics", filter: "graphic", count: filterCount(assets, "graphic", activeFilters), kind: "media" },
@@ -136,6 +138,7 @@ function suggestedFilters(assets: StockMediaAsset[], activeFilters: string[] = [
     { label: "Fellowship", filter: "fellowship", count: filterCount(assets, "fellowship", activeFilters), kind: "ministry" },
     { label: "Needs review", filter: "needs review", count: filterCount(assets, "needs review", activeFilters), kind: "workflow" },
     { label: "Rendition gaps", filter: "rendition gap", count: filterCount(assets, "rendition gap", activeFilters), kind: "workflow" },
+    { label: "Lifecycle review", filter: "lifecycle review", count: filterCount(assets, "lifecycle review", activeFilters), kind: "workflow" },
     ...queryFilters.map((filter) => ({ label: filter.replace(/\b\w/g, (letter) => letter.toUpperCase()), filter, count: filterCount(assets, filter, activeFilters), kind: "ministry" as const }))
   ];
   return uniqueSuggestedFilters(candidates)
@@ -171,6 +174,7 @@ function noResultHelp({
     filters: suggestedFilters(availableAssets, filters, query),
     savedViews: [
       { id: "approved-church-wide", label: "Ready to use" },
+      { id: "public-safe", label: "Public safe" },
       { id: "website-hero", label: "Website hero" },
       { id: "sermon-slides", label: "Sermon slides" },
       { id: "children-youth-review", label: "Children/youth review" }
