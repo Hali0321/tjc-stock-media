@@ -13,6 +13,8 @@ type LibraryPaginationProps = {
   loading?: boolean;
   pageSize?: number;
   onPage?: (page: number) => void;
+  onPageSize?: (pageSize: number) => void;
+  density?: "default" | "secondary";
 };
 
 export function LibraryPagination({
@@ -23,7 +25,9 @@ export function LibraryPagination({
   onNext,
   loading,
   pageSize,
-  onPage
+  onPage,
+  onPageSize,
+  density = "default"
 }: LibraryPaginationProps) {
   const effectivePageSize = pageSize || Math.max(1, rangeEnd - rangeStart + 1);
   return (
@@ -33,6 +37,8 @@ export function LibraryPagination({
       total={total}
       pageSize={effectivePageSize}
       loading={loading}
+      onPageSize={onPageSize}
+      density={density}
       onPage={(page) => {
         if (onPage) {
           onPage(page);
