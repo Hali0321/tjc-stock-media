@@ -4,6 +4,9 @@ import { validateAssetMetadataContract } from "@/lib/resourcespace-schema";
 const reviewPlaceholderPattern = /review before sharing|reviewer must approve/i;
 const rightsConcernPattern = /rights unclear|unknown|concern|not confirmed|needs review|review required/i;
 const rightsClearPattern = /rights approved|rights clear|permission confirmed|consent confirmed|tjc-owned|tjc owned|licensed/i;
+const hymnMusicPattern = /hymn|music|choir|livestream|accompaniment/i;
+const sacramentPattern = /sacrament|baptism|footwashing|holy communion|communion|holy spirit|prayer in spirit/i;
+const testimonyPattern = /testimony|pastoral|healing|illness|grief|counseling|spiritual battle/i;
 
 export type AssetGovernanceCounts = {
   visibleToRole: number;
@@ -37,11 +40,11 @@ export function assetNeedsReview(asset: StockMediaAsset) {
 }
 
 export function assetIsArchiveOnly(asset: StockMediaAsset) {
-  return asset.status === "Searchable Archive" || asset.usageScope === "Archive Only";
+  return asset.status === "Searchable Archive" || asset.usageScope === "Archive Only" || asset.reuseTier === "archive-only" || asset.visibilityTier === "archive";
 }
 
 export function assetIsBlocked(asset: StockMediaAsset) {
-  return asset.status === "Do Not Use" || asset.usageScope === "Do Not Use";
+  return asset.status === "Do Not Use" || asset.usageScope === "Do Not Use" || asset.withdrawalStatus === "withdrawn" || asset.withdrawalStatus === "takedown-requested";
 }
 
 export function assetHasCompatibleUsageScope(asset: StockMediaAsset) {
@@ -60,7 +63,7 @@ export function assetIsUnsafeForReuse(asset?: StockMediaAsset) {
 }
 
 export function assetHasChildrenYouthRisk(asset: StockMediaAsset) {
-  return asset.peopleRisk === "Possible minors" || /minor|children|youth/i.test(asset.sensitiveContext || "");
+  return asset.peopleRisk === "Possible minors" || asset.sensitivityClass === "youth-sensitive" || /minor|children|youth|\bRE\b|religious education/i.test(asset.sensitiveContext || "");
 }
 
 export function assetHasSensitiveContext(asset: StockMediaAsset) {
@@ -76,7 +79,76 @@ export function assetHasSensitiveContext(asset: StockMediaAsset) {
     .toLowerCase();
 
   if (!text.trim()) return false;
-  return /sensitive|sacrament|communion|footwashing|baptism|children|youth|minor|privacy|consent concern|do not publish/.test(text);
+  return Boolean(
+    asset.sensitivityClass && asset.sensitivityClass !== "public-safe" ||
+      /sensitive|sacrament|communion|footwashing|baptism|children|youth|minor|privacy|consent concern|do not publish/.test(text)
+  );
+}
+
+function maturePolicyText(asset: StockMediaAsset) {
+  return [
+    asset.sensitiveContext,
+    asset.doctrineSacramentTheme,
+    asset.testimonyTheme,
+    asset.hymnNumberOrTitle,
+    asset.sermonTitle,
+    asset.publicationTitle,
+    asset.rightsNotes,
+    ...(asset.tags || []),
+    ...(asset.tjcTerms || []),
+    ...(asset.usageTerms || [])
+  ].filter(Boolean).join(" ");
+}
+
+export function assetHasHymnMusicRisk(asset: StockMediaAsset) {
+  return asset.rightsBasis === "hymn-license" || asset.rightsBasis === "hymn-permission" || hymnMusicPattern.test(maturePolicyText(asset));
+}
+
+export function assetHasSacramentRisk(asset: StockMediaAsset) {
+  return asset.sensitivityClass === "sacrament-sensitive" || sacramentPattern.test(maturePolicyText(asset));
+}
+
+export function assetHasTestimonyRisk(asset: StockMediaAsset) {
+  return asset.sensitivityClass === "testimony-sensitive" || testimonyPattern.test(maturePolicyText(asset));
+}
+
+export function assetHasConsentEvidence(asset: StockMediaAsset) {
+  if (asset.consentReleaseRecordId?.trim()) return true;
+  return /confirmed|not applicable|documented exception/i.test(`${asset.consentStatus || ""} ${asset.rightsNotes || ""}`);
+}
+
+export function assetHasPublicChannelClearance(asset: StockMediaAsset) {
+  if (!asset.approvedChannels?.length) return true;
+  return asset.approvedChannels.some((channel) => ["website", "social", "print", "projection", "livestream"].includes(channel));
+}
+
+export function assetHasAcceptableRightsBasis(asset: StockMediaAsset) {
+  if (asset.rightsBasis && asset.rightsBasis !== "unknown" && asset.rightsBasis !== "fair-use-internal-only") return true;
+  return rightsClearPattern.test(`${asset.rightsStatus || ""} ${asset.rightsNotes || ""}`);
+}
+
+export function assetHasDomainReviewClearance(asset: StockMediaAsset) {
+  if (assetHasChildrenYouthRisk(asset) && asset.domainReviewer !== "RE/minors") return false;
+  if (assetHasSacramentRisk(asset) && asset.domainReviewer !== "doctrine") return false;
+  if (assetHasTestimonyRisk(asset) && asset.domainReviewer !== "pastoral-sensitivity") return false;
+  if (assetHasHymnMusicRisk(asset) && asset.domainReviewer !== "music-rights") return false;
+  return true;
+}
+
+export function assetLifecycleIsCurrent(asset: StockMediaAsset, now: Date | number = new Date()) {
+  const referenceDate = now instanceof Date ? now : new Date(now);
+  const dateFields = [asset.expirationDate, asset.approvalRecheckDate, asset.expirationOrRecheckDate, asset.rightsExpirationDate, asset.consentExpirationDate];
+  const stale = dateFields.some((value) => {
+    if (!value) return false;
+    const date = new Date(value);
+    return !Number.isNaN(date.getTime()) && date.getTime() < referenceDate.getTime();
+  });
+  if (stale) return false;
+  if (asset.embargoDate) {
+    const embargo = new Date(asset.embargoDate);
+    if (!Number.isNaN(embargo.getTime()) && embargo.getTime() > referenceDate.getTime()) return false;
+  }
+  return asset.withdrawalStatus !== "embargoed" && asset.withdrawalStatus !== "expired";
 }
 
 export function assetHasSourceProvenance(asset: StockMediaAsset) {
@@ -102,6 +174,9 @@ export function assetNeedsRightsReview(asset: StockMediaAsset) {
   const rightsText = `${rightsStatus} ${consentStatus} ${rightsNotes}`;
 
   if (assetIsBlocked(asset)) return true;
+  if (asset.status === "Approved Public" && !assetHasAcceptableRightsBasis(asset)) return true;
+  if (assetHasChildrenYouthRisk(asset) && !assetHasConsentEvidence(asset)) return true;
+  if (assetHasHymnMusicRisk(asset) && (!assetHasAcceptableRightsBasis(asset) || !asset.requiredNotice || !asset.approvedChannels?.length)) return true;
   if (rightsConcernPattern.test(rightsStatus) || rightsConcernPattern.test(consentStatus)) return true;
   if (rightsClearPattern.test(rightsText)) return false;
   if (assetIsApproved(asset)) return true;
@@ -161,11 +236,7 @@ export function assetIsPortalReady(asset: StockMediaAsset) {
 }
 
 export function assetNeedsStaleApprovalReview(asset: StockMediaAsset, now: Date | number = new Date()) {
-  if (asset.expirationOrRecheckDate) {
-    const recheck = new Date(asset.expirationOrRecheckDate);
-    const referenceDate = now instanceof Date ? now : new Date();
-    if (!Number.isNaN(recheck.getTime()) && recheck.getTime() < referenceDate.getTime()) return true;
-  }
+  if (!assetLifecycleIsCurrent(asset, now)) return true;
   if (!assetIsApproved(asset) || !asset.reviewedDate) return false;
   const referenceDate = now instanceof Date ? now : new Date();
   const reviewed = new Date(asset.reviewedDate);
@@ -179,15 +250,23 @@ export function assetPortalBlockers(asset: StockMediaAsset) {
   if (assetIsBlocked(asset)) blockers.push("Do not use");
   if (assetIsArchiveOnly(asset)) blockers.push("Archive only");
   if (asset.status !== "Approved Public") blockers.push("Not Approved Public");
+  if (asset.reuseTier === "context-safe") blockers.push("Context-safe only");
+  if (asset.visibilityTier && asset.visibilityTier !== "public") blockers.push("Visibility not public");
+  if (asset.withdrawalStatus && asset.withdrawalStatus !== "active") blockers.push("Lifecycle blocks reuse");
   contract.missing.forEach((field) => blockers.push(`Metadata contract missing: ${field}`));
   if (!asset.peopleRisk || asset.peopleRisk === "Unknown") blockers.push("People/minors unknown");
   if (assetHasChildrenYouthRisk(asset)) blockers.push("Children/youth review required");
+  if (assetHasChildrenYouthRisk(asset) && !assetHasConsentEvidence(asset)) blockers.push("Consent/release record missing");
   if (assetNeedsSourceReview(asset)) blockers.push("Source not traceable");
   if (assetNeedsRightsReview(asset)) blockers.push("Rights/consent unclear");
   if (!assetHasCompatibleUsageScope(asset)) blockers.push("Usage scope not public-ready");
   if (!assetReviewComplete(asset)) blockers.push("Reviewer/date missing");
   if (assetHasRenditionGap(asset)) blockers.push("Approved derivatives missing");
   if (assetHasSensitiveContext(asset)) blockers.push("Sensitive context review required");
+  if (!assetHasDomainReviewClearance(asset)) blockers.push("Domain reviewer clearance missing");
+  if (assetHasHymnMusicRisk(asset) && !asset.requiredNotice) blockers.push("Required notice missing");
+  if (assetHasHymnMusicRisk(asset) && !asset.approvedChannels?.length) blockers.push("Hymn/music channel clearance missing");
+  if (!assetHasPublicChannelClearance(asset)) blockers.push("Approved channels do not include public reuse");
   if (assetNeedsStaleApprovalReview(asset)) blockers.push("Approval is stale");
   return blockers;
 }
@@ -214,6 +293,8 @@ export function assetGovernancePassport(asset: StockMediaAsset): AssetGovernance
     assetNeedsAiEnrichment(asset) && "AI/tag enrichment needed",
     assetHasTaxonomyDrift(asset) && "Taxonomy drift weakens search",
     asset.duplicateGroup && "Duplicate group needs canonical decision",
+    asset.duplicateSimilarityHint && "Near-duplicate similarity hint needs reviewer/admin decision",
+    asset.suggestedTags?.length && asset.controlledVocabularySource !== "approved-historical-tjc" && "Suggested tags need controlled vocabulary review",
     assetNeedsUsageGuidance(asset) && "Usage guidance missing",
     assetNeedsStaleApprovalReview(asset) && "Approval recheck due",
     ...validateAssetMetadataContract(asset).warnings.map((field) => `Metadata contract warning: ${field}`)

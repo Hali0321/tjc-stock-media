@@ -27,6 +27,7 @@ only.
 | `source_platform` | High-level source, such as Google Photos or Google Drive. |
 | `source_system` | Google Photos, Google Drive, IA DME folder, local copy, etc. |
 | `source_account` | Source account, such as `lm.photo@tjc.org`. |
+| `source_folder` | Shared Drive or source-system folder boundary when album is not enough. |
 | `source_album` | Google Photos album or source folder name. |
 | `source_album_path` | Local/export folder for this album during import. |
 | `source_album_memberships` | All source albums this exact asset appeared in. |
@@ -40,10 +41,12 @@ only.
 | `import_manifest_row_id` | Row ID from batch manifest. |
 | `import_date` | Date imported or audited. |
 | `master_drive_path` | Intended or verified Google Shared Drive master path. |
+| `master_custody_path_status` | Verified, planned, missing, or not exported. Portal uses this as custody evidence without exposing the path to Viewers. |
 | `master_drive_paths_all` | All Shared Drive master paths for exact duplicate album appearances. |
 | `resourcespace_ref` | ResourceSpace resource ID for cross-checking exports. |
 | `duplicate_group` | Group ID for exact or near duplicates. |
 | `duplicate_role` | Canonical, exact duplicate source, near duplicate, crop, edited version, etc. |
+| `duplicate_similarity_hint` | AI or hash/visual hint for reviewer/admin duplicate workflow only. It never deletes or canonizes automatically. |
 
 ## Description / Search
 
@@ -51,6 +54,7 @@ only.
 |---|---|
 | `media_type` | Photo, video, audio, graphic, document. |
 | `event_name` | Church event or album context when known. |
+| `event_series` | Repeating event series, such as Sabbath Service, Evangelical Service, or Student Spiritual Convocation. |
 | `event_date` | Event date when known. |
 | `captured_date` | Capture date from Google Photos details or file metadata. |
 | `captured_date_source` | Google Photos UI, EXIF, filename, album range, or unknown. |
@@ -68,6 +72,14 @@ only.
 | `minors_visible` | Yes, no, unknown. |
 | `sensitive_context` | Prayer counseling, private moment, sacrament, minors, music rights, etc. |
 | `location` | City/church/location when known. |
+| `church` | Local church when known. |
+| `region` | Region or district when known. |
+| `publication_title` | Publication, newsletter, sermon series, or design source when applicable. |
+| `hymn_number_or_title` | Hymn number/title when music, lyric, choir, accompaniment, or service media includes hymn content. |
+| `sermon_title` | Sermon title when media is tied to a sermon or sermon clip. |
+| `religious_education_level` | RE/youth class or level when applicable. |
+| `language` | Language of visible text, captions, audio, or publication. |
+| `version_or_edition` | Version, edition, translation, or template version. |
 
 ## Rights / Review
 
@@ -88,15 +100,37 @@ only.
 | `rights_basis` | TJC-owned, contributor license, public domain, jurisdiction-limited public domain, hymn license, hymn permission, fair use internal only, unknown. |
 | `approved_channels` | Website, livestream, projection, choir upload, print, social, internal training, limited-share link, archive only. |
 | `required_notice` | Copyright/license notice required for hymn, publication, third-party, or channel-specific reuse. |
-| `hymn_number_or_title` | Hymn number/title when music, lyric, choir, accompaniment, or service media includes hymn content. |
 | `rights_territory` | Worldwide, country-specific, jurisdiction-limited, unknown. |
 | `consent_status` | Confirmed, not confirmed, not applicable, unknown. |
 | `consent_release_record_id` | Traceable consent/release record or documented exception when identifiable people or minors appear. |
 | `reviewed_by` | Rights reviewer name/account. |
 | `reviewed_date` | Date reviewed. |
 | `approval_notes` | Why this asset is safe or restricted. |
+| `publish_date` | Date an approved asset or derivative may begin reuse. |
+| `embargo_date` | Future date before which reuse remains blocked. |
+| `expiration_date` | Date after which reuse expires. |
+| `approval_recheck_date` | Date a reviewer must recheck approval. |
 | `expiration_or_recheck_date` | Date to revisit rights if needed. |
+| `rights_expiration_date` | Date rights basis expires. |
+| `consent_expiration_date` | Date consent/release expires if limited. |
+| `withdrawal_status` | Active, withdrawn, takedown requested, embargoed, or expired. Withdrawal/takedown blocks reuse without deleting the record. |
 | `domain_reviewer` | Doctrine, music rights, RE/minors, pastoral sensitivity, archive, or DAM reviewer responsible for specialized approval. |
+
+## Mature Policy Rules
+
+- `public safe` in search or UI means Portal Ready, not raw `Approved Public`.
+- Portal Ready requires source/provenance, rights basis, people/minors state,
+  reviewer/date, compatible usage scope, approved derivative, current lifecycle,
+  and no explicit TJC sensitivity blocker.
+- `context-safe` assets may be useful for their original context or channel, but
+  they are not stock-safe and must not be treated as broad public reuse.
+- `archive-only` assets remain preserved and reviewer/admin searchable, but they
+  cannot download as normal approved copies.
+- Youth/minors, sacrament, testimony/pastoral, and hymn/music assets require the
+  matching domain-review evidence before public reuse.
+- Hymn/music assets need rights basis, approved channel, and required notice.
+- Expired, embargoed, withdrawn, takedown-requested, or recheck-due assets
+  degrade to review or block reuse.
 
 ## Derivatives / Format Handling
 
@@ -130,6 +164,8 @@ Policy: preserve originals as masters. If HEIC preview fails, attach a metadata-
 | `ai_quality_suggestion` | Suggested quality/usefulness status. |
 | `ai_people_or_minor_flag` | Suggested people/minor risk flag. |
 | `human_ai_decision` | Accepted, edited, rejected, or not reviewed. |
+| `suggested_tags` | Suggested tags from intake, reviewer, or AI queue. These are not final taxonomy. |
+| `controlled_vocabulary_source` | Whether suggestions came from approved historical TJC vocabulary, reviewer suggestion, or unknown source. |
 
 ## Important Rule
 

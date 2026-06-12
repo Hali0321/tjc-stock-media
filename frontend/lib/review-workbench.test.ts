@@ -109,8 +109,33 @@ describe("trust and redaction decisions", () => {
   });
 
   it("redacts source custody and ResourceSpace internals from Viewer payloads", () => {
-    const viewer = assetForRolePayload("Viewer", asset());
-    const reviewer = assetForRolePayload("Reviewer", asset());
+    const matureAsset = asset({
+      sourceFolder: "/Shared Drives/private/source-folder",
+      importBatch: "MVP Batch 01",
+      masterCustodyPathStatus: "verified",
+      publishDate: "2026-06-01",
+      embargoDate: "2026-07-01",
+      expirationDate: "2026-12-31",
+      approvalRecheckDate: "2026-09-01",
+      rightsExpirationDate: "2026-12-31",
+      consentExpirationDate: "2026-12-31",
+      withdrawalStatus: "active",
+      doctrineSacramentTheme: "Holy Communion",
+      hymnNumberOrTitle: "Hymn 469",
+      sermonTitle: "Sabbath sermon",
+      testimonyTheme: "healing",
+      religiousEducationLevel: "RE youth",
+      church: "Local church",
+      region: "Region",
+      publicationTitle: "Newsletter",
+      language: "English",
+      versionOrEdition: "v1",
+      duplicateSimilarityHint: "near duplicate",
+      suggestedTags: ["worship-ready"],
+      controlledVocabularySource: "review-suggestion"
+    });
+    const viewer = assetForRolePayload("Viewer", matureAsset);
+    const reviewer = assetForRolePayload("Reviewer", matureAsset);
     const viewerSource = sourceForRole("Viewer", {
       adapter: "resourcespace-api",
       label: "ResourceSpace",
@@ -122,9 +147,35 @@ describe("trust and redaction decisions", () => {
     expect(viewer.sourcePath).toBeUndefined();
     expect(viewer.checksumSha256).toBeUndefined();
     expect(viewer.imageUrls?.download).toBeUndefined();
+    expect(viewer.masterCustodyPathStatus).toBeUndefined();
+    expect(viewer.publishDate).toBeUndefined();
+    expect(viewer.embargoDate).toBeUndefined();
+    expect(viewer.expirationDate).toBeUndefined();
+    expect(viewer.approvalRecheckDate).toBeUndefined();
+    expect(viewer.rightsExpirationDate).toBeUndefined();
+    expect(viewer.consentExpirationDate).toBeUndefined();
+    expect(viewer.withdrawalStatus).toBeUndefined();
+    expect(viewer.doctrineSacramentTheme).toBeUndefined();
+    expect(viewer.hymnNumberOrTitle).toBeUndefined();
+    expect(viewer.sermonTitle).toBeUndefined();
+    expect(viewer.testimonyTheme).toBeUndefined();
+    expect(viewer.religiousEducationLevel).toBeUndefined();
+    expect(viewer.church).toBeUndefined();
+    expect(viewer.region).toBeUndefined();
+    expect(viewer.publicationTitle).toBeUndefined();
+    expect(viewer.language).toBeUndefined();
+    expect(viewer.versionOrEdition).toBeUndefined();
+    expect(viewer.duplicateSimilarityHint).toBeUndefined();
+    expect(viewer.sourceFolder).toBeUndefined();
+    expect(viewer.importBatch).toBeUndefined();
+    expect(viewer.suggestedTags).toBeUndefined();
+    expect(viewer.controlledVocabularySource).toBeUndefined();
     expect(viewerSource.label).toBe("Media library");
     expect(reviewer.resourceSpaceId).toBe("1001");
     expect(reviewer.sourcePath).toBeUndefined();
+    expect(reviewer.masterCustodyPathStatus).toBe("verified");
+    expect(reviewer.doctrineSacramentTheme).toBe("Holy Communion");
+    expect(reviewer.duplicateSimilarityHint).toBe("near duplicate");
   });
 });
 

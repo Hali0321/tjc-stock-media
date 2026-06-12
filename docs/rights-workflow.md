@@ -9,6 +9,11 @@ Every imported asset starts as:
 - `public_safe = Unknown`
 - `usage_scope = Do Not Publish`
 - `quality_status = Unreviewed`
+- source provenance captured when available: source folder/account, import batch,
+  checksum, original filename, and master custody status
+
+This default also applies to bulk intake and large video/audio admin intake.
+Intake may route work to reviewers, but it never publishes media.
 
 ## Roles
 
@@ -30,6 +35,9 @@ Every imported asset starts as:
 | Unknown people or children default to Needs Review. | Consent risk. |
 | No asset goes to Approved Public without metadata. | Prevents looks-fine approvals. |
 | Portal review action is not ResourceSpace truth until live writeback is confirmed by re-read. | Prevents queued sidecar state from masquerading as DAM state. |
+| `public safe` means Portal Ready, not raw `Approved Public`. | Portal Ready requires rights, people/minors, review, derivative, and lifecycle evidence. |
+| AI suggestions stay separate from human-approved fields. | AI cannot decide rights, consent, minors, doctrine, hymn clearance, reviewer identity, or public approval. |
+| Smart routing creates review reasons only. | Routing never auto-publishes. |
 
 ## Quality vs Rights vs Publishing
 
@@ -41,8 +49,36 @@ Do not use one field to mean everything.
 | `rights_status` | Do we know the source/use rights? |
 | `usage_scope` | Where may it be used? |
 | `publish_status` | What should users do with it operationally? |
+| `reuse_tier` | Is it stock-safe, context-safe, or archive-only? |
+| `visibility_tier` | Which roles may discover or preview it? |
+| `approved_channels` | Which channels are cleared, such as website, livestream, projection, print, social, or archive only? |
+| `sensitivity_class` | Which TJC-specific review domain owns the risk? |
 
 Low-use but safe media should be `Archive - Not Promoted`, not `Do Not Use`. Reserve `Do Not Use` for rights, safety, privacy, or mission-alignment problems.
+
+## Portal Ready Rules
+
+An asset is Portal Ready only when all required evidence is current:
+
+- ResourceSpace status is `Approved Public`.
+- Reuse tier is stock-safe or legacy evidence clearly supports broad public use.
+- Usage scope allows public or public/internal use.
+- Rights basis is known and not internal-only.
+- Approved channels allow the intended public use.
+- People/minors state is reviewed.
+- Children/youth risk has consent/release evidence and RE/minors domain review.
+- Sacrament-sensitive media has doctrine review.
+- Testimony/pastoral-sensitive media has pastoral sensitivity review.
+- Hymn/music media has music-rights review, channel clearance, and required
+  notice.
+- Reviewer, review date, and notes exist.
+- Approved derivative/download copy exists.
+- Approval is not expired, embargoed, withdrawn, takedown-requested, or due for
+  recheck.
+
+Context-safe assets can be requested for original context or selected channels,
+but they are not stock-safe. Archive-only assets are preserved for history and
+review, not normal reuse.
 
 ## Review States
 
@@ -74,6 +110,8 @@ Keep these in `Needs Review` until a reviewer approves:
 - unknown people
 - volunteer-created media
 - third-party design assets
+- expired, embargoed, withdrawn, or takedown-requested assets
+- context-safe assets requested for broad public use
 
 ## Archive Tiers
 
@@ -84,3 +122,19 @@ Keep these in `Needs Review` until a reviewer approves:
 | Cold Archive / Do Not Use | Duplicate, low-value, restricted, risky, or unreviewed assets. |
 
 Full archive launch should use tiers. Do not promise that every imported archive file is fully reviewed and usable.
+
+## AI And Vocabulary Boundary
+
+AI may suggest titles, OCR, tags, quality hints, duplicate hints, people/minors
+risk hints, sensitivity hints, translations, and captions. These suggestions
+must stay in `ai_*` or suggestion fields until a human reviewer accepts, edits,
+or rejects them. Suggested tags should come from approved historical TJC
+vocabulary when possible; sparse or drifting vocabulary creates review tasks
+instead of final free-form taxonomy.
+
+## Duplicate And Similarity Boundary
+
+Exact checksum duplicates, near-duplicate hints, crop/derivative hints, and
+similarity candidates are reviewer/admin workflow signals. They may help choose
+a canonical record, but they never delete, hide, move, or rewrite source media
+automatically.

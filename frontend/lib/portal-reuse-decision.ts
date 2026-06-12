@@ -2,9 +2,14 @@ import type { DemoRole, MetadataConfidence, ReuseBlocker, ReuseDecision, ReuseSt
 import {
   assetHasChildrenYouthRisk,
   assetHasCompatibleUsageScope,
+  assetHasConsentEvidence,
+  assetHasDomainReviewClearance,
+  assetHasHymnMusicRisk,
+  assetHasPublicChannelClearance,
   assetHasRenditionGap,
   assetHasSensitiveContext,
   assetHasSourceProvenance,
+  assetLifecycleIsCurrent,
   assetIsArchiveOnly,
   assetIsBlocked,
   assetIsApproved,
@@ -182,14 +187,21 @@ export function reuseBlockers(asset: StockMediaAsset) {
 
   if (assetIsBlocked(asset)) addBlocker("blocked-do-not-use");
   if (assetIsArchiveOnly(asset)) addBlocker("blocked-archive");
+  if (asset.reuseTier === "context-safe") addBlocker("blocked-needs-review");
+  if (asset.visibilityTier && asset.visibilityTier !== "public") addBlocker("blocked-needs-review");
+  if (!assetLifecycleIsCurrent(asset)) addBlocker("blocked-reviewer-date");
   if (assetNeedsReview(asset) || !assetIsApproved(asset)) addBlocker("blocked-needs-review");
   if (!trustedPublicImport && !assetHasSourceProvenance(asset)) addBlocker("blocked-source");
   if (!trustedPublicImport && assetNeedsRightsReview(asset)) addBlocker("blocked-rights");
   if (!assetHasCompatibleUsageScope(asset)) addBlocker("blocked-needs-review");
   if (!trustedPublicImport && (!asset.peopleRisk || asset.peopleRisk === "Unknown" || assetHasChildrenYouthRisk(asset))) addBlocker("blocked-people-minors");
+  if (assetHasChildrenYouthRisk(asset) && !assetHasConsentEvidence(asset)) addBlocker("blocked-people-minors");
   if (!trustedPublicImport && (!asset.reviewer || !asset.reviewedDate)) addBlocker("blocked-reviewer-date");
   if (assetHasRenditionGap(asset)) addBlocker("blocked-derivative");
   if (assetHasSensitiveContext(asset)) addBlocker("blocked-sensitive");
+  if (!assetHasDomainReviewClearance(asset)) addBlocker("blocked-sensitive");
+  if (assetHasHymnMusicRisk(asset) && (!asset.requiredNotice || !asset.approvedChannels?.length)) addBlocker("blocked-rights");
+  if (!assetHasPublicChannelClearance(asset)) addBlocker("blocked-rights");
   if (assetNeedsStaleApprovalReview(asset)) addBlocker("blocked-reviewer-date");
   return blockers;
 }
@@ -222,7 +234,7 @@ export function buildReuseDecision(asset: StockMediaAsset): ReuseDecision {
     state,
     label,
     summary: publicReady
-      ? "Source, rights, people/minors, review, and approved-copy checks pass."
+      ? "Source, rights, people/minors, channel, lifecycle, review, and approved-copy checks pass."
       : internalReady
         ? "Approved for internal ministry use with required checks complete."
         : blockers.length
