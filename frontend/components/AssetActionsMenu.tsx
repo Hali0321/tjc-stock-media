@@ -14,7 +14,7 @@ type AssetActionsMenuProps = {
   label?: string;
 };
 
-export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace, canExposeResourceSpaceId = true, label = "Asset actions" }: AssetActionsMenuProps) {
+export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace, canExposeResourceSpaceId = true, label = "More actions" }: AssetActionsMenuProps) {
   const [status, setStatus] = useState("");
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
   const recordLabel = canExposeResourceSpaceId ? "ResourceSpace ID" : "media record ID";
