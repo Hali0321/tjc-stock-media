@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildDiscoveryQuery, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
+import { fileRequiresAdminIntake, intakeDefaultsToNeedsReview, routeAssetForReview, routeUploadIntakeForReview } from "@/lib/intake-routing";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { buildPackageGovernance } from "@/lib/package-governance";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
@@ -176,6 +177,66 @@ describe("trust and redaction decisions", () => {
     expect(reviewer.masterCustodyPathStatus).toBe("verified");
     expect(reviewer.doctrineSacramentTheme).toBe("Holy Communion");
     expect(reviewer.duplicateSimilarityHint).toBe("near duplicate");
+  });
+});
+
+describe("Phase 1B intake routing primitives", () => {
+  it("keeps browser and batch intake non-publishing while routing large media to admin intake", () => {
+    const defaults = intakeDefaultsToNeedsReview();
+    const reasons = routeUploadIntakeForReview({
+      files: [{ name: "choir-service.mp4", size: 42_000_000, type: "video/mp4" }],
+      eventName: "Sabbath baptism service",
+      ministry: "Choir",
+      peopleVisible: "Unknown",
+      minorsVisible: "Unknown",
+      suggestedTags: "hymn,not-yet-approved",
+      intakeNotes: "Hymns of Praise livestream clip from baptism service."
+    });
+
+    expect(defaults).toEqual({ status: "Needs Review", usageScope: "Do Not Publish", publishable: false });
+    expect(fileRequiresAdminIntake({ name: "choir-service.mp4", size: 42_000_000, type: "video/mp4" })).toBe(true);
+    expect(reasons.map((reason) => reason.id)).toEqual(expect.arrayContaining([
+      "large-media-admin-intake",
+      "doctrine-sacrament-review",
+      "music-rights-review",
+      "minors-consent-review",
+      "source-provenance-review",
+      "taxonomy-review"
+    ]));
+    expect(reasons.every((reason) => reason.nonPublishing)).toBe(true);
+  });
+
+  it("routes TJC recognition and AI hints to review without changing final approval truth", () => {
+    const risky = asset({
+      status: "Needs Review",
+      usageScope: "Do Not Publish",
+      peopleRisk: "Unknown",
+      sourcePath: undefined,
+      sourceAccount: undefined,
+      checksumSha256: undefined,
+      originalFilename: undefined,
+      imageUrls: { small: "/small.jpg", card: "/card.jpg", collection: "/collection.jpg", detail: "/detail.jpg" },
+      tags: ["uncurated"],
+      tjcTerms: ["Testimony"],
+      doctrineSacramentTheme: "Holy Communion",
+      hymnNumberOrTitle: "Hymn 469",
+      aiVisibleTagSuggestions: ["baptism"],
+      controlledVocabularySource: "review-suggestion"
+    });
+
+    const reasons = routeAssetForReview(risky);
+
+    expect(reasons.map((reason) => reason.id)).toEqual(expect.arrayContaining([
+      "doctrine-sacrament-review",
+      "music-rights-review",
+      "minors-consent-review",
+      "source-provenance-review",
+      "rendition-readiness-review",
+      "taxonomy-review",
+      "ai-suggestion-review"
+    ]));
+    expect(buildPortalReuseDecision(risky, "Viewer").reuse.state).not.toBe("portal-ready");
+    expect(reasons.every((reason) => reason.nonPublishing)).toBe(true);
   });
 });
 

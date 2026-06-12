@@ -39,6 +39,19 @@ Intake may route work to reviewers, but it never publishes media.
 | AI suggestions stay separate from human-approved fields. | AI cannot decide rights, consent, minors, doctrine, hymn clearance, reviewer identity, or public approval. |
 | Smart routing creates review reasons only. | Routing never auto-publishes. |
 
+## Smart Routing Boundaries
+
+Smart routing is an assignment aid. It may label intake or assets with review
+reasons such as doctrine/sacrament, music-rights, minors/consent, source
+provenance, rendition readiness, taxonomy review, large-media admin intake, or
+AI suggestion review. Each reason explains why a reviewer should look next.
+
+Routing does not write ResourceSpace approval, does not change public/internal
+status, does not clear rights or consent, and does not turn `Approved Public`
+into Portal Ready. TJC recognition terms such as baptism, Holy Communion, Hymns
+of Praise, sermon, testimony, RE, doctrine, language, or version/edition route
+to safer review queues only.
+
 ## Quality vs Rights vs Publishing
 
 Do not use one field to mean everything.

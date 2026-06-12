@@ -118,6 +118,29 @@ only.
 
 ## Mature Policy Rules
 
+## Intake And Routing Primitives
+
+Browser intake, folder intake, bulk manifests, and large video/audio admin intake
+all create review work; they do not create public-ready media. New intake
+defaults to `publish_status = Needs Review` and `usage_scope = Do Not Publish`.
+Large video/audio and files over the browser limit route to Shared Drive/admin
+intake so originals stay under master custody.
+
+Smart routing reasons are explainable hints:
+
+| Routing reason | Trigger examples | Review owner |
+|---|---|---|
+| Doctrine/sacrament review | Baptism, footwashing, Holy Communion, Holy Spirit, doctrine terms. | Doctrine reviewer |
+| Music/hymn rights review | Hymns of Praise, choir, music, livestream, worship audio/video. | Music-rights reviewer |
+| Minors/consent review | Children/youth, RE, unknown people/minors fields. | RE/minors reviewer |
+| Source provenance review | Missing source folder/account, import batch, checksum, original filename, or custody status. | Source reviewer |
+| Rendition readiness review | Missing approved copy, derivative URL, or dimensions. | DAM reviewer |
+| Taxonomy review | Sparse tags or tags outside approved historical TJC vocabulary. | Taxonomy manager |
+| AI suggestion review | AI or suggestion-only metadata exists. | DAM reviewer |
+
+Routing never sets final rights, consent, minors, doctrine, hymn clearance,
+public approval, reviewer identity, or Portal Ready state.
+
 - `public safe` in search or UI means Portal Ready, not raw `Approved Public`.
 - Portal Ready requires source/provenance, rights basis, people/minors state,
   reviewer/date, compatible usage scope, approved derivative, current lifecycle,
