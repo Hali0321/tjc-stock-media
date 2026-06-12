@@ -29,6 +29,8 @@ export type AuditEventType =
   | "batch_action_denied"
   | "batch_action_previewed"
   | "admin_denied"
+  | "beta_auth_login"
+  | "beta_auth_logout"
   | "beta_feedback_submitted"
   | "beta_feedback_triaged";
 
@@ -71,6 +73,8 @@ const auditEventTypes: AuditEventType[] = [
   "batch_action_denied",
   "batch_action_previewed",
   "admin_denied",
+  "beta_auth_login",
+  "beta_auth_logout",
   "beta_feedback_submitted",
   "beta_feedback_triaged"
 ];

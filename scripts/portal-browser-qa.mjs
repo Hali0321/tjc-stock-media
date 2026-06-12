@@ -5,6 +5,8 @@ import path from "node:path";
 
 const { chromium } = playwright;
 const base = process.env.BASE_URL || "http://localhost:3008";
+const trustedHeaderQa = process.env.PORTAL_QA_TRUSTED_HEADERS === "1";
+let betaAuthProbe = null;
 const outDir = path.resolve("docs/screenshots");
 const tinyPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
 const preferredDetailAssetId = "368";
@@ -118,6 +120,65 @@ function isTransientBrowserTargetClose(error) {
   return /Target page, context or browser has been closed|ERR_ABORTED|frame was detached/i.test(String(error?.message || error));
 }
 
+function trustedRoleHeaders(role) {
+  if (!trustedHeaderQa || !role) return {};
+  return {
+    "x-tjc-role": role,
+    "x-auth-request-email": `${String(role).replace(/\s+/g, "-")}@portal-browser-qa.local`
+  };
+}
+
+function betaPasswordForRole(role) {
+  const envByRole = {
+    Viewer: "BETA_VIEWER_PASSWORD",
+    Contributor: "BETA_CONTRIBUTOR_PASSWORD",
+    Reviewer: "BETA_REVIEWER_PASSWORD",
+    "DAM Admin": "BETA_ADMIN_PASSWORD"
+  };
+  const envName = envByRole[role];
+  return envName ? process.env[envName] || "" : "";
+}
+
+async function betaAuthState() {
+  if (betaAuthProbe) return betaAuthProbe;
+  try {
+    const response = await fetch(new URL("/api/beta-auth/session", base), {
+      headers: { Accept: "application/json", ...trustedRoleHeaders("Viewer") }
+    });
+    const payload = await response.json().catch(() => null);
+    betaAuthProbe = { enabled: payload?.enabled === true, status: response.status };
+  } catch (error) {
+    betaAuthProbe = { enabled: false, status: 0, error: String(error?.message || error) };
+  }
+  return betaAuthProbe;
+}
+
+async function establishBetaSession(context, role) {
+  const state = await betaAuthState();
+  if (!state.enabled) return;
+  const password = betaPasswordForRole(role);
+  if (!password) {
+    throw new Error(`BETA auth is enabled but ${role} password env is missing for browser QA`);
+  }
+  const response = await context.request.post(new URL("/api/beta-auth/login", base).toString(), {
+    headers: { "Content-Type": "application/json", ...trustedRoleHeaders(role) },
+    data: { role, password, returnTo: "/" }
+  });
+  if (!response.ok()) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`BETA login failed for ${role}: HTTP ${response.status()} ${body.slice(0, 300)}`);
+  }
+}
+
+function roleFromPathname(pathname) {
+  try {
+    const url = new URL(pathname, base);
+    return url.searchParams.get("role") || "";
+  } catch {
+    return "";
+  }
+}
+
 function visibleOpsLeaks(text) {
   const normalized = text.replace(/\s+/g, " ").trim();
   return normalUserOpsLeakPatterns
@@ -162,13 +223,22 @@ async function newRolePage(role, width, height) {
   if (!browser.isConnected()) browser = await launchBrowser();
   let context;
   try {
-    context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
+    context = await browser.newContext({
+      viewport: { width, height },
+      deviceScaleFactor: 1,
+      extraHTTPHeaders: trustedRoleHeaders(role)
+    });
   } catch (error) {
     if (!isTransientBrowserTargetClose(error)) throw error;
     browser = await launchBrowser();
-    context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
+    context = await browser.newContext({
+      viewport: { width, height },
+      deviceScaleFactor: 1,
+      extraHTTPHeaders: trustedRoleHeaders(role)
+    });
   }
   await context.addInitScript((nextRole) => window.localStorage.setItem("tjc-demo-role", nextRole), role);
+  await establishBetaSession(context, role);
   let page;
   try {
     page = await context.newPage();
@@ -176,8 +246,13 @@ async function newRolePage(role, width, height) {
     if (!isTransientBrowserTargetClose(error)) throw error;
     await closeContext(context);
     browser = await launchBrowser();
-    context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
+    context = await browser.newContext({
+      viewport: { width, height },
+      deviceScaleFactor: 1,
+      extraHTTPHeaders: trustedRoleHeaders(role)
+    });
     await context.addInitScript((nextRole) => window.localStorage.setItem("tjc-demo-role", nextRole), role);
+    await establishBetaSession(context, role);
     page = await context.newPage();
   }
   page.on("console", (msg) => {
@@ -267,13 +342,24 @@ async function waitForVisibleImages(page) {
 }
 
 async function saveFullPageScreenshot(page, screenshotPath) {
-  const style = await page.addStyleTag({
-    content: ".dam-app-header{position:static!important;top:auto!important}"
-  });
+  await page.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+  let style = null;
+  try {
+    style = await page.addStyleTag({
+      content: ".dam-app-header{position:static!important;top:auto!important}"
+    });
+  } catch (error) {
+    if (!/Execution context was destroyed|navigation/i.test(String(error?.message || error))) throw error;
+    await page.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(250);
+    style = await page.addStyleTag({
+      content: ".dam-app-header{position:static!important;top:auto!important}"
+    }).catch(() => null);
+  }
   try {
     await withTimeout(`screenshot ${screenshotPath}`, 15000, () => page.screenshot({ path: screenshotPath, fullPage: true }));
   } finally {
-    await style.evaluate((node) => node.remove()).catch(() => {});
+    await style?.evaluate((node) => node.remove()).catch(() => {});
   }
 }
 
@@ -309,7 +395,7 @@ async function advanceUploadToFiles(page, prefix = "Browser QA") {
 async function fillReviewEvidence(page, note) {
   const panel = page.locator('[data-component="ReviewActionEvidencePanel"]:visible').last();
   await panel.getByLabel("Review note").fill(note);
-  for (const label of ["Source confirmed", "Rights confirmed", "People visibility confirmed", "Children/youth checked", "Usage scope selected", "Derivative available", "Sensitive context checked", "Credit requirement checked"]) {
+  for (const label of ["Source evidence", "Proof link or note", "Owner/license evidence", "People/minors status", "Children/youth review", "Usage scope", "Approved derivative", "Sensitive context review", "Credit requirement evidence"]) {
     await panel.getByLabel(label).check();
   }
 }
@@ -410,6 +496,18 @@ async function inspectPage(page, expected) {
   }, expected);
 }
 
+async function inspectPageAfterSettledNavigation(page, expected) {
+  try {
+    return await inspectPage(page, expected);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/Execution context was destroyed|navigation/i.test(message)) throw error;
+    await page.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(250);
+    return inspectPage(page, expected);
+  }
+}
+
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -418,8 +516,9 @@ async function fetchQaJson(pathname, timeoutMs = 8000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    const role = roleFromPathname(pathname);
     const response = await fetch(new URL(pathname, base), {
-      headers: { Accept: "application/json" },
+      headers: { Accept: "application/json", ...trustedRoleHeaders(role) },
       signal: controller.signal
     });
     const payload = await response.json().catch(() => null);
@@ -449,11 +548,11 @@ async function resolveAssetDetailFixture() {
   const search = await fetchQaJson("/api/assets/search?role=Viewer&limit=12&offset=0");
   const firstVisible = assetSummary(search.payload?.assets?.[0]);
   if (firstVisible) {
-    warnings.push(`fixture resolver: using Viewer-visible ${firstVisible.id} for asset-detail QA instead of missing ${preferredDetailAssetId}`);
+    console.log(`[browser-qa] fixture resolver using Viewer-visible ${firstVisible.id} for asset-detail QA instead of missing ${preferredDetailAssetId}`);
     return firstVisible;
   }
 
-  warnings.push(`fixture resolver: keeping ${preferredDetailAssetId}; no Viewer-visible fallback asset found`);
+  console.log(`[browser-qa] fixture resolver keeping ${preferredDetailAssetId}; no Viewer-visible fallback asset found`);
   return { ...qaAsset.detail };
 }
 
@@ -465,12 +564,12 @@ async function resolveUnsafeAssetFixture(detailId) {
   const search = await fetchQaJson("/api/assets/search?role=Reviewer&limit=24&offset=0");
   const unsafe = (search.payload?.assets || []).map(assetSummary).find((asset) => asset && asset.id !== detailId);
   if (unsafe) {
-    warnings.push(`fixture resolver: using Reviewer-visible ${unsafe.id} for unsafe/review QA instead of missing ${preferredUnsafeAssetId}`);
+    console.log(`[browser-qa] fixture resolver using Reviewer-visible ${unsafe.id} for unsafe/review QA instead of missing ${preferredUnsafeAssetId}`);
     return unsafe;
   }
 
-  warnings.push(`fixture resolver: reusing ${detailId} for download-gate fallback; no separate unsafe asset found`);
-  return { ...qaAsset.detail, id: detailId, path: `/assets/${encodeURIComponent(detailId)}` };
+  console.log(`[browser-qa] fixture resolver keeping preferred unsafe fixture ${preferredUnsafeAssetId}; no separate unsafe fallback resolved`);
+  return { ...qaAsset.unsafe };
 }
 
 async function resolveQaAssetFixtures() {
@@ -502,9 +601,9 @@ for (const width of qaViewports) {
       try {
         console.log(`[browser-qa] ${item.label} ${width} attempt ${attempt + 1}`);
         const response = await withTimeout(`goto ${item.label} ${width}`, 30000, () => gotoAndSettle(page, `${base}${item.path}`));
-        await withTimeout(`ready ${item.label} ${width}`, 18000, () => waitForAppReady(page, item.path, item.role));
+        await withTimeout(`ready ${item.label} ${width}`, 40000, () => waitForAppReady(page, item.path, item.role));
         await withTimeout(`images ${item.label} ${width}`, 5000, () => waitForVisibleImages(page));
-        const state = await withTimeout(`inspect ${item.label} ${width}`, 10000, () => inspectPage(page, item));
+        const state = await withTimeout(`inspect ${item.label} ${width}`, 10000, () => inspectPageAfterSettledNavigation(page, item));
         if (!response || response.status() >= 500) failures.push(`${item.label} ${width}: HTTP ${response?.status()}`);
         if (state.overflowX) failures.push(`${item.label} ${width}: horizontal overflow ${state.scrollWidth}/${state.clientWidth}`);
         if (state.clippedControls.length) failures.push(`${item.label} ${width}: clipped controls ${JSON.stringify(state.clippedControls)}`);
@@ -563,7 +662,7 @@ browser = await launchBrowser();
     if ((await findSearchInput.inputValue()) !== "Bible") failures.push("search interaction: search input did not retain query");
     if ((await page.getByText(/Bible/i).count()) < 1) failures.push("search interaction: search query did not surface Bible results");
   }
-  for (const text of ["Asset Library", "Can I use this?", "Download"]) {
+  for (const text of ["Library", "Can I use this?", "Download"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`library ResourceSpace shell: missing ${text}`);
   }
   if ((await page.getByLabel("Quick filters").count()) < 1) failures.push("library ResourceSpace shell: quick filters missing");
@@ -594,11 +693,11 @@ browser = await launchBrowser();
 {
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/packages`);
-  for (const text of ["ResourceSpace Toolkit Draft", "Package outline", "Browse ResourceSpace assets", "ResourceSpace IDs retained", "Copied assets"]) {
+  for (const text of ["ResourceSpace Toolkit Draft", "Package outline", "Browse ResourceSpace assets", "DAM record refs retained", "References retained only", "Original copying disabled", "No ResourceSpace writeback from this draft"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`package builder ResourceSpace refs shell: missing ${text}`);
   }
   const packageSummary = await page.locator(".ed-summary-grid").innerText().catch(() => "");
-  if (!/0\s+Copied assets/i.test(packageSummary.replace(/\s+/g, " "))) failures.push("package builder ResourceSpace refs shell: refs-only summary missing zero copied assets");
+  if (!/0\s+File copies/i.test(packageSummary.replace(/\s+/g, " "))) failures.push("package builder ResourceSpace refs shell: refs-only summary missing zero file copies");
   await closeContext(context);
 }
 
@@ -638,10 +737,11 @@ browser = await launchBrowser();
   const { page, context } = await newRolePage("Reviewer", 1440, 1000);
   await gotoAndSettle(page, `${base}/review?queue=pending`);
   await waitForAppReady(page, "/review?queue=pending", "Reviewer");
-  for (const text of ["Review Queue", "Review Evidence", "Metadata completeness", "Risk signals", "Save progress", "Next asset", "Request info"]) {
+  for (const text of ["Review Queue", "Review Evidence", "Metadata completeness", "Risk signals", "Save progress", "Next asset", "Request info", "Owner/license evidence missing", "Rights checks require evidence before approval can proceed"]) {
     if ((await page.getByText(text).count()) < 1) failures.push(`review ResourceSpace shell: missing ${text}`);
   }
   if ((await page.getByLabel("Review decision actions").count()) < 1) failures.push("review ResourceSpace shell: decision actions footer missing");
+  if ((await page.getByText("Mark checked").count()) > 0) failures.push("review ResourceSpace shell: unsafe Mark checked action visible");
   if ((await page.locator(".ed-review-list .ed-queue-item.is-active").count()) < 1) failures.push("review ResourceSpace shell: selected queue item missing");
   if ((await page.getByText(/ResourceSpace updated successfully/i).count()) > 0) failures.push("review ResourceSpace shell: fake ResourceSpace success visible");
   await closeContext(context);

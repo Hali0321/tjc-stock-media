@@ -35,7 +35,7 @@ export type ReviewActionBackend = (typeof reviewActions)[number]["backend"];
 
 export const reviewQueues = [
   { id: "pending", label: "Missing copyright evidence", description: "Evidence packet incomplete or needs reviewer decision." },
-  { id: "children-youth", label: "People/minors unknown", description: "Contains, may contain, or has not ruled out people/youth." },
+  { id: "children-youth", label: "People/minors status unresolved", description: "Contains, may contain, or has not ruled out people/youth." },
   { id: "missing-source", label: "Source access restricted", description: "Source, album, photographer, or custody path missing." },
   { id: "rights-review", label: "Rights review needed", description: "Owner, license, consent, attribution, or proof unclear." },
   { id: "usage-guidance", label: "Usage scope needed", description: "Approved/useful record lacks safe channel guidance." },
@@ -98,7 +98,7 @@ export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: M
   const flags: string[] = [];
   if (assetHasChildrenYouthRisk(asset)) flags.push("Children/youth");
   if (asset.peopleRisk === "Adults visible") flags.push("People visible");
-  if (!asset.peopleRisk || asset.peopleRisk === "Unknown") flags.push("People/minors unknown");
+  if (!asset.peopleRisk || asset.peopleRisk === "Unknown") flags.push("People/minors status unresolved");
   if (assetNeedsSourceReview(asset)) flags.push("Missing source");
   if (assetNeedsRightsReview(asset)) flags.push("Rights unclear");
   if (!meaningfulMetadataValue(asset.consentStatus)) flags.push("Consent unknown");
