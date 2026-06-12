@@ -147,6 +147,36 @@ export const demoFallbackAssets: StockMediaAsset[] = [
     humanAiDecision: "edited"
   },
   {
+    id: "9105",
+    title: "Internal Teaching Handout",
+    thumbnail: imageUrlsForResource("9105").small,
+    thumbnailAlt: "Internal teaching handout approved copy",
+    preview: imageUrlsForResource("9105").detail,
+    imageUrls: imageUrlsForResource("9105"),
+    mediaType: "photo",
+    collection: "Internal Ministry",
+    status: "Approved Internal",
+    usageScope: "Internal",
+    peopleRisk: "No people",
+    sourcePlatform: "ResourceSpace",
+    sourceSystem: "Hosted beta fixture",
+    sourceAccount: "qa.fixture@tjc.example",
+    sourceAlbum: "Internal Ministry",
+    sourceAlbumMemberships: ["Internal Ministry"],
+    resourceSpaceId: "9105",
+    imageDimensions: "1600 x 1200",
+    rightsStatus: "Rights approved",
+    consentStatus: "Consent confirmed",
+    reviewer: "API Smoke Reviewer",
+    reviewedDate: "2026-06-01",
+    rightsNotes: "Internal-use approved copy fixture for download gate smoke.",
+    usageGuidance: "Approved for internal ministry reference only.",
+    downloadPolicy: "internal-approved-copy-allowed",
+    tags: ["internal", "teaching", "stock-safe"],
+    tjcTerms: ["Religious Education"],
+    usageTerms: ["internal", "slides"]
+  },
+  {
     id: "9102",
     title: "Sabbath Flower Arrangement",
     thumbnail: "",
@@ -238,5 +268,38 @@ export const demoFallbackAssets: StockMediaAsset[] = [
     aiTjcTermSuggestions: ["Hymns of Praise"],
     aiPeopleOrMinorFlag: "unknown",
     humanAiDecision: "not reviewed"
-  }
+  },
+  ...Array.from({ length: 8 }, (_, index) => {
+    const id = `92${String(index).padStart(2, "0")}`;
+    return {
+      id,
+      title: `Hosted Pagination Fixture ${index + 1}`,
+      thumbnail: imageUrlsForResource(id).small,
+      thumbnailAlt: `Hosted pagination fixture ${index + 1}`,
+      preview: imageUrlsForResource(id).detail,
+      imageUrls: imageUrlsForResource(id),
+      mediaType: "photo" as const,
+      collection: "Hosted Beta Pagination",
+      status: "Approved Public" as const,
+      usageScope: "Public" as const,
+      peopleRisk: "No people" as const,
+      sourcePlatform: "ResourceSpace",
+      sourceSystem: "Hosted beta fixture",
+      sourceAccount: "qa.fixture@tjc.example",
+      sourceAlbum: "Hosted Beta Pagination",
+      sourceAlbumMemberships: ["Hosted Beta Pagination"],
+      resourceSpaceId: id,
+      imageDimensions: "1800 x 1200",
+      rightsStatus: "Rights approved",
+      consentStatus: "Consent confirmed",
+      reviewer: "API Smoke Reviewer",
+      reviewedDate: "2026-06-01",
+      rightsNotes: "TJC-owned pagination fixture approved for public smoke verification.",
+      usageGuidance: "Approved for public smoke verification and layout pagination testing.",
+      downloadPolicy: "approved-copy-allowed" as const,
+      tags: index % 2 ? ["flower", "newsletter", "stock-safe"] : ["Bible", "website", "stock-safe"],
+      tjcTerms: index % 2 ? ["Sabbath Service", "Hymns of Praise"] : ["Sabbath Service", "Religious Education"],
+      usageTerms: ["website", "slides", "newsletter"]
+    };
+  })
 ];

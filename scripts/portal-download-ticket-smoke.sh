@@ -156,7 +156,9 @@ SMOKE_EXPORT="$SMOKE_EXPORT" node -e "$ensure_runtime_export_script"
 
 approved_asset_id_script='
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-const asset = (Array.isArray(data.assets) ? data.assets : []).find((item) => item && item.id && item.reuseDecision?.downloadable === true);
+const assets = Array.isArray(data.assets) ? data.assets : [];
+const asset = assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true && (item.status === "Approved Internal" || item.downloadPolicy === "internal-approved-copy-allowed"))
+  || assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true);
 if (!asset) {
   console.error("FAIL: no reviewer-visible downloadable asset found");
   process.exit(1);
