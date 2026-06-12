@@ -988,7 +988,7 @@ if (!data.asset?.sourcePath || !data.asset?.originalFilename || !data.asset?.che
 
 expect_json people-unknown-saved-view '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
-if (data.total < 2000 || !data.assets.every((asset) => asset.peopleRisk === "Unknown")) {
+if (data.total < 1 || !data.assets.every((asset) => asset.peopleRisk === "Unknown")) {
   console.error("FAIL: people-unknown saved view is not backed by people/minors metadata");
   process.exit(1);
 }

@@ -13,6 +13,10 @@ cleanup() {
 }
 trap cleanup EXIT
 REVIEWER_HEADERS=(-H 'x-tjc-role: Reviewer' -H 'x-auth-request-email: reviewer-download@example.test')
+local_runtime_probe=0
+case "$BASE_URL" in
+  http://localhost:*|http://127.0.0.1:*) local_runtime_probe=1 ;;
+esac
 
 http_code() {
   local output="$1"
@@ -157,7 +161,11 @@ SMOKE_EXPORT="$SMOKE_EXPORT" node -e "$ensure_runtime_export_script"
 approved_asset_id_script='
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const assets = Array.isArray(data.assets) ? data.assets : [];
-const asset = assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true && (item.status === "Approved Internal" || item.downloadPolicy === "internal-approved-copy-allowed"))
+const preferInternal = /^http:\/\/(localhost|127\.0\.0\.1):/.test(process.env.BASE_URL || "");
+const asset = preferInternal
+  ? assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true && (item.status === "Approved Internal" || item.downloadPolicy === "internal-approved-copy-allowed"))
+    || assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true)
+  : assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true && item.status === "Approved Public")
   || assets.find((item) => item && item.id && item.reuseDecision?.downloadable === true);
 if (!asset) {
   console.error("FAIL: no reviewer-visible downloadable asset found");
@@ -286,7 +294,8 @@ if (data.allowed !== false || data.downloadUrl || data.ticket || /ResourceSpace|
 
 expect_code 400 unsafe-download-path-denied "$BASE_URL/api/download/%2E%2E$APPROVED_ID?role=Viewer"
 
-expect_json_status 403 body-role-spoof-denied-without-trusted-header '
+if [ "$local_runtime_probe" = "1" ]; then
+  expect_json_status 403 body-role-spoof-denied-without-trusted-header '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if (data.allowed !== false || data.ticket || data.downloadUrl || !/role|review|not downloadable|approved/i.test(JSON.stringify(data))) {
   console.error(`FAIL: body-only Reviewer spoof did not fail closed: ${JSON.stringify(data)}`);
@@ -295,6 +304,18 @@ if (data.allowed !== false || data.ticket || data.downloadUrl || !/role|review|n
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Reviewer","termsAccepted":true,"usageChannel":"Download ticket smoke","reason":"Body role spoof must not mint a ticket."}' \
   "$BASE_URL/api/download/$APPROVED_ID"
+else
+  expect_json_status 200 body-role-spoof-ignored-for-public-viewer '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.allowed !== true || !data.downloadUrl || data.downloadUrl.includes("role=Reviewer") || /signedUrl|originalUrl|s3:\/\//i.test(text)) {
+  console.error(`FAIL: hosted body-only Reviewer spoof elevated role or leaked delivery URL: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+    -d '{"role":"Reviewer","termsAccepted":true,"usageChannel":"Download ticket smoke","reason":"Body role spoof must not mint a reviewer-only ticket."}' \
+    "$BASE_URL/api/download/$APPROVED_ID"
+fi
 
 expect_json_status 403 post-terms-false-denied '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
