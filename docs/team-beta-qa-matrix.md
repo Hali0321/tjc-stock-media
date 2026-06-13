@@ -1,21 +1,24 @@
 # Team Beta QA Matrix
 
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
 This matrix separates automated proof from manual teammate beta checks and remaining risks. It is scoped to internal beta demo readiness only. It does not approve production launch, public publishing, source media changes, ResourceSpace live writeback, or source/original downloads.
 
+Internal beta access update: hosted beta should use `/beta-login` when `BETA_AUTH_ENABLED=true`. Persona passwords come from Vercel env vars, and beta sessions override query/localStorage role spoofing. Older `?role=` links remain local/beta-off QA shortcuts only.
+
 ## Current Decision
 
-**Demo QA: GO for controlled internal beta demo dry run. NO-GO for teammate invite batch until human invite gates are signed off.**
+**Demo QA: GO for signed six-person internal beta workflow test. NO-GO for production launch, public media library, wider tester batch, live ResourceSpace writeback, production analytics, durable public package sharing, or source/original downloads.**
 
-Code and app proof is broad enough for a demo: local rehearsal passed, hosted smoke passed, browser QA passed across desktop/tablet/mobile widths, download gates are blocked, review decisions remain honest queued evidence, feedback intake/export is covered, and package/saved-search beta storage is guarded.
+Code and app proof is broad enough for a tiny internal beta: local rehearsal passed, hosted smoke passed, browser QA passed across desktop/tablet/mobile widths, download gates are blocked, review decisions remain honest queued evidence, feedback intake/export is covered, package/saved-search beta storage is guarded, and Phase 7 governance/readiness metrics are diagnostic-only.
 
-Invite blockers remain human/ops gates:
+Wider-batch blockers remain human/ops gates:
 
-- Rights/media reviewer must approve preview-only visibility for the 181 Viewer-visible seed records, or seed data must be scrubbed/hidden before invites.
-- Beta owner must confirm private URL sharing policy and seed-data ownership for first testers.
-- Tech owner must confirm hosted ResourceSpace writeback is disabled or queued: `RESOURCESPACE_ENABLE_WRITEBACK=0`, `RESOURCESPACE_WRITEBACK_MODE=queued`.
+- Rights/media reviewer must re-approve seed visibility before any wider batch or real sensitive production media.
+- Beta owner must keep private URL sharing limited to named testers.
+- Tech owner must keep hosted ResourceSpace writeback disabled or queued: `RESOURCESPACE_ENABLE_WRITEBACK=0`, `RESOURCESPACE_WRITEBACK_MODE=queued`.
 - Current seed has zero portal-ready/downloadable assets, so beta remains preview-only workflow testing.
+- Production SSO, durable analytics/audit/package sharing, S3 derivative delivery, and live ResourceSpace writeback are not proven by this beta.
 
 ## Automated Proof Versus Manual Beta Matrix
 
@@ -31,9 +34,9 @@ Invite blockers remain human/ops gates:
 | DAM Admin readiness | `portal-beta-rehearsal` proves Admin readiness opens; `portal-api-smoke` covers readiness payload shape and redaction; command center lists integration readiness states. | DAM Admin opens Admin modules, checks module content changes, identifies top launch blockers. | Admin data is partly readiness/dashboard evidence, not proof that integrations are production-configured. | GO for readiness demo |
 | Feedback path | `portal-feedback-smoke` covers feedback submission, unsafe link/route/text sanitization, missing severity validation, non-admin denial, Admin list, triage update, and agent-ready export. Hosted smoke covers feedback POST and Admin feedback inbox. | Testers use in-app Report issue button in Task Mode; DAM Admin exports agent-ready JSON after triage. Use template only if app unavailable. | Vercel KV/Blob storage is preferred for hosted persistence; local fallback is JSON. Confirm hosted storage before widening tester group. | GO for small demo |
 | Devices and responsive UI | `portal-browser-qa` report checked 17 pages, viewports 1440/1280/1024/768/390/320, 23 screenshots, zero failures, zero warnings, zero console errors, zero network failures. | At least one human mobile pass around 390 px for Viewer, Reviewer, and DAM Admin workflows; check tap targets and copy clarity. | Automated screenshots do not prove human comprehension or touch ergonomics. | GO with manual mobile spot check |
-| Packages | `portal-package-smoke` covers Viewer denial, Contributor sanitized ResourceSpace refs, Reviewer listing, local-json storage mode, and Admin readiness warning that wider rollout needs durable storage. | Contributor/Reviewer inspect Package Builder and confirm ResourceSpace references are clear and originals are not copied. | Package drafts are beta affordances unless backend storage/publishing/share links are connected. | GO for draft-only demo |
-| Saved searches | `portal-saved-search-smoke` covers Viewer denial, Contributor sanitized search state, Reviewer listing, local-json storage mode, and Admin readiness warning. | Tester saves/loads one benign search if this is part of demo script. | Saved views are beta affordances until durable backend storage is connected. | GO for draft-only demo |
-| Usage analytics and Insights | `portal-usage-smoke` covers event logging when `PORTAL_USAGE_LOGGING=1` and Admin analytics payload redaction. | Viewer opens Insights and clicks common use-case cards; confirms routes lead to useful searches. | Some trend/package charts may be labeled sample until portal event logging is connected. | GO with labeling |
+| Packages and collections | `portal-package-smoke` covers Viewer denial, Contributor sanitized ResourceSpace refs, Reviewer listing, local-json storage mode, and Admin readiness warning that wider rollout needs durable storage. Phase 6 package governance blocks export/share unless every item passes item-level reuse/channel/derivative/lifecycle checks. | Contributor/Reviewer inspect Package Builder and confirm ResourceSpace references are clear, originals are not copied, and one blocked item blocks package export/share. | Package drafts are beta affordances unless backend storage/publishing/share links are connected. Collection/package membership is curation, not permission. | GO for draft-only demo |
+| Saved searches | `portal-saved-search-smoke` covers Viewer denial, Contributor sanitized search state, Reviewer listing, local-json storage mode, and Admin readiness warning. Phase 3 saved views are query definitions only. | Tester saves/loads one benign search if this is part of demo script. | Saved views are beta affordances until durable backend storage is connected. They cannot bypass role/policy filtering. | GO for draft-only demo |
+| Usage analytics, metrics, and Insights | `portal-usage-smoke` covers event logging when `PORTAL_USAGE_LOGGING=1` and Admin analytics payload redaction. Phase 7 metrics summarize blocked assets, stale lifecycle, package/share blockers, audit/download coverage, and unavailable data honestly. | Viewer opens Insights and common use-case cards; DAM Admin checks readiness and metrics copy. | Metrics/readiness are diagnostics only, not permission truth. Missing analytics/storage must read unavailable or stale, never zero success. | GO for diagnostics, NO-GO for production analytics |
 | Delivery privacy and source custody | `portal-delivery-smoke`, `portal-api-smoke`, and browser QA redaction checks cover no private/source/original/signed URL leakage in browser-facing payloads. | Tester verifies UI language does not imply original/master access. | S3 derivative delivery and Google Shared Drive master-original integration are not configured for production. | GO for privacy demo, NO-GO for production delivery |
 | Seed/media safety | Read-only seed scrub in command center: 2,290 records, 181 Viewer-visible, 0 portal-ready/downloadable, 181 rights/copyright-review flags, 0 obvious sensitive/youth/private flags. | Rights/media reviewer must sign off preview-only visibility or scrub seed. | Mechanical scan cannot replace rights/people/minors review. This is top invite blocker. | NO-GO until signed off |
 
@@ -106,7 +109,7 @@ Before widening beyond owner demo, complete these human checks:
 
 ## Coverage Gaps
 
-- No human rights/media reviewer signoff for 181 Viewer-visible seed records is recorded in repo.
+- Wider-batch human rights/media reviewer signoff for Viewer-visible seed records must be renewed before expanding beyond the named internal batch.
 - No manual proof yet that doctrine/sacrament assets route through doctrine review before stock-safe/public use.
 - No manual proof yet that hymn/channel rights, territory, required notices, and high-risk hymn ranges block unsafe public export.
 - No manual proof yet that RE/minors media cannot become public without consent review.
@@ -118,11 +121,11 @@ Before widening beyond owner demo, complete these human checks:
 - No approved-copy real reuse/download demo because zero seed assets are portal-ready/downloadable.
 - No production S3 derivative delivery or Google Shared Drive master-original connector proof.
 - No broad human mobile ergonomics proof beyond automated screenshots.
-- No durable package/saved-search backend proof; local-json beta storage is covered.
+- No durable analytics, audit, package, or saved-search backend proof; local-json/runtime beta storage is covered honestly.
 - Hosted feedback persistence should be rechecked if Vercel KV/Blob env changes.
 
 ## Final QA Call
 
-**GO**: Owner-led internal beta demo and dry run using stable hosted URL, role links, Task Mode, blocked downloads, queued review workflow, Admin readiness, feedback inbox/export, packages, and saved searches as beta-only affordances.
+**GO**: Signed six-person internal beta workflow test using stable hosted URL, beta login, Task Mode, blocked downloads, queued review workflow, Admin readiness, diagnostic metrics, feedback inbox/export, packages, and saved searches as beta-only affordances.
 
-**NO-GO**: Public launch, production approval workflow, real download/reuse workflow, live ResourceSpace writeback, or teammate invite batch before media safety, private sharing policy, hosted writeback mode, seed ownership, and research-derived manual QA gates are signed off.
+**NO-GO**: Public launch, production approval workflow, real download/reuse workflow, live ResourceSpace writeback, production analytics, durable public package sharing, source/original access, or wider teammate invite batch before media safety, private sharing policy, hosted writeback mode, seed ownership, and research-derived manual QA gates are signed off.
