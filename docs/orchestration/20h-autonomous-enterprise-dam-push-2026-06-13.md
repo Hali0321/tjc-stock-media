@@ -74,9 +74,9 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `hardening/feedback-durability-attachments`
+Lane: `hardening/truth-scope-fixture-photo-only`
 
-Goal: make hosted feedback durability and attachment safety honest without exposing private/source material.
+Goal: keep normal beta UI photo-only and prevent fixture/demo data from looking like real governed DAM truth.
 
 ## Completed lanes
 
@@ -84,6 +84,7 @@ Goal: make hosted feedback durability and attachment safety honest without expos
 | --- | --- | --- | --- | --- |
 | `docs/weekend-enterprise-dam-runbooks` | `7625050` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/6 | `git diff --check`, `git-hygiene`, `private-source`, `public-env`, `make launch-readiness` pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `security/beta-login-throttling` | `09c31f4` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/7 | focused beta-auth tests 6/6, full tests 44/44, typecheck, build, guards, launch-readiness pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
+| `hardening/feedback-durability-attachments` | `eb7a1a2` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/8 | focused feedback tests 4/4, full tests 45/45, typecheck, build, guards, launch-readiness pass, local feedback smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 
 ## Docs lane included paths
 
@@ -108,6 +109,7 @@ docs/orchestration/20h-autonomous-enterprise-dam-push-2026-06-13.md
 ```text
 docs/weekend-enterprise-dam-runbooks
 security/beta-login-throttling
+hardening/feedback-durability-attachments
 ```
 
 ## PR links
@@ -115,6 +117,7 @@ security/beta-login-throttling
 ```text
 https://github.com/Hali0321/tjc-stock-media/pull/6
 https://github.com/Hali0321/tjc-stock-media/pull/7
+https://github.com/Hali0321/tjc-stock-media/pull/8
 ```
 
 ## Blockers
