@@ -1,43 +1,29 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Archive, CheckCircle2, Clock3, Database, FileDown, FolderPlus, LayoutGrid, List, Search, ShieldAlert, ShieldCheck, SlidersHorizontal, Users, X } from "lucide-react";
 import Link from "next/link";
-import { AssetCard } from "@/components/AssetCard";
-import { CollectionAlbumCard } from "@/components/CollectionAlbumCard";
+import { CheckCircle2, Database, Filter, FolderOpen, LayoutGrid, List, Mail, Package, RotateCcw, Search, UploadCloud } from "lucide-react";
+import { Dialog } from "@/components/Dialog";
+import { DamEmptyState as EmptyState, DamHeroSearch as HeroSearch, DamMediaCard as MediaCard, DamPrimaryAction as PrimaryAction, DamTrustSignalStrip as TrustSignalStrip, DamUseCaseCard as UseCaseCard, findUseCases } from "@/components/dam/DamWorkspace";
 import { FilterSidebar } from "@/components/FilterSidebar";
+import { GatedDownloadButton } from "@/components/GatedDownloadButton";
 import { LibraryPagination } from "@/components/LibraryPagination";
-import { SavedViewCard } from "@/components/SavedViewCard";
 import { useDemoRole } from "@/components/RoleProvider";
-import type { CatalogSort, SearchResult, StockMediaAsset } from "@/lib/types";
+import { RawStatusBadge, UsageBadge } from "@/components/StatusBadge";
+import type { CatalogSort, DemoRole, SearchResult, StockMediaAsset } from "@/lib/types";
 import { assetMetadataHealth } from "@/lib/asset-governance";
+import { assetPresentation } from "@/lib/presentation";
 import { cn } from "@/lib/ui";
+import { viewerVerdictForAsset } from "@/lib/viewer-verdict";
 
+const viewerDefaultView = "approved-church-wide";
 const sortOptions: CatalogSort[] = ["Approved first", "Recently approved", "Newest", "A-Z"];
-
-const useCaseButtons = [
-  { label: "Website hero", view: "website-hero" },
-  { label: "Slides", view: "sermon-slides" },
-  { label: "Newsletter", view: "newsletter" },
-  { label: "Social", view: "social-media" },
-  { label: "No people", view: "no-people" },
-  { label: "Internal only", view: "internal-ministry", contributorOnly: true },
-  { label: "Recently approved", view: "recently-approved" },
-  { label: "Needs review", view: "needs-review", reviewerOnly: true }
+const viewerFacetGroups = [
+  { label: "Use", options: ["Website image", "Slide background", "Newsletter", "Youth-safe"] },
+  { label: "Media type", options: ["Photo", "Video", "Graphic", "Document"] },
+  { label: "People", options: ["No people", "Adults visible", "Youth review needed"] },
+  { label: "Availability", options: ["Approved copies", "Review required before use", "Source restricted"] }
 ] as const;
-
-const viewerShortcutIds = new Set(["approved-church-wide", "website-hero", "sermon-slides", "newsletter", "social-media", "no-people", "recently-approved"]);
-const contributorShortcutIds = new Set([...viewerShortcutIds, "internal-ministry"]);
-
-function AssetGridSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" aria-hidden="true">
-      {Array.from({ length: 15 }).map((_, index) => (
-        <div key={index} className={cn("skeleton w-full", index % 4 === 0 ? "h-48" : index % 3 === 0 ? "h-44" : "h-[11.5rem]")} />
-      ))}
-    </div>
-  );
-}
 
 function healthTone(score: number) {
   if (score >= 90) return "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]";
@@ -45,39 +31,87 @@ function healthTone(score: number) {
   return "border-[#e5b7b5] bg-[#fff0ef] text-[#7d2d2a]";
 }
 
-function insightTone(tone: "ok" | "warn" | "info") {
-  if (tone === "ok") return "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]";
-  if (tone === "warn") return "border-[#ead6a8] bg-[#fff7e5] text-[#725216]";
-  return "border-[#c8d7e6] bg-[#f2f7fb] text-[#27435b]";
-}
-
-function AssetListRow({
-  asset,
-  selected,
-  onToggle
-}: {
-  asset: StockMediaAsset;
-  selected: boolean;
-  onToggle: () => void;
-}) {
+function OpsAssetRow({ asset, selected }: { asset: StockMediaAsset; selected?: boolean }) {
+  const display = assetPresentation(asset, "Reviewer");
   const health = assetMetadataHealth(asset);
   return (
-    <article className={cn("grid gap-3 border-b border-tjc-line bg-white px-3 py-2.5 last:border-b-0 lg:grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem]", selected && "bg-[#f4fbf7]")}>
-      <label className="grid h-9 w-9 place-items-center rounded-md border border-tjc-line bg-white" aria-label={`Select ${asset.title}`}>
-        <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selected} onChange={onToggle} />
-      </label>
-      <Link href={`/assets/${asset.id}`} className="block aspect-[4/3] overflow-hidden rounded-md bg-[#eef1ed]">
-        <img className="h-full w-full object-cover" src={asset.thumbnail} alt={asset.thumbnailAlt} loading="lazy" />
-      </Link>
-      <div className="min-w-0">
-        <Link href={`/assets/${asset.id}`} className="line-clamp-2 font-semibold leading-tight text-tjc-ink hover:text-tjc-evergreen">{asset.title}</Link>
-        <p className="mt-1 truncate text-sm text-tjc-muted">{asset.collection}</p>
+    <Link
+      href={`/assets/${asset.id}`}
+      className={cn(
+        "grid min-h-32 items-center gap-3 border-b border-[#e1e7e2] bg-white px-3 py-3 text-sm transition last:border-b-0 hover:bg-[#f7faf7] xl:grid-cols-[minmax(9rem,12rem)_minmax(10rem,1fr)_minmax(6rem,8rem)_minmax(7rem,9rem)_minmax(6rem,8rem)_minmax(6rem,8rem)_minmax(5rem,7rem)]",
+        selected && "bg-[#eef8f2]"
+      )}
+    >
+      <span className="block aspect-video w-full overflow-hidden rounded-[12px] bg-[#e9efeb]">
+        {display.image ? <img className="h-full w-full object-cover" src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : null}
+      </span>
+      <span className="min-w-0">
+        <strong className="line-clamp-2 text-base font-black leading-tight text-tjc-ink">{display.title}</strong>
+        <span className="mt-1 block truncate text-xs font-semibold text-tjc-muted">{asset.collection}</span>
+      </span>
+      <span data-badge-slot="ops-status"><RawStatusBadge status={asset.status} size="xs" /></span>
+      <span data-badge-slot="ops-usage"><UsageBadge scope={asset.usageScope} size="xs" /></span>
+      <span className="text-xs font-semibold text-tjc-muted">{asset.peopleRisk || "Unknown"}</span>
+      <span className="truncate text-xs font-semibold text-tjc-muted">RS {asset.resourceSpaceId || asset.id}</span>
+      <span className={cn("h-fit rounded-[10px] border px-2 py-1 text-xs font-black tabular-nums", healthTone(health.score))}>{health.score}%</span>
+    </Link>
+  );
+}
+
+function ViewerAssetListRow({ asset, role }: { asset: StockMediaAsset; role: DemoRole }) {
+  const display = assetPresentation(asset, role);
+  const verdict = viewerVerdictForAsset(asset, role);
+  return (
+    <Link
+      href={`/assets/${asset.id}`}
+      className="viewer-asset-list-row grid min-h-28 items-center gap-3 border-b border-[var(--dam-border)] bg-white px-3 py-3 text-sm transition last:border-b-0 hover:bg-[var(--dam-panel-muted)] md:grid-cols-[9rem_minmax(0,1fr)_10rem_9rem_8rem]"
+    >
+      <span className="block aspect-video overflow-hidden rounded-xl bg-[#e9e8f2]">
+        {display.image ? <img className="h-full w-full object-cover" src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : null}
+      </span>
+      <span className="min-w-0">
+        <strong className="line-clamp-2 text-base font-black leading-tight text-[var(--dam-ink)]">{display.title}</strong>
+        <span className="mt-1 block truncate text-sm font-semibold text-[var(--dam-muted)]">{display.cardSubtitle}</span>
+      </span>
+      <span className={cn("w-fit rounded-full border px-2.5 py-1 text-xs font-black", verdict.canDownload ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#ead6a8] bg-[#fff7e5] text-[#725216]")}>
+        {verdict.label}
+      </span>
+      <span className="truncate text-xs font-semibold text-[var(--dam-muted)]">{asset.mediaType}</span>
+      <span className="truncate text-xs font-black text-[var(--dam-muted)]">Ref {asset.id}</span>
+    </Link>
+  );
+}
+
+function ReviewNeededShelf({ assets, onOpen }: { assets: StockMediaAsset[]; onOpen: () => void }) {
+  if (!assets.length) return null;
+  return (
+    <section className="review-needed-shelf mt-3" aria-label="Items needing review">
+      <header>
+        <span>Holding shelf</span>
+        <div>
+          <h3>Approved records needing final reuse checks</h3>
+          <p>Open a record for guidance. Downloads stay blocked until reuse checks clear.</p>
+        </div>
+        <button type="button" onClick={onOpen}>Show all</button>
+      </header>
+      <div className="review-needed-shelf-grid">
+        {assets.slice(0, 6).map((asset) => {
+          const display = assetPresentation(asset, "Viewer");
+          return (
+            <Link className="review-needed-card" href={`/assets/${asset.id}`} key={asset.id}>
+              <span className="review-needed-thumb">
+                {display.image ? <img src={display.image} alt={asset.thumbnailAlt} loading="lazy" /> : <span>Preview protected</span>}
+              </span>
+              <span className="review-needed-copy">
+                <strong>{display.title}</strong>
+                <small>{asset.mediaType} - Open record first</small>
+              </span>
+              <em>Review needed</em>
+            </Link>
+          );
+        })}
       </div>
-      <span className="rounded-md border border-tjc-line bg-white px-2 py-1 text-xs font-semibold text-[#4d554d]">{asset.status}</span>
-      <span className="rounded-md border border-tjc-line bg-white px-2 py-1 text-xs font-semibold text-[#4d554d]">{asset.usageScope}</span>
-      <span className="truncate text-sm text-tjc-muted">{asset.reviewer && asset.reviewedDate ? `${asset.reviewer} / ${asset.reviewedDate}` : "Review pending"}</span>
-      <span className={cn("rounded-md border px-2 py-1 text-xs font-semibold", healthTone(health.score))}>{health.score}% {health.state}</span>
-    </article>
+    </section>
   );
 }
 
@@ -85,58 +119,29 @@ export function LibraryPage() {
   const { role, ready } = useDemoRole();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [filters, setFilters] = useState<string[]>([]);
-  const [selectedView, setSelectedView] = useState("");
+  const [selectedView, setSelectedView] = useState(viewerDefaultView);
   const [selectedCollection, setSelectedCollection] = useState("");
   const [sort, setSort] = useState<CatalogSort>("Approved first");
+  const [filters, setFilters] = useState<string[]>([]);
   const [result, setResult] = useState<SearchResult | null>(null);
+  const [reviewNeededPreview, setReviewNeededPreview] = useState<StockMediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pageOffset, setPageOffset] = useState(0);
-  const [batchMessage, setBatchMessage] = useState("");
-  const [collectionTitle, setCollectionTitle] = useState("");
-  const [collectionAudience, setCollectionAudience] = useState("Internal ministry");
-  const [collectionExpiry, setCollectionExpiry] = useState("");
-  const [collectionOwner, setCollectionOwner] = useState("Ministry media");
-
-  const apiUrl = useMemo(() => {
-    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: "84", offset: String(pageOffset) });
-    if (selectedView) params.set("view", selectedView);
-    if (selectedCollection) params.set("collection", selectedCollection);
-    filters.forEach((filter) => params.append("filter", filter));
-    return `/api/assets/search?${params.toString()}`;
-  }, [role, submittedQuery, filters, selectedView, selectedCollection, sort, pageOffset]);
+  const [pageLimit, setPageLimit] = useState(24);
+  const opsView = role === "Reviewer" || role === "DAM Admin";
 
   useEffect(() => {
-    if (!ready) return;
-	    let cancelled = false;
-	    setLoading(true);
-	    setError("");
-	    fetch(apiUrl)
-	      .then(async (response) => {
-	        const data = await response.json();
-	        if (!response.ok) throw new Error(data.error || "Unable to load library assets.");
-	        return data as SearchResult;
-	      })
-	      .then((data: SearchResult) => {
-	        if (!cancelled) setResult(data);
-	      })
-	      .catch((err: Error) => {
-	        if (!cancelled) {
-	          setError(err.message);
-	          setResult(null);
-	        }
-	      })
-	      .finally(() => {
-	        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [apiUrl, ready]);
+    function updatePageLimit() {
+      const width = window.innerWidth;
+      setPageLimit(width < 640 ? 10 : width >= 1536 ? 36 : 24);
+    }
+    updatePageLimit();
+    window.addEventListener("resize", updatePageLimit);
+    return () => window.removeEventListener("resize", updatePageLimit);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -146,565 +151,581 @@ export function LibraryPage() {
     if (initialView) {
       setSelectedView(initialView);
       setSelectedCollection("");
-      setQuery("");
-      setSubmittedQuery("");
-      setPageOffset(0);
       return;
     }
     if (initialCollection) {
       setSelectedView("");
       setSelectedCollection(initialCollection);
-      setQuery("");
-      setSubmittedQuery("");
-      setPageOffset(0);
       return;
     }
     if (initialQuery) {
       setSelectedView("");
       setQuery(initialQuery);
       setSubmittedQuery(initialQuery);
-      setPageOffset(0);
     }
   }, []);
 
   useEffect(() => {
-    setSelectedIds([]);
-    setBatchMessage("");
-  }, [apiUrl]);
+    if (!ready) return;
+    if (role === "Viewer") {
+      setSelectedView((current) => {
+        if (submittedQuery || selectedCollection) return current === viewerDefaultView ? "" : current;
+        return current || viewerDefaultView;
+      });
+    } else if (selectedView === viewerDefaultView && !submittedQuery) {
+      setSelectedView("");
+    }
+  }, [ready, role, selectedView, submittedQuery, selectedCollection]);
 
-  function replaceLibraryViewParam(viewId?: string) {
-    if (window.location.pathname !== "/") return;
-    if (!viewId) {
-      window.history.replaceState(null, "", "/");
+  const apiUrl = useMemo(() => {
+    const params = new URLSearchParams({ role, q: submittedQuery, sort, limit: String(pageLimit), offset: String(pageOffset) });
+    if (selectedView) params.set("view", selectedView);
+    if (selectedCollection) params.set("collection", selectedCollection);
+    filters.forEach((filter) => params.append("filter", filter));
+    return `/api/assets/search?${params.toString()}`;
+  }, [role, submittedQuery, sort, pageLimit, pageOffset, selectedView, selectedCollection, filters]);
+
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    fetch(apiUrl)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unable to load media.");
+        return data as SearchResult;
+      })
+      .then((data) => {
+        if (!cancelled) setResult(data);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+          setResult(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiUrl, ready]);
+
+  useEffect(() => {
+    if (!ready || role !== "Viewer") {
+      setReviewNeededPreview([]);
       return;
     }
-    const params = new URLSearchParams();
-    params.set("view", viewId);
-    window.history.replaceState(null, "", `/?${params.toString()}`);
-  }
+    let cancelled = false;
+    const params = new URLSearchParams({ role: "Viewer", view: "batch-approved-blockers", limit: "6" });
+    fetch(`/api/assets/search?${params.toString()}`)
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as SearchResult;
+      })
+      .then((data) => {
+        if (!cancelled) setReviewNeededPreview(data?.assets || []);
+      })
+      .catch(() => {
+        if (!cancelled) setReviewNeededPreview([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, role]);
 
-  function replaceLibraryCollectionParam(collectionId?: string) {
-    if (window.location.pathname !== "/") return;
-    if (!collectionId) {
-      window.history.replaceState(null, "", "/");
-      return;
-    }
-    const params = new URLSearchParams();
-    params.set("collection", collectionId);
-    window.history.replaceState(null, "", `/?${params.toString()}`);
-  }
+  useEffect(() => {
+    setPageOffset(0);
+  }, [selectedView, selectedCollection, submittedQuery, filters, sort, role]);
 
-  function submit(event: FormEvent) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget as HTMLFormElement;
-    const nextQuery = String(new FormData(form).get("q") || "").trim();
+    const nextQuery = String(new FormData(event.currentTarget).get("q") || "").trim();
     setSelectedView("");
     setSelectedCollection("");
-    setQuery(nextQuery);
     setSubmittedQuery(nextQuery);
-    setPageOffset(0);
-    replaceLibraryViewParam();
-  }
-
-  function toggleFilter(filter: string) {
-    setFilters((current) => (current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]));
-    setPageOffset(0);
+    setQuery(nextQuery);
+    window.history.replaceState(null, "", nextQuery ? `/?q=${encodeURIComponent(nextQuery)}` : "/");
   }
 
   function openSavedView(viewId: string) {
     setSelectedView(viewId);
     setSelectedCollection("");
-    setQuery("");
     setSubmittedQuery("");
-    setPageOffset(0);
-    replaceLibraryViewParam(viewId);
+    setQuery("");
+    window.history.replaceState(null, "", `/?view=${encodeURIComponent(viewId)}`);
   }
 
   function clearSearchState() {
-    setSelectedView("");
+    const defaultView = role === "Viewer" ? viewerDefaultView : "";
+    setSelectedView(defaultView);
     setSelectedCollection("");
     setSubmittedQuery("");
     setQuery("");
     setFilters([]);
-    setPageOffset(0);
-    replaceLibraryViewParam();
+    window.history.replaceState(null, "", defaultView ? `/?view=${encodeURIComponent(defaultView)}` : "/");
   }
 
-  function openUseCase(item: (typeof useCaseButtons)[number]) {
-    openSavedView(item.view);
+  function toggleFilter(filter: string) {
+    setFilters((current) => (current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]));
   }
 
-  function browseCollection(collectionId: string, name: string) {
-    setSelectedView("");
-    setSelectedCollection(collectionId);
-    setQuery(name);
-    setSubmittedQuery("");
-    setPageOffset(0);
-    replaceLibraryCollectionParam(collectionId);
-  }
-
-  function toggleSelected(id: string) {
-    setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-  }
-
-  function selectVisibleAssets() {
-    const visible = (result?.assets || []).map((asset) => asset.id);
-    setSelectedIds((current) => (current.length === visible.length ? [] : visible));
-  }
-
-  async function runBatchAction(action: string) {
-    if (!selectedIds.length) return;
-    const response = await fetch("/api/batch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, action, assetIds: selectedIds })
-    });
-    const body = await response.json();
-    setBatchMessage(body.message || body.error || "Batch route responded.");
-  }
-
-  function exportCsv() {
-    const selected = (result?.assets || []).filter((asset) => selectedIds.includes(asset.id));
-    const rows = [
-      ["id", "title", "status", "usageScope", "peopleRisk", "sourceSystem", "sourceAccount", "reviewer", "reviewedDate", "resourceSpaceId"],
-      ...selected.map((asset) => [
-        asset.id,
-        asset.title,
-        asset.status,
-        asset.usageScope,
-        asset.peopleRisk || "",
-        asset.sourceSystem || "",
-        asset.sourceAccount || "",
-        asset.reviewer || "",
-        asset.reviewedDate || "",
-        asset.resourceSpaceId || ""
-      ])
-    ];
-    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "tjc-stock-media-selection.csv";
-    link.click();
-    URL.revokeObjectURL(url);
-    setBatchMessage(`Exported ${selected.length} selected asset records as CSV.`);
-  }
-
-  async function createCollectionDraft(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selectedIds.length) return;
-    const response = await fetch("/api/collections", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        role,
-        assetIds: selectedIds,
-        title: collectionTitle || "Untitled ministry collection",
-        audience: collectionAudience,
-        expiry: collectionExpiry,
-        owner: collectionOwner
-      })
-    });
-    const body = await response.json();
-    setBatchMessage(body.message || body.error || "Collection route responded.");
-  }
-
-  const reviewer = role === "Reviewer" || role === "DAM Admin";
-  const contributor = role === "Contributor" || reviewer;
-  const activeView = result?.savedViews.find((view) => view.id === selectedView);
-  const shortcuts =
-    result?.savedViews.filter((view) => reviewer || (contributor ? contributorShortcutIds : viewerShortcutIds).has(view.id)) || [];
-  const visibleUseCases = useCaseButtons.filter((item) => {
-    if ("reviewerOnly" in item && item.reviewerOnly) return reviewer;
-    if ("contributorOnly" in item && item.contributorOnly) return contributor;
-    return true;
-  });
-  const activeCollection = result?.collections.find((collection) => collection.id === selectedCollection);
-  const hasActiveSearch = Boolean(activeView || activeCollection || submittedQuery || filters.length);
-  const visibleAssets = result?.assets || [];
+  const assets = result?.assets || [];
+  const selectedAsset = assets[0];
+  const inspectorAsset = selectedAsset || (!opsView ? reviewNeededPreview[0] : undefined);
+  const selectedAssetDisplay = inspectorAsset ? assetPresentation(inspectorAsset, role) : null;
+  const selectedAssetVerdict = inspectorAsset ? viewerVerdictForAsset(inspectorAsset, role) : null;
   const pagination = result?.pagination;
+  const activeView = result?.savedViews.find((view) => view.id === selectedView);
+  const activeCollection = result?.collections.find((collection) => collection.id === selectedCollection);
+  const viewerSafeDefaultEmpty = role === "Viewer" && selectedView === viewerDefaultView && !submittedQuery && !filters.length && !activeCollection;
+  const title = opsView ? "Asset Library" : "Find approved media";
+  const subtitle = opsView
+    ? "Search media, source records, rights signals, packages, and ministry queues from one workspace."
+    : "Search by ministry use, event, topic, or package.";
+  const currentWorkspaceLabel = activeCollection?.name || (selectedView === viewerDefaultView ? "Ready copies" : activeView?.label) || (submittedQuery ? `Search: ${submittedQuery}` : "Ready copies");
 
   return (
     <div className="dam-shell">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 xl:grid-cols-[minmax(0,1fr)_30rem]" aria-label="Library workspace">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="dam-page-title">Library</h1>
-              <p className="mt-1 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
-                Find approved media by ministry need, collection, people risk, date, status, and TJC terms.
+      <section className="find-hero asset-bank-header p-3 sm:p-4" aria-label={opsView ? "Asset library front door" : "Find approved media"}>
+        <div className={cn("relative z-[1] grid gap-3", opsView ? "lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,.55fr)] lg:items-end" : "xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-end")}>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <span className="dam-kicker">{opsView ? "Asset library" : "Asset library"}</span>
+                <h1 className="dam-page-title mt-1">{title}</h1>
+              </div>
+              {!opsView ? (
+                <span className="rounded-md border border-[#d6dfd8] bg-[#f8faf8] px-2.5 py-1 text-xs font-black text-tjc-evergreen">
+                  Ready copies only by default
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-1.5 max-w-[58ch] text-sm font-semibold leading-relaxed text-tjc-muted">{subtitle}</p>
+            <p className="mt-1 max-w-[72ch] text-xs font-black uppercase tracking-[.04em] text-[#725216]">
+              Controlled reuse system: no evidence = no public/external download.
+            </p>
+            <div className="mt-3">
+              <HeroSearch
+                value={query}
+                onChange={setQuery}
+                onSubmit={submit}
+                ops={opsView}
+                placeholder={opsView ? "Search assets, collections, people, rights, source records..." : "Search assets, collections, people, rights, source records..."}
+              />
+            </div>
+            {!opsView ? (
+              <div className="asset-bank-controlbar mt-3 flex flex-wrap items-center gap-2" aria-label="Asset library controls">
+                <span className="inline-flex min-h-8 items-center rounded-md border border-[#b8d9c6] bg-[#edf8f1] px-2.5 text-xs font-black text-[#22563a]" role="status">
+                  Ready only
+                </span>
+                <button className="inline-flex min-h-8 items-center rounded-md border border-[#d1d5db] bg-white px-2.5 text-xs font-black text-[#3f4a43]" type="button" onClick={() => setFiltersOpen(true)}>
+                  Filters
+                </button>
+                <button className={cn("inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-black", viewMode === "grid" ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#d1d5db] bg-white text-[#3f4a43]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
+                  <LayoutGrid size={14} strokeWidth={1.9} aria-hidden="true" />
+                  Grid
+                </button>
+                <button className={cn("inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-black", viewMode === "list" ? "border-[#b8d9c6] bg-[#edf8f1] text-[#22563a]" : "border-[#d1d5db] bg-white text-[#3f4a43]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
+                  <List size={14} strokeWidth={1.9} aria-hidden="true" />
+                  List
+                </button>
+                <Link className="inline-flex min-h-8 items-center rounded-md border border-[#d1d5db] bg-white px-2.5 text-xs font-black text-tjc-evergreen" href="/collections">
+                  Packages
+                </Link>
+              </div>
+            ) : null}
+          </div>
+          {opsView ? (
+            <div className="grid gap-3 rounded-[12px] border border-[#e5e7eb] bg-white p-4">
+              <div className="flex items-center gap-2 text-sm font-black text-tjc-evergreen">
+                <CheckCircle2 size={18} strokeWidth={1.9} aria-hidden="true" />
+                Operations truth visible
+              </div>
+              <p className="text-sm font-semibold leading-relaxed text-tjc-muted">
+                Reviewer/Admin search includes verdict, rights evidence, source, custody, package, audit, and blocked reuse state.
               </p>
             </div>
-            {hasActiveSearch ? (
-              <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef5f1] active:translate-y-px" type="button" onClick={clearSearchState}>
-                <X size={15} strokeWidth={1.8} aria-hidden="true" />
-                Reset
-              </button>
-            ) : null}
-          </div>
-          <form className="mt-4 grid gap-2 rounded-md border border-tjc-line bg-white p-2 shadow-[0_1px_0_rgba(32,34,31,.04)] md:grid-cols-[auto_1fr_auto]" onSubmit={submit} aria-label="Library search">
-            <Search aria-hidden="true" className="ml-1 mt-2 text-tjc-evergreen" size={20} strokeWidth={1.8} />
-            <label className="sr-only" htmlFor="library-search">Search approved media</label>
-            <input
-              id="library-search"
-              className="min-h-10 min-w-0 bg-transparent px-1 text-base text-tjc-ink placeholder:text-[#7f8a82]"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search Bible, fellowship, baptism, flowers, no people, website hero..."
-              name="q"
-              type="search"
-            />
-            <button className="min-h-10 rounded-md bg-tjc-evergreen px-5 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px" type="submit">Search</button>
-          </form>
-          <div className="mt-3 flex max-w-full min-w-0 flex-wrap gap-2 pb-1" aria-label="Use-case shortcuts">
-            {visibleUseCases.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                className="inline-flex min-h-9 items-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#3f4a43] transition hover:border-[#9bc5b5] hover:bg-[#eef7f1] active:translate-y-px"
-                onClick={() => openUseCase(item)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="dam-panel grid min-w-0 content-start gap-3 p-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-sm font-semibold text-tjc-evergreen">Source and count truth</span>
-              <strong className="mt-1 block text-sm font-semibold text-tjc-ink">{result?.source.label || "Loading source"}</strong>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-tjc-muted sm:line-clamp-none">{result?.source.detail || "Loading ResourceSpace source state."}</p>
+          ) : (
+            <div className="asset-bank-rule grid gap-1 rounded-lg border border-[#e5e7eb] bg-[#fbfcfb] p-3 text-sm font-semibold leading-relaxed text-tjc-muted">
+              <strong className="text-tjc-evergreen">Approved-copy workspace</strong>
+              <span>Downloads stay blocked until a media record clears reuse checks.</span>
             </div>
-            <Database className="shrink-0 text-tjc-evergreen" size={19} strokeWidth={1.8} aria-hidden="true" />
-          </div>
-          <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold text-tjc-ink sm:hidden" aria-label="Mobile catalog summary">
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
-              {result?.counts.approved ?? "-"} approved
-            </span>
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
-              {result?.counts.rightsReview ?? "-"} rights
-            </span>
-            <span className="rounded-md border border-tjc-line bg-[#fbfcfa] px-2 py-1.5">
-              {result?.counts.visibleToRole ?? "-"} visible
-            </span>
-          </div>
-          <div className="hidden grid-cols-3 gap-2 sm:grid sm:grid-cols-6" aria-label="Catalog summary">
-            {[
-              { icon: CheckCircle2, value: result?.counts.approved ?? "-", label: "approved" },
-              { icon: Clock3, value: result?.counts.needsReview ?? "-", label: "review" },
-              { icon: ShieldAlert, value: result?.counts.rightsReview ?? "-", label: "rights" },
-              { icon: Users, value: result?.counts.childrenYouth ?? "-", label: "youth" },
-              { icon: Archive, value: result?.counts.archive ?? "-", label: "archive" },
-              { icon: Database, value: result?.counts.visibleToRole ?? "-", label: "role-visible" }
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div className="grid min-h-16 content-center rounded-md border border-tjc-line bg-[#fbfcfa] p-2" key={item.label}>
-                  <Icon className="text-tjc-evergreen" size={14} strokeWidth={1.8} aria-hidden="true" />
-                  <strong className="mt-1 text-lg font-semibold tabular-nums text-tjc-ink">{item.value}</strong>
-                  <span className="text-[11px] font-medium leading-tight text-tjc-muted">{item.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-	      </section>
-
-	      {error ? (
-	        <div className="mt-4 rounded-lg border border-[#e5b7b5] bg-[#fff0ef] p-3 text-sm font-semibold text-[#7d2d2a]" role="status">
-	          {error}
-	        </div>
-	      ) : null}
-
-	      <details className="mt-3 hidden rounded-md border border-tjc-line bg-white/88 md:block">
-        <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-tjc-evergreen">
-          <span>Production signals</span>
-          <span className="text-xs font-medium text-tjc-muted">Metadata health, operational signals, search gaps</span>
-        </summary>
-        <div className="grid gap-3 border-t border-tjc-line p-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,.55fr)_minmax(20rem,.6fr)]" aria-label="Production DAM health">
-        <div className="grid gap-2 rounded-md border border-tjc-line bg-white p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Metadata health</h2>
-              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Production confidence: source, people, rights, usage, and review completeness.</p>
-            </div>
-            <span className={cn("rounded-md border px-3 py-2 text-sm font-semibold", healthTone(result?.metadataHealth.averageScore ?? 0))}>{result?.metadataHealth.averageScore ?? "-"}% avg</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
-            {[
-              ["Complete", result?.metadataHealth.complete],
-              ["Needs source", result?.metadataHealth.needsSource],
-              ["Needs people", result?.metadataHealth.needsPeople],
-              ["Needs rights", result?.metadataHealth.needsRights],
-              ["Needs usage", result?.metadataHealth.needsUsage],
-              ["Review pending", result?.metadataHealth.reviewPending]
-            ].map(([label, value]) => (
-              <div className="rounded-md border border-tjc-line bg-[#fbfcfa] p-2" key={label}>
-                <strong className="block text-lg font-semibold tabular-nums text-tjc-ink">{value ?? "-"}</strong>
-                <span className="text-[11px] font-medium text-tjc-muted">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-md border border-tjc-line bg-white p-3">
-          <h2 className="text-sm font-semibold text-tjc-evergreen">Operational signals</h2>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {(result?.operationalInsights || []).slice(0, 6).map((insight) => {
-              const content = (
-                <>
-                  <strong className="block text-lg font-semibold tabular-nums">{insight.value.toLocaleString()}</strong>
-                  <span className="block text-[11px] font-semibold leading-tight">{insight.label}</span>
-                </>
-              );
-              const className = cn("rounded-md border p-2 text-left transition", insightTone(insight.tone), insight.savedViewId && "hover:brightness-[.98] active:translate-y-px");
-              return insight.savedViewId ? (
-                <button className={className} key={insight.id} type="button" title={insight.detail} onClick={() => openSavedView(insight.savedViewId || "")}>
-                  {content}
-                </button>
-              ) : (
-                <div className={className} key={insight.id} title={insight.detail}>
-                  {content}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="rounded-md border border-tjc-line bg-white p-3">
-          <h2 className="text-sm font-semibold text-tjc-evergreen">Search gaps</h2>
-          <div className="mt-2 grid gap-2">
-            {(result?.zeroResultInsights || []).slice(0, 3).map((insight) => (
-              <button key={insight.query} type="button" className="grid rounded-md border border-tjc-line bg-[#fbfcfa] p-2 text-left text-xs transition hover:bg-[#eef7f1]" onClick={() => insight.savedViewId && openSavedView(insight.savedViewId)}>
-                <span className="font-semibold text-tjc-ink">{insight.query}: raw {insight.rawCount} / mapped {insight.savedViewCount}</span>
-                <span className="mt-1 text-tjc-muted">{insight.recommendation}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        </div>
-      </details>
-
-      <section className="mt-4 grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]" aria-label="Library controls and results">
-        <aside className="order-2 grid min-w-0 gap-4 xl:order-1 xl:sticky xl:top-24 xl:self-start">
-          <section className="min-w-0 overflow-hidden rounded-md border border-tjc-line bg-white" aria-label="Saved DAM views">
-            <div className="border-b border-tjc-line px-3 py-3">
-              <h2 className="text-sm font-semibold text-tjc-evergreen">Saved DAM views</h2>
-              <p className="mt-1 text-xs leading-relaxed text-tjc-muted">Operational shortcuts backed by ResourceSpace export fields.</p>
-            </div>
-            <div className="grid max-w-full min-w-0 gap-2 p-2 sm:grid-cols-2 lg:block lg:p-0">
-              {shortcuts.slice(0, 10).map((view) => (
-                <SavedViewCard key={view.id} view={view} active={selectedView === view.id} onOpen={() => openSavedView(view.id)} />
-              ))}
-            </div>
-          </section>
-          <div className="xl:hidden">
-            <button className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen" type="button" onClick={() => setFiltersOpen((value) => !value)}>
-              <SlidersHorizontal size={16} strokeWidth={1.8} aria-hidden="true" />
-              {filtersOpen ? "Hide filters" : "Show filters"}
-            </button>
-          </div>
-          <div className={cn("xl:block", filtersOpen ? "block" : "hidden")}>
-            <FilterSidebar filters={filters} onToggle={toggleFilter} onClear={() => setFilters([])} />
-          </div>
-        </aside>
-
-        <div className="order-1 min-w-0 xl:order-2">
-          <section className="min-w-0" aria-label="Asset results">
-            <section className="mb-3 grid gap-3 rounded-md border border-tjc-line bg-white p-2.5" aria-label="Selection and batch actions">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={selectVisibleAssets}>
-                    <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
-                    {selectedIds.length ? "Clear selection" : "Select visible"}
-                  </button>
-                  <span className="text-sm font-semibold text-tjc-muted">{selectedIds.length} selected</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "grid" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}>
-                    <LayoutGrid size={15} strokeWidth={1.8} aria-hidden="true" />
-                    Grid
-                  </button>
-                  <button className={cn("inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line px-3 text-sm font-semibold transition", viewMode === "list" ? "bg-[#e8f5ef] text-tjc-evergreen" : "bg-white text-[#3e4741]")} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}>
-                    <List size={15} strokeWidth={1.8} aria-hidden="true" />
-                    List
-                  </button>
-                </div>
-              </div>
-              {selectedIds.length ? (
-                <div className="grid gap-3 border-t border-tjc-line pt-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportCsv}>
-                      <FileDown size={15} strokeWidth={1.8} aria-hidden="true" />
-                      Export CSV
-                    </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("request-review")}>
-                      <ShieldAlert size={15} strokeWidth={1.8} aria-hidden="true" />
-                      Preview review
-                    </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("mark-internal")}>
-                      <ShieldCheck size={15} strokeWidth={1.8} aria-hidden="true" />
-                      Preview internal
-                    </button>
-                    <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1] disabled:opacity-50" type="button" disabled={!reviewer} onClick={() => runBatchAction("archive")}>
-                      <Archive size={15} strokeWidth={1.8} aria-hidden="true" />
-                      Preview archive
-                    </button>
-                  </div>
-                  <form className="grid gap-2 rounded-md border border-tjc-line bg-[#fbfcfa] p-3 md:grid-cols-[minmax(10rem,1fr)_11rem_10rem_minmax(9rem,.7fr)_auto]" onSubmit={createCollectionDraft}>
-                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionTitle} onChange={(event) => setCollectionTitle(event.target.value)} placeholder="Collection name" aria-label="Collection name" />
-                    <select className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionAudience} onChange={(event) => setCollectionAudience(event.target.value)} aria-label="Collection audience">
-                      <option>Private draft</option>
-                      <option>Internal ministry</option>
-                      <option>Public-approved portal</option>
-                    </select>
-                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" type="date" value={collectionExpiry} onChange={(event) => setCollectionExpiry(event.target.value)} aria-label="Expiry date" />
-                    <input className="min-h-9 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium" value={collectionOwner} onChange={(event) => setCollectionOwner(event.target.value)} placeholder="Owner" aria-label="Collection owner" />
-                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-3 text-sm font-semibold text-white transition hover:bg-tjc-evergreen-2 disabled:opacity-50" type="submit" disabled={!contributor}>
-                      <FolderPlus size={15} strokeWidth={1.8} aria-hidden="true" />
-                      Preview draft
-                    </button>
-                  </form>
-                  {batchMessage ? <div className="rounded-md border border-[#c8d7e6] bg-[#f2f7fb] p-2 text-sm font-semibold text-[#27435b]">{batchMessage}</div> : null}
-                </div>
-              ) : null}
-            </section>
-
-            <div className="mb-3 grid gap-2 rounded-md border border-tjc-line bg-white px-3 py-2.5 text-sm text-tjc-muted" aria-live="polite">
-              <div className="flex flex-wrap items-center gap-2">
-                <strong className="font-semibold text-tjc-ink">
-                  {loading
-                    ? "Loading results"
-                    : pagination && result?.total
-                      ? `Showing ${pagination.rangeStart.toLocaleString()}-${pagination.rangeEnd.toLocaleString()} of ${result.total.toLocaleString()} matching assets`
-                      : "No matching assets"}
-                </strong>
-                <span>Rendered {result?.counts.rendered ?? result?.assets.length ?? 0} / matching {result?.counts.matching ?? result?.total ?? 0} / role-visible {result?.counts.visibleToRole ?? 0}</span>
-              </div>
-              {activeView ? (
-                <p>
-                  View: <strong className="font-semibold text-tjc-evergreen">{activeView.label}</strong>. This view is based on available ResourceSpace export metadata. Reviewer should confirm before production use.
-                </p>
-              ) : null}
-              {!activeView && result?.appliedIntent?.matchedView ? (
-                <p>
-                  Search intent: <strong className="font-semibold text-tjc-evergreen">{result.appliedIntent.rawQuery}</strong> mapped to <strong className="font-semibold text-tjc-evergreen">{result.appliedIntent.matchedView}</strong>.
-                </p>
-              ) : null}
-              {activeCollection ? (
-                <p>
-                  Collection: <strong className="font-semibold text-tjc-evergreen">{activeCollection.name}</strong>. Opened by stable collection ID, not raw keyword search.
-                </p>
-              ) : null}
-              <div className="flex flex-wrap gap-1.5">
-                {submittedQuery ? <span className="rounded-md bg-[#eef4f1] px-2 py-1 text-xs font-semibold text-[#536058]">Search: {submittedQuery}</span> : null}
-                {filters.map((filter) => (
-                  <button key={filter} className="inline-flex min-h-7 items-center gap-1 rounded-md bg-[#eef4f1] px-2 text-xs font-semibold text-[#536058]" type="button" onClick={() => toggleFilter(filter)}>
-                    {filter}
-                    <X size={12} strokeWidth={1.8} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <section className="mb-3 flex flex-wrap items-center gap-2 text-sm text-tjc-muted" aria-label="Sort results">
-              <span className="font-semibold text-tjc-ink">Sort</span>
-              {sortOptions.map((option) => (
-                <button
-                  type="button"
-                  key={option}
-                  className={cn("min-h-9 rounded-md border border-tjc-line bg-white px-3 font-semibold text-[#3e4741] transition hover:bg-[#eef7f1] active:translate-y-px", sort === option && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen")}
-                  onClick={() => {
-                    setSort(option);
-                    setPageOffset(0);
-                  }}
-                  aria-pressed={sort === option}
-                >
-                  {option}
-                </button>
-              ))}
-            </section>
-
-            {pagination ? (
-              <div className="mb-3">
-                <LibraryPagination
-                  rangeStart={pagination.rangeStart}
-                  rangeEnd={pagination.rangeEnd}
-                  total={result?.total ?? 0}
-                  hasPrevious={pagination.hasPrevious}
-                  hasNext={pagination.hasNext}
-                  loading={loading}
-                  onPrevious={() => setPageOffset(pagination.previousOffset)}
-                  onNext={() => setPageOffset(pagination.nextOffset)}
-                />
-              </div>
-            ) : null}
-
-            {loading ? <AssetGridSkeleton /> : null}
-            {!loading && result?.assets.length === 0 ? (
-              <div className="rounded-md border border-tjc-line bg-white p-8 text-tjc-muted">No visible assets match this workspace. Try Portal ready, Needs portal review, No people, or Bible Study.</div>
-            ) : null}
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {visibleAssets.map((asset) => (
-                  <div className="relative" key={asset.id}>
-                    <label className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-tjc-line bg-white/92 shadow-sm" aria-label={`Select ${asset.title}`}>
-                      <input className="h-4 w-4 accent-tjc-evergreen" type="checkbox" checked={selectedIds.includes(asset.id)} onChange={() => toggleSelected(asset.id)} />
-                    </label>
-                    <AssetCard asset={asset} role={role} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-lg border border-tjc-line">
-                <div className="hidden grid-cols-[auto_5rem_minmax(12rem,1.2fr)_9rem_10rem_12rem_9rem] gap-3 border-b border-tjc-line bg-[#f5f7f4] px-3 py-2 text-xs font-semibold text-tjc-muted lg:grid">
-                  <span>Select</span><span>Preview</span><span>Asset</span><span>Status</span><span>Use</span><span>Reviewer</span><span>Health</span>
-                </div>
-                {visibleAssets.map((asset) => <AssetListRow key={asset.id} asset={asset} selected={selectedIds.includes(asset.id)} onToggle={() => toggleSelected(asset.id)} />)}
-              </div>
-            )}
-            {pagination && result?.total ? (
-              <div className="mt-3">
-                <LibraryPagination
-                  rangeStart={pagination.rangeStart}
-                  rangeEnd={pagination.rangeEnd}
-                  total={result.total}
-                  hasPrevious={pagination.hasPrevious}
-                  hasNext={pagination.hasNext}
-                  loading={loading}
-                  onPrevious={() => setPageOffset(pagination.previousOffset)}
-                  onNext={() => setPageOffset(pagination.nextOffset)}
-                />
-              </div>
-            ) : null}
-          </section>
-
-          <section id="collections" className="mt-6 scroll-mt-24" aria-label="Featured collections">
-            <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-tjc-ink">Collections</h2>
-                <p className="text-sm text-tjc-muted">Albums and ministry contexts with approval summaries.</p>
-              </div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-              {(result?.collections || []).map((collection) => (
-                <CollectionAlbumCard
-                  key={collection.id}
-                  name={collection.name}
-                  description={collection.description}
-                  countLabel={collection.countLabel}
-                  dateRange={collection.dateRange}
-                  ministry={collection.ministry}
-                  approvalSummary={collection.approvalSummary}
-                  peopleWarning={collection.peopleWarning}
-                  images={collection.images}
-                  onOpen={() => browseCollection(collection.id, collection.name)}
-                />
-              ))}
-            </div>
-          </section>
+          )}
         </div>
       </section>
+
+      {!opsView ? (
+        <>
+          <div className="mt-3">
+            <TrustSignalStrip
+              signals={[
+                { label: "Default library", value: "Approved copies first", tone: "approved" },
+                { label: "Reuse decision", value: "Open record before download", tone: "info" },
+                { label: "Protected source", value: "Originals request-only", tone: "blocked" },
+                { label: "Unsure?", value: "Request DAM review", tone: "review" }
+              ]}
+            />
+          </div>
+          <section className="find-usecase-grid mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-7" aria-label="Common media tasks">
+            {findUseCases.map((task) => {
+              const props = {
+                label: task.label,
+                detail: task.detail,
+                icon: task.icon
+              };
+              if ("href" in task) return <UseCaseCard {...props} href={task.href} key={task.label} />;
+              return <UseCaseCard {...props} onClick={() => openSavedView(task.view)} key={task.label} />;
+            })}
+          </section>
+        </>
+      ) : (
+        <section className="ops-workbench mt-5 grid gap-3 p-4 xl:grid-cols-[1fr_.9fr]" aria-label="Operational search summary">
+          <div className="grid gap-3 sm:grid-cols-4">
+            {[
+              { label: "Visible here", value: result?.counts.visibleToRole ?? "-", tone: "bg-[#f2f6fa] text-[#27435b]" },
+              { label: "Portal ready", value: result?.counts.portalReady ?? "-", tone: "bg-[#eef8f2] text-[#194f34]" },
+              { label: "Rights review", value: result?.counts.rightsReview ?? "-", tone: "bg-[#fff8e8] text-[#71500f]" },
+              { label: "Children/youth", value: result?.counts.childrenYouth ?? "-", tone: "bg-[#fff1ef] text-[#7b332f]" }
+            ].map((item) => (
+              <div className={cn("rounded-[16px] p-3", item.tone)} key={item.label}>
+                <strong className="block text-2xl font-black tabular-nums">{item.value}</strong>
+                <span className="text-xs font-black">{item.label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-2 text-sm font-semibold text-tjc-muted">
+            <div className="flex items-center gap-2 text-tjc-evergreen">
+              <Database size={17} strokeWidth={1.9} aria-hidden="true" />
+              <strong>{result?.source.label || "Loading source"}</strong>
+            </div>
+            <p>{result?.source.detail || "Loading media-library source state."}</p>
+          </div>
+        </section>
+      )}
+
+      {opsView ? (
+        <section className="mt-3 grid gap-3 rounded-[12px] border border-[#d9dee3] bg-white p-3 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,.45fr)]" aria-label="Rights and incident search">
+          <div>
+            <span className="dam-kicker">Rights Search</span>
+            <h2 className="mt-1 text-lg font-black text-tjc-ink">Find assets by source, license, person, event, package, download, or pending write.</h2>
+            <p className="mt-1 text-sm font-semibold leading-relaxed text-tjc-muted">
+              This route is the incident desk: find all assets from a source, under a license, involving people/minors, expired, Do Not Use, downloaded by a user, used in a package, or waiting on ResourceSpace sync.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {[
+              ["Verdict", "Approved / Restricted / Do Not Use"],
+              ["Rights", "Owner/license, attribution, proof link"],
+              ["Custody", "ResourceSpace, Drive, S3 derivative"],
+              ["Audit", "Downloads, denials, share links, review actions"]
+            ].map(([label, value]) => (
+              <div className="rounded-md border border-[#e1e7e2] bg-[#fbfcfa] p-2" key={label}>
+                <strong className="block font-black text-tjc-ink">{label}</strong>
+                <span className="mt-1 block font-semibold leading-snug text-tjc-muted">{value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {error ? (
+        <section className="mt-5 rounded-[12px] border border-[#dfb9b5] bg-[#fff1ef] p-4 text-sm font-semibold text-[#7b332f]" role="alert">
+          {error}
+        </section>
+      ) : null}
+
+      <div className={cn("asset-bank-console mt-5 grid gap-4", !opsView && "lg:grid-cols-[17rem_minmax(0,1fr)] xl:grid-cols-[17rem_minmax(0,1fr)_24rem]")} data-testid="asset-bank-console">
+        {!opsView ? (
+          <aside className="find-facet-rail order-2 grid gap-3 self-start rounded-lg border border-[#d9dee3] bg-white p-3 lg:order-none lg:sticky lg:top-[calc(var(--app-header-height)+1rem)]" aria-label="Asset bank navigation">
+            <section className="grid gap-2">
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Workspace</h2>
+                <p className="mt-1 truncate text-sm font-black text-tjc-ink">{currentWorkspaceLabel}</p>
+              </div>
+              <div className="rounded-md border border-[#d9dee3] bg-[#f8faf9] px-2.5 py-2 text-xs font-semibold leading-relaxed text-tjc-muted">
+                Downloads stay blocked until each media record clears reuse checks. Package approval never replaces item verdict.
+              </div>
+            </section>
+            <section className="grid gap-1.5" aria-label="Saved views">
+              <h3 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Saved views</h3>
+              {[
+                ["Ready copies", viewerDefaultView],
+                ["Website image", "website-hero"],
+                ["Slide background", "sermon-slides"],
+                ["Youth-safe", "no-people"],
+                ["Review needed", "batch-approved-blockers"]
+              ].map(([label, view]) => (
+                <button
+                  className={cn(
+                    "flex min-h-9 items-center justify-between rounded-md px-2 text-left text-xs font-black transition",
+                    selectedView === view ? "bg-[#e8f3ee] text-tjc-evergreen" : "text-[#3f4a43] hover:bg-[#f7faf8]"
+                  )}
+                  type="button"
+                  onClick={() => openSavedView(view)}
+                  key={view}
+                >
+                  <span>{label}</span>
+                  <span aria-hidden="true">›</span>
+                </button>
+              ))}
+              <Link className="flex min-h-9 items-center justify-between rounded-md px-2 text-xs font-black text-[#3f4a43] hover:bg-[#f7faf8]" href="/collections">
+                <span>Packages</span>
+                <span aria-hidden="true">›</span>
+              </Link>
+            </section>
+            <section className="grid gap-3" aria-label="Facets">
+              <h3 className="text-xs font-black uppercase tracking-[.04em] text-[#52606b]">Facets</h3>
+              {viewerFacetGroups.map((group) => (
+                <div className="grid gap-1.5" key={group.label}>
+                  <strong className="text-xs font-black text-tjc-ink">{group.label}</strong>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.options.map((filter) => (
+                      <button
+                        className={cn(
+                          "min-h-7 rounded-md border px-2 text-[11px] font-black transition",
+                          filters.includes(filter) ? "border-[#92b9aa] bg-[#e8f3ee] text-tjc-evergreen" : "border-[#d9dee3] bg-white text-[#52606b] hover:bg-[#f8faf9]"
+                        )}
+                        type="button"
+                        onClick={() => toggleFilter(filter)}
+                        aria-pressed={filters.includes(filter)}
+                        key={filter}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          </aside>
+        ) : null}
+
+      <section className="asset-bank-results order-1 grid gap-3 lg:order-none" aria-label="Find results">
+        {!(viewerSafeDefaultEmpty && !loading && !assets.length) ? (
+        <div className="asset-results-toolbar flex flex-wrap items-end justify-between gap-3 rounded-lg border border-[#e5e7eb] bg-white px-3 py-3">
+          <div>
+            <h2 className="text-lg font-black text-tjc-ink">
+              {loading ? "Loading media" : assets.length ? "Media results" : "Asset results"}
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-tjc-muted">
+              {viewerSafeDefaultEmpty
+                ? "Ready-only default is active."
+                : pagination && result?.total
+                ? `Showing ${pagination.rangeStart.toLocaleString()}-${pagination.rangeEnd.toLocaleString()} of ${result.total.toLocaleString()}`
+                : activeCollection
+                  ? `Package: ${activeCollection.name}`
+                  : activeView
+                    ? `View: ${activeView.label}`
+                    : "Search or choose a use case."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {assets.length || filters.length ? (
+              <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={() => setFiltersOpen(true)}>
+                <Filter size={16} strokeWidth={1.9} aria-hidden="true" />
+                Filters
+              </button>
+            ) : null}
+            {assets.length ? (
+              <label className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-[#c5d1c9] bg-white px-3 text-sm font-black text-[#3f4a43]">
+                Sort
+                <select className="bg-transparent text-tjc-evergreen" value={sort} onChange={(event) => setSort(event.target.value as CatalogSort)}>
+                  {sortOptions.map((option) => <option key={option}>{option}</option>)}
+                </select>
+              </label>
+            ) : null}
+            <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#c5d1c9] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={clearSearchState}>
+              <RotateCcw size={16} strokeWidth={1.9} aria-hidden="true" />
+              Reset
+            </button>
+          </div>
+        </div>
+        ) : null}
+
+        {loading ? (
+          <div className="media-results-grid" aria-hidden="true">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div className="skeleton h-80 rounded-[14px]" key={index} />
+            ))}
+          </div>
+        ) : null}
+
+        {!loading && !assets.length ? (
+          <div data-testid="library-empty-state">
+            {viewerSafeDefaultEmpty ? (
+              <div className="asset-empty-inline" data-testid="viewer-safe-empty-state">
+                <EmptyState
+                  title="No approved copies are ready yet"
+                  description="Media may exist, but it still needs review, rights checks, or approved copies before normal users can reuse it."
+                  primary={<PrimaryAction href="/collections" icon={Package}>Browse packages</PrimaryAction>}
+                  secondary={<PrimaryAction href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20media%20for%20safe%20reuse.%0AContext:%20" tone="secondary" icon={Mail}>Request DAM review</PrimaryAction>}
+                  tertiary={<PrimaryAction href="/upload" tone="secondary" icon={UploadCloud}>Send new media</PrimaryAction>}
+                  className="library-empty-compact"
+                />
+                <button className="mt-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#e5cf93] bg-[#fff8e8] px-3 text-sm font-black text-[#71500f] transition hover:bg-[#fff2d2] active:translate-y-px" type="button" onClick={() => openSavedView("batch-approved-blockers")}>
+                  Show items needing review, downloads stay blocked
+                </button>
+                <ReviewNeededShelf assets={reviewNeededPreview} onOpen={() => openSavedView("batch-approved-blockers")} />
+              </div>
+            ) : (
+              <EmptyState
+                title="No approved media matches this search"
+                description="Try another use case, browse packages, or send media to the team for DAM review."
+                primary={<PrimaryAction onClick={clearSearchState} icon={Search}>Find approved media</PrimaryAction>}
+                secondary={<PrimaryAction href="/collections" tone="secondary" icon={FolderOpen}>Browse packages</PrimaryAction>}
+              />
+            )}
+          </div>
+        ) : null}
+
+        {!loading && assets.length && !opsView && viewMode === "grid" ? (
+          <div className="media-results-grid">
+            {assets.map((asset, index) => (
+              <MediaCard asset={asset} role={role} priority={index === 0 || index === 7} key={asset.id} />
+            ))}
+          </div>
+        ) : null}
+
+        {!loading && assets.length && !opsView && viewMode === "list" ? (
+          <div className="overflow-hidden rounded-xl border border-[var(--dam-border)] bg-white shadow-[var(--dam-shadow-soft)]">
+            <div className="hidden grid-cols-[9rem_minmax(0,1fr)_10rem_9rem_8rem] gap-3 border-b border-[var(--dam-border)] bg-[var(--dam-panel-muted)] px-3 py-2 text-xs font-black text-[var(--dam-muted)] md:grid">
+              <span>Preview</span><span>Asset</span><span>Verdict</span><span>Type</span><span>Reference</span>
+            </div>
+            {assets.map((asset) => <ViewerAssetListRow asset={asset} role={role} key={asset.id} />)}
+          </div>
+        ) : null}
+
+        {!loading && assets.length && opsView ? (
+          <div className="overflow-hidden rounded-[12px] border border-[#d8e1da] bg-white">
+            <div className="hidden grid-cols-[minmax(9rem,12rem)_minmax(10rem,1fr)_minmax(6rem,8rem)_minmax(7rem,9rem)_minmax(6rem,8rem)_minmax(6rem,8rem)_minmax(5rem,7rem)] gap-3 border-b border-[#d8e1da] bg-[#f3f6f4] px-3 py-2 text-xs font-black text-[#526059] xl:grid">
+              <span>Preview</span><span>Asset</span><span>Workflow</span><span>Distribution</span><span>People</span><span>Reference</span><span>Health</span>
+            </div>
+            {assets.map((asset) => <OpsAssetRow asset={asset} key={asset.id} />)}
+          </div>
+        ) : null}
+
+        {assets.length && pagination && result?.total ? (
+          <LibraryPagination
+            rangeStart={pagination.rangeStart}
+            rangeEnd={pagination.rangeEnd}
+            total={result.total}
+            hasPrevious={pagination.hasPrevious}
+            hasNext={pagination.hasNext}
+            loading={loading}
+            onPrevious={() => setPageOffset(pagination.previousOffset)}
+            onNext={() => setPageOffset(pagination.nextOffset)}
+            pageSize={pageLimit}
+            onPage={(page) => setPageOffset(Math.max(0, (page - 1) * pageLimit))}
+          />
+        ) : null}
+      </section>
+
+        {!opsView && inspectorAsset && selectedAssetDisplay && selectedAssetVerdict ? (
+          <aside className="library-inspector-rail order-3 hidden self-start xl:grid" aria-label="Selected asset inspector">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-black text-tjc-muted">1 of {result?.total?.toLocaleString() || assets.length.toLocaleString()}</span>
+              <Link className="text-xs font-black text-tjc-evergreen" href={`/assets/${inspectorAsset.id}`}>Open record</Link>
+            </div>
+            <div className="overflow-hidden rounded-[10px] border border-[#d9dee3] bg-[#eef0f7]">
+              {selectedAssetDisplay.image ? (
+                <img className="aspect-[4/3] w-full object-cover" src={selectedAssetDisplay.image} alt={inspectorAsset.thumbnailAlt} loading="lazy" />
+              ) : (
+                <div className="dam-unavailable-preview min-h-44">
+                  <strong>Preview unavailable</strong>
+                  <span>Open record for derivative and permission state.</span>
+                </div>
+              )}
+            </div>
+            <div>
+              <h2 className="line-clamp-2 text-lg font-black text-tjc-ink">{selectedAssetDisplay.title}</h2>
+              <p className="mt-1 text-sm font-semibold text-tjc-muted">{selectedAssetDisplay.cardSubtitle}</p>
+            </div>
+            <section className={cn("rounded-[10px] border p-3", selectedAssetVerdict.canDownload ? "border-[#b8d9c6] bg-[#edf8f1]" : "border-[#ead6a8] bg-[#fff8e8]")} aria-label="Selected asset use decision">
+              <span className="block text-xs font-black uppercase tracking-[.05em] text-[#536057]">Can I use this?</span>
+              <strong className={cn("mt-1 block text-lg font-black leading-tight", selectedAssetVerdict.canDownload ? "text-[#22563a]" : "text-[#725216]")}>{selectedAssetVerdict.label}</strong>
+              <p className="mt-1 text-sm font-semibold leading-relaxed text-[#4d5b52]">{selectedAssetVerdict.reason}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/80 bg-white px-2.5 py-1 text-xs font-black text-[#52606b]">{inspectorAsset.mediaType}</span>
+                <span className="rounded-full border border-white/80 bg-white px-2.5 py-1 text-xs font-black text-[#52606b]">Source/original restricted</span>
+              </div>
+            </section>
+            <dl className="library-inspector-ledger">
+              {[
+                ["Asset ID", inspectorAsset.id],
+                ["Usage", inspectorAsset.usageScope],
+                ["People", inspectorAsset.peopleRisk || "Unknown"],
+                ["Review", inspectorAsset.reviewedDate || "Pending"],
+                ["Source/original", "Restricted"],
+                ["Evidence gate", selectedAssetVerdict.canDownload ? "Cleared for approved copy" : "Public download blocked"]
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {selectedAssetVerdict.canDownload ? (
+              <GatedDownloadButton className="dam-action-button" href={selectedAssetVerdict.downloadHref} reason={`Library inspector approved-copy request for ${inspectorAsset.title}`}>Download Approved Copy</GatedDownloadButton>
+            ) : (
+              <Link className="dam-action-button" href={`/assets/${inspectorAsset.id}`}>View usage guidance</Link>
+            )}
+            <p className="text-xs font-semibold leading-relaxed text-tjc-muted">
+              Collections and saved views help discovery only. Item-level record verdict controls reuse. Master/original files stay restricted.
+            </p>
+          </aside>
+        ) : null}
+      </div>
+
+      <Dialog
+        open={filtersOpen}
+        title="Filter media"
+        description={opsView ? "Use operational filters for review and governance work." : "Filter approved media by use, people visibility, and media type."}
+        onClose={() => setFiltersOpen(false)}
+        placement="right"
+        maxWidthClassName="max-w-[28rem]"
+        footer={(
+          <>
+            <PrimaryAction tone="secondary" onClick={() => setFilters([])}>Clear filters</PrimaryAction>
+            <PrimaryAction onClick={() => setFiltersOpen(false)}>Show results</PrimaryAction>
+          </>
+        )}
+      >
+        {opsView ? (
+          <FilterSidebar filters={filters} onToggle={toggleFilter} onClear={() => setFilters([])} variant="drawer" />
+        ) : (
+          <div className="grid gap-4">
+            {[
+              { label: "Best use", options: ["Website image", "Slide background", "Newsletter", "Social", "Youth-safe"] },
+              { label: "Media type", options: ["Photo", "Video", "Audio", "Graphic", "Document"] },
+              { label: "People visibility", options: ["No people", "Adults visible", "People unknown", "Youth review needed"] },
+              { label: "Availability", options: ["Approved copies", "Review required before use", "Source file restricted"] }
+            ].map((group) => (
+              <section className="grid gap-2" key={group.label}>
+                <h3 className="text-sm font-black text-tjc-ink">{group.label}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {group.options.map((filter) => (
+                    <button
+                      type="button"
+                      className={cn(
+                        "min-h-10 rounded-[10px] border px-3 text-left text-xs font-black transition",
+                        filters.includes(filter) ? "border-[#92c2b0] bg-[#e8f5ef] text-tjc-evergreen" : "border-[#d8e1da] bg-white text-[#3f4a43] hover:bg-[#f8faf8]"
+                      )}
+                      onClick={() => toggleFilter(filter)}
+                      aria-pressed={filters.includes(filter)}
+                      key={filter}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </Dialog>
     </div>
   );
 }

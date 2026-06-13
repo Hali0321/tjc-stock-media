@@ -3,38 +3,45 @@
 import { useState } from "react";
 import { Copy, ExternalLink, Link as LinkIcon } from "lucide-react";
 import { DropdownActionMenu, type DropdownAction } from "@/components/DropdownActionMenu";
+import { toastSaveFailed, toastShareCopied } from "@/lib/tjc-toasts";
 import type { StockMediaAsset } from "@/lib/types";
 
 type AssetActionsMenuProps = {
   asset: StockMediaAsset;
   resourceSpaceUrl: string | null;
   canOpenResourceSpace: boolean;
+  canExposeResourceSpaceId?: boolean;
+  label?: string;
 };
 
-export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace }: AssetActionsMenuProps) {
+export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace, canExposeResourceSpaceId = false, label = "Asset actions" }: AssetActionsMenuProps) {
   const [status, setStatus] = useState("");
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
+  const recordLabel = canExposeResourceSpaceId ? "ResourceSpace ID" : "reference code";
 
   async function copyText(value: string, label: string) {
     if (!navigator.clipboard?.writeText) {
       setStatus("Copy unavailable in this browser.");
+      toastSaveFailed("Copy unavailable in this browser.");
       return;
     }
     try {
       await navigator.clipboard.writeText(value);
       setStatus(`${label} copied.`);
+      toastShareCopied(`${label} copied`);
     } catch {
       setStatus(`${label} could not be copied.`);
+      toastSaveFailed(`${label} could not be copied.`);
     }
   }
 
   const actions: DropdownAction[] = [
     {
       id: "copy-resource-id",
-      label: "Copy ResourceSpace ID",
-      detail: resourceSpaceId,
+      label: canExposeResourceSpaceId ? "Copy ResourceSpace ID" : "Copy reference code",
+      detail: canExposeResourceSpaceId ? resourceSpaceId : "Use this when asking the media team for help",
       icon: <Copy size={15} strokeWidth={1.8} aria-hidden="true" />,
-      onSelect: () => copyText(resourceSpaceId, "ResourceSpace ID")
+      onSelect: () => copyText(resourceSpaceId, recordLabel)
     },
     {
       id: "copy-portal-link",
@@ -56,5 +63,5 @@ export function AssetActionsMenu({ asset, resourceSpaceUrl, canOpenResourceSpace
     });
   }
 
-  return <DropdownActionMenu label="Asset actions" actions={actions} status={status} />;
+  return <DropdownActionMenu label={label} actions={actions} status={status} />;
 }

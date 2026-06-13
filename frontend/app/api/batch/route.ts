@@ -1,53 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAssetRecordById } from "@/lib/catalog";
-import { canReview, normalizeRole } from "@/lib/permissions";
-import { normalizeAssetIds } from "@/lib/request-validation";
+import { appendAuditEvent } from "@/lib/audit-log";
+import { resolveAssetSelection } from "@/lib/asset-selection";
+import {
+  batchActionDeniedAuditEvent,
+  batchActionForPreview,
+  batchActionInputValidationError,
+  batchActionPreviewAuditEvent,
+  batchActionRoleDeniedError,
+  batchActionSelectionValidationError,
+  buildBatchActionPreviewPayload,
+  readBatchActionInput
+} from "@/lib/batch-actions";
+import { canReview } from "@/lib/permissions";
+import { requestIdentity } from "@/lib/request-identity";
 
 export const dynamic = "force-dynamic";
 
-const supportedActions = new Set(["request-review", "mark-internal", "archive"]);
-
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as {
-    role?: string;
-    action?: string;
-    assetIds?: string[];
-  };
-  const role = normalizeRole(body.role);
-  const assetIds = normalizeAssetIds(body.assetIds);
+  const input = await readBatchActionInput(request);
+  const identity = requestIdentity(request, input.role);
+  const role = identity.role;
 
   if (!canReview(role)) {
-    return NextResponse.json({ error: "Bulk governance actions require Reviewer or DAM Admin role." }, { status: 403 });
+    appendAuditEvent(batchActionDeniedAuditEvent(input, role, identity.id));
+    const denied = batchActionRoleDeniedError();
+    return NextResponse.json(denied.body, { status: denied.status });
   }
-  if (!body.action || !supportedActions.has(body.action)) {
-    return NextResponse.json({ error: "Unsupported batch action." }, { status: 400 });
-  }
-  if (!assetIds.length) {
-    return NextResponse.json({ error: "Select at least one asset." }, { status: 400 });
+  const inputError = batchActionInputValidationError(input);
+  if (inputError) {
+    return NextResponse.json(inputError.body, { status: inputError.status });
   }
 
-  const records = await Promise.all(assetIds.map((id) => getAssetRecordById(id)));
-  const found = records.filter((item) => item.asset).map((item) => item.asset!);
-  const missing = assetIds.filter((id) => !found.some((asset) => asset.id === id));
-  if (missing.length) {
-    return NextResponse.json({ error: "One or more selected assets were not found.", missing }, { status: 404 });
+  const selection = await resolveAssetSelection(input.requestedIds);
+  const selectionError = batchActionSelectionValidationError(selection);
+  if (selectionError) {
+    return NextResponse.json(selectionError.body, { status: selectionError.status });
   }
 
   const timestamp = new Date().toISOString();
+  const action = batchActionForPreview(input);
 
-  return NextResponse.json({
-    ok: false,
-    mode: "server-route-contract",
-    action: body.action,
-    count: found.length,
-    auditRecords: found.map((asset) => ({
-      assetId: asset.id,
-      resourceSpaceId: asset.resourceSpaceId || asset.id,
-      previousStatus: asset.status,
-      requestedAction: body.action,
-      reviewerRole: role,
-      timestamp
-    })),
-    message: `Batch action preview ready for ${found.length} asset${found.length === 1 ? "" : "s"}: ${body.action.replace("-", " ")}. ResourceSpace API write mapping must be configured before persistence.`
-  });
+  appendAuditEvent(batchActionPreviewAuditEvent(action, selection.assets.length, role, identity.id));
+
+  return NextResponse.json(buildBatchActionPreviewPayload({ action, assets: selection.assets, role, timestamp }));
 }

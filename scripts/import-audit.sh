@@ -16,6 +16,18 @@ fi
 
 mkdir -p "$OUT_DIR"
 
+file_count="$(find "$SOURCE_DIR" -maxdepth 1 -type f | wc -l | tr -d ' ')"
+total_size="$(du -sh "$SOURCE_DIR" | awk '{print $1}')"
+extension_counts="$(
+  find "$SOURCE_DIR" -maxdepth 1 -type f |
+    sed 's/.*\\.//' |
+    tr '[:upper:]' '[:lower:]' |
+    sort |
+    uniq -c |
+    sort -nr |
+    awk '{print "- " $2 ": " $1}'
+)"
+
 printf 'canonical_asset_id,original_filename,extension,size_bytes,checksum_sha256,source_path,import_batch\n' > "$MANIFEST"
 
 while IFS= read -r -d '' file; do
@@ -41,17 +53,36 @@ done < <(find "$SOURCE_DIR" -maxdepth 1 -type f -print0 | sort -z)
   echo
   echo "## Count By Extension"
   echo
-  find "$SOURCE_DIR" -maxdepth 1 -type f | sed 's/.*\\.//' | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr | awk '{print "- " $2 ": " $1}'
+  if [ -n "$extension_counts" ]; then
+    printf '%s\n' "$extension_counts"
+  else
+    echo "- none: 0"
+  fi
   echo
   echo "## Total"
   echo
-  echo "- Files: $(find "$SOURCE_DIR" -maxdepth 1 -type f | wc -l | tr -d ' ')"
-  echo "- Size: $(du -sh "$SOURCE_DIR" | awk '{print $1}')"
+  echo "- Files: $file_count"
+  echo "- Size: $total_size"
   echo
   echo "## HEIC Check"
   echo
   echo "HEIC files must be verified in ResourceSpace preview generation. If preview fails, keep originals and create derivative JPG copies only."
+  echo
+  echo "## Operator Checklist"
+  echo
+  echo "- Confirm source folder and batch name are correct before import."
+  echo "- Confirm manifest row count matches expected source file count."
+  echo "- Run \`make smoke\` before \`make import-mvp-batch\`."
+  echo "- Imported assets must remain \`Needs Review / Do Not Publish\` until reviewer signoff."
+  echo "- Source media was not renamed, moved, deleted, or imported by this audit."
 } > "$SUMMARY"
 
-echo "Manifest written: $MANIFEST"
-echo "Summary written: $SUMMARY"
+echo "Import audit complete"
+echo "Source: $SOURCE_DIR"
+echo "Batch: $BATCH"
+echo "Files: $file_count"
+echo "Size: $total_size"
+echo "Manifest: $MANIFEST"
+echo "Summary: $SUMMARY"
+echo "Safety: audit only; no source media renamed, moved, deleted, or imported."
+echo "Next: review summary, then run: make smoke && make import-mvp-batch"

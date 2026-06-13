@@ -84,11 +84,13 @@ export function HoldReleaseButton({
       }}
     >
       <span
-        className={cn("absolute inset-y-0 left-0 bg-[#f7d9d7] opacity-80", holding ? "w-full" : "w-0")}
-        style={{ transition: holding ? `width ${holdMs}ms linear` : "width 140ms ease-out" }}
+        className={cn("absolute inset-y-0 left-0 w-full origin-left bg-[#f7d9d7] opacity-80", holding ? "scale-x-100" : "scale-x-0")}
+        style={{ transition: holding ? `transform ${holdMs}ms linear` : "transform 140ms ease-out" }}
         aria-hidden="true"
       />
-      <span className="relative z-10 inline-flex items-center justify-center gap-2">{children}</span>
+      <span className="relative z-10 inline-flex min-w-0 flex-wrap items-center justify-center gap-2 whitespace-normal text-center">{children}</span>
     </button>
   );
 }
+
+export const HoldToConfirmButton = HoldReleaseButton;

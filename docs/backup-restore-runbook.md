@@ -25,4 +25,4 @@ Before church launch:
 - backup target must be separate from primary storage
 - restore test must pass on church PC/NAS
 - backup schedule must be owned by church IT/admin
-- Hali Mac must be optional, not production dependency
+- local prototype machine must be optional, not production dependency

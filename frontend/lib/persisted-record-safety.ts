@@ -1,0 +1,62 @@
+export function safeCompactText(value: unknown, maxLength: number) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+export function safeSlugText(value: unknown, maxLength: number) {
+  return safeCompactText(value, maxLength).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "");
+}
+
+export function safePathSlugText(value: unknown, maxLength: number) {
+  return safeCompactText(value, maxLength).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export function safeFileNameText(value: unknown, maxLength: number) {
+  return safeCompactText(value, maxLength).replace(/[^a-z0-9._-]+/gi, "-").replace(/^[.-]+|[.-]+$/g, "");
+}
+
+export function safeIsoTimestamp(value: unknown) {
+  const text = safeCompactText(value, 40);
+  if (!/^\d{4}-\d{2}-\d{2}(?:T|$)/.test(text)) return "";
+  const parsed = Date.parse(text);
+  if (Number.isNaN(parsed)) return "";
+  const iso = new Date(parsed).toISOString();
+  return iso.startsWith(text.slice(0, 10)) ? iso : "";
+}
+
+export function safeIsoTimestampIdPart(value: unknown) {
+  const iso = value instanceof Date && !Number.isNaN(value.getTime()) ? value.toISOString() : safeIsoTimestamp(value);
+  return (iso || new Date(0).toISOString()).replace(/[:.]/g, "-");
+}
+
+export function safeTimestampMs(value: unknown) {
+  const iso = safeIsoTimestamp(value);
+  return iso ? Date.parse(iso) : 0;
+}
+
+export function newestByTimestamp<T>(records: T[], timestamp: (record: T) => unknown) {
+  return [...records].sort((a, b) => safeTimestampMs(timestamp(b)) - safeTimestampMs(timestamp(a)));
+}
+
+export function safeNonNegativeInt(value: unknown) {
+  return Math.max(0, Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : 0);
+}
+
+export function safeBoundedInt(value: unknown, { fallback, min, max }: { fallback: number; min: number; max: number }) {
+  const raw = typeof value === "string" ? value.trim() : value;
+  if (raw === "" || raw === null || raw === undefined) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(Math.trunc(parsed), min), max);
+}
+
+export function safeFiniteNumber(value: unknown) {
+  return Number.isFinite(value) ? value as number : 0;
+}
+
+export function safeBoolean(value: unknown) {
+  return value === true;
+}
+
+export function safeEnumValue<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? value as T : fallback;
+}

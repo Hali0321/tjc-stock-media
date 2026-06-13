@@ -1,0 +1,12 @@
+[
+  {
+    "engineName": "webkit",
+    "ok": false,
+    "error": "Error: browserType.launch: Executable doesn't exist at /Users/halim4pro/Library/Caches/ms-playwright/webkit-2287/pw_run.sh\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     npx playwright install                                 ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝"
+  },
+  {
+    "engineName": "firefox",
+    "ok": false,
+    "error": "Error: browserType.launch: Executable doesn't exist at /Users/halim4pro/Library/Caches/ms-playwright/firefox-1522/firefox/Nightly.app/Contents/MacOS/firefox\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     npx playwright install                                 ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝"
+  }
+]

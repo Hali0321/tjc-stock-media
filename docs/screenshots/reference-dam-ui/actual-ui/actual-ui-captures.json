@@ -1,0 +1,797 @@
+{
+  "capturedAt": "2026-06-09T01:48:10.796Z",
+  "captures": [
+    {
+      "name": "brandfolder-searching",
+      "url": "https://brandguides.brandfolder.com/how-to-use-brandfolder-1/searching",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/brandfolder-searching-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/brandfolder-searching-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/brandfolder-searching-2.png"
+      ],
+      "summary": {
+        "title": "How to Use Brandfolder | Searching",
+        "headings": [
+          "Searching",
+          "Search Bar",
+          "What You Can Search For",
+          "Using Auto-Suggestions",
+          "Search Operators and Syntax",
+          "High Recall vs. Strict Search",
+          "Search Examples",
+          "Sections",
+          "How Sections Work",
+          "Using Sections Effectively",
+          "Labels",
+          "Understanding Label Hierarchy",
+          "Navigating Labels",
+          "Label Benefits",
+          "Filters",
+          "Available Filter Types",
+          "Using Filters Effectively",
+          "Filter Combinations",
+          "Pins",
+          "Understanding Pins",
+          "Searching Pinned Assets",
+          "When to Use Pin Searches",
+          "Visual Browsing",
+          "Visual Discovery Benefits"
+        ],
+        "images": [
+          {
+            "alt": "Description of GIF",
+            "src": "https://cdn.bfldr.com/EBRJ9P75/at/mrcjxwncxfx3cf484xh4s66/Search_Bar_final.gif",
+            "w": 1920,
+            "h": 1080
+          },
+          {
+            "alt": "Description of GIF",
+            "src": "https://cdn.bfldr.com/EBRJ9P75/at/sm4b58fm9g3bjqj7qb9kkf8/Labels.gif",
+            "w": 1920,
+            "h": 1080
+          },
+          {
+            "alt": "Description of GIF",
+            "src": "https://cdn.bfldr.com/EBRJ9P75/at/sp3fhrg466hvsf3bkqg/Pins_1.gif",
+            "w": 1920,
+            "h": 1080
+          }
+        ],
+        "textSample": "Welcome to Sonata Asset Library!IntroSearchingSearch BarSectionsLabelsFiltersPinsVisual BrowsingBest PracticesDownloadingSingle Asset DownloadBulk DownloadResize & ConvertCroppingBest PracticesSharingShare LinksBest PracticesCommentingCommentsAnnotationsReply ThreadsBest PracticesAccessingPublic DAMPrivate AccessRequesting AccessHelpSearchingFinding the right assets quickly is essential for efficient workflow. The Sonata Asset Library offers multiple powerful search and discovery methods to help you locate exactly what you need. This chapter will guide you through each method and show you how to combine them for optimal results.Search Bar The search bar is your primary tool for finding assets. Located prominently at the top of the interface, it provides intelligent, fast results across all your accessible content. What You Can Search For The asset library searches across an extensive ran"
+      }
+    },
+    {
+      "name": "brandfolder-downloading",
+      "url": "https://brandguides.brandfolder.com/how-to-use-brandfolder-1/downloading",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/brandfolder-downloading-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/brandfolder-downloading-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/brandfolder-downloading-2.png"
+      ],
+      "summary": {
+        "title": "How to Use Brandfolder | Downloading",
+        "headings": [
+          "Downloading",
+          "Single Asset Download",
+          "Download from Asset Card",
+          "Quick Download from Thumbnail",
+          "Download Options Available",
+          "Bulk Download",
+          "Managing Large Selections",
+          "Resize & Convert",
+          "Resize Options",
+          "Cropping",
+          "Admin-Defined Presets",
+          "Using Crop Presets",
+          "Custom Cropping",
+          "Best Practices",
+          "Planning Your Downloads",
+          "Working with Large Collections",
+          "Download Tips & Shortcuts",
+          "Quick Download Shortcuts",
+          "Quality Considerations"
+        ],
+        "images": [],
+        "textSample": "Welcome to Sonata Asset Library!IntroSearchingSearch BarSectionsLabelsFiltersPinsVisual BrowsingBest PracticesDownloadingSingle Asset DownloadBulk DownloadResize & ConvertCroppingBest PracticesSharingShare LinksBest PracticesCommentingCommentsAnnotationsReply ThreadsBest PracticesAccessingPublic DAMPrivate AccessRequesting AccessHelpDownloadingGetting your assets out of the system and into your projects is straightforward and flexible. Whether you need a single image for a quick email or hundreds of assets for a major campaign, the asset library provides several download options to meet your specific needs.Single Asset Download Download from Asset Card The most common way to download an individual asset is from within the asset's detailed card view, which provides full access to all download options. To download from asset card: Locate your asset using any of the search methods from Chap"
+      }
+    },
+    {
+      "name": "bynder-asset-bank",
+      "url": "https://support.bynder.com/hc/en-us/articles/360016051239-View-Assets-in-the-Asset-Bank",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-asset-bank-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-asset-bank-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-asset-bank-2.png"
+      ],
+      "summary": {
+        "title": "Just a moment...",
+        "headings": [
+          "support.bynder.com",
+          "Performing security verification",
+          "Verification successful. Waiting for support.bynder.com to respond"
+        ],
+        "images": [],
+        "textSample": "support.bynder.comPerforming security verificationThis website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.Verification successful. Waiting for support.bynder.com to respond<div class=\"h2\"><span id=\"challenge-error-text\">Enable JavaScript and cookies to continue</span></div>"
+      }
+    },
+    {
+      "name": "bynder-upload",
+      "url": "https://support.bynder.com/hc/en-us/articles/360013870260-How-To-Upload-Assets-Via-Upload-Media-And-Drag-And-Drop",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-upload-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-upload-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-upload-2.png"
+      ],
+      "summary": {
+        "title": "Just a moment...",
+        "headings": [
+          "support.bynder.com",
+          "Performing security verification",
+          "Verification successful. Waiting for support.bynder.com to respond"
+        ],
+        "images": [],
+        "textSample": "support.bynder.comPerforming security verificationThis website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.Verification successful. Waiting for support.bynder.com to respond<div class=\"h2\"><span id=\"challenge-error-text\">Enable JavaScript and cookies to continue</span></div>"
+      }
+    },
+    {
+      "name": "bynder-workflow-assets",
+      "url": "https://support.bynder.com/hc/en-us/articles/360013932879-Asset-Workflow-Assets",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-workflow-assets-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-workflow-assets-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/bynder-workflow-assets-2.png"
+      ],
+      "summary": {
+        "title": "Just a moment...",
+        "headings": [
+          "support.bynder.com",
+          "Performing security verification",
+          "Verification successful. Waiting for support.bynder.com to respond"
+        ],
+        "images": [],
+        "textSample": "support.bynder.comPerforming security verificationThis website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.Verification successful. Waiting for support.bynder.com to respond<div class=\"h2\"><span id=\"challenge-error-text\">Enable JavaScript and cookies to continue</span></div>"
+      }
+    },
+    {
+      "name": "acquia-search-assets",
+      "url": "https://docs.acquia.com/acquia-dam/how-do-i-search-assets",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-search-assets-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-search-assets-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-search-assets-2.png"
+      ],
+      "summary": {
+        "title": "How do I search for assets? | Acquia DAM | Acquia Product Documentation",
+        "headings": [
+          "How do I search for assets?",
+          "Viewing search results",
+          "Search shortcuts",
+          "Common types of searches",
+          "Filename",
+          "And and or",
+          "Exact",
+          "Field-specific",
+          "Does not contain",
+          "Wildcard",
+          "Last updated",
+          "Is empty or is not empty",
+          "Combining search shortcuts",
+          "Permissions and settings",
+          "Did not find what you were looking for?"
+        ],
+        "images": [
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/vyskjqfm9r/web/Product%20Logo-DAM-Color.svg?v=e5ec19ee-a3ec-4c9e-a61f-72adf98beb81",
+            "w": 1596,
+            "h": 2048
+          },
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/34m6as7nqp/web/Product%20Logo-DAM-White.svg?v=31107d43-43f5-4ee2-b893-f44574a8c550",
+            "w": 1581,
+            "h": 2048
+          },
+          {
+            "alt": "Website navigation bar with \"eudaimonia\" logo, search bar, and menu options including Dashboard, Activity, Collections, and Categories.",
+            "src": "https://acquia.widen.net/content/9cueaebcoi/web/ka0Pb000000AvJZ00N6g00000WDN1a0EM6g000005LvRH.png?v=9a69d565-28d1-4647-b311-e980a6c15446",
+            "w": 1057,
+            "h": 120
+          },
+          {
+            "alt": "Search results for \"bike\" showing three images of cyclists, with sidebar filters for categories, tags, and more.",
+            "src": "https://acquia.widen.net/content/oezkk0adaq/web/ka0Pb000000AvJZ00N6g00000WDN1a0EMPb000003Jxqf.png?v=6b02b0af-26f2-407b-bf78-d887c7c090e5",
+            "w": 2048,
+            "h": 1032
+          },
+          {
+            "alt": "all-asset",
+            "src": "https://acquia.widen.net/content/voiydgb28l/web/2a7c3_all-asset.png?w=480&v=4b31839b-ae35-4089-9618-b57f9305f2bb&itok=NUnzbLp0",
+            "w": 480,
+            "h": 250
+          },
+          {
+            "alt": "Acquia-DAM_search-help",
+            "src": "https://acquia.widen.net/content/02telvf1xz/web/7fbcc_search-help.png?w=480&v=5c3512b4-e172-4d2d-b6f0-227f72a7efe3&itok=_8RcTM2N",
+            "w": 480,
+            "h": 209
+          },
+          {
+            "alt": "Search bar displaying the text \"bike explorer\" with a magnifying glass icon.",
+            "src": "https://acquia.widen.net/content/rmld1fqpna/web/ka0Pb000000AvJZ00N6g00000WDN1a0EMPb000003K0F3.png?w=480&v=39ea331e-6b58-4fcb-90a9-3979666e6f41&itok=gQYsGdZL",
+            "w": 480,
+            "h": 105
+          },
+          {
+            "alt": "Search bar displaying the text \"bike or explorer\" with a magnifying glass icon on the right.",
+            "src": "https://acquia.widen.net/content/ebppyf2tcw/web/ka0Pb000000AvJZ00N6g00000WDN1a0EMPb000003K0LV.png?w=480&v=2900b16b-e00c-471a-b980-a50108324450&itok=K19LNTcx",
+            "w": 480,
+            "h": 110
+          },
+          {
+            "alt": "Search bar displaying the query \"color: blue\" with a magnifying glass icon on the right.",
+            "src": "https://acquia.widen.net/content/sc3b47mjvm/web/ka0Pb000000AvJZ00N6g00000WDN1a0EMPb000003KNQ9.png?w=480&v=5ac58cdf-c5e0-4924-990c-ac7af44ae77d&itok=fXcvd8li",
+            "w": 480,
+            "h": 111
+          }
+        ],
+        "textSample": "requestAnimationFrame(function(){$RT=performance.now()});$RB=[];$RV=function(a){$RT=performance.now();for(var b=0;b<a.length;b+=2){var c=a[b],e=a[b+1];null!==e.parentNode&&e.parentNode.removeChild(e);var f=c.parentNode;if(f){var g=c.previousSibling,h=0;do{if(c&&8===c.nodeType){var d=c.data;if(\"/$\"===d||\"/&\"===d)if(0===h)break;else h--;else\"$\"!==d&&\"$?\"!==d&&\"$~\"!==d&&\"$!\"!==d&&\"&\"!==d||h++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;e.firstChild;)f.insertBefore(e.firstChild,c);g.data=\"$\";g._reactRetry&&requestAnimationFrame(g._reactRetry)}}a.length=0}; $RC=function(a,b){if(b=document.getElementById(b))(a=document.getElementById(a))?(a.previousSibling.data=\"$~\",$RB.push(a,b),2===$RB.length&&(\"number\"!==typeof $RT?requestAnimationFrame($RV.bind(null,$RB)):(a=performance.now(),setTimeout($RV.bind(null,$RB),2300>a&&2E3<a?2300-a:$RT+300-a)))):b.parentNode.removeChild(b)};$RC(\"B:1\",\"S:1"
+      }
+    },
+    {
+      "name": "acquia-portals-collections",
+      "url": "https://docs.acquia.com/acquia-dam/how-do-i-add-collections-portal",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-portals-collections-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-portals-collections-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-portals-collections-2.png"
+      ],
+      "summary": {
+        "title": "How do I allow downloads or shares from a portal? | Acquia DAM | Acquia Product Documentation",
+        "headings": [
+          "How do I allow downloads or shares from a portal?",
+          "Did not find what you were looking for?",
+          "How do I add collections to a portal?",
+          "Featured collections",
+          "Collection cards",
+          "Edit collection names",
+          "Set previews and pin top collections",
+          "Choose collection settings",
+          "Add more collections",
+          "Remove collections",
+          "Did not find what you were looking for?"
+        ],
+        "images": [
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/vyskjqfm9r/web/Product%20Logo-DAM-Color.svg?v=e5ec19ee-a3ec-4c9e-a61f-72adf98beb81",
+            "w": 1596,
+            "h": 2048
+          },
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/34m6as7nqp/web/Product%20Logo-DAM-White.svg?v=31107d43-43f5-4ee2-b893-f44574a8c550",
+            "w": 1581,
+            "h": 2048
+          },
+          {
+            "alt": "asset section with arrow pointing to settings",
+            "src": "https://acquia.widen.net/content/gy3ojulax6/web/ka0Pb0000006vjZ00N6g00000WDN1a0EM6g000005LvpW.png?v=2353d890-9827-4076-abe5-45bb890da620",
+            "w": 1670,
+            "h": 852
+          },
+          {
+            "alt": "download and share settings for an asset section in a portal",
+            "src": "https://acquia.widen.net/content/jpp8gerxbs/web/ka0Pb0000006vjZ00N6g00000WDN1a0EM6g000005LvpU.png?v=3167ac8f-0fb1-4d52-b428-22e21b54fe72",
+            "w": 1758,
+            "h": 1328
+          },
+          {
+            "alt": "portals download modal with quick download disabled",
+            "src": "https://acquia.widen.net/content/r476a7nesx/web/ka0Pb0000006vjZ00N6g00000WDN1a0EM6g000005LvpV.png?v=62aa1a7d-a887-4b0d-8c23-7920226eee71",
+            "w": 1776,
+            "h": 1214
+          },
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/vyskjqfm9r/web/Product%20Logo-DAM-Color.svg?v=e5ec19ee-a3ec-4c9e-a61f-72adf98beb81",
+            "w": 1596,
+            "h": 2048
+          },
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/34m6as7nqp/web/Product%20Logo-DAM-White.svg?v=31107d43-43f5-4ee2-b893-f44574a8c550",
+            "w": 1581,
+            "h": 2048
+          },
+          {
+            "alt": "Select the type of collection you want to add to the collection section of your portal.",
+            "src": "https://acquia.widen.net/content/ugslf4outl/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvnx.png?v=432e1d8c-cddd-41fe-a514-ee4d7dc9e35d",
+            "w": 548,
+            "h": 163
+          },
+          {
+            "alt": "Select to add global or personal collections to your portal.",
+            "src": "https://acquia.widen.net/content/jjaf2yncmf/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvo0.png?v=36828bdb-c71c-411a-b1f5-01c6331dc942",
+            "w": 1352,
+            "h": 538
+          },
+          {
+            "alt": "When you choose a featured collection, the first four assets in the collection display as previews.",
+            "src": "https://acquia.widen.net/content/lxe3necybl/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvo3.png?v=6817dfe3-ef38-4da3-bf62-0f672bcb3bb7",
+            "w": 1085,
+            "h": 439
+          },
+          {
+            "alt": "Multiple collections can display in a portal when you select collection cards.",
+            "src": "https://acquia.widen.net/content/z66ffo5mva/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvny.png?v=372cf9d4-638b-407e-bf34-dcb818401830",
+            "w": 849,
+            "h": 328
+          },
+          {
+            "alt": "Click the pencil icon to edit a collection's name in a portal.",
+            "src": "https://acquia.widen.net/content/fpaa9tw2ks/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvnv.png?v=bc43cffd-9b1b-4645-b07f-d396cc9ade3c",
+            "w": 276,
+            "h": 277
+          },
+          {
+            "alt": "Click the menu to change an image preview for the collection in the portal.",
+            "src": "https://acquia.widen.net/content/lj2qaua5lq/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvo5.png?v=f57218c8-771c-4192-b3ac-ac24b0a8a258",
+            "w": 274,
+            "h": 375
+          },
+          {
+            "alt": "Pin top collections you want others to see in a portal.",
+            "src": "https://acquia.widen.net/content/icylf30skh/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvo4.png?v=ab6579aa-1205-4735-bcfe-b049a6c62046",
+            "w": 1254,
+            "h": 800
+          },
+          {
+            "alt": "Select the gear icon to choose collection section settings.",
+            "src": "https://acquia.widen.net/content/xzuowvlcuh/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvo1.png?v=e68e3702-d833-4eaf-9571-e6a2c5f9fbb4",
+            "w": 873,
+            "h": 367
+          },
+          {
+            "alt": "Click the Add icon to add more collections to a portal.",
+            "src": "https://acquia.widen.net/content/urmyjjooel/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvnw.png?v=d864a59c-eda6-45e2-b0c2-30190bd9287f",
+            "w": 875,
+            "h": 363
+          },
+          {
+            "alt": "Remove a single collection from a portal by clicking the menu and deleting the card.",
+            "src": "https://acquia.widen.net/content/qkfjtj8mns/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvo2.png?v=c9d4d865-911c-4ad9-aca9-014aa0097962",
+            "w": 273,
+            "h": 375
+          },
+          {
+            "alt": "Click the trash can icon to delete a featured collection in a portal.",
+            "src": "https://acquia.widen.net/content/cw0fwclbs3/web/ka0Pb0000006vLN00N6g00000WDN1a0EM6g000005Lvnz.png?v=218bb2eb-375b-4de8-9daa-6b7f88aba35c",
+            "w": 1224,
+            "h": 442
+          }
+        ],
+        "textSample": ":root { --bprogress-color: #1c8385; --bprogress-height: 4px; --bprogress-spinner-size: 18px; --bprogress-spinner-animation-duration: 400ms; --bprogress-spinner-border-size: 2px; --bprogress-box-shadow: 0 0 10px #1c8385, 0 0 5px #1c8385; --bprogress-z-index: 99999; --bprogress-spinner-top: 15px; --bprogress-spinner-bottom: auto; --bprogress-spinner-right: 15px; --bprogress-spinner-left: auto; } .bprogress { width: 0; height: 0; pointer-events: none; z-index: var(--bprogress-z-index); } .bprogress .bar { background: var(--bprogress-color); position: fixed; z-index: var(--bprogress-z-index); top: 0; left: 0; width: 100%; height: var(--bprogress-height); } /* Fancy blur effect */ .bprogress .peg { display: block; position: absolute; right: 0; width: 100px; height: 100%; box-shadow: var(--bprogress-box-shadow); opacity: 1.0; transform: rotate(3deg) translate(0px, -4px); } /* Remove these to g"
+      }
+    },
+    {
+      "name": "acquia-upload-files",
+      "url": "https://docs.acquia.com/acquia-dam/how-do-i-upload-files",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-upload-files-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-upload-files-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/acquia-upload-files-2.png"
+      ],
+      "summary": {
+        "title": "How do I upload files? | Acquia DAM | Acquia Product Documentation",
+        "headings": [
+          "How do I upload files?",
+          "Choose details",
+          "Select categories",
+          "Did not find what you were looking for?"
+        ],
+        "images": [
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/vyskjqfm9r/web/Product%20Logo-DAM-Color.svg?v=e5ec19ee-a3ec-4c9e-a61f-72adf98beb81",
+            "w": 1596,
+            "h": 2048
+          },
+          {
+            "alt": "",
+            "src": "https://acquia.widen.net/content/34m6as7nqp/web/Product%20Logo-DAM-White.svg?v=31107d43-43f5-4ee2-b893-f44574a8c550",
+            "w": 1581,
+            "h": 2048
+          },
+          {
+            "alt": "Click the Upload button, then choose Assets to upload files to your site.",
+            "src": "https://acquia.widen.net/content/f3dzfohzmk/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviB.png?v=fd960166-8402-4f7f-8b8d-a9f526001fad",
+            "w": 191,
+            "h": 201
+          },
+          {
+            "alt": "User-added image",
+            "src": "https://acquia.widen.net/content/fam9qg5m5u/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviJ.png?v=ef47184b-341c-4b96-8c82-c2a8ad963277",
+            "w": 2048,
+            "h": 1147
+          },
+          {
+            "alt": "User-added image",
+            "src": "https://acquia.widen.net/content/bftcvg5pcr/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviD.png?v=c5150a73-93f3-4ecb-8421-359d5501e4f3",
+            "w": 2048,
+            "h": 1289
+          },
+          {
+            "alt": "User-added image",
+            "src": "https://acquia.widen.net/content/6omn4xmujx/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviI.png?v=ebd3c267-f996-41db-9526-ecf594544f9f",
+            "w": 2036,
+            "h": 1160
+          },
+          {
+            "alt": "add metadata page with metadata type, primary metadata, and other fields shown",
+            "src": "https://acquia.widen.net/content/3hthwm2oqf/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviF.png?v=615ccab1-6eb7-46c1-a941-8f77134130c0",
+            "w": 2048,
+            "h": 1327
+          },
+          {
+            "alt": "metadata field labeled keywords with lock icon beside it",
+            "src": "https://acquia.widen.net/content/dohdtlycgg/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviC.png?v=7d865ef4-5ec3-4c9f-9d37-4c4549078878",
+            "w": 710,
+            "h": 726
+          },
+          {
+            "alt": "color metadata field with dropdown and three colors listed",
+            "src": "https://acquia.widen.net/content/kuco4nnppr/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviG.png?v=bb71c29e-3972-4629-8b52-adbeea9ec9fb",
+            "w": 384,
+            "h": 216
+          },
+          {
+            "alt": "User-added image",
+            "src": "https://acquia.widen.net/content/ufwzxkeixr/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviL.png?v=cdbe8e4b-8546-4b9e-99bb-d21834a5571d",
+            "w": 1822,
+            "h": 468
+          },
+          {
+            "alt": "file drop zone with 4 files uploaded and one file in the process of uploading",
+            "src": "https://acquia.widen.net/content/wev457rpfe/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviE.png?v=3621505f-8304-4cd8-95cc-fb09d9118bac",
+            "w": 2048,
+            "h": 1011
+          },
+          {
+            "alt": "5 files uploaded in drop zone",
+            "src": "https://acquia.widen.net/content/qeplmrysko/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005Lvi9.png?v=d94e4e1f-ed92-48c5-a651-c1eb839aa396",
+            "w": 2048,
+            "h": 1009
+          },
+          {
+            "alt": "User-added image",
+            "src": "https://acquia.widen.net/content/sda4xoaohj/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviK.png?v=09e2c605-8b10-4556-8736-7922a00a3960",
+            "w": 2048,
+            "h": 1449
+          },
+          {
+            "alt": "Add or edit metadata on the Batch Edit page.",
+            "src": "https://acquia.widen.net/content/mnegchpwhy/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviH.png?v=022b7419-a455-48c0-8e41-7563ff7096c1",
+            "w": 940,
+            "h": 891
+          },
+          {
+            "alt": "User-added image",
+            "src": "https://acquia.widen.net/content/mhpfg9t9ra/web/ka0Pb0000006uKT00N6g00000WDN1a0EM6g000005LviA.png?v=c525cb2f-f096-48a3-b2e6-9ad47e2268d9",
+            "w": 2048,
+            "h": 654
+          }
+        ],
+        "textSample": ":root { --bprogress-color: #1c8385; --bprogress-height: 4px; --bprogress-spinner-size: 18px; --bprogress-spinner-animation-duration: 400ms; --bprogress-spinner-border-size: 2px; --bprogress-box-shadow: 0 0 10px #1c8385, 0 0 5px #1c8385; --bprogress-z-index: 99999; --bprogress-spinner-top: 15px; --bprogress-spinner-bottom: auto; --bprogress-spinner-right: 15px; --bprogress-spinner-left: auto; } .bprogress { width: 0; height: 0; pointer-events: none; z-index: var(--bprogress-z-index); } .bprogress .bar { background: var(--bprogress-color); position: fixed; z-index: var(--bprogress-z-index); top: 0; left: 0; width: 100%; height: var(--bprogress-height); } /* Fancy blur effect */ .bprogress .peg { display: block; position: absolute; right: 0; width: 100px; height: 100%; box-shadow: var(--bprogress-box-shadow); opacity: 1.0; transform: rotate(3deg) translate(0px, -4px); } /* Remove these to g"
+      }
+    },
+    {
+      "name": "adobe-assets-view",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/navigate-assets-view",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-assets-view-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-assets-view-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-assets-view-2.png"
+      ],
+      "summary": {
+        "title": "Assets view user interface | Adobe Experience Manager as a Cloud Service",
+        "headings": [
+          "Navigate to files and folders and view assets",
+          "Understand the Assets view user interface",
+          "Browse and view assets and folders",
+          "Preview assets",
+          "Next Steps",
+          "Experience Manager as a Cloud Service",
+          "ON THIS PAGE",
+          "Was this content helpful?"
+        ],
+        "images": [
+          {
+            "alt": "Assets view user interface",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/media_1cb53c4b23c71ad708fc178ea293e6e937b621269.png?width=2000&format=webply&optimize=medium",
+            "w": 2000,
+            "h": 656
+          },
+          {
+            "alt": "Browse folders",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/media_15a12cff95a19a02a3122af953a24a8f10d156dcb.png?width=2000&format=webply&optimize=medium",
+            "w": 958,
+            "h": 367
+          },
+          {
+            "alt": "Preview an asset",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/media_11548aa1fc86d3304eaeb38136665afbbc7918fa5.png?width=2000&format=webply&optimize=medium",
+            "w": 1192,
+            "h": 698
+          },
+          {
+            "alt": "Video preview",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/media_1a024e23ea45c2b09d025ab474765d1f2e2c7db01.png?width=2000&format=webply&optimize=medium",
+            "w": 1006,
+            "h": 445
+          }
+        ],
+        "textSample": "DocumentationAEMUser Guide AEM AssetsNavigate to files and folders and view assets Last update: June 5, 2026 BookmarkSign-in to bookmark Copy linkCopy link URL Applies to: Experience Manager as a Cloud Service Topics: Asset Management Publishing Collaboration Asset Processing CREATED FOR: User Understand the Assets view user interface Assets view offers an intuitive and user-friendly user interface. The clean interface makes assets and related information easy to find and remember.When you log into Assets view, you see the following interface. A: Left sidebar to browse repository and provides access to a few other options B: Display or collapse the left sidebar to increase asset-viewing area C: Filter search results D: Select all contents of the selected folder E: Options to sort assets F: Search box G: Upload or drag and drop files using Add Assets button H: Create a new folder I: Switc"
+      }
+    },
+    {
+      "name": "adobe-search-assets",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/search-assets",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-search-assets-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-search-assets-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-search-assets-2.png"
+      ],
+      "summary": {
+        "title": "How to search assets in AEM? | Adobe Experience Manager as a Cloud Service",
+        "headings": [
+          "Search assets in AEM",
+          "Understand asset search interface",
+          "Dynamic search facets",
+          "Search suggestions as you type",
+          "Understand search results and behavior",
+          "Basic search terms and results",
+          "Search ranking and boosting",
+          "Configure asset batch size to display search results",
+          "Advanced search",
+          "Find similar images",
+          "Adobe Stock images",
+          "Dynamic Media assets",
+          "GQL search using specific values in metadata fields",
+          "Search assets from other Experience Manager offerings or interfaces",
+          "Search assets from Adobe Asset Link panel",
+          "Search assets in Experience Manager desktop app",
+          "Search assets in Brand Portal",
+          "Search Adobe Stock images",
+          "Search Dynamic Media assets",
+          "Search assets in Content Finder when authoring web pages",
+          "Search collections",
+          "Content Advisor",
+          "Limitations",
+          "Search tips"
+        ],
+        "images": [
+          {
+            "alt": "Understand Experience Manager Assets search results interface",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_1b2499449bece579e679469ed634f2bacce009368.png?width=2000&format=webply&optimize=medium",
+            "w": 2000,
+            "h": 1004
+          },
+          {
+            "alt": "See the approximate number of assets without filtering search results in search facets.",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_110393a4327c3ea8a016128b8ec033e74e03b6bf2.png?width=2000&format=webply&optimize=medium",
+            "w": 877,
+            "h": 709
+          }
+        ],
+        "textSample": "DocumentationAEMUser Guide AEM AssetsSearch assets in AEM Last update: June 5, 2026 BookmarkSign-in to bookmark Copy linkCopy link URL Applies to: Experience Manager as a Cloud Service Topics: Selectors Adobe Stock Asset Distribution Asset Management Asset Processing CREATED FOR: User Admin VersionArticle linkAEM 6.5Click hereAEM as a Cloud ServiceThis articleAdobe Experience Manager Assets provides robust asset search methods that help you achieve higher content velocity. Your teams can reduce time to market with seamless, intelligent asset search experience using out-of-the-box functionality and custom methods. Search assets capability is central to the usage of a digital asset management system – be it for further use by creatives, for robust management of assets by the business users and marketers, or for administration by DAM administrators. Simple, advanced, and custom searches tha"
+      }
+    },
+    {
+      "name": "adobe-stock-metadata",
+      "url": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/assets/manage/aem-assets-adobe-stock.html?lang=en",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-stock-metadata-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-stock-metadata-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/adobe-stock-metadata-2.png"
+      ],
+      "summary": {
+        "title": "Manage Adobe Stock assets in Assets. | Adobe Experience Manager as a Cloud Service",
+        "headings": [
+          "Use Adobe Stock assets in Adobe Experience Manager Assets",
+          "Prerequisites to integrate Experience Manager and Adobe Stock",
+          "Integrate Experience Manager and Adobe Stock",
+          "Set up a program in Developer Console",
+          "Add configuration in the AEM author instance",
+          "Assign permissions to user group",
+          "Access Adobe Stock assets",
+          "Use and manage Adobe Stock assets in Experience Manager",
+          "Find assets",
+          "Save and view the required assets",
+          "License assets",
+          "Access metadata and asset properties",
+          "Known limitations",
+          "Experience Manager as a Cloud Service",
+          "ON THIS PAGE",
+          "Was this content helpful?"
+        ],
+        "images": [
+          {
+            "alt": "integrate aem assets with adobe stock",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_1fecaf265856aea7efee211c650a0ae4ccbb8f970.png?width=2000&format=webply&optimize=medium",
+            "w": 2000,
+            "h": 403
+          },
+          {
+            "alt": "integrate aem assets and adobe stock",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_1ee24663763ce5196a681ff6ba7453b634f52367c.png?width=2000&format=webply&optimize=medium",
+            "w": 1442,
+            "h": 998
+          },
+          {
+            "alt": "aem assets and adobe stock",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_14ee45848146cb9d053a9db90bedb8b2a686e230a.png?width=2000&format=webply&optimize=medium",
+            "w": 1116,
+            "h": 1266
+          },
+          {
+            "alt": "aem assets and adobe stock",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_1a90a330bf999ca7569f8fcf3e37659b158b038c1.png?width=2000&format=webply&optimize=medium",
+            "w": 1674,
+            "h": 1390
+          },
+          {
+            "alt": "using adobe stock with aem",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_1c6e5ac43b89ec08edc62d6ed76cf5bd0692f8282.png?width=2000&format=webply&optimize=medium",
+            "w": 2000,
+            "h": 882
+          },
+          {
+            "alt": "using adobe stock with aem",
+            "src": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/media_19bc92d0ba6dd9779f1bac7e5735f79f9595f3aad.png?width=2000&format=webply&optimize=medium",
+            "w": 2000,
+            "h": 667
+          }
+        ],
+        "textSample": "DocumentationAEMUser Guide AEM AssetsUse Adobe Stock assets in Adobe Experience Manager Assets Last update: June 5, 2026 BookmarkSign-in to bookmark Copy linkCopy link URL Applies to: Experience Manager as a Cloud Service Topics: Adobe Stock CREATED FOR: Admin User VersionArticle linkAEM 6.5Click hereAEM as a Cloud ServiceThis articleAdobe Stock service provides designers and businesses with access to millions of high-quality, curated, royalty-free photos, vectors, illustrations, videos, templates, and 3D assets for all their creative projects.Adobe Stock for enterprise offering, by default, includes sharing rights across the organization. Once an asset has been licensed by a user of your organization, other users of your organization can identify, download, and use this asset without having to license it again. Once an asset has been licensed by your organization, the right to use it is"
+      }
+    },
+    {
+      "name": "aprimo-agentic-ui",
+      "url": "https://www.aprimo.com/platform/digital-asset-management",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-agentic-ui-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-agentic-ui-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-agentic-ui-2.png"
+      ],
+      "summary": {
+        "title": "Aprimo DAM: Centralize Content & Accelerate Delivery.",
+        "headings": [
+          "News",
+          "Explore Aprimo’s latest product innovations",
+          "Digital Asset Management",
+          "Personalization",
+          "Content Intelligence",
+          "Productivity",
+          "Plan",
+          "Spend",
+          "Aprimo AI",
+          "Integrations",
+          "Why Aprimo",
+          "Industry",
+          "Value",
+          "AI Agents",
+          "Team",
+          "Company Size",
+          "Categories",
+          "Featured",
+          "2026 Top DAM Trends Report",
+          "Aprimo Named a Leader by Top Industry Analysts",
+          "The DAM Buyer’s Guide",
+          "Hachette Book Group’s Success with Aprimo",
+          "Digital Asset Management",
+          "Personalization"
+        ],
+        "images": [
+          {
+            "alt": "Young male model in colorful jackets surrounded by digital asset thumbnails, highlighting AI-driven content customization and rendition generation for marketing.",
+            "src": "https://www.aprimo.com/wp-content/uploads/2026/03/DAM-Page-Hero-Agentic-DAM-v2.webp",
+            "w": 1352,
+            "h": 989
+          },
+          {
+            "alt": "Aprimo Agentic DAM graphic showcasing AI-powered content operations, featuring labeled functions: Analyze & Optimize, Deliver & Personalize, Plan & Create, Upload & Enrich, Review & Approve, and Search, with a dark background and vibrant accents.",
+            "src": "https://www.aprimo.com/wp-content/uploads/2026/02/Aprimo-AI-Agentic-Power-Content-Operations-v5.webp",
+            "w": 1400,
+            "h": 687
+          },
+          {
+            "alt": "Predictive metadata dashboard displaying trends in predicted and retention rates for digital asset management, featuring field-level summaries for author, category, description, tags, and titles.",
+            "src": "https://www.aprimo.com/wp-content/uploads/2026/02/Agentic-Automation-Product-Screens-768x519.webp",
+            "w": 646,
+            "h": 436
+          },
+          {
+            "alt": "Woman gardening with short gray hair and glasses, wearing a gray sweater and pink scarf, illustrating the importance of personal well-being and active lifestyle in the context of health and wellness.",
+            "src": "https://www.aprimo.com/wp-content/uploads/2026/02/Annotation-AI-Review-Pharma_white-BG-768x565.webp",
+            "w": 646,
+            "h": 475
+          },
+          {
+            "alt": "Predictive metadata dashboard displaying trends in predicted and retention rates for digital asset management, featuring field-level summaries for author, category, description, tags, and titles.",
+            "src": "https://www.aprimo.com/wp-content/uploads/2026/02/Agentic-Automation-Product-Screens-768x519.webp",
+            "w": 646,
+            "h": 436
+          }
+        ],
+        "textSample": "We use cookies to personalize content and ads, to provide social media features and to analyze our traffic. We also share information about your use of our site with our social media, advertising and analytics partners who may combine it with other information that you’ve provided to them or that they’ve collected from your use of their services. For more information see our If you decline, your information won’t be tracked when you visit this website. A single cookie will be used in your browser to remember your preference not to be tracked.AcceptDecline <iframe src=\"https://www.googletagmanager.com/ns.html?id=GTM-T75TRJ\" height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe> Skip to content News Explore Aprimo’s latest product innovations View Highlights Products Close Products Open Products Digital Asset Management Single source of truth for the full content lifecycle P"
+      }
+    },
+    {
+      "name": "aprimo-dam-api",
+      "url": "https://developers.aprimo.com/docs/tutorials/dam-developer-tutorial",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-dam-api-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-dam-api-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-dam-api-2.png"
+      ],
+      "summary": {
+        "title": "DAM - Getting Started | Aprimo Developer Documentation",
+        "headings": [
+          "DAM - Getting Started",
+          "DAM Developer Tutorial​",
+          "Authorization​",
+          "Searching For Assets​",
+          "Get Asset Metadata and Files​",
+          "Downloading An Asset​",
+          "Uploading a File to Aprimo​",
+          "Creating a New Record​"
+        ],
+        "images": [
+          {
+            "alt": "image",
+            "src": "https://developers.aprimo.com/assets/images/ClientRegistrationForm-50987f28cbbba2bc262d56486a1c0a3b.png",
+            "w": 992,
+            "h": 565
+          }
+        ],
+        "textSample": "Ask ChatGPTTutorialsDAM - Getting StartedOn this pageDAM - Getting StartedDAM Developer Tutorial​ In this tutorial, we'll guide you through the fundamental steps of interacting with the Aprimo Digital Asset Management (DAM) API. This straightforward approach is designed to help you quickly integrate with the API and perform essential operations such as authorization, searching for assets, downloading assets, retrieving metadata, uploading files, and creating new assets. You are encouraged to follow along using our provided DAM Developer Tutorial POSTMAN Collection. Rate LimitingBefore you begin developing, read about Aprimo Rate Limiting. Authorization​ Before you can interact with the Aprimo DAM API, you need to authenticate your application. Aprimo uses OAuth 2.0 for authorization, which involved the following steps: Registering a Client Registration Requesting an Access Token Includin"
+      }
+    },
+    {
+      "name": "aprimo-dam-rules",
+      "url": "https://developers.aprimo.com/docs/webhooks-and-rules/dam-rules",
+      "shots": [
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-dam-rules-0.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-dam-rules-1.png",
+        "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/actual-ui/aprimo-dam-rules-2.png"
+      ],
+      "summary": {
+        "title": "DAM Rules | Aprimo Developer Documentation",
+        "headings": [
+          "DAM Rules",
+          "How DAM Rules Work​",
+          "Key Components of DAM Rules​",
+          "1. Target Objects​",
+          "2. Conditions​",
+          "3. Actions​",
+          "4. Execution Timing​",
+          "5. Retries​",
+          "Managing DAM Rules​",
+          "Configuring Rules​",
+          "Rule Structure​",
+          "Advanced Features​",
+          "Responding To HTTP Actions​",
+          "Examples of Use Cases​",
+          "1. Metadata Synchronization​",
+          "2. Expiring Assets​",
+          "3. AI-Driven Tagging​",
+          "4. Classification Updates​",
+          "Considerations for Developers​"
+        ],
+        "images": [],
+        "textSample": "Ask ChatGPTWebhooksDAM RulesOn this pageDAM RulesDAM Rules enable developers to automate actions in the Digital Asset Management (DAM) platform based on defined conditions. These rules act as event-driven webhooks, designed to execute tasks like updating metadata, linking classifications, or initiating external processes when specific triggers occur. Rules are a powerful way to streamline workflows and enforce consistency in the DAM ecosystem. How DAM Rules Work​ DAM Rules operate using an If...Then logic. When a defined condition is met (e.g., a record is updated or a file is added), one or more actions are executed automatically. Rules can respond to a variety of triggers, such as: Object changes (e.g., a field is modified, or a record is reclassified). Specific states (e.g., a field contains a particular value). Scheduled events (e.g., daily checks for expired assets). Rules can be ap"
+      }
+    }
+  ]
+}

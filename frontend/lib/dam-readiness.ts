@@ -11,35 +11,23 @@ import {
   assetNeedsStaleApprovalReview,
   buildDuplicateGroupCounts
 } from "@/lib/asset-governance";
+import { auditLogDiagnostics } from "@/lib/audit-log";
+import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
+import { buildFieldMappings, buildVocabulary } from "@/lib/dam-readiness-metadata";
 import { getActiveMediaSource } from "@/lib/media-source";
-import { hasResourceSpaceApiConfig } from "@/lib/env";
-import { pendingReviewWriteDiagnostics } from "@/lib/pending-review-writes";
-import { resourceSpaceFieldMap } from "@/lib/resourcespace-field-map";
-import { canonicalTags } from "@/lib/taxonomy";
-import type { AdminActionItem, DamReadinessItem, DamReadinessResult, FieldMappingStatus, IntegrationReadinessItem, StockMediaAsset, VocabularyInsight } from "@/lib/types";
+import { buildIntegrationReadiness } from "@/lib/dam-readiness-integrations";
+import type { AuditEventRecord } from "@/lib/audit-log";
+import type { createDamRouteSession } from "@/lib/dam-route-session";
+import type { AdminActionItem, DamReadinessItem, DamReadinessResult } from "@/lib/types";
 
-const fieldDefinitions: Array<{
-  key: keyof typeof resourceSpaceFieldMap;
-  label: string;
-  required: boolean;
-}> = [
-  { key: "publishStatus", label: "Publish status", required: true },
-  { key: "usageScope", label: "Usage scope", required: true },
-  { key: "rightsStatus", label: "Rights status", required: true },
-  { key: "consentStatus", label: "Consent status", required: true },
-  { key: "peopleVisible", label: "People visible", required: true },
-  { key: "minorsVisible", label: "Children/youth visible", required: true },
-  { key: "reviewer", label: "Reviewer", required: true },
-  { key: "reviewedDate", label: "Review date", required: true },
-  { key: "sourceSystem", label: "Source system", required: true },
-  { key: "sourceAccount", label: "Source / photographer", required: false },
-  { key: "sourcePath", label: "Source path", required: true },
-  { key: "sourceAlbumMemberships", label: "Album memberships", required: false },
-  { key: "visibleTags", label: "Visible tags", required: true },
-  { key: "tjcTerms", label: "TJC terms", required: true },
-  { key: "checksumSha256", label: "Checksum", required: true },
-  { key: "duplicateGroup", label: "Duplicate group", required: false }
-];
+type DamRouteSession = ReturnType<typeof createDamRouteSession>;
+type DamReadinessAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
+type DamReadinessRouteError = {
+  body: {
+    error: string;
+  };
+  status: 403;
+};
 
 function ratio(count: number, total: number) {
   return total ? Math.round((count / total) * 100) : 0;
@@ -51,97 +39,6 @@ function clampScore(value: number) {
 
 function average(values: number[]) {
   return values.length ? clampScore(values.reduce((sum, value) => sum + value, 0) / values.length) : 0;
-}
-
-function fieldPresent(asset: StockMediaAsset, key: keyof typeof resourceSpaceFieldMap) {
-  switch (key) {
-    case "publishStatus":
-      return Boolean(asset.status);
-	    case "usageScope":
-	      return Boolean(asset.usageScope);
-	    case "rightsStatus":
-	      return Boolean(asset.rightsStatus && !/unknown|needs review|review required/i.test(asset.rightsStatus));
-	    case "consentStatus":
-	      return Boolean(asset.consentStatus && !/unknown|needs review|review required/i.test(asset.consentStatus));
-	    case "peopleVisible":
-	      return Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown");
-    case "minorsVisible":
-      return Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown");
-    case "visibleTags":
-      return Boolean(asset.tags?.length);
-    case "tjcTerms":
-      return Boolean(asset.tjcTerms?.length);
-    case "reviewer":
-      return Boolean(asset.reviewer);
-    case "reviewedDate":
-      return Boolean(asset.reviewedDate);
-    case "sourceAlbum":
-      return Boolean(asset.collection);
-    case "sourceAlbumMemberships":
-      return Boolean(asset.sourceAlbumMemberships?.length);
-    case "checksumSha256":
-      return Boolean(asset.checksumSha256);
-    case "duplicateGroup":
-      return Boolean(asset.duplicateGroup);
-    default: {
-      const value = asset[key as keyof StockMediaAsset];
-      return Array.isArray(value) ? value.length > 0 : Boolean(value);
-    }
-  }
-}
-
-function buildFieldMappings(assets: StockMediaAsset[]): FieldMappingStatus[] {
-  return fieldDefinitions.map((field) => {
-    const present = assets.filter((asset) => fieldPresent(asset, field.key)).length;
-    const missing = Math.max(0, assets.length - present);
-    return {
-      key: field.key,
-      label: field.label,
-      resourceSpaceField: resourceSpaceFieldMap[field.key],
-      required: field.required,
-      coverage: ratio(present, assets.length),
-      present,
-      missing
-    };
-  });
-}
-
-function normalizeTerm(term: string) {
-  return term.trim().replace(/\s+/g, " ");
-}
-
-function buildVocabulary(assets: StockMediaAsset[]): VocabularyInsight[] {
-  const canonical = [...canonicalTags.visibleTags, ...canonicalTags.tjcTerms];
-  const canonicalLookup = new Map(canonical.map((term) => [term.toLowerCase(), term]));
-  const counts = new Map<string, { label: string; count: number }>();
-
-  assets.forEach((asset) => {
-    [...(asset.tags || []), ...(asset.tjcTerms || []), ...(asset.usageTerms || [])].forEach((term) => {
-      const label = normalizeTerm(term);
-      if (!label) return;
-      const key = label.toLowerCase();
-      const current = counts.get(key);
-      counts.set(key, { label: current?.label || label, count: (current?.count || 0) + 1 });
-    });
-  });
-
-  const canonicalRows: VocabularyInsight[] = canonical
-    .flatMap((term) => {
-      const count = counts.get(term.toLowerCase())?.count || 0;
-      return count ? [{ term, count, kind: "canonical" as const }] : [];
-    });
-
-  const candidateRows: VocabularyInsight[] = [...counts.entries()]
-    .filter(([key]) => !canonicalLookup.has(key))
-    .map(([, item]) => ({
-      term: item.label,
-      count: item.count,
-      kind: item.count >= 3 ? ("candidate" as const) : ("drift" as const)
-    }))
-    .sort((a, b) => b.count - a.count || a.term.localeCompare(b.term))
-    .slice(0, 18);
-
-  return [...canonicalRows, ...candidateRows].slice(0, 28);
 }
 
 function buildActionBacklog({
@@ -179,7 +76,7 @@ function buildActionBacklog({
     {
       id: "rights-review",
       severity: rightsReview ? "high" : "low",
-      label: "Rights and consent review",
+      label: "Rights and consent review coverage",
       count: rightsReview,
       owner: "Reviewer",
       action: "Confirm rights status, consent, restrictions, and public-use notes before external reuse.",
@@ -246,81 +143,36 @@ function buildActionBacklog({
   });
 }
 
-function buildIntegrationReadiness({
-  status,
-  approvedPublic,
-  portalReady
-}: {
-  status: Awaited<ReturnType<typeof getActiveMediaSource>>["status"];
-  approvedPublic: number;
-  portalReady: number;
-}): IntegrationReadinessItem[] {
-  const pending = pendingReviewWriteDiagnostics();
-  const apiConfigured = hasResourceSpaceApiConfig();
-  return [
-    {
-      id: "metadata-source",
-      label: "ResourceSpace read bridge",
-      ready: status.adapter === "resourcespace-api" || status.adapter === "exported-metadata",
-      owner: "ResourceSpace",
-      detail: status.detail
-    },
-    {
-      id: "review-writes",
-      label: "ResourceSpace write mapping",
-      ready: apiConfigured,
-      owner: "ResourceSpace",
-      detail: apiConfigured
-        ? "API credentials are present; field refs still need production write verification before automatic sync."
-        : "Review actions queue locally. ResourceSpace API write mapping is not configured yet."
-    },
-    {
-      id: "pending-review-writes",
-      label: "Pending review write queue",
-      ready: pending.count === 0,
-      owner: "DAM Admin",
-      detail: `${pending.count.toLocaleString()} pending write${pending.count === 1 ? "" : "s"}. Last attempt: ${pending.lastAttemptAt || "none"}. Last error: ${pending.lastError || "none"}.`
-    },
-    {
-      id: "auth",
-      label: "Real authentication",
-      ready: false,
-      owner: "DAM Admin",
-      detail: "Demo role switch is useful for stakeholder review; production needs real identity and permissions."
-    },
-    {
-      id: "master-originals",
-      label: "Google Shared Drive master originals",
-      ready: false,
-      owner: "Google Shared Drive",
-      detail: "Master-original model is documented; production needs access, backup, and ownership confirmation."
-    },
-    {
-      id: "approved-copy-delivery",
-      label: "Approved copy delivery",
-      ready: portalReady > 0,
-      owner: "Reviewers",
-      detail: portalReady
-        ? `${portalReady.toLocaleString()} portal-ready asset${portalReady === 1 ? "" : "s"} can be downloaded as approved copies.`
-        : `${approvedPublic.toLocaleString()} ResourceSpace-approved public asset${approvedPublic === 1 ? "" : "s"} still need portal reuse checks before copy delivery.`
-    },
-    {
-      id: "public-portal",
-      label: "Public portal gate",
-      ready: portalReady > 0,
-      owner: "DAM Admin",
-      detail: portalReady
-        ? `${portalReady.toLocaleString()} asset${portalReady === 1 ? "" : "s"} pass the portal-ready policy.`
-        : "No asset passes portal-ready policy until rights, people/minors, and derivative confidence improve."
-    }
-  ];
-}
-
 function readinessItem(item: DamReadinessItem): DamReadinessItem {
   return {
     ...item,
     score: clampScore(item.score),
     tone: item.score >= 80 ? "ok" : item.score >= 55 ? "info" : "warn"
+  };
+}
+
+export function damReadinessDeniedError(): DamReadinessRouteError {
+  return { body: { error: "DAM readiness is available to DAM Admin role." }, status: 403 };
+}
+
+export function damReadinessDeniedAuditEvent(session: DamRouteSession): DamReadinessAuditEvent {
+  return {
+    type: "admin_readiness_denied",
+    role: session.role,
+    actor: session.identity.id,
+    status: "denied",
+    summary: "Governance readiness denied for non-admin role.",
+    details: { reason: "role-cannot-admin" }
+  };
+}
+
+export function damReadinessViewedAuditEvent(session: DamRouteSession): DamReadinessAuditEvent {
+  return {
+    type: "admin_readiness_viewed",
+    role: session.role,
+    actor: session.identity.id,
+    status: "allowed",
+    summary: "Governance readiness viewed."
   };
 }
 
@@ -341,6 +193,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
   const duplicateCandidates = assets.filter((asset) => assetIsDuplicateCandidate(asset, duplicateGroupCounts)).length;
   const renditionGaps = assets.filter(assetHasRenditionGap).length;
   const staleApprovals = assets.filter((asset) => assetNeedsStaleApprovalReview(asset)).length;
+  const auditLog = auditLogDiagnostics();
 
   const sourceCoverage = 100 - ratio(missingSource, assetCount);
   const rightsCoverage = 100 - ratio(rightsReview, assetCount);
@@ -352,6 +205,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
   const duplicateScore = 100 - ratio(duplicateCandidates, assetCount);
   const staleScore = 100 - ratio(staleApprovals, assetCount);
   const renditionScore = 100 - ratio(renditionGaps, assetCount);
+  const integrationReadiness = buildIntegrationReadiness({ status, approvedPublic, portalReady, auditEvents: auditLog });
 
   const readiness = [
     readinessItem({
@@ -359,7 +213,7 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
       pillar: "Find",
       label: "Search quality",
       score: average([taxonomyScore, enrichmentScore]),
-      detail: "Controlled vocabulary, AI enrichment backlog, and useful titles.",
+      detail: "Controlled vocabulary, metadata enrichment backlog, and useful titles.",
       action: "Clear taxonomy drift and enrichment queues.",
       savedViewId: "taxonomy-drift",
       tone: "info"
@@ -482,6 +336,13 @@ export async function getDamReadiness(): Promise<DamReadinessResult> {
       staleApprovals,
       duplicateCandidates
     }),
-    integrationReadiness: buildIntegrationReadiness({ status, approvedPublic, portalReady })
+    integrationReadiness,
+    betaReadiness: buildBetaReadiness({
+      integrations: integrationReadiness,
+      assetCount,
+      portalReady,
+      auditRecent: auditLog.recent
+    }),
+    auditLog
   };
 }

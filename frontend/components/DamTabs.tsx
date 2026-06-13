@@ -10,7 +10,9 @@ type DamTabsProps<T extends string> = {
   ariaLabel: string;
   idPrefix: string;
   className?: string;
+  size?: "sm" | "md";
   mountedPanels?: boolean;
+  getLabel?: (tab: T) => string;
 };
 
 function safeTabId(tab: string) {
@@ -25,10 +27,14 @@ export function damTabPanelId(idPrefix: string, tab: string) {
   return `${idPrefix}-${safeTabId(tab)}-panel`;
 }
 
-export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, idPrefix, className, mountedPanels = false }: DamTabsProps<T>) {
+export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, idPrefix, className, size = "md", getLabel }: DamTabsProps<T>) {
   function moveFocus(nextTab: T) {
     onChange(nextTab);
-    window.requestAnimationFrame(() => document.getElementById(damTabId(idPrefix, nextTab))?.focus());
+    window.requestAnimationFrame(() => {
+      const next = document.getElementById(damTabId(idPrefix, nextTab));
+      next?.focus();
+      next?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -50,25 +56,34 @@ export function DamTabs<T extends string>({ tabs, active, onChange, ariaLabel, i
   }
 
   return (
-    <div className={cn("flex flex-wrap gap-1", className)} role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown}>
-      {tabs.map((tab) => {
-        const selected = active === tab;
-        return (
-          <button
-            id={damTabId(idPrefix, tab)}
-            key={tab}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            aria-controls={selected || mountedPanels ? damTabPanelId(idPrefix, tab) : undefined}
-            tabIndex={selected ? 0 : -1}
-            className={cn("inline-flex min-h-9 max-w-full items-center rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-[#46534b] transition hover:bg-[#eef7f1] active:translate-y-px", selected && "border-[#9bc5b5] bg-[#e8f5ef] text-tjc-evergreen shadow-[inset_0_0_0_1px_rgba(18,63,58,.08)]")}
-            onClick={() => onChange(tab)}
-          >
-            {tab}
-          </button>
-        );
-      })}
+    <div className={cn("dam-tabs-scroll max-w-full overflow-x-auto overflow-y-hidden rounded-md border border-[#c5d1c9] bg-[#edf3f0] p-1", className)}>
+      <div className="flex w-max min-w-full flex-nowrap items-center gap-1 whitespace-nowrap" role="tablist" aria-label={ariaLabel} aria-orientation="horizontal" onKeyDown={onKeyDown}>
+        {tabs.map((tab) => {
+          const selected = active === tab;
+          const label = getLabel?.(tab) || tab;
+          return (
+            <button
+              id={damTabId(idPrefix, tab)}
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              aria-label={label === tab ? undefined : tab}
+              aria-controls={damTabPanelId(idPrefix, tab)}
+              tabIndex={selected ? 0 : -1}
+              data-state={selected ? "active" : "inactive"}
+              className={cn(
+                "relative inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-transparent font-black text-[#46534b] outline-none transition duration-200 ease-out hover:bg-[#f8fbf8] hover:text-tjc-evergreen focus-visible:ring-2 focus-visible:ring-[#16a99a]/24 active:translate-y-px",
+                size === "sm" ? "min-h-9 px-3 text-xs" : "min-h-11 px-4 text-sm",
+                selected && "border-[#8fb8aa] bg-[#e5f0eb] text-tjc-evergreen"
+              )}
+              onClick={() => onChange(tab)}
+            >
+              <span className="relative z-[1]">{label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
