@@ -74,9 +74,9 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `hardening/media-delivery-preview-proxy`
+Lane: `qa/redaction-crawler`
 
-Goal: harden approved-copy, thumbnail, and preview delivery boundaries without exposing originals or backend URLs.
+Goal: add a normal-role crawler/check for source/original/private/admin/checksum leak terms without widening app scope.
 
 ## Completed lanes
 
@@ -86,6 +86,7 @@ Goal: harden approved-copy, thumbnail, and preview delivery boundaries without e
 | `security/beta-login-throttling` | `09c31f4` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/7 | focused beta-auth tests 6/6, full tests 44/44, typecheck, build, guards, launch-readiness pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `hardening/feedback-durability-attachments` | `eb7a1a2` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/8 | focused feedback tests 4/4, full tests 45/45, typecheck, build, guards, launch-readiness pass, local feedback smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `hardening/truth-scope-fixture-photo-only` | `7383b3f` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/9 | focused production-hardening tests 7/7, full tests 43/43, typecheck, build, guards, tag static smoke, launch-readiness, local API smoke, and local download-ticket smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
+| `hardening/media-delivery-preview-proxy` | `77abe99` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/10 | focused media-delivery tests 3/3, full tests 44/44, typecheck, build, guards, launch-readiness, local download-ticket smoke, and local delivery smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 
 ## Docs lane included paths
 
@@ -112,6 +113,7 @@ docs/weekend-enterprise-dam-runbooks
 security/beta-login-throttling
 hardening/feedback-durability-attachments
 hardening/truth-scope-fixture-photo-only
+hardening/media-delivery-preview-proxy
 ```
 
 ## PR links
@@ -121,6 +123,7 @@ https://github.com/Hali0321/tjc-stock-media/pull/6
 https://github.com/Hali0321/tjc-stock-media/pull/7
 https://github.com/Hali0321/tjc-stock-media/pull/8
 https://github.com/Hali0321/tjc-stock-media/pull/9
+https://github.com/Hali0321/tjc-stock-media/pull/10
 ```
 
 ## Blockers
