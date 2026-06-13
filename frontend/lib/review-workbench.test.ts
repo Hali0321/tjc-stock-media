@@ -4,6 +4,7 @@ import { buildBetaReadiness } from "@/lib/beta-readiness-facts";
 import { buildDiscoveryQuery, matchesDiscoveryQuery } from "@/lib/catalog-discovery";
 import { intentDefinitions, matchesCatalogFilter, savedViewDefinitions } from "@/lib/catalog-language";
 import { derivativeIndexDiagnostics, governedRenditionPolicyForVariant, originalMasterRenditionPolicy, thumbnailVariantCanSatisfyApprovedCopy } from "@/lib/derivative-index";
+import { auditCoverageMetrics, buildGovernanceMetrics, usageHealthMetrics } from "@/lib/dam-governance-metrics";
 import { fileRequiresAdminIntake, intakeDefaultsToNeedsReview, routeAssetForReview, routeUploadIntakeForReview } from "@/lib/intake-routing";
 import { resolvePackageSections } from "@/lib/package-drafts";
 import { buildPackageGovernance } from "@/lib/package-governance";
@@ -499,6 +500,82 @@ describe("Phase 6 rights-aware packages and collections", () => {
       productionReadySharing: false,
       permissionTruth: false
     });
+  });
+});
+
+describe("Phase 7 governance metrics primitives", () => {
+  it("reports raw Approved Public as blocked when portal-ready gates fail", () => {
+    const rawApproved = asset({
+      id: "raw-approved",
+      status: "Approved Public",
+      rightsStatus: "Unknown",
+      rightsBasis: undefined,
+      approvedChannels: [],
+      consentStatus: "Unknown",
+      peopleRisk: "Unknown",
+      reviewer: undefined,
+      reviewedDate: undefined,
+      imageUrls: { small: "/small.jpg", card: "/card.jpg", collection: "/collection.jpg", detail: "/detail.jpg" }
+    });
+    const youthSacrament = asset({
+      id: "sensitive",
+      status: "Needs Review",
+      usageScope: "Do Not Publish",
+      sensitivityClass: "sacrament-sensitive",
+      doctrineSacramentTheme: "Holy Communion",
+      peopleRisk: "Possible minors",
+      consentReleaseRecordId: undefined,
+      hymnNumberOrTitle: "Hymn 469",
+      requiredNotice: undefined,
+      withdrawalStatus: "takedown-requested",
+      duplicateGroup: "dup-1",
+      duplicateRole: "near duplicate"
+    });
+
+    const metrics = buildGovernanceMetrics({ assets: [rawApproved, youthSacrament] });
+    const byId = Object.fromEntries(metrics.map((item) => [item.id, item]));
+
+    expect(byId["raw-approved-blocked"]?.count).toBe(1);
+    expect(byId["rights-review-backlog"]?.count).toBeGreaterThan(0);
+    expect(byId["minors-consent-backlog"]?.count).toBeGreaterThan(0);
+    expect(byId["doctrine-sacrament-backlog"]?.count).toBe(1);
+    expect(byId["hymn-music-backlog"]?.count).toBe(1);
+    expect(byId["required-notice-gaps"]?.count).toBe(1);
+    expect(byId["withdrawal-takedown"]?.count).toBe(1);
+    expect(byId["missing-derivatives"]?.count).toBeGreaterThan(0);
+    expect(byId["duplicate-candidates"]?.count).toBe(1);
+  });
+
+  it("marks missing analytics and package sharing as unavailable instead of zero-success", () => {
+    const metrics = buildGovernanceMetrics({
+      assets: [asset()],
+      usageAnalytics: { enabled: false, storageMode: "local-sqlite", totalEvents: 0 },
+      packageDiagnostics: { count: 2, blockedRefs: 3, productionReadySharing: false }
+    });
+    const byId = Object.fromEntries(metrics.map((item) => [item.id, item]));
+
+    expect(byId["usage-analytics"]).toMatchObject({ status: "unavailable", count: null });
+    expect(byId["package-blockers"]).toMatchObject({ status: "available", count: 3 });
+    expect(byId["package-durable-sharing"]).toMatchObject({ status: "unavailable", count: null });
+    expect(usageHealthMetrics({ enabled: true, storageMode: "local-sqlite", totalEvents: 0 })).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "usage-zero-results", status: "unavailable", count: null })
+    ]));
+  });
+
+  it("summarizes audit/download/package coverage without becoming permission truth", () => {
+    const events: AuditEventRecord[] = [
+      { id: "a1", type: "approved_download", createdAt: "2026-06-12T00:00:00.000Z", role: "Viewer", actor: "Viewer", status: "allowed", summary: "Approved copy downloaded." },
+      { id: "a2", type: "denied_download", createdAt: "2026-06-12T00:01:00.000Z", role: "Viewer", actor: "Viewer", status: "denied", summary: "Denied." },
+      { id: "a3", type: "package_export_blocked", createdAt: "2026-06-12T00:02:00.000Z", role: "Reviewer", actor: "Reviewer", status: "blocked", summary: "Blocked." },
+      { id: "a4", type: "review_pending_write_queued", createdAt: "2026-06-12T00:03:00.000Z", role: "Reviewer", actor: "Reviewer", status: "queued", summary: "Queued." }
+    ];
+    const metrics = auditCoverageMetrics(events);
+    const byId = Object.fromEntries(metrics.map((item) => [item.id, item]));
+
+    expect(byId["audit-approved-downloads"]).toMatchObject({ count: 1, status: "available" });
+    expect(byId["audit-blocked-downloads"]).toMatchObject({ count: 1, status: "available" });
+    expect(byId["audit-package-decisions"]).toMatchObject({ count: 1, status: "available" });
+    expect(byId["audit-review-throughput"]?.detail).toMatch(/portal audit/i);
   });
 });
 

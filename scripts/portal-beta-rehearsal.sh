@@ -164,7 +164,30 @@ const forbiddenKeys = new Set([
   "sourceSystem",
   "workflowState",
   "integrationReadiness",
-  "auditLog"
+  "auditLog",
+  "sourceFolder",
+  "approvalRecheckDate",
+  "church",
+  "consentExpirationDate",
+  "controlledVocabularySource",
+  "doctrineSacramentTheme",
+  "duplicateSimilarityHint",
+  "embargoDate",
+  "expirationDate",
+  "hymnNumberOrTitle",
+  "importBatch",
+  "language",
+  "masterCustodyPathStatus",
+  "publicationTitle",
+  "publishDate",
+  "region",
+  "religiousEducationLevel",
+  "rightsExpirationDate",
+  "sermonTitle",
+  "suggestedTags",
+  "testimonyTheme",
+  "versionOrEdition",
+  "withdrawalStatus"
 ]);
 const forbiddenText = [/s3:\/\//i, /amazonaws\.com/i, /source path/i, /master drive/i, /checksum/i, /ResourceSpace ID/i, /\bRS\s+\d+\b/i, /[a-f0-9]{32,}/i];
 const leaks = [];

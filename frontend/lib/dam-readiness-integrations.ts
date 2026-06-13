@@ -86,7 +86,7 @@ export function buildIntegrationReadiness({
       owner: "ResourceSpace",
       state: sourceIsResourceSpace && derivativeIndex.indexed ? "Operational" : sourceIsResourceSpace ? "Degraded" : "Blocked",
       detail: sourceIsResourceSpace
-        ? `Previews route through backend thumbnail API and derivative manifest. Indexed entries: ${derivativeIndex.entries.toLocaleString()}. Missing derivatives show explicit unavailable states.`
+        ? `Previews route through backend thumbnail API and derivative manifest. Indexed entries: ${derivativeIndex.entries.toLocaleString()}. Missing derivatives show explicit unavailable states. ${derivativeIndex.detail}`
         : "Preview route falls back only when ResourceSpace/export data is unavailable."
     },
     {
@@ -195,7 +195,7 @@ export function buildIntegrationReadiness({
       state: analytics.enabled ? (analytics.totalEvents > 0 ? "Operational" : "Degraded") : "Pending setup",
       detail: analytics.enabled
         ? `Usage analytics is enabled with ${analytics.storageMode}. Recorded events: ${analytics.totalEvents.toLocaleString()}.`
-        : "Insights uses real ResourceSpace counts plus clearly labeled sample trend/package charts until portal event logging is connected."
+        : "Usage analytics is unavailable; search, zero-result, and trend metrics must not be reported as zero-success until durable event logging is connected."
     },
     {
       id: "beta-feedback-storage",
@@ -221,7 +221,7 @@ export function buildIntegrationReadiness({
       ready: packages.count > 0,
       owner: "Portal",
       state: packages.count > 0 ? "Degraded" : "Pending setup",
-      detail: `Package drafts use ${packages.storageMode}; suitable for local/private beta only, not wider rollout. Drafts: ${packages.count.toLocaleString()}; open: ${packages.openCount.toLocaleString()}; blocked refs: ${packages.blockedRefs.toLocaleString()}. Connect durable backend storage before package sharing or invites.`
+      detail: `Package drafts use ${packages.storageMode}; suitable for local/private beta only, not wider rollout. Production-ready sharing: ${packages.productionReadySharing ? "yes" : "no"}. Drafts: ${packages.count.toLocaleString()}; open: ${packages.openCount.toLocaleString()}; blocked refs: ${packages.blockedRefs.toLocaleString()}. Connect durable backend storage before package sharing or invites.`
     },
     {
       id: "brand-kit-collections",

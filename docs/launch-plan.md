@@ -87,6 +87,14 @@ Launch is blocked until all items pass:
 15. ResourceSpace live API reads prove paginated full-archive behavior and do not silently cap at 1,000 records.
 16. ResourceSpace review writeback is confirmed by re-reading the updated record; queued portal review is not final ResourceSpace truth.
 17. Approved Public is checked against portal-ready policy before reuse; raw approval alone is not a download grant.
+18. DAM Admin readiness reports distinguish diagnostics from permission truth:
+    `portal-ready` is stricter than raw `Approved Public`; blocked/stale/expired
+    assets remain visible; missing analytics or durable storage is reported as
+    unavailable, not as zero-success.
+19. Governance metrics surface rights, minors/consent, doctrine/sacrament,
+    testimony/pastoral, hymn/music, stale lifecycle, missing derivative, missing
+    source, duplicate/canonical candidates, package blockers, and audit/download
+    coverage where real data exists.
 
 ## Storage Requirement
 
