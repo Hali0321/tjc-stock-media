@@ -74,9 +74,9 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `feature/smart-rules-dry-run`
+Lane: `infra/photo-only-resourcespace-readiness`
 
-Goal: add deterministic suggestion-only rule helpers if narrow; stop before any approval/writeback/UI expansion.
+Goal: add photo-only ResourceSpace readiness docs/scripts without mutating infra, paid resources, source media, or ResourceSpace data.
 
 ## Completed lanes
 
@@ -89,6 +89,7 @@ Goal: add deterministic suggestion-only rule helpers if narrow; stop before any 
 | `hardening/media-delivery-preview-proxy` | `77abe99` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/10 | focused media-delivery tests 3/3, full tests 44/44, typecheck, build, guards, launch-readiness, local download-ticket smoke, and local delivery smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `qa/redaction-crawler` | `b8d9b75` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/11 | PR base is `hardening/truth-scope-fixture-photo-only`; crawler pass for 27 local routes, focused production-hardening tests 9/9, full tests 45/45, typecheck, build, guards, and launch-readiness pass; launch-readiness warnings only from local runtime/evidence gaps |
 | `feature/governed-tagging-taxonomy-foundation` | `3811d94` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/12 | foundation-only helper/test; focused governed-taxonomy tests 4/4, full tests 45/45, typecheck, build, guards, and launch-readiness pass; no UI/search/writeback behavior changed |
+| `feature/smart-rules-dry-run` | `edd0204` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/13 | PR base is `feature/governed-tagging-taxonomy-foundation`; dry-run-only helper/test; focused smart-rules tests 2/2, full tests 47/47, typecheck, build, guards, and launch-readiness pass; no UI/search/writeback/approval behavior changed |
 
 ## Docs lane included paths
 
@@ -118,6 +119,7 @@ hardening/truth-scope-fixture-photo-only
 hardening/media-delivery-preview-proxy
 qa/redaction-crawler
 feature/governed-tagging-taxonomy-foundation
+feature/smart-rules-dry-run
 ```
 
 ## PR links
@@ -130,6 +132,7 @@ https://github.com/Hali0321/tjc-stock-media/pull/9
 https://github.com/Hali0321/tjc-stock-media/pull/10
 https://github.com/Hali0321/tjc-stock-media/pull/11
 https://github.com/Hali0321/tjc-stock-media/pull/12
+https://github.com/Hali0321/tjc-stock-media/pull/13
 ```
 
 ## Blockers
@@ -137,6 +140,7 @@ https://github.com/Hali0321/tjc-stock-media/pull/12
 - Existing primary worktree is dirty. All scoped work must use clean worktrees or narrow path staging.
 - Hardening branch refs from prior weekend all resolve to `ca18451`; prior QA evidence must be reconstructed into clean branches before push/PR.
 - PR #11 is intentionally stacked on PR #9; retarget after PR #9 lands.
+- PR #13 is intentionally stacked on PR #12; retarget after PR #12 lands.
 - Hosted mutating smokes remain human-gated.
 
 ## Remaining human gates
