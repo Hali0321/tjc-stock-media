@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TJC Stock Media Portal — stakeholder intro prototype</title>
+  <style>
+    :root {
+      --bg: #f5f7f4;
+      --surface: #ffffff;
+      --fg: #171b19;
+      --muted: #5a635f;
+      --border: #dfe7e1;
+      --accent: #0f3d2e;
+      --accent-2: #1f4f73;
+      --warn: #7a5a19;
+      --danger: #7d2d2a;
+      --ok: #22563a;
+      --shadow: 0 24px 80px rgba(15, 61, 46, 0.08);
+      --font-display: "Iowan Old Style", "Charter", Georgia, "Times New Roman", serif;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2 { font-family: var(--font-display); letter-spacing: -0.02em; text-wrap: balance; }
+    p { text-wrap: pretty; }
+
+    .deck {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 18rem minmax(0, 1fr);
+    }
+    .rail {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      border-right: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 82%, var(--bg));
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand {
+      display: grid;
+      gap: 6px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand strong {
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1;
+    }
+    .brand span,
+    .eyebrow,
+    .meta,
+    .kpi-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+    .nav a {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 0 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 750;
+    }
+    .nav a:hover {
+      border-color: var(--border);
+      background: var(--surface);
+      color: var(--fg);
+    }
+    .rail-card {
+      margin-top: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+    .rail-card strong { font-size: 14px; }
+    .rail-card p { color: var(--muted); font-size: 13px; }
+    .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      padding: 0 14px;
+      font-weight: 800;
+    }
+    .btn-primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--surface);
+    }
+    .slides {
+      height: 100dvh;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-padding: 0;
+    }
+    .slide {
+      min-height: 100dvh;
+      scroll-snap-align: start;
+      padding: clamp(28px, 4vw, 56px);
+      display: grid;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .slide-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      gap: 28px;
+    }
+    .two-col {
+      grid-template-columns: minmax(0, 0.88fr) minmax(0, 1fr);
+      align-items: center;
+    }
+    .copy {
+      display: grid;
+      gap: 18px;
+      max-width: 58ch;
+    }
+    .copy h1 {
+      font-size: clamp(48px, 7vw, 92px);
+      line-height: 0.96;
+    }
+    .copy h2 {
+      font-size: clamp(34px, 4.4vw, 58px);
+      line-height: 1.02;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 22px);
+      max-width: 58ch;
+    }
+    .script {
+      border-left: 3px solid var(--accent);
+      padding-left: 16px;
+      color: var(--fg);
+      font-size: 17px;
+      font-weight: 650;
+    }
+    .surface {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-width: 0;
+    }
+    .browser-bar {
+      min-height: 44px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      background: color-mix(in oklch, var(--bg) 70%, var(--surface));
+    }
+    .dots { display: flex; gap: 6px; }
+    .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--border); }
+    .dot:first-child { background: color-mix(in oklch, var(--danger) 70%, var(--surface)); }
+    .dot:nth-child(2) { background: color-mix(in oklch, var(--warn) 70%, var(--surface)); }
+    .dot:nth-child(3) { background: color-mix(in oklch, var(--ok) 70%, var(--surface)); }
+    .browser-title { color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
+    .ui {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+    .searchbox {
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      color: var(--muted);
+      font-weight: 750;
+    }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      border: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 84%, var(--bg));
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .pill.ok { color: var(--ok); border-color: color-mix(in oklch, var(--ok) 30%, var(--border)); }
+    .pill.warn { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 30%, var(--border)); }
+    .pill.danger { color: var(--danger); border-color: color-mix(in oklch, var(--danger) 30%, var(--border)); }
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .asset {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .thumb {
+      aspect-ratio: 4 / 3;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(135deg, color-mix(in oklch, var(--accent) 12%, transparent), color-mix(in oklch, var(--accent-2) 12%, transparent)),
+        var(--bg);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-align: center;
+      padding: 10px;
+    }
+    .asset-body { padding: 10px; display: grid; gap: 8px; }
+    .asset-title { font-size: 13px; font-weight: 850; line-height: 1.25; }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      gap: 6px;
+    }
+    .kpi-value {
+      font-family: var(--font-display);
+      font-size: clamp(30px, 3.2vw, 48px);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+    .chart {
+      height: 190px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      align-items: end;
+      gap: 12px;
+      background: var(--surface);
+    }
+    .bar {
+      border-radius: 10px 10px 0 0;
+      background: color-mix(in oklch, var(--accent) 76%, var(--surface));
+      min-height: 22px;
+      position: relative;
+    }
+    .bar:nth-child(even) { background: color-mix(in oklch, var(--accent-2) 72%, var(--surface)); }
+    .bar span {
+      position: absolute;
+      left: 50%;
+      bottom: -26px;
+      transform: translateX(-50%);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .flow-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+    .flow-card strong { font-size: 18px; }
+    .flow-card p { color: var(--muted); font-size: 14px; }
+    .table {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .row {
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.8fr 0.7fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .row:last-child { border-bottom: 0; }
+    .row.header {
+      min-height: 42px;
+      background: var(--bg);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .qa {
+      display: grid;
+      gap: 12px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    details {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 16px;
+    }
+    summary { cursor: pointer; font-weight: 850; }
+    details p { margin-top: 10px; color: var(--muted); }
+    .footer-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      .deck { grid-template-columns: 1fr; }
+      .rail {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .nav { grid-template-columns: repeat(2, 1fr); }
+      .slides { height: auto; overflow: visible; scroll-snap-type: none; }
+      .slide { min-height: auto; scroll-snap-align: none; }
+      .two-col, .flow, .kpis { grid-template-columns: 1fr; }
+      .media-grid { grid-template-columns: 1fr 1fr; max-height: none; }
+      .row { grid-template-columns: 1fr; padding: 14px; }
+      .row.header { display: none; }
+    }
+    @media (max-width: 560px) {
+      .nav { grid-template-columns: 1fr; }
+      .media-grid { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <aside class="rail" aria-label="Prototype navigation">
+      <div class="brand">
+        <strong>TJC Stock Media</strong>
+        <span>Stakeholder intro prototype</span>
+      </div>
+      <nav class="nav">
+        <a href="#slide-1">01 Open <span>↓</span></a>
+        <a href="#slide-2">02 Problem <span>↓</span></a>
+        <a href="#slide-3">03 Portal <span>↓</span></a>
+        <a href="#slide-4">04 Workflow <span>↓</span></a>
+        <a href="#slide-5">05 Review <span>↓</span></a>
+        <a href="#slide-6">06 Ask <span>↓</span></a>
+        <a href="#slide-7">07 Q&A <span>↓</span></a>
+      </nav>
+      <div class="rail-card">
+        <strong>Meeting posture</strong>
+        <p>Nontechnical. Show working pilot shape, explain safety, ask for controlled pilot approval.</p>
+        <button class="btn btn-primary" id="downloadSource">Download source</button>
+      </div>
+    </aside>
+
+    <main class="slides" id="content">
+      <section class="slide" id="slide-1" data-od-id="opener">
+        <div class="slide-inner two-col">
+          <div class="copy">
+            <p class="eyebrow">Presentation opener · 2 minutes</p>
+            <h1>Church media users need trust before download.</h1>
+            <p class="lead">This pilot introduces a safer way to find, request, review, and reuse TJC ministry media.</p>
+            <p class="script">Say: “This is a church pilot demo candidate, not a production launch. We want to show the direction and ask whether to continue into a controlled pilot.”</p>
+          </div>
+          <div class="surface" aria-label="Portal dashboard preview">
+            <div class="browser-bar">
+              <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+              <span class="browser-title">Sandboxed portal overview</span>
+            </div>
+            <div class="ui">
+              <div class="kpis">
+                <div class="kpi"><span class="kpi-label">Imported batch</span><strong class="kpi-value">181</strong></div>
+                <div class="kpi"><span class="kpi-label">Known scope</span><strong class="kpi-value">506 GB</strong></div>
+                <div class="kpi"><span class="kpi-label">Viewer default</span><strong class="kpi-value">Safe</strong></div>
+                <div class="kpi"><span class="kpi-label">Launch state</span><strong class="kpi-value">Pilot</strong></div>
+              </div>
+              <div class="chart" aria-label="Review readiness chart">
+                <div class="bar" style="height: 76%;"><span>Find</span></div>
+                <div class="bar" style="height: 58%;"><span>Trust</span></div>
+                <div class="bar" style="height: 64%;"><span>Send</span></div>
+                <div class="bar" style="height: 48%;"><span>Review</span></div>
+                <div class="bar" style="height: 44%;"><span>Write</span></div>
+                <div class="bar" style="height: 52%;"><span>Launch</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-2" data-od-id="problem">
+        <div class="slide-inner two-col">
+          <div class="copy">
+            <p class="eyebrow">Problem · scattered media</p>
+            <h2>Finding a photo is easy. Knowing whether it is safe is hard.</h2>
+            <p class="lead">Media lives across Drive folders, Google Photos, ResourceSpace records, and local batches. The missing layer is clear reuse permission.</p>
+            <p class="script">Say: “The question is not only ‘where is the file?’ It is ‘can this be used publicly, internally, or not at all?’”</p>
+          </div>
+          <div class="flow">
+            <div class="flow-card"><span class="pill warn">Current friction</span><strong>Folder guessing</strong><p>Users need to know where media was stored before they can search it.</p></div>
+            <div class="flow-card"><span class="pill danger">Risk</span><strong>Unclear approval</strong><p>Approved-looking media can still lack rights, source, people, or youth evidence.</p></div>
+            <div class="flow-card"><span class="pill ok">Target</span><strong>Guided reuse</strong><p>Every asset should answer what use is allowed before download.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-3" data-od-id="portal">
+        <div class="slide-inner two-col">
+          <div class="copy">
+            <p class="eyebrow">Portal model · plain explanation</p>
+            <h2>ResourceSpace stays source of truth. The portal becomes the safe front door.</h2>
+            <p class="lead">Google Shared Drive holds originals. ResourceSpace tracks records and metadata. The new portal turns that into a role-aware ministry workflow.</p>
+            <p class="script">Say: “We are not replacing ResourceSpace or Drive. We are making them usable for normal ministry workers.”</p>
+          </div>
+          <div class="surface">
+            <div class="browser-bar">
+              <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+              <span class="browser-title">Find approved media</span>
+            </div>
+            <div class="ui">
+              <div class="toolbar">
+                <div class="searchbox">Search Bible study, website image, youth-safe...</div>
+                <button class="btn">Filters</button>
+              </div>
+              <div class="pill-row">
+                <span class="pill ok">Ready copies only</span>
+                <span class="pill">Website hero</span>
+                <span class="pill">Slide background</span>
+                <span class="pill warn">Review required hidden by default</span>
+              </div>
+              <div class="media-grid">
+                <article class="asset"><div class="thumb">Preview protected</div><div class="asset-body"><strong class="asset-title">Bible study table</strong><span class="pill ok">Ready to use</span></div></article>
+                <article class="asset"><div class="thumb">Preview protected</div><div class="asset-body"><strong class="asset-title">Church exterior</strong><span class="pill ok">Approved copy</span></div></article>
+                <article class="asset"><div class="thumb">Preview pending</div><div class="asset-body"><strong class="asset-title">Youth activity</strong><span class="pill warn">Request review</span></div></article>
+                <article class="asset"><div class="thumb">Original restricted</div><div class="asset-body"><strong class="asset-title">Event source file</strong><span class="pill danger">Do not publish</span></div></article>
+                <article class="asset"><div class="thumb">Package cover</div><div class="asset-body"><strong class="asset-title">Newsletter kit</strong><span class="pill">Open package</span></div></article>
+                <article class="asset"><div class="thumb">Review copy</div><div class="asset-body"><strong class="asset-title">Sabbath worship</strong><span class="pill warn">Sensitive context</span></div></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-4" data-od-id="workflow">
+        <div class="slide-inner">
+          <div class="copy">
+            <p class="eyebrow">User journey · nontechnical</p>
+            <h2>Four roles. One clear path.</h2>
+            <p class="lead">Users find media, contributors send media, reviewers approve media, admins manage readiness.</p>
+          </div>
+          <div class="flow">
+            <div class="flow-card"><span class="pill ok">Viewer</span><strong>Find and download approved copies.</strong><p>Viewer sees safe labels, usage guidance, and request-review paths.</p></div>
+            <div class="flow-card"><span class="pill">Contributor</span><strong>Send files or source links.</strong><p>Every intake starts Needs Review / Do Not Publish.</p></div>
+            <div class="flow-card"><span class="pill warn">Reviewer</span><strong>Approve only with evidence.</strong><p>Rights, people/youth, source, reviewer, date, and notes stay explicit.</p></div>
+          </div>
+          <p class="script">Say: “Many people can submit media. Few people should approve media. Very few people should change system settings.”</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-5" data-od-id="review-governance">
+        <div class="slide-inner two-col">
+          <div class="copy">
+            <p class="eyebrow">Review + governance</p>
+            <h2>The pilot is intentionally honest about what is still blocked.</h2>
+            <p class="lead">Reviewer actions queue pending writes until ResourceSpace write mapping is configured. Governance shows launch blockers instead of hiding them.</p>
+            <p class="script">Say: “This prevents the demo from pretending final approval happened when the backend is not yet wired for production writes.”</p>
+          </div>
+          <div class="table" aria-label="Review queue table">
+            <div class="row header"><span>Queue</span><span>Decision</span><span>Owner</span><span>Status</span></div>
+            <div class="row"><strong>Rights review</strong><span>Confirm consent and usage scope</span><span>Reviewer</span><span class="pill warn">Open</span></div>
+            <div class="row"><strong>Children/youth</strong><span>Keep blocked until evidence exists</span><span>Reviewer</span><span class="pill danger">Guarded</span></div>
+            <div class="row"><strong>Write mapping</strong><span>Map ResourceSpace fields</span><span>DAM Admin</span><span class="pill warn">Pilot blocker</span></div>
+            <div class="row"><strong>Viewer downloads</strong><span>Block unsafe assets</span><span>Server route</span><span class="pill ok">Protected</span></div>
+            <div class="row"><strong>Original access</strong><span>Request only, not automatic</span><span>DAM Admin</span><span class="pill ok">Restricted</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-6" data-od-id="decision-ask">
+        <div class="slide-inner two-col">
+          <div class="copy">
+            <p class="eyebrow">Decision ask</p>
+            <h2>Approve the controlled pilot, not public launch.</h2>
+            <p class="lead">Pilot a small approved batch, connect the write path, rehearse deployment, and assign reviewers before broader rollout.</p>
+            <p class="script">Say: “The decision today is whether to continue into controlled pilot implementation with a narrow batch and clear safety ownership.”</p>
+          </div>
+          <div class="surface">
+            <div class="browser-bar">
+              <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+              <span class="browser-title">Next phase plan</span>
+            </div>
+            <div class="ui">
+              <div class="flow">
+                <div class="flow-card"><span class="meta">Step 1</span><strong>50-100 assets</strong><p>Polish first reviewed set before expanding archive import.</p></div>
+                <div class="flow-card"><span class="meta">Step 2</span><strong>Write mapping</strong><p>Make reviewer decisions sync only when ResourceSpace confirms.</p></div>
+                <div class="flow-card"><span class="meta">Step 3</span><strong>Deployment rehearsal</strong><p>Church-owned host, protected access, backup and restore test.</p></div>
+              </div>
+              <div class="footer-note">
+                <span>Do not promise public launch, open download, or full archive approval.</span>
+                <button class="btn btn-primary">Ask: continue pilot</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-7" data-od-id="qa">
+        <div class="slide-inner two-col">
+          <div class="copy">
+            <p class="eyebrow">Q&A guardrails</p>
+            <h2>Keep answers simple and safety-centered.</h2>
+            <p class="lead">Stakeholders need confidence in the workflow, not backend details.</p>
+            <p class="script">Close: “This portal is not just a prettier photo library. It is a safety layer for ministry media reuse.”</p>
+          </div>
+          <div class="qa">
+            <details open><summary>Is this replacing Google Drive?</summary><p>No. Google Shared Drive remains the master warehouse for originals.</p></details>
+            <details><summary>Is this replacing ResourceSpace?</summary><p>No. ResourceSpace remains the source of truth. The portal is the safer ministry-facing layer.</p></details>
+            <details><summary>Can normal users upload?</summary><p>Yes, but upload only submits for review. It does not publish.</p></details>
+            <details><summary>Can normal users download everything?</summary><p>No. Viewer downloads stay blocked unless the asset is portal-ready.</p></details>
+            <details><summary>What about children or youth photos?</summary><p>They remain review-required unless explicit approval evidence exists.</p></details>
+            <details><summary>Is this production-ready?</summary><p>No. It is a pilot demo candidate. Production still needs auth, deployment, backups, write mapping, reviewer assignment, and launch checks.</p></details>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById("downloadSource").addEventListener("click", () => {
+      const source = "<!doctype html>\\n" + document.documentElement.outerHTML;
+      const blob = new Blob([source], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "tjc-stock-media-stakeholder-portal-intro.html";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

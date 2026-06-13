@@ -24,6 +24,11 @@ Large video/audio:
 - ResourceSpace stores metadata, previews when available, review state, and download policy.
 - Master path and checksum are recorded.
 - No public/internal approval until video/audio review passes.
+- Preview/rendition work creates governed derivatives only; it does not move or
+  expose the master original.
+- Original/master access remains a separate request workflow with approver,
+  expiry, audit, and revocation. The portal must not issue live original access
+  from local sidecar state.
 
 Never:
 
@@ -37,6 +42,10 @@ Use `100 MB` as the first conservative threshold for browser-upload caution when
 
 Files above that threshold should use admin large-media intake unless the live Cloudflare plan and ResourceSpace upload limit are explicitly verified.
 
+The local derivative index under `.runtime` may prove a preview or approved copy
+exists for private beta, but it is not production-durable rendition storage and
+not a replacement for ResourceSpace metadata or Shared Drive custody.
+
 ## User Message
 
 If a contributor has a large video/audio file:
@@ -46,4 +55,3 @@ Do not upload this directly through the browser.
 Place it in Shared Drive Incoming or give it to the DAM admin.
 It will still be reviewed and searchable in ResourceSpace after admin intake.
 ```
-

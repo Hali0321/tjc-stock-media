@@ -1,0 +1,93 @@
+{
+  "capturedAt": "2026-06-09T01:59:01.756Z",
+  "results": [
+    {
+      "name": "brandfolder-smartsheet-search",
+      "url": "https://help.smartsheet.com/articles/2483104-Search-in-Brandfolder",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/brandfolder-smartsheet-search.png",
+      "title": "Search in Brandfolder | Smartsheet Learning Center",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Your Privacy Welcome to Smartsheet! We’re glad you’re here and want you to know that we respect your privacy and your right to control how we collect, use, and share your personal data. Please read our Privacy Notice to learn about our privacy practices. Customize Settings Accept All ___ Skip to main content Help Center Community University Go to Smartsheet.com Help Center SVG Documentation Guided Learning Contact support Select your language English Deutsch Español Français Italiano Portuguese "
+    },
+    {
+      "name": "brandfolder-smartsheet-download",
+      "url": "https://help.smartsheet.com/articles/2482839-Download-Individual-Assets",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/brandfolder-smartsheet-download.png",
+      "title": "Download individual assets | Smartsheet Learning Center",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Your Privacy Welcome to Smartsheet! We’re glad you’re here and want you to know that we respect your privacy and your right to control how we collect, use, and share your personal data. Please read our Privacy Notice to learn about our privacy practices. Customize Settings Accept All ___ Skip to main content Help Center Community University Go to Smartsheet.com Help Center SVG Documentation Guided Learning Contact support Select your language English Deutsch Español Français Italiano Portuguese "
+    },
+    {
+      "name": "brandfolder-smartsheet-upload",
+      "url": "https://help.smartsheet.com/articles/2482958-Upload-Assets",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/brandfolder-smartsheet-upload.png",
+      "title": "Upload assets | Smartsheet Learning Center",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Your Privacy Welcome to Smartsheet! We’re glad you’re here and want you to know that we respect your privacy and your right to control how we collect, use, and share your personal data. Please read our Privacy Notice to learn about our privacy practices. Customize Settings Accept All ___ Skip to main content Help Center Community University Go to Smartsheet.com Help Center SVG Documentation Guided Learning Contact support Select your language English Deutsch Español Français Italiano Portuguese "
+    },
+    {
+      "name": "bynder-asset-bank",
+      "url": "https://support.bynder.com/hc/en-us/articles/360016051239-View-Assets-in-the-Asset-Bank",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-asset-bank.png",
+      "title": "View Assets in the Asset Bank – Bynder Support",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Learn Connect Get Help Explore Product Develop Partner Submit a request Sign in Bynder Support Articles Digital Asset Management (DAM) Exploring your Assets Search View Assets in the Asset Bank The Asset Bank provides access to your organization’s most recent and valuable assets. You can search for assets and then choose to share, download, or add them to a collection. By clicking on an asset's thumbnail, you can view the Asset Detail or Info tab. This tab displays metaproperties, version histor"
+    },
+    {
+      "name": "bynder-asset-detail",
+      "url": "https://support.bynder.com/hc/en-us/articles/21745299220882-Exploring-the-Asset-Detail-View",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-asset-detail.png",
+      "title": "Exploring the Asset Detail View – Bynder Support",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Learn Connect Get Help Explore Product Develop Partner Submit a request Sign in Bynder Support Articles Digital Asset Management (DAM) Exploring your Assets Search Exploring the Asset Detail View The Asset Detail View provides a comprehensive overview of an individual asset metadata, version history, permissions, and usage. This view is crucial for understanding asset-specific details, making edits, tracking usage, and managing rights. Metadata Metadata is crucial for organizing and retrieving d"
+    },
+    {
+      "name": "bynder-download-assets",
+      "url": "https://support.bynder.com/hc/en-us/articles/360013931719-Select-Assets-in-the-Asset-Bank",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-download-assets.png",
+      "title": "How To Select And Download Assets In The Asset Bank – Bynder Support",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Learn Connect Get Help Explore Product Develop Partner Submit a request Sign in Bynder Support Articles Digital Asset Management (DAM) Download Search How To Select And Download Assets In The Asset Bank Summary Users can download one or more assets stored in the Asset Bank. Your portal admin might ask you to provide a reason for downloading an asset via a form. Who? This feature/solution is enabled by a Bynder Admin. Don't have Bynder yet? Start Here. As a Bynder Admin, you can manage who can do"
+    },
+    {
+      "name": "acquia-share-assets",
+      "url": "https://docs.acquia.com/acquia-dam/How-do-I-share-assets",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/acquia-share-assets.png",
+      "title": "How do I share assets? | Acquia DAM | Acquia Product Documentation",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Skip to content Docs Product Guides Resources Legal and Security Support Search Open product launcher Open user menu Acquia DAM Documentation Releases Developers Legal guide Help Acquia DAM How do I share assets? Close sidebar Documentation Searching, downloading, and sharing Share assets RSS Feed Left Sidebar Documentation Accounts and login Acquia DAM Community Admin API Entries Features Insights Integrations Metadata and upload Portals Releases and roadmap Searching, downloading, and sharing "
+    },
+    {
+      "name": "acquia-collections",
+      "url": "https://docs.acquia.com/acquia-dam/what-are-collections",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/acquia-collections.png",
+      "title": "What are collections? | Acquia DAM | Acquia Product Documentation",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Skip to content Docs Product Guides Resources Legal and Security Support Search Open product launcher Open user menu Acquia DAM Documentation Releases Developers Legal guide Help Acquia DAM What are collections? Close sidebar Documentation Features Collections RSS Feed Left Sidebar Documentation Accounts and login Acquia DAM Community Admin API Entries Features Available features and permissions Accessibility Conformance Reports How does facial recognition work in Acquia DAM? Cloud architecture "
+    },
+    {
+      "name": "adobe-assets-manage",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-assets-essentials/help/manage-organize",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/adobe-assets-manage.png",
+      "title": "Manage your digital assets | Adobe Experience Manager",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Documentation AEM Assets Essentials Guide Manage assets Last update: May 12, 2026 TOPICS: Assets Essentials CREATED FOR: User Leader You can do various digital asset management (DAM) tasks easily using the user-friendly interface of Assets Essentials. After you’ve added the assets, you can search, download, move, copy, rename, delete, update, and edit your assets. Use Assets Essentials to accomplish the following asset management tasks. When you select an asset, the following options display in "
+    },
+    {
+      "name": "adobe-aem-renditions",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/renditions",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/adobe-aem-renditions.png",
+      "title": "View and manage renditions in Experience Manager Assets | Adobe Experience Manager as a Cloud Service",
+      "classificationHint": "DOC_OR_HELP",
+      "textSample": "Documentation AEM User Guide AEM Assets View and manage renditions in Experience Manager Assets Last update: June 5, 2026 APPLIES TO: Experience Manager as a Cloud Service TOPICS: Renditions CREATED FOR: User Renditions in Adobe Experience Manager (AEM) are customized versions of digital assets, such as images, designed for different devices and platforms to ensure optimal performance. AEM facilitates easy creation and management of these renditions, enhancing the user experience. You can create"
+    },
+    {
+      "name": "aprimo-dam-page",
+      "url": "https://www.aprimo.com/platform/digital-asset-management",
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/aprimo-dam-page.png",
+      "title": "Aprimo DAM: Centralize Content & Accelerate Delivery.",
+      "classificationHint": "SALES_OR_MOCKUP",
+      "textSample": "We use cookies to personalize content and ads, to provide social media features and to analyze our traffic. We also share information about your use of our site with our social media, advertising and analytics partners who may combine it with other information that you’ve provided to them or that they’ve collected from your use of their services. For more information see our If you decline, your information won’t be tracked when you visit this website. A single cookie will be used in your browse"
+    }
+  ]
+}

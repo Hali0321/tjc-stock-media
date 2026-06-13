@@ -1,12 +1,15 @@
 "use client";
 
 import { FormEvent, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Clock3, FileCheck2, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
-import { InputWithTags } from "@/components/InputWithTags";
+import { CheckCircle2, Clock3, FileCheck2, FileText, Link as LinkIcon, RotateCcw, Save, Search, ShieldCheck, UploadCloud, Users } from "lucide-react";
+import { DamFormEmptyState as EmptyState, DamFormEvidenceChecklist as EvidenceChecklist, DamFormPrimaryAction as PrimaryAction, DamFormUseCaseCard as UseCaseCard, DamPacketRequirementPanel as PacketRequirementPanel, DamPacketStepper as PacketStepper, DamPacketSubmitBar as PacketSubmitBar, DamPacketSummary as PacketSummary, DamUploadFileDropzone as UploadDropzone } from "@/components/dam/DamFormFlow";
+import { DamTrustSignalStrip as TrustSignalStrip } from "@/components/dam/DamWorkspace";
+import { TagInput } from "@/components/InputWithTags";
 import { useDemoRole } from "@/components/RoleProvider";
-import { UploadFileDropzone } from "@/components/UploadFileDropzone";
 import { canUpload } from "@/lib/permissions";
-import { uploadTagSuggestions } from "@/lib/upload-tags";
+import { toastDraftSaved, toastUploadComplete, toastUploadFailed, toastUploadStarted } from "@/lib/tjc-toasts";
+import { parseUploadTags, uploadTagSuggestions } from "@/lib/upload-tags";
+import { cn } from "@/lib/ui";
 import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
 
 type UploadReceipt = {
@@ -15,38 +18,146 @@ type UploadReceipt = {
   message?: string;
   eventName?: string;
   fileCount?: number;
-  sourceLink?: string | null;
+  sourceLinkCaptured?: boolean;
   reviewWarnings?: string[];
 };
 
-const inputClass = "min-h-10 w-full min-w-0 rounded-md border border-tjc-line bg-white px-3 text-sm font-medium text-tjc-ink placeholder:text-[#858f87]";
-const labelClass = "grid gap-2 text-sm font-semibold text-tjc-ink";
-const requiredHint = <span className="text-xs font-semibold text-[#7a5a19]">Required</span>;
+const inputClass = "min-h-11 w-full min-w-0 rounded-[12px] border border-[#d8e1da] bg-white px-3 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d]";
+const labelClass = "grid gap-2 text-sm font-black text-tjc-ink";
+const requiredHint = <span className="text-xs font-black text-[#7a5a19]">Required</span>;
+
+const intakeTypes = [
+  { id: "event-photo", label: "Event photos", detail: "Event, people visibility, source, and use case.", icon: UploadCloud },
+  { id: "youth", label: "Youth/children", detail: "Consent and visibility evidence required.", icon: Users },
+  { id: "sermon", label: "Sermon/teaching", detail: "Speaker, context, and usage scope.", icon: FileText },
+  { id: "graphics", label: "Graphics/flyers", detail: "Design rights, fonts, and channel fit.", icon: FileCheck2 },
+  { id: "music", label: "Hymn/music", detail: "Recording and copyright basis.", icon: ShieldCheck },
+  { id: "source-link", label: "Source link only", detail: "Media-team link or shared source for reviewer intake.", icon: LinkIcon }
+] as const;
+
+const steps = [
+  "What are you sending?",
+  "Where is this from?",
+  "Who appears and what permission is known?",
+  "Files, link, and reviewer notes",
+  "Reviewer packet"
+] as const;
+
+const packetRequirementItems = [
+  { label: "Origin", detail: "Where it came from and who can answer follow-up." },
+  { label: "People/youth", detail: "Who appears and whether children or youth may be visible." },
+  { label: "Rights", detail: "Owner/license, attribution, proof link, restrictions, or internal-only limits." },
+  { label: "Use case", detail: "How ministry teams expect to reuse it after review." },
+  { label: "Review truth", detail: "Upload submits for review only. Final DAM approval still controls reuse." }
+];
 
 export function UploadPage() {
   const { role, ready } = useDemoRole();
+  const [step, setStep] = useState(0);
+  const [intakeType, setIntakeType] = useState<(typeof intakeTypes)[number]["id"]>("event-photo");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [sourceLink, setSourceLink] = useState("");
+  const [suggestedTags, setSuggestedTags] = useState("");
+  const [intakeNotes, setIntakeNotes] = useState("");
   const [message, setMessage] = useState("");
   const [largeWarning, setLargeWarning] = useState("");
   const [receipt, setReceipt] = useState<UploadReceipt | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [suggestedTags, setSuggestedTags] = useState("");
+  const [draftSaved, setDraftSaved] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sourceLinkRef = useRef<HTMLInputElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
   const allowed = ready && canUpload(role);
-
+  const opsView = role === "Reviewer" || role === "DAM Admin";
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const selectedType = intakeTypes.find((item) => item.id === intakeType) || intakeTypes[0];
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const hasValidSourceLink = useMemo(() => {
+    if (!sourceLink.trim()) return false;
+    try {
+      const parsed = new URL(sourceLink.trim());
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }, [sourceLink]);
+  const hasFileOrSource = selectedFiles.length > 0 || hasValidSourceLink;
+  const tagCount = parseUploadTags(suggestedTags).length;
+  const submitReady = hasFileOrSource && tagCount > 0 && intakeNotes.trim().length > 0;
+  const packetItems = [
+    { id: "type", label: `Media type selected: ${selectedType.label}`, complete: Boolean(intakeType) },
+    { id: "file", label: hasFileOrSource ? "File or source link included" : "File or source link needed", complete: hasFileOrSource },
+    { id: "tags", label: tagCount ? `${tagCount} suggested tags` : "Suggested tags needed", complete: tagCount > 0 },
+    { id: "notes", label: intakeNotes.trim() ? "Reviewer notes included" : "Reviewer notes needed", complete: intakeNotes.trim().length > 0 },
+    { id: "evidence", label: "Rights evidence requested for reviewer", complete: true },
+    { id: "blocked", label: "Media stays blocked until review", complete: true }
+  ];
+
+  function stepContainer(index: number) {
+    return formRef.current?.querySelector<HTMLElement>(`[data-send-step="${index}"]`);
+  }
+
+  function revealStep(index: number) {
+    window.setTimeout(() => {
+      const target = stepContainer(index);
+      if (!target) return;
+      const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 88);
+      window.scrollTo({ top, behavior: "smooth" });
+    }, 0);
+  }
+
+  function goToStep(index: number) {
+    setStep(index);
+    revealStep(index);
+  }
+
+  function firstMissingControl(index: number) {
+    const container = stepContainer(index);
+    return Array.from(container?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[required], select[required], textarea[required]") || [])
+      .find((control) => !control.disabled && !String(control.value || "").trim());
+  }
+
+  function showIssue(index: number, text: string, control?: HTMLElement | null) {
+    setStep(index);
+    setMessage(text);
+    window.setTimeout(() => {
+      control?.focus({ preventScroll: true });
+      control?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 0);
+  }
+
+  function validateStep(index: number) {
+    if (index === 3) {
+      if (sourceLink.trim() && !hasValidSourceLink) {
+        showIssue(index, "Use a full http or https source link.", sourceLinkRef.current);
+        return false;
+      }
+      if (!hasFileOrSource) {
+        showIssue(index, "Add a file or source link before continuing.", sourceLinkRef.current);
+        return false;
+      }
+      if (!tagCount) {
+        showIssue(index, "Add at least one suggested tag before continuing.");
+        return false;
+      }
+      if (!intakeNotes.trim()) {
+        showIssue(index, "Add reviewer notes before continuing.", notesRef.current);
+        return false;
+      }
+      return true;
+    }
+    const missing = firstMissingControl(index);
+    if (missing) {
+      showIssue(index, `Complete ${steps[index]} before continuing.`, missing);
+      return false;
+    }
+    return true;
+  }
+
+  function nextStep() {
+    if (!validateStep(step)) return;
     setMessage("");
-    setReceipt(null);
-    const form = new FormData(event.currentTarget);
-    form.delete("files");
-    selectedFiles.forEach((file) => form.append("files", file));
-    form.set("role", role);
-    const response = await fetch("/api/upload", { method: "POST", body: form });
-    const body = await response.json();
-    setMessage(body.message || body.error || "Upload intake checked.");
-    if (response.ok) setReceipt(body);
+    goToStep(Math.min(steps.length - 1, step + 1));
   }
 
   function checkFiles(files: FileList | null) {
@@ -54,6 +165,7 @@ export function UploadPage() {
     setSelectedFiles(nextFiles);
     const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
     setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+    if (nextFiles.length) toastUploadStarted(`${nextFiles.length} selected file${nextFiles.length === 1 ? "" : "s"} staged for review.`);
   }
 
   function syncFileInput(nextFiles: File[]) {
@@ -67,16 +179,18 @@ export function UploadPage() {
       }
     }
     setSelectedFiles(nextFiles);
-    const hasLarge = nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES);
-    setLargeWarning(hasLarge ? uploadDefaultState.largeMediaMessage : "");
+    setLargeWarning(nextFiles.some((file) => file.size > LARGE_MEDIA_BYTES) ? uploadDefaultState.largeMediaMessage : "");
   }
 
   function addDroppedFiles(files: File[]) {
     syncFileInput([...selectedFiles, ...files]);
+    toastUploadStarted(`${files.length} dropped file${files.length === 1 ? "" : "s"} added to reviewer intake.`);
   }
 
   function removeFile(index: number) {
+    const file = selectedFiles[index];
     syncFileInput(selectedFiles.filter((_, fileIndex) => fileIndex !== index));
+    toastDraftSaved(`${file?.name || "File"} removed from intake.`);
   }
 
   function clearFiles() {
@@ -85,73 +199,145 @@ export function UploadPage() {
     setLargeWarning("");
   }
 
+  function saveDraftNotice() {
+    setDraftSaved(true);
+    setMessage("Draft saved locally in this browser. Submit for DAM review when ready.");
+    toastDraftSaved("Draft saved locally. Submit for DAM review when ready.");
+  }
+
+  function resetSendDetails() {
+    clearFiles();
+    setSourceLink("");
+    setSuggestedTags("");
+    setIntakeNotes("");
+    setReceipt(null);
+    setMessage("Files, link, tags, and notes cleared.");
+    toastDraftSaved("Files, link, tags, and notes cleared.");
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setReceipt(null);
+    for (let index = 0; index < steps.length - 1; index += 1) {
+      if (!validateStep(index)) return;
+    }
+    if (!submitReady) {
+      showIssue(3, "Complete files, tags, and reviewer notes before submitting.", notesRef.current);
+      return;
+    }
+    const form = new FormData(event.currentTarget);
+    form.delete("files");
+    selectedFiles.forEach((file) => form.append("files", file));
+    form.set("role", role);
+    form.set("mediaType", intakeType);
+    toastUploadStarted(selectedFiles.length ? `${selectedFiles.length} file(s) staged for review.` : "Source-link intake will be reviewed without a browser file.");
+    const response = await fetch("/api/upload", { method: "POST", body: form });
+    const body = await response.json();
+    const safeError = !opsView && body.error?.includes("ResourceSpace")
+      ? "Suggested tags must use current media-team vocabulary."
+      : body.error;
+    setMessage(body.message || safeError || "Upload intake checked.");
+    if (response.ok) {
+      setReceipt(body);
+      toastUploadComplete();
+      goToStep(4);
+    } else {
+      toastUploadFailed(safeError || "No files were approved or published.");
+    }
+  }
+
   if (!ready) {
-    return <div className="px-3 py-5 md:px-5"><div className="skeleton h-[70dvh] rounded-lg" /></div>;
+    return <div className="dam-shell"><div className="skeleton h-[70dvh] rounded-[14px]" /></div>;
   }
 
   if (!allowed) {
     return (
-      <div className="mx-auto max-w-5xl px-3 py-5 md:px-5">
-        <section className="min-w-0 rounded-md border border-tjc-line bg-white p-5">
-          <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 dam-page-title">Upload is for Contributors</h1>
-          <p className="mt-2 max-w-[64ch] text-base leading-relaxed text-tjc-muted">Contributors provide context, people and rights information, files, tags, and notes. New media starts blocked until reviewer approval.</p>
-        </section>
-        <section className="mt-4 grid grid-cols-[auto_1fr] gap-4 rounded-md border border-tjc-line bg-white p-5">
-          <UploadCloud size={30} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-          <div>
-            <h2 className="text-xl font-semibold">Contribution flow</h2>
-            <p className="mt-1 text-tjc-muted">Context first, then people and rights, then files and tags. Reviewers approve before anyone can reuse media.</p>
-            <span className="mt-3 block rounded-md bg-[#eef7f1] px-3 py-2 text-sm font-semibold text-tjc-evergreen">Use role switch to Contributor, Reviewer, or DAM Admin to open intake.</span>
-          </div>
-        </section>
+      <div className="dam-shell max-w-5xl">
+        <EmptyState
+          title="Send media requires Contributor access"
+          description="Contributors provide source, people, rights, files, tags, and reviewer notes. New media stays blocked until review."
+          primary={<PrimaryAction href="/" icon={Search}>Find approved media</PrimaryAction>}
+        />
       </div>
     );
   }
 
   return (
-    <div className="dam-shell max-w-[1520px]">
-      <section className="grid gap-4 border-b border-tjc-line pb-4 lg:grid-cols-[minmax(0,1fr)_36rem]">
-        <div>
-          <span className="text-sm font-semibold text-tjc-evergreen">Contributor intake</span>
-          <h1 className="mt-2 dam-page-title">Upload for review</h1>
-          <p className="mt-2 max-w-[64ch] text-sm leading-relaxed text-tjc-muted">{uploadDefaultState.message}</p>
+    <div className="dam-shell mobile-first-flow grid gap-5">
+      <section className="find-hero send-hero p-5 sm:p-7" aria-label="Send media">
+        <div className="send-command-main">
+          <p className="dam-kicker">Contributor intake</p>
+          <h1 className="dam-page-title">Send media for review</h1>
+          <p className="mt-3 max-w-[58ch] text-lg font-semibold leading-relaxed text-tjc-muted">
+            Build a reviewer packet with source, rights, people, scope, and proof context. Send never publishes media.
+          </p>
+          <p className="mt-2 max-w-[64ch] text-sm font-black text-[#725216]">
+            Source class, owner/license, attribution, proof link, and requested usage scope are captured for reviewer evidence.
+          </p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-3" aria-label="Upload workflow">
+        <dl className="send-command-ledger" aria-label="Send media safety summary">
           {[
-            { icon: UploadCloud, title: "Context", body: "Event, date, ministry, source." },
-            { icon: ShieldCheck, title: "People and rights", body: "Visibility, consent, restrictions." },
-            { icon: FileCheck2, title: "Files and tags", body: "Upload, tag, receive review state." }
-          ].map((step) => {
-            const Icon = step.icon;
-            return (
-              <div className="rounded-md border border-tjc-line bg-white p-3" key={step.title}>
-                <Icon size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-                <strong className="mt-2 block font-semibold">{step.title}</strong>
-                <span className="mt-1 block text-sm text-tjc-muted">{step.body}</span>
-              </div>
-            );
-          })}
-        </div>
+            ["Intake", "Review packet"],
+            ["Default", uploadDefaultState.status],
+            ["Publish", "Never from Send"],
+            ["Truth", "DAM review"]
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
-      <form className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_24rem]" onSubmit={submit}>
-        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold">1. Context</h2>
-            <p className="text-sm text-tjc-muted">Help reviewers understand where this media came from.</p>
+      <TrustSignalStrip
+        signals={[
+          { label: "Send behavior", value: "Never publishes", tone: "blocked" },
+          { label: "Reviewer packet", value: "Source, people, rights", tone: "info" },
+          { label: "Default state", value: uploadDefaultState.status, tone: "review" },
+          { label: "Safe outcome", value: "Approval creates usable copy", tone: "approved" }
+        ]}
+      />
+
+      <PacketStepper steps={steps} current={step} />
+
+      <div className="dam-packet-workbench grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+      <form ref={formRef} className="grid gap-4" onSubmit={submit} noValidate>
+        <input type="hidden" name="intakeType" value={intakeType} />
+
+        <section data-send-step="0" className={cn("grid gap-4", step !== 0 && "hidden")}>
+          <div className="dam-packet-categories grid gap-3">
+            {intakeTypes.map((item) => (
+              <UseCaseCard
+                key={item.id}
+                label={item.label}
+                detail={item.detail}
+                icon={item.icon}
+                selected={intakeType === item.id}
+                onClick={() => setIntakeType(item.id)}
+              />
+            ))}
           </div>
+          <div className="dam-packet-selected rounded-[16px] border border-[#d8e1da] bg-white p-3 text-sm font-semibold text-tjc-muted">
+            <span>Selected category</span>
+            <strong className="text-tjc-evergreen">{selectedType.label}</strong>
+          </div>
+          <PacketRequirementPanel typeLabel={selectedType.label} items={packetRequirementItems} />
+        </section>
+
+        <section data-send-step="1" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 1 && "hidden")}>
           <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Title {requiredHint}</span>
             <input className={inputClass} name="title" placeholder="Bible study fellowship photos" required />
           </label>
-          <label className={`${labelClass} mt-4`}>
-            <span className="flex items-center justify-between gap-2">Event name {requiredHint}</span>
-            <input className={inputClass} name="eventName" placeholder="MVP worship workshop" required />
+          <label className={labelClass}>
+            <span className="flex items-center justify-between gap-2">Event {requiredHint}</span>
+            <input className={inputClass} name="eventName" placeholder="Youth service, Sabbath lunch, workshop..." required />
           </label>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
-              <span className="flex items-center justify-between gap-2">Event date {requiredHint}</span>
+              <span className="flex items-center justify-between gap-2">Date {requiredHint}</span>
               <input className={inputClass} name="eventDate" type="date" defaultValue={today} required />
             </label>
             <label className={labelClass}>
@@ -159,45 +345,77 @@ export function UploadPage() {
               <input className={inputClass} name="ministry" placeholder="Internet Ministry" required />
             </label>
           </div>
-          <label className={`${labelClass} mt-4`}>
+          <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Source / photographer {requiredHint}</span>
-            <input className={inputClass} name="source" placeholder="lm.photo@tjc.org, volunteer name, or Shared Drive folder" required />
+            <input className={inputClass} name="source" placeholder="Volunteer name, media team, source owner..." required />
+          </label>
+          <label className={labelClass}>
+            <span className="flex items-center justify-between gap-2">Source class {requiredHint}</span>
+            <select className={inputClass} name="sourceClass" defaultValue="" required>
+              <option value="" disabled>Choose one</option>
+              <option>Church photographer / TJC-created</option>
+              <option>Existing media archive master</option>
+              <option>Existing media library record</option>
+              <option>Online/free source</option>
+              <option>Third-party stock/license</option>
+              <option>Unknown - reviewer must verify</option>
+            </select>
+            <span className="text-xs font-semibold text-tjc-muted">Church-created media can move faster, but people/youth and sensitive context still require review. Online/free is not proof.</span>
           </label>
         </section>
 
-        <section className="self-start rounded-md border border-tjc-line bg-white p-4">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold">2. People and rights</h2>
-            <p className="text-sm text-tjc-muted">Anything uncertain stays blocked until reviewed.</p>
-          </div>
+        <section data-send-step="2" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 2 && "hidden")}>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
               <span className="flex items-center justify-between gap-2">People visible {requiredHint}</span>
-              <select className={inputClass} name="peopleVisible" defaultValue="Unknown" required>
-                <option>Unknown</option>
+              <select className={inputClass} name="peopleVisible" defaultValue="" required>
+                <option value="" disabled>Choose one</option>
                 <option>No</option>
                 <option>Yes</option>
+                <option>Unknown</option>
               </select>
             </label>
             <label className={labelClass}>
               <span className="flex items-center justify-between gap-2">Children/youth visible {requiredHint}</span>
-              <select className={inputClass} name="minorsVisible" defaultValue="Unknown" required>
-                <option>Unknown</option>
+              <select className={inputClass} name="minorsVisible" defaultValue="" required>
+                <option value="" disabled>Choose one</option>
                 <option>No</option>
                 <option>Yes</option>
+                <option>Unknown</option>
               </select>
             </label>
           </div>
-          <label className={`${labelClass} mt-4`}>
+          <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Usage rights {requiredHint}</span>
-            <select className={inputClass} name="usageRights" defaultValue="Unknown - needs review" required>
-              <option>Unknown - needs review</option>
+            <select className={inputClass} name="usageRights" defaultValue="" required>
+              <option value="" disabled>Choose one</option>
               <option>TJC-owned / permission confirmed</option>
               <option>Internal ministry use only</option>
               <option>Do not publish externally</option>
+              <option>Unknown - needs review</option>
             </select>
           </label>
-          <label className={`${labelClass} mt-4`}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className={labelClass}>
+              Owner/license
+              <input className={inputClass} name="ownerLicense" placeholder="TJC, photographer, license owner, stock provider..." />
+            </label>
+            <label className={labelClass}>
+              Attribution text
+              <input className={inputClass} name="attributionText" placeholder="Credit line if required..." />
+            </label>
+          </div>
+          <label className={labelClass}>
+            Usage scope requested
+            <select className={inputClass} name="requestedUsageScope" defaultValue="Reviewer decides">
+              <option>Reviewer decides</option>
+              <option>Internal ministry only</option>
+              <option>Public web/social</option>
+              <option>Slides/newsletter</option>
+              <option>Archive only</option>
+            </select>
+          </label>
+          <label className={labelClass}>
             Suggested approval direction
             <select className={inputClass} name="approvalSuggestion" defaultValue="Reviewer decides">
               <option>Reviewer decides</option>
@@ -207,104 +425,112 @@ export function UploadPage() {
               <option>Do not publish externally</option>
             </select>
           </label>
-          <label className={`${labelClass} mt-4`}>
+          <label className={labelClass}>
             <span className="flex items-center justify-between gap-2">Consent/restrictions {requiredHint}</span>
-            <textarea className="min-h-28 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="notes" placeholder="Known permissions, event context, internal-only notes..." rows={4} required />
+            <textarea className="min-h-28 rounded-[12px] border border-[#d8e1da] bg-white p-3 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d]" name="notes" placeholder="Known permissions, consent, internal-only limits, or restrictions..." rows={4} required />
           </label>
         </section>
 
-        <section className="min-w-0 self-start rounded-md border border-tjc-line bg-white p-4">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold">3. Files and tags</h2>
-            <p className="text-sm text-tjc-muted">Submissions enter {uploadDefaultState.status}.</p>
-          </div>
-          <UploadFileDropzone
-            inputRef={fileInputRef}
-            selectedFiles={selectedFiles}
-            onInputFiles={checkFiles}
-            onDropFiles={addDroppedFiles}
-            onRemove={removeFile}
-            onClear={clearFiles}
+        <section data-send-step="3" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 3 && "hidden")}>
+          <UploadDropzone inputRef={fileInputRef} selectedFiles={selectedFiles} onInputFiles={checkFiles} onDropFiles={addDroppedFiles} onRemove={removeFile} onClear={clearFiles} />
+          <label className={labelClass}>
+            Existing media-team link
+            <input ref={sourceLinkRef} className={inputClass} name="sourceLink" placeholder="https://..." value={sourceLink} onChange={(event) => setSourceLink(event.target.value)} />
+            {sourceLink.trim() && !hasValidSourceLink ? <span className="text-xs font-black text-[#7a5a19]">Use a full http or https source link.</span> : null}
+          </label>
+          <label className={labelClass}>
+            Proof link / license receipt / consent attachment
+            <input className={inputClass} name="proofLink" placeholder="https://... or note where proof is attached" />
+            <span className="text-xs font-semibold text-tjc-muted">Required before public/external approval. Missing proof means public download remains blocked.</span>
+          </label>
+          <TagInput
+            name="tags"
+            label="Suggested tags"
+            value={suggestedTags}
+            onChange={setSuggestedTags}
+            required
+            placeholder="Bible, fellowship, welcome, youth..."
+            suggestions={uploadTagSuggestions}
+            helperText="Use visible-content or TJC terms. Reviewers approve final tags."
           />
-          <label className={`${labelClass} mt-4`}>
-            Existing Google / ResourceSpace link
-            <input className={inputClass} name="sourceLink" placeholder="https://drive.google.com/... or ResourceSpace ref" />
+          <label className={labelClass}>
+            <span className="flex items-center justify-between gap-2">Reviewer notes {requiredHint}</span>
+            <textarea ref={notesRef} className="min-h-28 rounded-[12px] border border-[#d8e1da] bg-white p-3 text-sm font-semibold text-tjc-ink placeholder:text-[#68756d]" name="intakeNotes" placeholder="What should the reviewer check before reuse?" rows={4} required value={intakeNotes} onChange={(event) => setIntakeNotes(event.target.value)} />
           </label>
-          <div className="mt-4">
-            <InputWithTags
-              name="tags"
-              label="Suggested tags"
-              value={suggestedTags}
-              onChange={setSuggestedTags}
-              required
-              placeholder="Bible, fellowship, welcome, youth..."
-              suggestions={uploadTagSuggestions}
-              helperText="Use existing visible-content or TJC terms. Reviewers approve final taxonomy before ResourceSpace updates."
-            />
+          {largeWarning ? <div className="rounded-[14px] border border-[#e5cf93] bg-[#fff8e8] p-3 text-sm font-semibold text-[#71500f]">{largeWarning}</div> : null}
+        </section>
+
+        <section data-send-step="4" className={cn("dam-packet-panel grid gap-4 rounded-[14px] border border-[#e5e7eb] bg-white p-4", step !== 4 && "hidden")}>
+          <div>
+            <h2 className="text-2xl font-black text-tjc-ink">Reviewer packet</h2>
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">Reviewer receives source context, people/youth answers, rights notes, proof fields, file/link, suggested tags, and notes. Media stays blocked.</p>
           </div>
-          <label className={`${labelClass} mt-4`}>
-            <span className="flex items-center justify-between gap-2">Intake notes {requiredHint}</span>
-            <textarea className="min-h-24 w-full min-w-0 rounded-md border border-tjc-line bg-white p-3 font-medium text-tjc-ink placeholder:text-[#858f87]" name="intakeNotes" placeholder="Anything the reviewer should know before approval..." rows={3} required />
-          </label>
-          {largeWarning ? <div className="sr-only" role="status">{largeWarning}</div> : null}
-          <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-md border border-tjc-line bg-[#f6faf7] p-3">
-            <FolderInput size={18} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
-            <div>
-              <strong className="block font-semibold">Large media intake</strong>
-              <span className="mt-1 block text-sm leading-snug text-tjc-muted">{uploadDefaultState.largeMediaMessage}</span>
-            </div>
-          </div>
-          <div className="mt-4 rounded-md border border-[#cbd8e4] bg-[#f2f7fb] p-3 text-sm leading-snug text-[#52677a]">
-            AI tag suggestions may help later, but a person still reviews titles, tags, people visibility, and rights before publishing.
+          <EvidenceChecklist items={packetItems} />
+          <div className="grid gap-3 rounded-[16px] border border-[#d8e1da] bg-[#fbfcfa] p-3 text-sm font-semibold text-tjc-muted">
+            <span><strong className="text-tjc-ink">Selected type:</strong> {selectedType.label}</span>
+            <span><strong className="text-tjc-ink">Files:</strong> {selectedFiles.length}</span>
+            <span><strong className="text-tjc-ink">Source link:</strong> {hasValidSourceLink ? "included" : "not included"}</span>
+            <span><strong className="text-tjc-ink">Tags:</strong> {tagCount}</span>
+            <span><strong className="text-tjc-ink">Public use:</strong> blocked until evidence and DAM review clear</span>
           </div>
         </section>
 
-        <section className="rounded-md border border-tjc-line bg-[#fbfcfa] p-4 xl:col-span-3" aria-label="Ready to submit checklist">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold">Reviewer handoff checklist</h2>
-              <p className="mt-1 text-sm text-tjc-muted">Submission is stronger when every required evidence field is filled before intake.</p>
-            </div>
-            <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-3 py-2 text-xs font-semibold text-[#725216]">Status after submit: Needs Review / Do Not Publish</span>
-          </div>
-          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            {["Context present", "Source named", "People/minors answered", "Rights/restrictions noted"].map((item) => (
-              <span className="rounded-md border border-tjc-line bg-white px-3 py-2 font-semibold text-[#4d554d]" key={item}>{item}</span>
-            ))}
-          </div>
-        </section>
+        {message ? <div className="rounded-[16px] border border-[#c8d7e6] bg-[#f2f7fb] p-3 text-sm font-black text-[#27435b]" role="status">{message}</div> : null}
 
-        <button className="inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md bg-tjc-evergreen px-5 text-base font-semibold text-white transition hover:bg-tjc-evergreen-2 active:translate-y-px xl:col-span-3" type="submit">
-          <UploadCloud size={16} strokeWidth={1.8} aria-hidden="true" />
-          Submit intake
-        </button>
-        {message ? <div className="rounded-md border border-tjc-line bg-white p-4 text-sm font-semibold text-tjc-evergreen xl:col-span-3">{message}</div> : null}
+        <PacketSubmitBar>
+          <div className="flex flex-wrap gap-2">
+            <PrimaryAction tone="secondary" onClick={saveDraftNotice} icon={Save}>Save draft</PrimaryAction>
+            <PrimaryAction tone="secondary" onClick={resetSendDetails} icon={RotateCcw}>Clear files</PrimaryAction>
+            {step > 0 ? <PrimaryAction tone="secondary" onClick={() => goToStep(Math.max(0, step - 1))}>Back</PrimaryAction> : null}
+            {step < steps.length - 1 ? (
+              <PrimaryAction onClick={nextStep}>Next</PrimaryAction>
+            ) : (
+              <PrimaryAction type="submit" icon={UploadCloud} disabled={!submitReady}>Submit for DAM review</PrimaryAction>
+            )}
+          </div>
+          <p className="text-xs font-semibold leading-relaxed text-tjc-muted">
+            {draftSaved ? "Draft saved locally. " : ""}Submit creates a review packet. Nothing publishes from this page.
+          </p>
+        </PacketSubmitBar>
 
         {receipt ? (
-          <section className="grid gap-4 rounded-md border border-[#b9d9c6] bg-[#eef8f2] p-5 text-[#24583d] sm:grid-cols-[auto_1fr_auto] xl:col-span-3" aria-label="Upload receipt">
-            <CheckCircle2 size={22} strokeWidth={1.8} aria-hidden="true" />
-            <div>
-              <h2 className="text-xl font-semibold">Intake received</h2>
-              <p className="mt-1 text-sm font-semibold">This media is blocked until a reviewer approves reuse.</p>
-              <dl className="mt-3 grid gap-3 sm:grid-cols-4">
-                <div><dt className="text-xs font-semibold">Status</dt><dd>{receipt.defaultReviewState || uploadDefaultState.status}</dd></div>
-                <div><dt className="text-xs font-semibold">Event</dt><dd>{receipt.eventName || "Not provided"}</dd></div>
-                <div><dt className="text-xs font-semibold">Files</dt><dd>{receipt.fileCount ?? 0}</dd></div>
-                <div><dt className="text-xs font-semibold">Source link</dt><dd>{receipt.sourceLink ? "Captured" : "Not provided"}</dd></div>
-              </dl>
-              <p className="mt-3 text-sm">Persistence mode: server-routed demo/export intake. ResourceSpace API write mapping must be configured for production writes.</p>
-              {receipt.reviewWarnings?.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {receipt.reviewWarnings.map((warning) => (
-                    <span className="rounded-md border border-[#ead6a8] bg-[#fff8e8] px-2.5 py-1 text-xs font-semibold text-[#725216]" key={warning}>{warning}</span>
-                  ))}
-                </div>
-              ) : null}
+          <section className="grid gap-4 rounded-[14px] border border-[#b9d8c6] bg-[#eef8f2] p-5 text-[#194f34]" aria-label="Final submission summary">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 size={23} strokeWidth={1.9} aria-hidden="true" />
+              <div>
+                <h2 className="text-2xl font-black">Intake received</h2>
+                <p className="mt-1 text-sm font-semibold">This media is blocked until a reviewer approves reuse.</p>
+              </div>
             </div>
-            <Clock3 size={20} strokeWidth={1.8} aria-hidden="true" />
+            <dl className="grid gap-3 sm:grid-cols-4">
+              <div><dt className="text-xs font-black">Status</dt><dd>{receipt.defaultReviewState || uploadDefaultState.status}</dd></div>
+              <div><dt className="text-xs font-black">Event</dt><dd>{receipt.eventName || "Not provided"}</dd></div>
+              <div><dt className="text-xs font-black">Files</dt><dd>{receipt.fileCount ?? 0}</dd></div>
+              <div><dt className="text-xs font-black">Source link</dt><dd>{receipt.sourceLinkCaptured ? "Captured" : "Not provided"}</dd></div>
+            </dl>
+            {receipt.reviewWarnings?.length ? (
+              <div className="flex flex-wrap gap-2">
+                {receipt.reviewWarnings.map((warning) => (
+                  <span className="rounded-[10px] border border-[#e5cf93] bg-[#fff8e8] px-2.5 py-1 text-xs font-black text-[#71500f]" key={warning}>{warning}</span>
+                ))}
+              </div>
+            ) : null}
           </section>
         ) : null}
       </form>
+      <PacketSummary
+        typeLabel={selectedType.label}
+        fileCount={selectedFiles.length}
+        hasSourceLink={hasValidSourceLink}
+        tagCount={tagCount}
+        ready={submitReady}
+      >
+        <EvidenceChecklist items={packetItems} />
+        <div className="rounded-xl border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm font-black leading-relaxed text-[#71500f]">
+          New media remains Needs Review / Do Not Publish. Missing proof blocks public/external download.
+        </div>
+      </PacketSummary>
+      </div>
     </div>
   );
 }
