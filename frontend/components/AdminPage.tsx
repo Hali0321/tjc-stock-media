@@ -316,37 +316,51 @@ export function AdminPage() {
       </aside>
 
       <main className="min-w-0">
-      <section id="overview" className="scroll-mt-24 grid gap-4 border-b border-[#d6dfd8] pb-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <div>
-          <span className="text-sm font-black text-tjc-evergreen">Governance and operations</span>
+      <section id="overview" className="admin-cockpit-hero find-hero scroll-mt-24 grid gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_28rem]">
+        <div className="admin-cockpit-intro">
+          <span className="text-sm font-black text-tjc-evergreen">Governance cockpit</span>
           <h1 className="mt-2 dam-page-title">Launch blocked</h1>
-          <p className="mt-2 max-w-[78ch] text-base font-semibold leading-relaxed text-tjc-muted">Private DAM pilot remains safe for curated workflows. Full production launch waits on identity, write mapping, audit, and rights coverage.</p>
-          <ol className="mt-4 grid gap-2 text-sm font-black text-[#6f4608]">
+          <p className="mt-3 max-w-[72ch] text-lg font-semibold leading-relaxed text-tjc-muted">See what is blocked, why it is blocked, who owns it, and the next queue to open.</p>
+          <div className="admin-mobile-metric-strip mt-4 grid grid-cols-2 gap-2 md:hidden" aria-label="Mobile readiness summary">
             {[
-              "ResourceSpace write mapping",
-              "Real authentication / SSO",
-              "Rights and consent review coverage"
-            ].map((blocker, index) => (
-              <li className="grid grid-cols-[auto_1fr] gap-2 rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3" key={blocker}>
-                <span className="tabular-nums">{index + 1}.</span>
-                <span>{blocker}</span>
-              </li>
+              ["Score", `${data.score}%`],
+              ["Assets", data.assetCount.toLocaleString()],
+              ["Portal ready", data.metrics.portalReady.toLocaleString()],
+              ["Needs review", data.metrics.needsReview.toLocaleString()]
+            ].map(([label, value]) => (
+              <div className="rounded-md border border-[#e5e7eb] bg-[#fbfcfd] px-3 py-2" key={label}>
+                <strong className="block text-base font-black tabular-nums text-tjc-ink">{value}</strong>
+                <span className="text-[.68rem] font-black uppercase tracking-[.04em] text-tjc-muted">{label}</span>
+              </div>
             ))}
-          </ol>
+          </div>
+          <div className="admin-top-blockers mt-5 grid gap-2">
+            {topBlockers.map((item, index) => (
+              <Link
+                className="admin-top-blocker grid gap-2 border-t border-[#e5e7eb] py-3 first:border-t-0 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center"
+                href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
+                key={item.id}
+              >
+                <span className="text-xs font-black text-tjc-muted">Blocker {index + 1}</span>
+                <strong className="block text-base font-black leading-tight text-tjc-ink">{item.label}</strong>
+                <span className={cn("w-fit rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
+              </Link>
+            ))}
+          </div>
         </div>
-        <div className="grid content-center gap-3 rounded-md border border-[#d6dfd8] bg-white p-4">
+        <div className="admin-launch-card grid content-center gap-4 rounded-[12px] border border-[#e5e7eb] bg-white p-5">
           <div>
             <div className="flex items-center gap-2 text-sm font-semibold text-[#7d2d2a]">
               <AlertTriangle size={19} strokeWidth={1.8} aria-hidden="true" />
               Launch gate status
             </div>
-            <strong className="mt-1 block text-3xl font-black text-tjc-ink">Blocked</strong>
+            <strong className="mt-1 block text-5xl font-black text-tjc-ink">Blocked</strong>
             <span className="mt-1 block text-sm font-semibold text-tjc-muted">Readiness score {data.score}% across {data.assetCount.toLocaleString()} assets from {data.source.label}</span>
             <span className="mt-3 block h-2 overflow-hidden rounded-full bg-[#edf0eb]" aria-hidden="true">
               <span className={cn("block h-full rounded-full", scoreTone(data.score) === "ok" ? "bg-[#2f7d55]" : scoreTone(data.score) === "info" ? "bg-[#5a7f95]" : "bg-[#d64545]")} style={{ width: `${Math.max(3, Math.min(data.score, 100))}%` }} />
             </span>
           </div>
-          <button className="inline-flex min-h-9 w-fit items-center justify-center gap-2 rounded-md border border-tjc-line bg-white px-3 text-sm font-semibold text-tjc-evergreen transition hover:bg-[#eef7f1]" type="button" onClick={exportReadinessCsv}>
+          <button className="inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-[10px] bg-tjc-evergreen px-4 text-sm font-black text-white transition hover:bg-[#082f29]" type="button" onClick={exportReadinessCsv}>
             <Download size={15} strokeWidth={1.8} aria-hidden="true" />
             Export report
           </button>
@@ -359,7 +373,8 @@ export function AdminPage() {
         onChange={setActiveAdminTab}
         ariaLabel="Admin readiness sections"
         idPrefix="admin-readiness"
-        className="mt-4"
+        className="admin-tabs mt-4"
+        size="sm"
       />
 
       <section
@@ -368,19 +383,26 @@ export function AdminPage() {
         aria-labelledby={damTabId("admin-readiness", "Overview")}
         hidden={activeAdminTab !== "Overview"}
       >
-      <section className="mt-4 grid gap-3 lg:grid-cols-3" aria-label="Top readiness blockers">
+      <section className="mt-5 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white" aria-label="Top readiness blockers">
+        <div className="hidden gap-3 border-b border-[#e5e7eb] bg-[#f8faf8] px-3 py-2 text-xs font-black text-tjc-muted md:grid md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem]">
+          <span>Priority</span>
+          <span>Blocker</span>
+          <span>Count</span>
+          <span>Queue</span>
+        </div>
         {topBlockers.map((item, index) => (
           <Link
             key={item.id}
             href={item.savedViewId ? `/?view=${encodeURIComponent(item.savedViewId)}` : "/admin"}
-            className="rounded-md border border-[#d6dfd8] bg-white p-4 transition hover:border-[#b9c8bf] hover:bg-[#f8fbf8]"
+            className="admin-priority-card grid gap-2 border-b border-[#eef2ef] px-3 py-3 transition last:border-b-0 hover:bg-[#f8fbf8] md:grid-cols-[5rem_minmax(0,1fr)_7rem_8rem] md:items-center"
           >
-            <span className="text-xs font-black uppercase text-tjc-muted">Priority {index + 1}</span>
-            <div className="mt-2 flex items-start justify-between gap-3">
-              <strong className="text-base font-black leading-tight text-tjc-ink">{item.label}</strong>
-              <span className={cn("rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
-            </div>
-            <p className="mt-2 text-sm font-semibold leading-relaxed text-tjc-muted">{item.action}</p>
+            <span className="text-xs font-black uppercase text-tjc-muted">P{index + 1}</span>
+            <span className="min-w-0">
+              <strong className="block text-sm font-black leading-tight text-tjc-ink">{item.label}</strong>
+              <span className="mt-1 block text-xs font-semibold leading-snug text-tjc-muted">{item.action}</span>
+            </span>
+            <span className={cn("w-fit rounded-md border px-2.5 py-1 text-xs font-black tabular-nums", severityClass(item.severity))}>{item.count.toLocaleString()}</span>
+            <span className="text-xs font-black uppercase tracking-[.04em] text-tjc-evergreen">{item.count === 0 ? zeroCountLabel(item) : "Open queue"}</span>
           </Link>
         ))}
       </section>
@@ -431,7 +453,7 @@ export function AdminPage() {
         </div>
       </details>
 
-      <section className={cn("mt-4 hidden grid-cols-2 overflow-hidden rounded-lg border border-[#d7dfd5] bg-white md:grid md:grid-cols-5 xl:grid-cols-10", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Governance operating metrics">
+      <section className={cn("mt-5 hidden grid-cols-2 overflow-hidden rounded-[12px] border border-[#e5e7eb] bg-white md:grid md:grid-cols-5 xl:grid-cols-10", activeAdminTab !== "Overview" && "md:hidden")} aria-label="Governance operating metrics">
         <MetricTile label="Approved public" value={data.metrics.approvedPublic} />
         <MetricTile label="External ready" value={data.metrics.portalReady} />
         <MetricTile label="Needs review" value={data.metrics.needsReview} />

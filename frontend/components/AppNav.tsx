@@ -2,24 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderOpen, Gauge, HelpCircle, Search, ShieldCheck, UploadCloud, type LucideIcon } from "lucide-react";
+import { ClipboardList, FolderOpen, Gauge, HelpCircle, History, Search, UploadCloud, type LucideIcon } from "lucide-react";
 import type { DemoRole } from "@/lib/types";
 import { cn } from "@/lib/ui";
 
 type AppNavItem = {
   href: string;
   label: string;
+  mobileLabel?: string;
   icon: LucideIcon;
   adminOnly?: boolean;
 };
 
-const findAndUseNav: AppNavItem[] = [
-  { href: "/", label: "Find", icon: Search },
-  { href: "/collections", label: "Packages", icon: FolderOpen },
-  { href: "/guide", label: "Help", icon: HelpCircle }
-];
-
-const contributorNav: AppNavItem[] = [
+const viewerNav: AppNavItem[] = [
   { href: "/", label: "Find", icon: Search },
   { href: "/collections", label: "Packages", icon: FolderOpen },
   { href: "/upload", label: "Send", icon: UploadCloud },
@@ -27,75 +22,70 @@ const contributorNav: AppNavItem[] = [
 ];
 
 const reviewerNav: AppNavItem[] = [
-  { href: "/review", label: "Review", icon: ShieldCheck },
-  { href: "/", label: "Ops", icon: Search },
-  { href: "/upload", label: "Send", icon: UploadCloud },
+  { href: "/review", label: "Review Inbox", mobileLabel: "Review", icon: ClipboardList },
+  { href: "/", label: "Ops Search", mobileLabel: "Search", icon: Search },
   { href: "/collections", label: "Packages", icon: FolderOpen },
-  { href: "/guide", label: "Help", icon: HelpCircle }
+  { href: "/guide", label: "Audit", icon: History }
 ];
 
 const adminNav: AppNavItem[] = [
-  { href: "/admin", label: "Govern", icon: Gauge, adminOnly: true },
-  { href: "/review", label: "Review", icon: ShieldCheck },
-  { href: "/", label: "Ops", icon: Search },
+  { href: "/review", label: "Review Inbox", mobileLabel: "Review", icon: ClipboardList },
+  { href: "/", label: "Ops Search", mobileLabel: "Search", icon: Search },
   { href: "/collections", label: "Packages", icon: FolderOpen },
-  { href: "/guide", label: "Help", icon: HelpCircle }
+  { href: "/admin", label: "Governance", mobileLabel: "Govern", icon: Gauge, adminOnly: true },
+  { href: "/guide", label: "Audit", icon: History }
 ];
 
 function navItemsForRole(role: DemoRole) {
   if (role === "DAM Admin") return adminNav;
   if (role === "Reviewer") return reviewerNav;
-  if (role === "Contributor") return contributorNav;
-  return findAndUseNav;
+  return viewerNav;
 }
 
 type AppNavProps = {
   role: DemoRole;
-  variant?: "rail" | "mobile";
+  variant?: "top" | "mobile" | "menu";
+  onNavigate?: () => void;
 };
 
-export function AppNav({ role, variant = "mobile" }: AppNavProps) {
+export function AppNav({ role, variant = "mobile", onNavigate }: AppNavProps) {
   const pathname = usePathname();
+  const top = variant === "top";
+  const menu = variant === "menu";
   const visibleItems = navItemsForRole(role).filter((item) => !item.adminOnly || role === "DAM Admin");
-  const rail = variant === "rail";
 
   return (
     <nav
       className={cn(
-        "tubelight-nav mx-auto flex w-full items-center border border-[#c9d4d5] bg-white",
-        rail
-          ? "max-w-none flex-col gap-1 rounded-none border-0 bg-transparent p-0 shadow-none"
-          : "max-w-[34rem] gap-1 rounded-[.55rem] p-1 shadow-[0_10px_24px_rgba(17,24,39,.08)]"
+        "tubelight-nav border border-[#c9d4d5] bg-white",
+        top && "flex max-w-full items-center gap-1 border-transparent bg-transparent p-0 shadow-none",
+        menu && "grid gap-1 rounded-lg border-[#d7dde2] p-1 shadow-none",
+        !top && !menu && "mx-auto flex w-full max-w-[34rem] items-center gap-1 rounded-lg p-1 shadow-none"
       )}
       aria-label="Primary navigation"
     >
       {visibleItems.map((item) => {
         const Icon = item.icon;
         const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-        const utility = item.href === "/admin";
+        const label = top ? item.label : item.mobileLabel || item.label;
         return (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "group relative inline-flex min-w-0 flex-1 items-center text-sm font-bold text-[#5b655f] transition-colors duration-200 ease-out hover:text-tjc-evergreen active:translate-y-px",
-              rail
-                ? "min-h-10 w-full flex-none justify-start gap-2 rounded-md px-3"
-                : "min-h-14 flex-col justify-center gap-1 rounded-[.45rem] px-1.5 text-[11px]",
-              isActive && "text-tjc-evergreen",
-              utility && (rail ? "mt-2 border-t border-tjc-line pt-3" : "border-l border-tjc-line")
+              "group relative inline-flex min-w-0 flex-1 items-center justify-center font-black text-[#5b655f] transition-colors duration-200 hover:text-tjc-evergreen active:translate-y-px",
+              top && "min-h-10 flex-none gap-2 rounded-md px-3 text-sm",
+              menu && "min-h-11 justify-start gap-3 rounded-md px-3 text-sm",
+              !top && !menu && "min-h-14 flex-col gap-1 rounded-md px-1.5 text-[11px]",
+              isActive && "text-tjc-evergreen"
             )}
             title={item.label}
             aria-current={isActive ? "page" : undefined}
+            onClick={onNavigate}
           >
-            {isActive ? (
-              <>
-                <span className={cn("absolute inset-0 bg-[#dfece6] shadow-[inset_0_0_0_1px_rgba(13,63,57,.12)]", rail ? "rounded-md" : "rounded-[.45rem]")} aria-hidden="true" />
-                {!rail ? <span className="absolute inset-x-3 bottom-1.5 h-0.5 rounded-sm bg-[#0b5950]" aria-hidden="true" /> : null}
-              </>
-            ) : null}
-            <Icon className={cn("relative z-10 shrink-0", rail ? "h-[17px] w-[17px]" : "h-5 w-5")} aria-hidden="true" strokeWidth={1.9} />
-            <span className="nav-label relative z-10 whitespace-nowrap leading-none">{item.label}</span>
+            {isActive ? <span className="absolute inset-0 rounded-[inherit] bg-[#edf4ef]" aria-hidden="true" /> : null}
+            <Icon className={cn("relative z-10 shrink-0", top ? "h-[16px] w-[16px]" : menu ? "h-[17px] w-[17px]" : "h-5 w-5")} aria-hidden="true" strokeWidth={1.9} />
+            <span className={cn("nav-label relative z-10 truncate leading-none", top && "max-w-none")}>{label}</span>
           </Link>
         );
       })}

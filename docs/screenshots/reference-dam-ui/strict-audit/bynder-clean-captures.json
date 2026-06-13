@@ -1,0 +1,26 @@
+{
+  "capturedAt": "2026-06-09T02:01:48.076Z",
+  "results": [
+    {
+      "name": "bynder-asset-bank-ui-clean",
+      "url": "https://support.bynder.com/hc/en-us/articles/360016051239-View-Assets-in-the-Asset-Bank",
+      "scroll": 620,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-asset-bank-ui-clean.png",
+      "title": "View Assets in the Asset Bank – Bynder Support"
+    },
+    {
+      "name": "bynder-asset-detail-ui-clean",
+      "url": "https://support.bynder.com/hc/en-us/articles/21745299220882-Exploring-the-Asset-Detail-View",
+      "scroll": 430,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-asset-detail-ui-clean.png",
+      "title": "Exploring the Asset Detail View – Bynder Support"
+    },
+    {
+      "name": "bynder-download-assets-ui-clean",
+      "url": "https://support.bynder.com/hc/en-us/articles/360013931719-Select-Assets-in-the-Asset-Bank",
+      "scroll": 1120,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-download-assets-ui-clean.png",
+      "title": "How To Select And Download Assets In The Asset Bank – Bynder Support"
+    }
+  ]
+}

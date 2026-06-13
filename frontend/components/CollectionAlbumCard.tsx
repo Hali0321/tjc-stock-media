@@ -53,6 +53,18 @@ export function CollectionAlbumCard({
   const hasAssets = !countLabel.startsWith("0 ");
   const statusTone = hasPeopleWarning ? "warning" : hasAssets ? "success" : "neutral";
   const statusLabel = hasPeopleWarning ? "People review" : hasAssets ? "Package ready" : "No assets yet";
+  const bestUse = /slide|sermon|teaching|bible/i.test(`${name} ${description}`)
+    ? "Best for slides and teaching visuals"
+    : /website|hero|banner/i.test(`${name} ${description}`)
+      ? "Best for website pages"
+      : /newsletter|social|announcement/i.test(`${name} ${description}`)
+        ? "Best for newsletters and announcements"
+        : "Best as a ministry starting point";
+  const safetySummary = hasPeopleWarning
+    ? "Open item guidance before any public sharing."
+    : hasAssets
+      ? "Start here, then confirm each item before reuse."
+      : "Reviewer-approved media will appear here later.";
 
   return (
     <article
@@ -78,7 +90,7 @@ export function CollectionAlbumCard({
           </>
         ) : (
           <>
-            <AlbumPlaceholder name={name} className="row-span-2 aspect-[4/3]" title={name} label="Cover pending" />
+            <AlbumPlaceholder name={name} className="row-span-2 aspect-[4/3]" title={name} label="Package cover" />
             <AlbumPlaceholder name={`${name}-shelf`} className="aspect-[4/3]" title="Package" label="Preview" />
             <AlbumPlaceholder name={`${name}-stable`} className="aspect-[4/3]" title="Media kit" label="Preview" />
           </>
@@ -94,6 +106,10 @@ export function CollectionAlbumCard({
             <TjcStatusBadge domain="reuse" status={statusLabel} tone={statusTone} icon={hasPeopleWarning ? Users : hasAssets ? CheckCircle2 : FolderOpen} label={statusLabel} size="xs" />
           </div>
           <p className="line-clamp-2 text-sm font-semibold leading-snug text-tjc-muted">{description}</p>
+          <div className="grid gap-1 rounded-md border border-[#dbe4dd] bg-[#fbfcfa] p-2 text-xs font-semibold text-[#4d5b52]">
+            <span><strong className="text-tjc-ink">Best use:</strong> {bestUse}</span>
+            <span><strong className="text-tjc-ink">Safety:</strong> {safetySummary}</span>
+          </div>
           <div className="flex flex-wrap gap-2 text-xs font-black text-[#4d5b52]">
             <span className="inline-flex min-h-8 max-w-full min-w-0 items-center gap-1.5 rounded-md border border-[#dbe4dd] bg-[#f9fbf9] px-2">
               <Images size={13} strokeWidth={1.8} aria-hidden="true" />

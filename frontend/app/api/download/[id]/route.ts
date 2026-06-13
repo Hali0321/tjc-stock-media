@@ -5,6 +5,7 @@ import { getAssetRecordById } from "@/lib/catalog";
 import { findFilestoreDerivative } from "@/lib/media-source";
 import { canDownloadApprovedCopy, normalizeRole } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
+import { sourceForRole } from "@/lib/source-redaction";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
   const { asset, source } = await getAssetRecordById(id);
+  const safeSource = sourceForRole(role, source);
 
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found", source }, { status: 404 });
+    return NextResponse.json({ error: "Asset not found", source: safeSource }, { status: 404 });
   }
   if (!canDownloadApprovedCopy(role, asset)) {
     appendAuditEvent({
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(
       {
         error: "Not approved for this role. Original/master files stay restricted.",
-        source
+        source: safeSource
       },
       { status: 403 }
     );
@@ -40,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const filePath = findFilestoreDerivative(id, "download");
   if (!filePath) {
-    return NextResponse.json({ error: "Approved derivative not available in local filestore.", source }, { status: 404 });
+    return NextResponse.json({ error: "Approved derivative not available in local filestore.", source: safeSource }, { status: 404 });
   }
 
   try {
@@ -63,6 +65,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     });
   } catch {
-    return NextResponse.json({ error: "Approved derivative is indexed but unavailable.", source }, { status: 404 });
+    return NextResponse.json({ error: "Approved derivative is indexed but unavailable.", source: safeSource }, { status: 404 });
   }
 }

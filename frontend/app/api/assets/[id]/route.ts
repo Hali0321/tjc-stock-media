@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAssetById } from "@/lib/catalog";
-import { canOpenResourceSpace, canSeeAsset, normalizeRole } from "@/lib/permissions";
+import { canOpenResourceSpace, canReview, canSeeAsset, normalizeRole } from "@/lib/permissions";
 import { assetWithRoleImageUrls } from "@/lib/presentation";
 import { normalizeAssetId } from "@/lib/request-validation";
 import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
 import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
+import { sourceForRole } from "@/lib/source-redaction";
 
 export const dynamic = "force-dynamic";
 
@@ -15,20 +16,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
   }
   const { asset, source, related } = await getAssetById(id);
+  const safeSource = sourceForRole(role, source);
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found", source }, { status: 404 });
+    return NextResponse.json({ error: "Asset not found", source: safeSource }, { status: 404 });
   }
   if (!canSeeAsset(role, asset)) {
-    return NextResponse.json({ error: "This role cannot view this asset.", source }, { status: 403 });
+    return NextResponse.json({ error: "This role cannot view this asset.", source: safeSource }, { status: 403 });
   }
   const pending = latestPendingWriteForResource(asset.resourceSpaceId || asset.id);
+  const isReviewerOrAdmin = canReview(role);
   return NextResponse.json({
     asset: {
       ...assetWithRoleImageUrls(asset, role),
-      pendingReviewWrite: pending ? pendingReviewWriteSummary(pending) : undefined
+      pendingReviewWrite: isReviewerOrAdmin && pending ? pendingReviewWriteSummary(pending) : undefined
     },
-    source,
+    source: safeSource,
     related: related.filter((item) => canSeeAsset(role, item)).map((item) => assetWithRoleImageUrls(item, role)),
-    resourceSpaceUrl: asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : null
+    resourceSpaceUrl: isReviewerOrAdmin && asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : null
   });
 }

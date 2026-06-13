@@ -232,13 +232,49 @@ if (data.assets.length !== 5 || data.pagination?.rangeStart !== 6 || data.pagina
 }
 ' "$BASE_URL/api/assets/search?role=Viewer&limit=5&offset=5"
 
+expect_json viewer-search-redacts-operational-diagnostics '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const forbiddenTopLevel = ["metadataHealth", "zeroResultInsights", "operationalInsights"];
+const leakedTopLevel = forbiddenTopLevel.filter((key) => key in data);
+if (leakedTopLevel.length) {
+  console.error(`FAIL: Viewer search leaked operational diagnostics: ${leakedTopLevel.join(", ")}`);
+  process.exit(1);
+}
+const forbiddenCounts = [
+  "rawTotal",
+  "visibleToRole",
+  "approvedRaw",
+  "portalReady",
+  "batchApprovedWithBlockers",
+  "pendingReview",
+  "childrenYouth",
+  "missingSource",
+  "rightsReview"
+];
+const leakedCounts = forbiddenCounts.filter((key) => data.counts && key in data.counts);
+if (leakedCounts.length) {
+  console.error(`FAIL: Viewer search leaked operational counts: ${leakedCounts.join(", ")}`);
+  process.exit(1);
+}
+const requiredCounts = ["currentlyShown", "totalMatching", "totalRendered", "matching", "rendered"];
+const missingCounts = requiredCounts.filter((key) => !(data.counts && key in data.counts));
+if (missingCounts.length) {
+  console.error(`FAIL: Viewer search missing safe counts: ${missingCounts.join(", ")}`);
+  process.exit(1);
+}
+if (data.source?.adapter === "resourcespace-api" || /ResourceSpace|Shared Drive|pending writes|launch gate/i.test(`${data.source?.label || ""} ${data.source?.detail || ""}`)) {
+  console.error("FAIL: Viewer search source exposed operational truth");
+  process.exit(1);
+}
+' "$BASE_URL/api/assets/search?role=Viewer&limit=1"
+
 expect_json approved-rights-unknown-stays-review '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 if ((data.counts?.rightsReview || 0) < 1 || (data.metadataHealth?.needsRights || 0) < 1) {
   console.error("FAIL: approved assets with unknown rights/consent were treated as fully clear");
   process.exit(1);
 }
-' "$BASE_URL/api/assets/search?role=Viewer&view=approved-church-wide&limit=5"
+' "$BASE_URL/api/assets/search?role=Reviewer&view=approved-church-wide&limit=5"
 
 expect_json rights-status-not-publish-status '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

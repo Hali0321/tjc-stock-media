@@ -31,7 +31,7 @@ const commands: Command[] = [
   { id: "go-admin", group: "Go to", label: "Governance", hint: "Open operations console and blockers", href: "/admin", keywords: "governance admin diagnostics readiness api field mapping", icon: Settings2, shortcut: "G D", adminOnly: true, access: "Governance", tag: "Governance" },
 
   { id: "find-assets", group: "Find", label: "Search assets", hint: "Run a Find search with your current query", href: "/", keywords: "find search assets bible fellowship media", icon: Search, shortcut: "Enter" },
-  { id: "find-rs-id", group: "Find", label: "Search media record ID", hint: "Type a numeric record ID to open a media record", href: "/", keywords: "resourcespace media record id reference ref search number", icon: KeyRound, shortcut: "ID" },
+  { id: "find-rs-id", group: "Find", label: "Search reference code", hint: "Type a numeric reference code to open media", href: "/", keywords: "resourcespace media record id reference ref search number", icon: KeyRound, shortcut: "ID" },
   { id: "find-collection", group: "Find", label: "Search packages", hint: "Find curated packages by event, ministry, or campaign", href: "/collections", keywords: "deliver collection campaign event ministry stable id packages", icon: Tags, shortcut: "C" },
   { id: "find-blocked", group: "Find", label: "Search blocked downloads", hint: "Show assets blocked by reuse or download policy", href: "/?view=needs-review", keywords: "blocked downloads unsafe do not publish needs review", icon: ShieldAlert, shortcut: "B" },
 
@@ -76,8 +76,8 @@ export function CommandPalette() {
       base.unshift({
         id: `resource-${resourceId}`,
         group: "Find",
-        label: reviewer ? `Open ResourceSpace ID ${resourceId}` : `Open media record ${resourceId}`,
-        hint: reviewer ? "Open asset detail by exported ID/reference" : "Open media record by ID",
+        label: reviewer ? `Open ResourceSpace ID ${resourceId}` : `Open reference code ${resourceId}`,
+        hint: reviewer ? "Open asset detail by exported ID/reference" : "Open media by reference code",
         href: `/assets/${resourceId}`,
         keywords: resourceId,
         icon: KeyRound,
@@ -262,7 +262,7 @@ export function CommandPalette() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={onInputKeyDown}
-                  placeholder={reviewer ? "Search assets, RS ID, package, saved view..." : "Search media, record ID, package, saved view..."}
+                  placeholder={reviewer ? "Search assets, RS ID, package, saved view..." : "Search media, reference code, package, saved view..."}
                   aria-label="Command search"
                   aria-activedescendant={visibleCommands[selectedIndex] ? `command-option-${visibleCommands[selectedIndex].id}` : undefined}
                   aria-controls="command-results"

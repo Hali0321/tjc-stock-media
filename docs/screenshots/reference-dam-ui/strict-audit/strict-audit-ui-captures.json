@@ -1,0 +1,93 @@
+{
+  "capturedAt": "2026-06-09T02:00:43.860Z",
+  "results": [
+    {
+      "name": "brandfolder-smartsheet-search-ui",
+      "url": "https://help.smartsheet.com/articles/2483104-Search-in-Brandfolder",
+      "scroll": 900,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/brandfolder-smartsheet-search-ui.png",
+      "title": "Search in Brandfolder | Smartsheet Learning Center",
+      "textSample": "___ Skip to main content Help Center Community University Go to Smartsheet.com Help Center SVG Documentation Guided Learning Contact support Select your language English Deutsch Español Français Italiano Portuguese Pусский 日本語 Search Help Center Login Breadcrumb Brandfolder Creative asset management Organizing assets IN THIS ARTICLE: Navigation Narrow your search Search operators Search options Short-hand search syntax Reserved search characters Share searches Search in Brandfolder Users can use"
+    },
+    {
+      "name": "brandfolder-smartsheet-download-ui",
+      "url": "https://help.smartsheet.com/articles/2482839-Download-Individual-Assets",
+      "scroll": 900,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/brandfolder-smartsheet-download-ui.png",
+      "title": "Download individual assets | Smartsheet Learning Center",
+      "textSample": "___ Skip to main content Help Center Community University Go to Smartsheet.com Help Center SVG Documentation Guided Learning Contact support Select your language English Deutsch Español Français Italiano Portuguese Pусский 日本語 Search Help Center Login Breadcrumb Brandfolder Creative asset management Asset management IN THIS ARTICLE: Download from the Brandfolder view Download from the asset modal Format and resize Crop Download alerts Download individual assets There are multiple ways to downloa"
+    },
+    {
+      "name": "brandfolder-smartsheet-upload-ui",
+      "url": "https://help.smartsheet.com/articles/2482958-Upload-Assets",
+      "scroll": 900,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/brandfolder-smartsheet-upload-ui.png",
+      "title": "Upload assets | Smartsheet Learning Center",
+      "textSample": "___ Skip to main content Help Center Community University Go to Smartsheet.com Help Center SVG Documentation Guided Learning Contact support Select your language English Deutsch Español Français Italiano Portuguese Pусский 日本語 Search Help Center Login Breadcrumb Brandfolder Creative asset management Organizing assets IN THIS ARTICLE: Move assets across sections Upload assets Upload and manage digital assets within Brandfolder. Use individual or bulk uploads and learn about custom fields, asset n"
+    },
+    {
+      "name": "bynder-asset-bank-ui",
+      "url": "https://support.bynder.com/hc/en-us/articles/360016051239-View-Assets-in-the-Asset-Bank",
+      "scroll": 650,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-asset-bank-ui.png",
+      "title": "View Assets in the Asset Bank – Bynder Support",
+      "textSample": "Learn Connect Get Help Explore Product Develop Partner Submit a request Sign in Bynder Support Articles Digital Asset Management (DAM) Exploring your Assets Search View Assets in the Asset Bank The Asset Bank provides access to your organization’s most recent and valuable assets. You can search for assets and then choose to share, download, or add them to a collection. By clicking on an asset's thumbnail, you can view the Asset Detail or Info tab. This tab displays metaproperties, version histor"
+    },
+    {
+      "name": "bynder-asset-detail-ui",
+      "url": "https://support.bynder.com/hc/en-us/articles/21745299220882-Exploring-the-Asset-Detail-View",
+      "scroll": 540,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-asset-detail-ui.png",
+      "title": "Exploring the Asset Detail View – Bynder Support",
+      "textSample": "Learn Connect Get Help Explore Product Develop Partner Submit a request Sign in Bynder Support Articles Digital Asset Management (DAM) Exploring your Assets Search Exploring the Asset Detail View The Asset Detail View provides a comprehensive overview of an individual asset metadata, version history, permissions, and usage. This view is crucial for understanding asset-specific details, making edits, tracking usage, and managing rights. Metadata Metadata is crucial for organizing and retrieving d"
+    },
+    {
+      "name": "bynder-download-assets-ui",
+      "url": "https://support.bynder.com/hc/en-us/articles/360013931719-Select-Assets-in-the-Asset-Bank",
+      "scroll": 650,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/bynder-download-assets-ui.png",
+      "title": "How To Select And Download Assets In The Asset Bank – Bynder Support",
+      "textSample": "Learn Connect Get Help Explore Product Develop Partner Submit a request Sign in Bynder Support Articles Digital Asset Management (DAM) Download Search How To Select And Download Assets In The Asset Bank Summary Users can download one or more assets stored in the Asset Bank. Your portal admin might ask you to provide a reason for downloading an asset via a form. Who? This feature/solution is enabled by a Bynder Admin. Don't have Bynder yet? Start Here. As a Bynder Admin, you can manage who can do"
+    },
+    {
+      "name": "acquia-search-results-ui",
+      "url": "https://docs.acquia.com/acquia-dam/how-do-i-search-assets",
+      "scroll": 650,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/acquia-search-results-ui.png",
+      "title": "How do I search for assets? | Acquia DAM | Acquia Product Documentation",
+      "textSample": "Skip to content Docs Product Guides Resources Legal and Security Support Search Open product launcher Open user menu Acquia DAM Documentation Releases Developers Legal guide Help Acquia DAM How do I search for assets? Close sidebar Documentation Searching, downloading, and sharing Search for assets RSS Feed Close sidebar Left Sidebar Documentation Accounts and login Acquia DAM Community Admin API Entries Features Insights Integrations Metadata and upload Portals Releases and roadmap Searching, d"
+    },
+    {
+      "name": "acquia-portal-settings-ui",
+      "url": "https://docs.acquia.com/acquia-dam/how-do-i-add-collections-portal",
+      "scroll": 980,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/acquia-portal-settings-ui.png",
+      "title": "How do I add collections to a portal? | Acquia DAM | Acquia Product Documentation",
+      "textSample": "Skip to content Docs Product Guides Resources Legal and Security Support Search Open product launcher Open user menu Acquia DAM Documentation Releases Developers Legal guide Help Acquia DAM How do I add collections to a portal? Close sidebar Documentation Portals Create portals Add collections to portals RSS Feed Left Sidebar Documentation Accounts and login Acquia DAM Community Admin API Entries Features Insights Integrations Metadata and upload Portals Types of portals Portals permissions Port"
+    },
+    {
+      "name": "acquia-upload-ui",
+      "url": "https://docs.acquia.com/acquia-dam/how-do-i-upload-files",
+      "scroll": 640,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/acquia-upload-ui.png",
+      "title": "How do I upload files? | Acquia DAM | Acquia Product Documentation",
+      "textSample": "Skip to content Docs Product Guides Resources Legal and Security Support Search Open product launcher Open user menu Acquia DAM Documentation Releases Developers Legal guide Help Acquia DAM How do I upload files? Close sidebar Documentation Metadata and upload Asset uploads RSS Feed Left Sidebar Documentation Accounts and login Acquia DAM Community Admin API Entries Features Insights Integrations Metadata and upload Uploads page Edit metadata, asset categories and groups Asset thumbnail details "
+    },
+    {
+      "name": "adobe-assets-view-ui",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/assets-view/navigate-assets-view",
+      "scroll": 620,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/adobe-assets-view-ui.png",
+      "title": "Assets view user interface | Adobe Experience Manager as a Cloud Service",
+      "textSample": "Documentation AEM User Guide AEM Assets Navigate to files and folders and view assets Last update: June 5, 2026 APPLIES TO: Experience Manager as a Cloud Service TOPICS: Asset Management Publishing Collaboration Asset Processing CREATED FOR: User Understand the Assets view user interface Assets view offers an intuitive and user-friendly user interface. The clean interface makes assets and related information easy to find and remember. When you log into Assets view, you see the following interfac"
+    },
+    {
+      "name": "adobe-search-assets-ui",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/manage/search-assets",
+      "scroll": 700,
+      "screenshot": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/reference-dam-ui/strict-audit/adobe-search-assets-ui.png",
+      "title": "How to search assets in AEM? | Adobe Experience Manager as a Cloud Service",
+      "textSample": "Documentation AEM User Guide AEM Assets Search assets in AEM Last update: June 5, 2026 APPLIES TO: Experience Manager as a Cloud Service TOPICS: Selectors Adobe Stock Asset Distribution Asset Management Asset Processing CREATED FOR: User Admin Version Article link AEM 6.5 Click here AEM as a Cloud Service This article Adobe Experience Manager Assets provides robust asset search methods that help you achieve higher content velocity. Your teams can reduce time to market with seamless, intelligent "
+    }
+  ]
+}

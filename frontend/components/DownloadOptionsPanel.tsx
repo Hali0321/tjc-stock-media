@@ -21,10 +21,15 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
   const downloadHref = `/api/download/${asset.id}?role=${encodeURIComponent(role)}`;
   const assetTitle = asset.title || asset.resourceSpaceId || asset.id;
   const resourceSpaceId = asset.resourceSpaceId || asset.id;
+  const requestRecordLabel = opsView ? "ResourceSpace ID" : "Reference code";
+  const requestAccessLabel = opsView ? "Original/master access" : "Source-file access";
+  const requestStateLine = opsView
+    ? `Raw%20status:%20${encodeURIComponent(asset.status)}%0AReuse%20state:%20${encodeURIComponent(state.reuse.label)}`
+    : `Use%20state:%20${encodeURIComponent(state.reuse.label)}`;
   const requestLinks: Record<RequestKind, string> = {
-    original: `mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(assetTitle)}&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0ARequest:%20Original/master access%0AReason:%20`,
-    review: `mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(assetTitle)}&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0ARaw status: ${encodeURIComponent(asset.status)}%0AReuse state: ${encodeURIComponent(state.reuse.label)}%0AReason:%20`,
-    coworker: `mailto:media@tjc.org?subject=TJC Stock Media asset question&body=ResourceSpace ID: ${encodeURIComponent(resourceSpaceId)}%0AAsset: ${encodeURIComponent(assetTitle)}%0AQuestion:%20`
+    original: `mailto:media@tjc.org?subject=Original access request for ${encodeURIComponent(assetTitle)}&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0ARequest:%20${encodeURIComponent(requestAccessLabel)}%0AReason:%20`,
+    review: `mailto:media@tjc.org?subject=Review request for ${encodeURIComponent(assetTitle)}&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0A${requestStateLine}%0AReason:%20`,
+    coworker: `mailto:media@tjc.org?subject=TJC Stock Media asset question&body=${encodeURIComponent(requestRecordLabel)}:%20${encodeURIComponent(resourceSpaceId)}%0AAsset:%20${encodeURIComponent(assetTitle)}%0AQuestion:%20`
   };
   const options = [
     { label: "Web image", detail: "Approved web copy for websites and newsletters.", icon: ImageIcon, available: state.approvedCopy.allowed, kind: "download" as const },
@@ -160,7 +165,7 @@ export function DownloadOptionsPanel({ asset, role }: { asset: StockMediaAsset; 
             <div>
               <span className="text-xs font-semibold text-tjc-muted">Asset</span>
               <strong className="mt-1 block text-sm text-tjc-ink">{assetTitle}</strong>
-              <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Media record ${resourceSpaceId}`}</span>
+              <span className="mt-1 block text-xs font-semibold text-tjc-muted">{opsView ? `ResourceSpace ID ${resourceSpaceId}` : `Reference code ${resourceSpaceId}`}</span>
             </div>
             <div>
               <span className="text-xs font-semibold text-tjc-muted">{opsView ? "Current state" : "Use state"}</span>
