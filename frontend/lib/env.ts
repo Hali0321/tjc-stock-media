@@ -31,6 +31,10 @@ export function writableRuntimeRoot() {
   return repoRoot();
 }
 
+export function productionRuntime() {
+  return process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+}
+
 export function resourceSpaceBaseUrl() {
   return process.env.RESOURCESPACE_BASE_URL || process.env.RS_BASE_URL || "http://localhost:8088";
 }
@@ -90,6 +94,15 @@ export function trustedSsoHeadersEnabled() {
   return process.env.SSO_TRUSTED_HEADERS === "1" || process.env.SSO_PROVIDER === "cloudflare-access";
 }
 
+export function productionTrustedIdentityRequired() {
+  return process.env.PRODUCTION_REQUIRE_TRUSTED_IDENTITY !== "0";
+}
+
+export function localBetaRoleOverridesEnabled() {
+  if (productionRuntime()) return false;
+  return process.env.PORTAL_ALLOW_BETA_ROLE_OVERRIDE === "1" || process.env.BETA_ROLE_OVERRIDE_ENABLED === "1";
+}
+
 export function hasUsageAnalyticsConfig() {
   return Boolean(process.env.PORTAL_USAGE_LOGGING === "1" || process.env.USAGE_ANALYTICS_DSN);
 }
@@ -124,4 +137,13 @@ export function hasVercelKvConfig() {
 
 export function hasVercelBlobConfig() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+export function runtimeStoreMode() {
+  return process.env.RUNTIME_STORE || process.env.PORTAL_RUNTIME_STORE || "local-filesystem";
+}
+
+export function durableRuntimeStoreConfigured() {
+  const mode = runtimeStoreMode();
+  return (mode === "vercel-kv" && hasVercelKvConfig()) || mode === "external-durable";
 }

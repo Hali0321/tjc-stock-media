@@ -260,6 +260,16 @@ export async function savePackageDraftSubmission(draft: DamPackage, actor: { id:
   });
 }
 
+export function packageStorageReadiness() {
+  return {
+    storageMode: "local-json" as const,
+    durableShareStorage: false,
+    productionReadySharing: false,
+    permissionTruth: false,
+    detail: "Package drafts use local JSON readiness records. They are not durable production package/share storage and do not grant permission."
+  };
+}
+
 export function packageDraftDiagnostics() {
   const filePath = packageStorePath();
   const records = readLocalJsonStoreSync({
@@ -273,6 +283,7 @@ export function packageDraftDiagnostics() {
   return {
     storageMode: "local-json" as const,
     durableStorageConfigured: false,
+    productionReadySharing: false,
     count: records.length,
     openCount: openDrafts.length,
     blockedRefs,

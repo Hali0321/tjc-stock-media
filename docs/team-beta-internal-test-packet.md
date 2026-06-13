@@ -1,8 +1,12 @@
 # Team Beta Internal Tester Packet
 
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
-Use this packet only after the pre-send gates below are signed. This is the send-ready packet for a tiny internal Team Beta workflow test of TJC Stock Media. It is not approval for production launch, public sharing, source media changes, live ResourceSpace writeback, public downloads, or broad archive reuse.
+Use this packet only after the pre-send gates below are signed. This is the send-ready packet for a tiny internal Team Beta workflow test of the TJC internal DAM portal. It is not approval for production launch, public sharing, source media changes, live ResourceSpace writeback, public downloads, or broad archive reuse.
+
+Internal beta access update: when `BETA_AUTH_ENABLED=true`, testers must use `/beta-login` and the assigned persona password from Vercel env vars. The older role-query links below are legacy QA shortcuts for beta-off/local rehearsals only and should not be sent as the primary hosted access path.
+
+Current beta-auth handoff: `docs/free-internal-beta-handoff-2026-06-12.md`
 
 Canonical beta URL:
 
@@ -29,6 +33,18 @@ Packet status: ready to send to the signed six-person tiny internal Team Beta ba
 
 Invite status: GO for the named testers below. Do not widen beyond this group without a new signoff.
 
+Mature DAM beta boundaries after Phases 0-7:
+
+- ResourceSpace remains the metadata, search, and review source of truth.
+- Google Shared Drive remains master-original custody.
+- Approved folders, approved copies, packages, saved views, and collections are delivery/readiness workflows, not permission truth.
+- Viewer and Contributor paths must not expose originals, source paths, master paths, checksums, signed URLs, ResourceSpace internals, reviewer evidence, or private notes.
+- Viewer downloads are approved-copy gated only. Original/master access remains a separate request-only workflow and is not enabled by this beta.
+- Metrics, readiness, audit, package, and usage summaries are diagnostics/accountability evidence only. They do not approve rights, consent, doctrine, minors, hymn/music, public use, or portal readiness.
+- AI/smart suggestions are review debt. Humans approve rights, consent, people/minors, doctrine/sacrament, hymn/music clearance, sensitivity, and public reuse.
+- Brandfolder-inspired search, collections, packages, and saved views are translated into governed TJC workflows: route to review, explain blockers, and never bypass per-asset review.
+- Local JSON/runtime storage, queued review writes, and beta analytics are beta-only unless production-durable storage and live ResourceSpace sync are separately configured and proven.
+
 | Gate | Required signoff | Owner | Timestamp | Decision |
 |---|---|---|---|---|
 | Seed/media safety | Rights/media reviewer confirms preview-only beta visibility is safe, or seed is scrubbed/hidden before invites. | Enoch Liu primary; Hali Ding backup | 2026-06-11T21:36:44Z | Approved |
@@ -51,11 +67,17 @@ Subject: TJC Stock Media tiny internal beta test
 
 Hi team,
 
-We are running a tiny internal beta test of TJC Stock Media, a TJC-only media library workbench for safer search, review, and reuse decisions.
+We are running a tiny internal beta test of the TJC internal DAM portal, a TJC-only media library workbench for safer search, review, and reuse decisions.
 
-This is not a production launch and not a public media library. Google Shared Drive remains the master-original warehouse. ResourceSpace remains the DAM/search/review source of truth. The portal helps us test whether ministry teammates can find media, understand whether it is stock-safe, context-safe, or archive-only, and report unclear or unsafe states.
+This is not a production launch and not a public media library. Google Shared Drive remains master-original custody. ResourceSpace remains the DAM/search/review source of truth. The portal helps us test whether ministry teammates can find media, understand whether it is portal-ready, context-safe, archive-only, or blocked, and report unclear or unsafe states.
 
-Please use only the role link assigned to you:
+If beta auth is enabled, open:
+
+`https://tjc-stock-media.vercel.app/beta-login`
+
+Select your assigned persona and enter the password provided by the beta coordinator. This is internal beta access for QA testing only. It is not production SSO, not real church member auth, and not impersonation.
+
+Legacy beta-off/local role shortcuts:
 
 - Viewer: `https://tjc-stock-media.vercel.app/?role=Viewer&taskMode=1`
 - Contributor: `https://tjc-stock-media.vercel.app/upload?role=Contributor&taskMode=1`
@@ -70,6 +92,7 @@ Important boundaries:
 - Use harmless sample files only if your task asks you to test Upload.
 - Do not treat any visible seed media as reusable or downloadable.
 - Do not treat raw `Approved Public` as final reuse approval.
+- Do not treat metrics, readiness cards, package membership, collection membership, saved views, or AI suggestions as permission.
 - Do not publish, repost, download around gates, or move any source media.
 - Role switch is simulated for beta QA only; it is not production authentication.
 - ResourceSpace writeback is queued/disabled for this beta.
@@ -92,16 +115,17 @@ Thank you for helping us test whether the safest path is also the easiest path.
 
 Viewer:
 
-- Search and inspect media.
-- Decide whether the asset clearly says if it is stock-safe, context-safe, archive-only, or blocked.
-- Confirm unsafe downloads stay blocked.
-- Report trust copy that is unclear.
+- Search and inspect media using TJC terms and ministry context.
+- Decide whether the asset clearly says if it is portal-ready, context-safe, archive-only, or blocked.
+- Confirm unsafe downloads stay blocked and approved-copy language does not imply original/master access.
+- Report trust copy, search recovery, metrics, or package language that feels like permission truth.
 
 Contributor:
 
 - Test Upload/intake with harmless sample files only.
 - Confirm upload never claims publish, approval, or broad reuse.
 - Confirm source, event, people/minors, rights, consent/restrictions, and reviewer-note prompts make sense.
+- Inspect collections/packages as draft/reference workflows only.
 - Do not upload real church media, youth media, sensitive media, copyrighted third-party files, source files, or masters.
 
 Reviewer:
@@ -109,12 +133,14 @@ Reviewer:
 - Test review queues, evidence requirements, and pending-write honesty.
 - Confirm approval without evidence and note stays blocked.
 - Confirm a completed beta decision says queued/synced/blocked honestly.
+- Confirm doctrine/sacrament, hymn/music, RE/minors, testimony/pastoral, lifecycle, approved-copy, and package blockers route to review instead of bypassing review.
 - Do not treat portal queueing as ResourceSpace truth.
 
 DAM Admin:
 
 - Inspect Admin readiness, blockers, integration states, and Feedback Inbox.
 - Confirm source custody details stay hidden from Viewer/Contributor roles.
+- Confirm metrics/readiness/audit/package summaries are diagnostic and do not claim production analytics, durable sharing, durable audit storage, SSO, or live ResourceSpace writeback.
 - Triage reports and export agent-ready JSON after the test.
 - Keep launch claims conservative.
 
@@ -130,7 +156,7 @@ Viewer tasks:
 4. Search `Sabbath Service`, `Religious Education`, `RE`, `Hymns of Praise`, `baptism`, `Holy Communion`, `testimony`, and `children`.
 5. Confirm doctrine/sacrament, hymn/music, RE/minors, testimony, and archive-only results do not look stock-safe without reviewer evidence.
 6. Open a Needs Review or blocked asset and try the download path; confirm it blocks or explains the gate.
-7. Open Insights and common use-case cards; confirm routes lead to useful searches.
+7. Open Insights and common use-case cards; confirm routes lead to useful searches and metrics read as diagnostics, not approval.
 8. On one mobile pass around 390 px, check nav, Guide, Task Mode, feedback button, and text fit.
 
 Contributor tasks:
@@ -140,8 +166,8 @@ Contributor tasks:
 3. Confirm the default state is `Needs Review / Do Not Publish`.
 4. Confirm no screen says upload publishes, approves, or clears public use.
 5. Inspect Collections and Package Builder.
-6. Confirm ResourceSpace references are clear and originals/masters are not copied or exposed.
-7. Report any copy that makes collection or package membership feel like permission.
+6. Confirm ResourceSpace references are clear, every package item still needs item-level clearance, and originals/masters are not copied or exposed.
+7. Report any copy that makes collection, package, saved view, or Brand Hub membership feel like permission.
 
 Reviewer tasks:
 
@@ -151,13 +177,13 @@ Reviewer tasks:
 4. Complete evidence and note, queue a decision, and confirm the result is honest about queued/synced/blocked status.
 5. Check that TJC-specific risks are visible where relevant: doctrine/sacrament review, hymn rights/channel clearance, minors/RE consent, testimony/pastoral sensitivity, reuse tier, and master/derivative separation.
 6. Confirm `Approved Public` alone does not become `Portal Ready`.
-7. Report any path that makes AI, package membership, collection membership, or raw approval look like final rights clearance.
+7. Report any path that makes AI, package membership, collection membership, saved views, metrics, or raw approval look like final rights clearance.
 
 DAM Admin tasks:
 
 1. Open your DAM Admin link.
 2. Inspect Admin modules and confirm each module heading/content changes.
-3. Check launch blockers: production SSO, live ResourceSpace writeback, durable storage, S3 derivative delivery, seed safety, rights review, doctrine/sacrament review, hymn rights/channel clearance, minors/RE consent, testimony sensitivity, and master/derivative governance.
+3. Check launch blockers: production SSO, live ResourceSpace writeback, durable storage, durable analytics/audit/package sharing, S3 derivative delivery, seed safety, rights review, doctrine/sacrament review, hymn rights/channel clearance, minors/RE consent, testimony sensitivity, and master/derivative governance.
 4. Open Feedback Inbox, classify at least one test report, and export agent-ready JSON if reports exist.
 5. Confirm Admin readiness does not overclaim production launch, public downloads, live writeback, or broad archive approval.
 

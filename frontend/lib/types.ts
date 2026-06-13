@@ -16,6 +16,52 @@ export type UsageScope =
   | "Do Not Publish"
   | "Do Not Use";
 
+export type ReuseTier = "stock-safe" | "context-safe" | "archive-only";
+
+export type VisibilityTier = "public" | "internal/member" | "reviewer/admin" | "archive";
+
+export type SensitivityClass =
+  | "public-safe"
+  | "member-sensitive"
+  | "sacrament-sensitive"
+  | "youth-sensitive"
+  | "testimony-sensitive"
+  | "internal-governance"
+  | "archive-restricted";
+
+export type RightsBasis =
+  | "TJC-owned"
+  | "contributor-license"
+  | "public-domain"
+  | "jurisdiction-limited-public-domain"
+  | "hymn-license"
+  | "hymn-permission"
+  | "fair-use-internal-only"
+  | "unknown";
+
+export type ApprovedChannel =
+  | "website"
+  | "livestream"
+  | "projection"
+  | "choir-upload"
+  | "print"
+  | "social"
+  | "internal-training"
+  | "limited-share-link"
+  | "archive-only";
+
+export type DomainReviewer =
+  | "doctrine"
+  | "music-rights"
+  | "RE/minors"
+  | "pastoral-sensitivity"
+  | "archive"
+  | "DAM-reviewer";
+
+export type MasterCustodyPathStatus = "verified" | "planned" | "missing" | "not-exported";
+
+export type WithdrawalStatus = "active" | "withdrawn" | "takedown-requested" | "embargoed" | "expired";
+
 export type StockMediaAsset = {
   id: string;
   title: string;
@@ -38,10 +84,13 @@ export type StockMediaAsset = {
   sourcePlatform?: string;
   sourceSystem?: string;
   sourceAccount?: string;
+  sourceFolder?: string;
   sourceAlbum?: string;
   sourceAlbumPath?: string;
   sourceAlbumMemberships?: string[];
+  importBatch?: string;
   eventName?: string;
+  eventSeries?: string;
   eventDate?: string;
   capturedDate?: string;
   importDate?: string;
@@ -67,17 +116,47 @@ export type StockMediaAsset = {
   resourceSpaceId?: string;
   sourcePath?: string;
   masterDrivePath?: string;
+  masterCustodyPathStatus?: MasterCustodyPathStatus;
   originalFilename?: string;
   fileExtension?: string;
   fileSizeBytes?: number;
   tags?: string[];
   tjcTerms?: string[];
+  suggestedTags?: string[];
+  controlledVocabularySource?: "approved-historical-tjc" | "review-suggestion" | "unknown";
   aiTitleSuggestion?: string;
   aiVisibleTagSuggestions?: string[];
   aiTjcTermSuggestions?: string[];
   aiQualitySuggestion?: string;
   aiPeopleOrMinorFlag?: string;
   humanAiDecision?: string;
+  reuseTier?: ReuseTier;
+  visibilityTier?: VisibilityTier;
+  sensitivityClass?: SensitivityClass;
+  rightsBasis?: RightsBasis;
+  approvedChannels?: ApprovedChannel[];
+  requiredNotice?: string;
+  consentReleaseRecordId?: string;
+  publishDate?: string;
+  embargoDate?: string;
+  expirationDate?: string;
+  approvalRecheckDate?: string;
+  expirationOrRecheckDate?: string;
+  rightsExpirationDate?: string;
+  consentExpirationDate?: string;
+  withdrawalStatus?: WithdrawalStatus;
+  domainReviewer?: DomainReviewer;
+  doctrineSacramentTheme?: string;
+  hymnNumberOrTitle?: string;
+  sermonTitle?: string;
+  testimonyTheme?: string;
+  religiousEducationLevel?: string;
+  church?: string;
+  region?: string;
+  publicationTitle?: string;
+  language?: string;
+  versionOrEdition?: string;
+  duplicateSimilarityHint?: string;
   reuseDecision?: ReuseDecision;
   pendingReviewWrite?: ReviewWriteRecordSummary;
 };
@@ -143,8 +222,10 @@ export type ReviewEvidenceChecklist = {
 export type ReviewWriteSyncState =
   | "queued"
   | "ready_to_sync"
+  | "syncing"
   | "sync_failed"
   | "synced_to_resourcespace"
+  | "conflict_detected"
   | "cancelled"
   | "superseded";
 

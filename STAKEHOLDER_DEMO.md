@@ -7,7 +7,7 @@ Show that a ministry user can find a rights-safe approved media asset in under 6
 ## Open
 
 ```text
-http://localhost:3008
+http://localhost:4867
 ```
 
 Use a freshly started production Next server for screenshots or stakeholder walkthroughs after `npm --prefix frontend run build`. The final QA pass used `http://localhost:3029` with `TJC_STOCK_MEDIA_ROOT` set to the repo root so ResourceSpace export metadata, not fallback demo data, was active.

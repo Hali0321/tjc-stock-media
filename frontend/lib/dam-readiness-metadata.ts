@@ -2,8 +2,10 @@ import { resourceSpaceFieldMap } from "@/lib/resourcespace-field-map";
 import { canonicalTags } from "@/lib/taxonomy";
 import type { FieldMappingStatus, StockMediaAsset, VocabularyInsight } from "@/lib/types";
 
+const fieldMapLookup: Record<string, string | number> = resourceSpaceFieldMap;
+
 const fieldDefinitions: Array<{
-  key: keyof typeof resourceSpaceFieldMap;
+  key: string;
   label: string;
   required: boolean;
 }> = [
@@ -22,14 +24,23 @@ const fieldDefinitions: Array<{
   { key: "visibleTags", label: "Visible tags", required: true },
   { key: "tjcTerms", label: "TJC terms", required: true },
   { key: "checksumSha256", label: "Checksum", required: true },
-  { key: "duplicateGroup", label: "Duplicate group", required: false }
+  { key: "duplicateGroup", label: "Duplicate group", required: false },
+  { key: "reuseTier", label: "Reuse tier", required: true },
+  { key: "visibilityTier", label: "Visibility tier", required: true },
+  { key: "sensitivityClass", label: "Sensitivity class", required: true },
+  { key: "rightsBasis", label: "Rights basis", required: true },
+  { key: "approvedChannels", label: "Approved channels", required: true },
+  { key: "requiredNotice", label: "Required notice", required: false },
+  { key: "consentReleaseRecordId", label: "Consent/release record", required: false },
+  { key: "approvalRecheckDate", label: "Approval recheck date", required: false },
+  { key: "domainReviewer", label: "Domain reviewer", required: false }
 ];
 
 function ratio(count: number, total: number) {
   return total ? Math.round((count / total) * 100) : 0;
 }
 
-function fieldPresent(asset: StockMediaAsset, key: keyof typeof resourceSpaceFieldMap) {
+function fieldPresent(asset: StockMediaAsset, key: string) {
   switch (key) {
     case "publishStatus":
       return Boolean(asset.status);
@@ -59,6 +70,24 @@ function fieldPresent(asset: StockMediaAsset, key: keyof typeof resourceSpaceFie
       return Boolean(asset.checksumSha256);
     case "duplicateGroup":
       return Boolean(asset.duplicateGroup);
+    case "reuseTier":
+      return Boolean(asset.reuseTier);
+    case "visibilityTier":
+      return Boolean(asset.visibilityTier);
+    case "sensitivityClass":
+      return Boolean(asset.sensitivityClass);
+    case "rightsBasis":
+      return Boolean(asset.rightsBasis && asset.rightsBasis !== "unknown");
+    case "approvedChannels":
+      return Boolean(asset.approvedChannels?.length);
+    case "requiredNotice":
+      return Boolean(asset.requiredNotice);
+    case "consentReleaseRecordId":
+      return Boolean(asset.consentReleaseRecordId);
+    case "approvalRecheckDate":
+      return Boolean(asset.approvalRecheckDate || asset.expirationOrRecheckDate);
+    case "domainReviewer":
+      return Boolean(asset.domainReviewer);
     default: {
       const value = asset[key as keyof StockMediaAsset];
       return Array.isArray(value) ? value.length > 0 : Boolean(value);
@@ -73,7 +102,7 @@ export function buildFieldMappings(assets: StockMediaAsset[]): FieldMappingStatu
     return {
       key: field.key,
       label: field.label,
-      resourceSpaceField: resourceSpaceFieldMap[field.key],
+      resourceSpaceField: String(fieldMapLookup[field.key] || field.key),
       required: field.required,
       coverage: ratio(present, assets.length),
       present,

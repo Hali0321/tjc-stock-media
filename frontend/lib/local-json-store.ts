@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertRuntimeWriteAllowed, type RuntimeStateCategory } from "@/lib/runtime-file-store";
 
 export type LocalJsonStoreOptions<TRecord> = {
   filePath: () => string;
@@ -14,6 +15,14 @@ export type LocalJsonStoreOptions<TRecord> = {
 
 function localFilesEnabled<TRecord>(options: LocalJsonStoreOptions<TRecord>) {
   return options.localFileEnabled ? options.localFileEnabled() : true;
+}
+
+function categoryForPath(filePath: string): RuntimeStateCategory {
+  if (filePath.includes("beta-feedback")) return "beta-feedback";
+  if (filePath.includes("package-drafts")) return "package-drafts";
+  if (filePath.includes("saved-searches")) return "saved-searches";
+  if (filePath.includes("usage")) return "usage-events";
+  return "runtime";
 }
 
 function normalizeWindow<TRecord>(records: unknown[], options: LocalJsonStoreOptions<TRecord>) {
@@ -48,6 +57,7 @@ export async function readLocalJsonStore<TRecord>(options: LocalJsonStoreOptions
 
 export async function writeLocalJsonStore<TRecord>(records: TRecord[], options: LocalJsonStoreOptions<TRecord>) {
   const windowed = normalizeWindow(records, options);
+  assertRuntimeWriteAllowed(categoryForPath(options.filePath()));
   if (!localFilesEnabled(options)) {
     replaceMemory(windowed, options);
     return;

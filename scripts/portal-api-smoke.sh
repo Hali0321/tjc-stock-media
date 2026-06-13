@@ -4,6 +4,7 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:3008}"
 TMP_DIR="$(mktemp -d)"
 API_SMOKE_EXPORT=".runtime/exports/zzzzzz-portal-api-smoke-$$.csv"
+BETA_AUTH_MODE="trusted-headers"
 cleanup() {
   rm -rf "$TMP_DIR"
   rm -f "$API_SMOKE_EXPORT"
@@ -198,7 +199,70 @@ API_SMOKE_EXPORT="$API_SMOKE_EXPORT" node -e "$ensure_api_smoke_export_script"
 http_code() {
   local output="$1"
   shift
+  local curl_args=("$@")
+  local trusted_role
+  trusted_role="$(trusted_header_role "${curl_args[@]}")"
+  if [ -n "$trusted_role" ]; then
+    curl_args=(
+      -H "x-tjc-role: $trusted_role"
+      -H "x-auth-request-email: $(trusted_header_email "$trusted_role")"
+      "${curl_args[@]}"
+    )
+    if [ "$BETA_AUTH_MODE" = "beta-session" ]; then
+      curl_args=(-b "$(beta_cookie_jar_for_role "$trusted_role")" "${curl_args[@]}")
+    fi
+  fi
+  curl -sS -o "$output" -w '%{http_code}' "${curl_args[@]}"
+}
+
+http_code_without_trusted_headers() {
+  local output="$1"
+  shift
   curl -sS -o "$output" -w '%{http_code}' "$@"
+}
+
+trusted_header_enabled() {
+  [ "${PORTAL_API_SMOKE_TRUSTED_HEADERS:-${PORTAL_QA_TRUSTED_HEADERS:-1}}" = "1" ]
+}
+
+trusted_header_email() {
+  printf '%s\n' "${1// /-}@portal-api-smoke.local"
+}
+
+beta_cookie_jar_for_role() {
+  case "$1" in
+    Viewer) printf '%s/viewer.jar\n' "$TMP_DIR" ;;
+    Contributor) printf '%s/contributor.jar\n' "$TMP_DIR" ;;
+    Reviewer) printf '%s/reviewer.jar\n' "$TMP_DIR" ;;
+    "DAM Admin") printf '%s/admin.jar\n' "$TMP_DIR" ;;
+    *) printf '%s/viewer.jar\n' "$TMP_DIR" ;;
+  esac
+}
+
+beta_password_for_role() {
+  local var_name
+  case "$1" in
+    Viewer) var_name="BETA_VIEWER_PASSWORD" ;;
+    Contributor) var_name="BETA_CONTRIBUTOR_PASSWORD" ;;
+    Reviewer) var_name="BETA_REVIEWER_PASSWORD" ;;
+    "DAM Admin") var_name="BETA_ADMIN_PASSWORD" ;;
+    *) var_name="" ;;
+  esac
+  if [ -n "$var_name" ]; then
+    printf '%s\n' "${!var_name:-}"
+  fi
+}
+
+trusted_header_role() {
+  trusted_header_enabled || return 0
+  local joined=" $* "
+  case "$joined" in
+    *"role=DAM%20Admin"*|*"role=DAM+Admin"*|*"role=DAM Admin"*|*'"role":"DAM Admin"'*|*"'role':'DAM Admin'"*) printf '%s\n' "DAM Admin" ;;
+    *"role=Reviewer"*|*'"role":"Reviewer"'*|*"'role':'Reviewer'"*) printf '%s\n' "Reviewer" ;;
+    *"role=Contributor"*|*'"role":"Contributor"'*|*"'role':'Contributor'"*) printf '%s\n' "Contributor" ;;
+    *"role=Viewer"*|*'"role":"Viewer"'*|*"'role':'Viewer'"*) printf '%s\n' "Viewer" ;;
+    *) printf '%s\n' "Viewer" ;;
+  esac
 }
 
 expect_code() {
@@ -213,6 +277,36 @@ expect_code() {
     cat "$output"
     exit 1
   fi
+}
+
+expect_code_without_trusted_headers() {
+  local expected="$1"
+  local label="$2"
+  shift 2
+  local output="$TMP_DIR/${label//[^a-zA-Z0-9_-]/_}"
+  local code
+  code="$(http_code_without_trusted_headers "$output" "$@")"
+  if [ "$code" != "$expected" ]; then
+    echo "FAIL: $label expected $expected got $code"
+    cat "$output"
+    exit 1
+  fi
+}
+
+expect_query_role_not_trusted() {
+  local label="$1"
+  shift
+  local output="$TMP_DIR/${label//[^a-zA-Z0-9_-]/_}"
+  local code
+  code="$(http_code_without_trusted_headers "$output" "$@")"
+  case "$code" in
+    307|403) ;;
+    *)
+      echo "FAIL: $label expected query role to be denied before reviewer access, got $code"
+      cat "$output"
+      exit 1
+      ;;
+  esac
 }
 
 expect_json() {
@@ -265,6 +359,78 @@ expect_json_any_status() {
   STATUS_CODE="$code" node -e "$script" < "$output"
 }
 
+establish_beta_api_sessions() {
+  local probe="$TMP_DIR/beta-auth-session-probe.json"
+  local code
+  code="$(http_code_without_trusted_headers "$probe" "$BASE_URL/api/beta-auth/session" || true)"
+  if ! node -e 'const fs=require("fs"); let data={}; try{data=JSON.parse(fs.readFileSync(process.argv[1],"utf8"))}catch{} process.exit(data.enabled===true ? 0 : 1)' "$probe"; then
+    BETA_AUTH_MODE="trusted-headers"
+    return
+  fi
+
+  BETA_AUTH_MODE="beta-session"
+  for role in Viewer Contributor Reviewer "DAM Admin"; do
+    local password
+    password="$(beta_password_for_role "$role")"
+    if [ -z "$password" ]; then
+      echo "FAIL: beta auth is enabled at $BASE_URL but ${role} password env is missing for portal-api-smoke"
+      exit 1
+    fi
+    local payload="$TMP_DIR/api-login-${role// /-}.json"
+    ROLE="$role" PASSWORD="$password" node -e 'process.stdout.write(JSON.stringify({role:process.env.ROLE,password:process.env.PASSWORD,returnTo:"/"}))' > "$payload"
+    local output="$TMP_DIR/api-login-${role// /-}-response.json"
+    local login_code
+    login_code="$(curl -sS -o "$output" -w '%{http_code}' -c "$(beta_cookie_jar_for_role "$role")" -X POST -H 'Content-Type: application/json' --data-binary "@$payload" "$BASE_URL/api/beta-auth/login")"
+    if [ "$login_code" != "200" ]; then
+      echo "FAIL: beta login ${role} expected 200 got $login_code"
+      cat "$output"
+      exit 1
+    fi
+  done
+}
+
+establish_beta_api_sessions
+
+runtime_store_write_mode() {
+  local label="runtime-store-readiness-probe"
+  local output="$TMP_DIR/${label}.json"
+  local code
+  code="$(http_code "$output" "$BASE_URL/api/admin/readiness?role=DAM%20Admin")"
+  if [ "$code" != "200" ]; then
+    echo "FAIL: $label expected 200 got $code"
+    cat "$output"
+    exit 1
+  fi
+  node - <<'NODE' "$output"
+const fs = require("fs");
+const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (!Array.isArray(data.integrationReadiness)) {
+  console.error("FAIL: admin readiness did not expose integrationReadiness for runtime-store probe");
+  process.exit(1);
+}
+const runtimeStore = data.integrationReadiness.find((item) => item && item.id === "runtime-state-store");
+if (!runtimeStore) {
+  console.error("FAIL: admin readiness missing runtime-state-store integration row");
+  process.exit(1);
+}
+if (runtimeStore.state === "Blocked" && runtimeStore.ready === false) {
+  const detail = `${runtimeStore.detail || ""}`;
+  if (!/production/i.test(detail) || !/durable runtime store/i.test(detail)) {
+    console.error(`FAIL: runtime-state-store blocked without durable production detail: ${JSON.stringify(runtimeStore)}`);
+    process.exit(1);
+  }
+  process.stdout.write("blocked");
+  process.exit(0);
+}
+if (runtimeStore.ready === true || runtimeStore.state === "Operational" || runtimeStore.state === "Degraded" || runtimeStore.state === "Local beta only") {
+  process.stdout.write("writable");
+  process.exit(0);
+}
+console.error(`FAIL: runtime-state-store state is not actionable for smoke: ${JSON.stringify(runtimeStore)}`);
+process.exit(1);
+NODE
+}
+
 normal_user_payload_guard='
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const forbiddenKeys = new Set([
@@ -311,7 +477,30 @@ const forbiddenKeys = new Set([
   "childrenYouth",
   "missingSource",
   "rightsReview",
-  "approvedThisMonth"
+  "approvedThisMonth",
+  "sourceFolder",
+  "approvalRecheckDate",
+  "church",
+  "consentExpirationDate",
+  "controlledVocabularySource",
+  "doctrineSacramentTheme",
+  "duplicateSimilarityHint",
+  "embargoDate",
+  "expirationDate",
+  "hymnNumberOrTitle",
+  "importBatch",
+  "language",
+  "masterCustodyPathStatus",
+  "publicationTitle",
+  "publishDate",
+  "region",
+  "religiousEducationLevel",
+  "rightsExpirationDate",
+  "sermonTitle",
+  "suggestedTags",
+  "testimonyTheme",
+  "versionOrEdition",
+  "withdrawalStatus"
 ]);
 const forbiddenText = [
   /ResourceSpace/i,
@@ -372,6 +561,7 @@ if (data.source && (data.source.label !== "Media library" || data.source.adapter
 '
 
 expect_json_status 403 unsafe-thumbnail-viewer-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/thumbnail/644?variant=detail"
+expect_query_role_not_trusted reviewer-query-role-not-trusted "$BASE_URL/api/assets/thumbnail/644?variant=detail&role=Reviewer"
 expect_code 200 unsafe-thumbnail-reviewer "$BASE_URL/api/assets/thumbnail/644?variant=detail&role=Reviewer"
 expect_code 403 unsafe-download-variant-reviewer "$BASE_URL/api/assets/thumbnail/644?variant=download&role=Reviewer"
 expect_code 403 blocked-approved-download-viewer "$BASE_URL/api/download/368?role=Viewer"
@@ -450,6 +640,38 @@ if (/updated through the live API|synced_to_resourcespace/i.test(JSON.stringify(
   -d '{"role":"Reviewer","id":"644","action":"Approve Public","notes":"short","checklist":{}}' \
   "$BASE_URL/api/review"
 
+RUNTIME_STORE_WRITE_MODE="$(runtime_store_write_mode)"
+review_action_sync_payload='{"role":"Reviewer","id":"644","action":"Request More Info","notes":"QA review workflow decision with complete minimum evidence.","checklist":{"sourceConfirmed":true,"rightsConfirmed":true,"peopleVisibilityConfirmed":true,"childrenYouthChecked":true,"usageScopeSelected":true},"reviewerName":"API Smoke Reviewer"}'
+
+if [ "$RUNTIME_STORE_WRITE_MODE" = "blocked" ]; then
+expect_json_status 503 review-action-runtime-store-required '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.reasonCode !== "runtime-store-required") {
+  console.error(`FAIL: runtime-store blocked review did not return exact reasonCode: ${text}`);
+  process.exit(1);
+}
+if (!/Durable runtime store required/i.test(data.detail || "")) {
+  console.error(`FAIL: runtime-store blocked review missing durable-store detail: ${text}`);
+  process.exit(1);
+}
+if (data.pendingWriteId || data.auditRecord || data.usageRecord) {
+  console.error(`FAIL: runtime-store blocked review claimed write/audit success: ${text}`);
+  process.exit(1);
+}
+if (data.sync?.ok === true || data.mode === "resourcespace-live-writeback" || data.syncState === "synced_to_resourcespace" || /updated through the live API|synced_to_resourcespace/i.test(text)) {
+  console.error(`FAIL: runtime-store blocked review claimed ResourceSpace sync: ${text}`);
+  process.exit(1);
+}
+if (/sourcePath|masterDrivePath|sourceAlbumPath|sourceAlbumMemberships|originalFilename|checksumSha256|resourceSpaceUrl|resourceSpaceUrls|adminUrl|\/private\/|[a-f0-9]{32,}/i.test(text)) {
+  console.error(`FAIL: runtime-store blocked review leaked private/source/admin payload: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' \
+  -X POST -H 'Content-Type: application/json' \
+  -d "$review_action_sync_payload" \
+  "$BASE_URL/api/review"
+else
 expect_json_any_status "200 202" review-action-sync-truth '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const code = process.env.STATUS_CODE;
@@ -483,8 +705,9 @@ if (code === "200") {
 }
 ' \
   -X POST -H 'Content-Type: application/json' \
-  -d '{"role":"Reviewer","id":"644","action":"Request More Info","notes":"QA review workflow decision with complete minimum evidence.","checklist":{"sourceConfirmed":true,"rightsConfirmed":true,"peopleVisibilityConfirmed":true,"childrenYouthChecked":true,"usageScopeSelected":true},"reviewerName":"API Smoke Reviewer"}' \
+  -d "$review_action_sync_payload" \
   "$BASE_URL/api/review"
+fi
 
 expect_json_status 400 empty-upload-contributor-payload-safe "$normal_user_payload_guard" \
   -X POST -F 'role=Contributor' -F 'eventName=No files test' \
@@ -930,6 +1153,30 @@ expect_json viewer-asset-detail-scaffold-safe "$normal_user_payload_guard" "$BAS
 expect_json contributor-asset-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/assets/367?role=Contributor"
 expect_json_status 403 viewer-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Viewer"
 expect_json_status 403 contributor-denied-download-payload-safe "$normal_user_payload_guard" "$BASE_URL/api/download/368?role=Contributor"
+if [ "$RUNTIME_STORE_WRITE_MODE" = "blocked" ]; then
+expect_json_status 503 download-gate-audit-required '
+const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const text = JSON.stringify(data);
+if (data.reasonCode !== "audit-required") {
+  console.error(`FAIL: blocked download audit did not return exact audit-required reason: ${text}`);
+  process.exit(1);
+}
+if (data.downloadUrl || data.url || data.signedUrl || data.originalUrl) {
+  console.error(`FAIL: blocked download audit exposed URL: ${text}`);
+  process.exit(1);
+}
+if (data.auditRecord || data.usageRecord || /audit.*success|persisted":true|persisted successfully/i.test(text)) {
+  console.error(`FAIL: blocked download audit claimed persisted audit success: ${text}`);
+  process.exit(1);
+}
+if (/sourcePath|masterDrivePath|sourceAlbumPath|sourceAlbumMemberships|originalFilename|checksumSha256|resourceSpaceUrl|resourceSpaceUrls|adminUrl|\/private\/|[a-f0-9]{32,}/i.test(text)) {
+  console.error(`FAIL: blocked download audit leaked private/source/admin payload: ${text.slice(0, 900)}`);
+  process.exit(1);
+}
+' -X POST -H 'Content-Type: application/json' \
+  -d '{"role":"Viewer","termsAccepted":true,"variant":"../private-source-path","usageChannel":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}' \
+  "$BASE_URL/api/download/368"
+else
 expect_json_status 403 download-gate-metadata-sanitized '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
 const text = JSON.stringify(data);
@@ -940,6 +1187,7 @@ if (data.downloadUrl || text.includes("../private") || /source path|master drive
 ' -X POST -H 'Content-Type: application/json' \
   -d '{"role":"Viewer","termsAccepted":true,"variant":"../private-source-path","usageChannel":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}' \
   "$BASE_URL/api/download/368"
+fi
 
 expect_json rights-status-not-publish-status '
 const data = JSON.parse(require("fs").readFileSync(0, "utf8"));

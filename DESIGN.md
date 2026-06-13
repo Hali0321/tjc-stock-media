@@ -122,6 +122,8 @@ First 10 seconds should prove:
 
 The local role switch is demo-only. Production should map church access control to portal/ResourceSpace roles.
 
+Production behavior is now fail-closed: query/body/localStorage role overrides are ignored in production, trusted SSO headers must provide privileged roles, and beta task/feedback tools stay disabled unless explicitly enabled with safe public flags.
+
 ## Data And Backend Boundary
 
 Browser calls Next.js routes. Next.js routes read ResourceSpace API/export data through adapters. ResourceSpace remains source of truth for asset records, metadata, workflow state, approval status, reviewer notes, permissions, and download eligibility.
@@ -133,6 +135,8 @@ Current adapter priority:
 3. Temporary demo fallback only if ResourceSpace data is unavailable.
 
 The frontend does not persist approval state or create a second DAM database.
+
+Portal runtime sidecars such as audit log, pending review writes, tickets, saved searches, package drafts, usage events, and beta feedback are not ResourceSpace truth. Production must configure durable runtime storage or the affected stateful features fail closed.
 
 ## Thumbnail Policy
 

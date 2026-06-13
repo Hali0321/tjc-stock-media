@@ -17,24 +17,22 @@ import {
 } from "lucide-react";
 import { useDemoRole } from "@/components/RoleProvider";
 import { useAssetsSearch } from "@/components/dam/useDamApi";
-import { displayTitle, sourceLabel } from "@/lib/enterprise-display";
+import { assetType, displayTitle, sourceLabel } from "@/lib/enterprise-display";
 import { buildPackageGovernance } from "@/lib/package-governance";
-import { presentPackageBuilderContext } from "@/lib/portal-context-presenters";
 import {
   addPackageAssetRef,
   availableAssetsForSection,
   createPackageDraft,
   packageAssetsForCollection,
   removePackageAssetRef,
-  resolvePackageSections,
-  updatePackageTitle
+  resolvePackageSections
 } from "@/lib/package-drafts";
 import { packageAssetRef } from "@/lib/package-refs";
 import { buildPortalReuseDecision } from "@/lib/portal-reuse-decision";
 import { routeWithRole } from "@/lib/role-routes";
 import { matchesCatalogFilter } from "@/lib/catalog-language";
 import { cn } from "@/lib/ui";
-import { ActionButton, AssetCard, AssetThumb, ErrorCard, LoadingCard, SourcePill } from "./EnterpriseShared";
+import { ActionButton, AssetThumb, ErrorCard, LoadingCard } from "./EnterpriseShared";
 
 export function EnterprisePackageBuilderPage() {
   const router = useRouter();
@@ -49,7 +47,7 @@ export function EnterprisePackageBuilderPage() {
   const [sourceCollectionChecked, setSourceCollectionChecked] = useState(false);
   const [packageFilters, setPackageFilters] = useState<string[]>([]);
   const [packageFacetQuery, setPackageFacetQuery] = useState("");
-  const [draft, setDraft] = useState(() => createPackageDraft());
+  const [draft, setDraft] = useState(() => createPackageDraft("Media Set Draft"));
   const [packageMessage, setPackageMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const search = useAssetsSearch({
@@ -81,8 +79,8 @@ export function EnterprisePackageBuilderPage() {
       if (!selectedCollection) return;
       setDraft((current) => ({
         ...current,
-        title: current.title === "ResourceSpace Toolkit Draft" ? `${selectedCollection.name} Toolkit Draft` : current.title,
-        description: current.description || `Started from ${selectedCollection.name}. Add approved media references manually; full archive membership remains in the DAM.`,
+        title: /^(ResourceSpace Toolkit Draft|Media Set Draft)$/i.test(current.title) ? `${selectedCollection.name} Media Set Draft` : current.title,
+        description: current.description || `Started from ${selectedCollection.name}. Add approved references manually; full archive membership remains in the DAM.`,
         collectionId: selectedCollection.id
       }));
       return;
@@ -95,7 +93,6 @@ export function EnterprisePackageBuilderPage() {
   );
   const sections = useMemo(() => resolvePackageSections(draft, sourceAssets), [sourceAssets, draft]);
   const governance = useMemo(() => buildPackageGovernance(draft, sections, role), [draft, role, sections]);
-  const packagePresentation = useMemo(() => presentPackageBuilderContext(governance), [governance]);
   const sectionGovernance = useMemo(() => new Map(governance.sections.map((section) => [section.id, section])), [governance.sections]);
   const allSectionsEmpty = governance.totalRefs === 0;
   const activeAvailableAssets = availableAssetsForSection({ draft, sectionId: activeSection, assets: sourceAssets, approvedOnly, statusOf: packageAssetStatus });
@@ -103,6 +100,7 @@ export function EnterprisePackageBuilderPage() {
   const canSaveDraft = role === "Contributor" || role === "Reviewer" || role === "DAM Admin";
   const referenceLabel = (asset: (typeof assets)[number]) => packageAssetRef(asset) || "media-reference";
   const sourceScopeLabel = selectedCollection ? `${selectedCollection.name} collection` : sourceRecordLabel;
+  const visibleDraftTitle = opsView ? draft.title : draft.title.replace(/ResourceSpace/gi, "Media");
   const collectionVisibleCount = selectedCollection ? assets.length : 0;
   const collectionSkippedCount = selectedCollection ? Math.max(0, collectionVisibleCount - sourceAssets.length) : 0;
   const packageFacetOptions = [
@@ -121,10 +119,10 @@ export function EnterprisePackageBuilderPage() {
   const packageFacetCount = (filter: string) => assets.filter((asset) => matchesCatalogFilter(asset, filter)).length;
   const readinessReason = governance.totalRefs
     ? governance.reason
-    : "Package needs approved media references before readiness review.";
-  const previewDisabledReason = governance.canPreview ? undefined : `Reference preview locked: ${readinessReason}`;
-  const shareDisabledReason = governance.canShare ? undefined : `Access scope locked: ${readinessReason}`;
-  const publishDisabledReason = governance.canPublish ? undefined : `Readiness review locked: ${readinessReason}`;
+    : "Readiness unlocks after each required section has at least one approved reference.";
+  const previewDisabledReason = governance.canPreview ? undefined : "Available after approved references are selected.";
+  const shareDisabledReason = governance.canShare ? undefined : "Disabled in beta until identity/share policy is configured.";
+  const publishDisabledReason = governance.canPublish ? undefined : governance.totalRefs ? readinessReason : "Available after approved references are selected.";
   const saveDisabledReason = canSaveDraft ? undefined : "Save draft requires Contributor, Reviewer, or DAM Admin role.";
   const availableAssetsForTargetSection = (sectionId: string) => availableAssetsForSection({ draft, sectionId, assets: sourceAssets, approvedOnly, statusOf: packageAssetStatus });
   const addFirstAvailableAsset = (sectionId: string) => {
@@ -176,29 +174,19 @@ export function EnterprisePackageBuilderPage() {
   };
 
   const sectionLabel = (title: string) => title.replace(/^\d+\.\s*/, "");
+  const sectionPurpose = (sectionId: string) => {
+    if (sectionId === "cover") return "Primary reference for package identity, thumbnails, and stakeholder preview.";
+    if (sectionId === "hero-assets") return "Approved visual references for hero placements, banners, and ministry page leads.";
+    if (sectionId === "social-media") return "Safe references for social posts, announcements, and short-form ministry updates.";
+    if (sectionId === "documents") return "Reference documents, graphics, and support media attached to the set.";
+    return "Governed references for this package section.";
+  };
   const sectionStatusLabel = (status?: "ready" | "review" | "blocked" | "empty") => {
     if (status === "ready") return "Ready";
-    if (status === "empty") return "Needs assets";
+    if (status === "empty") return "Needs references";
     if (status === "review") return "Needs review";
     if (status === "blocked") return "Blocked";
-    return "Needs assets";
-  };
-  const commandLabel = (label: string) => {
-    if (/preview/i.test(label)) return "Reference preview";
-    if (/share/i.test(label)) return "Access scope";
-    if (/publish/i.test(label)) return "Readiness review";
-    return label;
-  };
-  const commandStatusLabel = (status: "ready" | "blocked" | "review") => {
-    if (status === "ready") return "Ready";
-    if (status === "review") return "Needs review";
-    return "Locked";
-  };
-  const commandDetail = (label: string, detail: string) => {
-    if (/preview/i.test(label)) return governance.canPreview ? "All references can render a role-safe preview." : "Reference preview waits for approved, resolvable media references.";
-    if (/share/i.test(label)) return governance.canShare ? "Access scope passes without public-link creation." : "Access scope waits for approved references and role-safe permissions.";
-    if (/publish/i.test(label)) return governance.canPublish ? "Readiness checks pass while originals stay protected." : readinessReason;
-    return detail;
+    return "Needs references";
   };
   const handlePrimaryPackageAction = () => {
     if (governance.totalRefs) {
@@ -212,83 +200,91 @@ export function EnterprisePackageBuilderPage() {
     }
     router.push(routeWithRole("/", role));
   };
+  const activeResolvedSection = sections.find((section) => section.id === activeSection) || sections[0];
+  const activeGovernance = activeResolvedSection ? sectionGovernance.get(activeResolvedSection.id) : undefined;
+  const populatedSections = sections.filter((section) => section.resourceSpaceAssetIds.length > 0).length;
+  const lastSavedLabel = draft.updatedAt ? `Last saved ${new Date(draft.updatedAt).toLocaleString()}` : "Not saved yet";
+  const ownerLabel = opsView ? "DAM Operations" : "Media team";
+  const packageTitle = visibleDraftTitle.replace(/ResourceSpace Toolkit Draft/gi, "Media Set Draft").replace(/Toolkit Draft/gi, "Media Set Draft");
+  const dataSourceSummary = sourceLabel(search.source)
+    .replace(/ResourceSpace export/gi, "ResourceSpace records")
+    .replace(/\bexport\b/gi, "records");
+  const activeSectionTitle = activeResolvedSection ? sectionLabel(activeResolvedSection.title) : "Cover";
+  const requiredSectionCount = sections.length;
+  const readySections = governance.sections.filter((section) => section.readinessStatus === "ready").length;
+  const readinessUnlockCopy = "Available after at least one approved reference is selected for each required section.";
+  const sectionRequirements = [
+    ["Required", "Yes"],
+    ["Minimum references", "1"],
+    ["Allowed media", "Approved previews only"],
+    ["Originals", "Protected"]
+  ];
+  const readinessRows = [
+    {
+      label: "Reference review",
+      status: governance.canPreview ? "ready" : governance.totalRefs ? "review" : "blocked",
+      detail: governance.canPreview ? "All selected references can render role-safe previews." : "Add approved, resolvable references before preview review."
+    },
+    {
+      label: "Access scope",
+      status: governance.canShare ? "ready" : "blocked",
+      detail: governance.canShare ? "Internal access scope passes without public-link creation." : "Access scope remains locked until approved references and share policy pass."
+    },
+    {
+      label: "Readiness review",
+      status: governance.canPublish ? "ready" : governance.totalRefs ? "review" : "blocked",
+      detail: governance.canPublish ? "Readiness checks pass while originals stay protected." : readinessReason
+    }
+  ];
 
   return (
     <div className="enterprise-page enterprise-package-builder">
       <header className="ed-package-builder-header">
-        <div>
+        <div className="ed-package-title-block">
           <span className="ed-package-builder-kicker">Package Builder</span>
-          <h1>{draft.title || "ResourceSpace Toolkit Draft"}</h1>
-          <p>{draft.status === "draft" ? "Draft" : draft.status} · {packagePresentation.selectedAssetLabel} · {packagePresentation.readinessState}</p>
+          <h1>{packageTitle || "ResourceSpace Toolkit Draft"}</h1>
+          <p>
+            <span>{draft.status === "draft" ? "Draft" : draft.status}</span>
+            <span>{ownerLabel}</span>
+            <span>{lastSavedLabel}</span>
+            <span>Reference-only internal beta</span>
+            {opsView ? <span>ResourceSpace Toolkit Draft</span> : null}
+          </p>
         </div>
         <div className="ed-package-builder-actions" aria-label="Package builder actions">
-          <ActionButton tone="primary" icon={Plus} ariaLabel={`${packagePresentation.primaryActionLabel} for package draft`} onClick={handlePrimaryPackageAction}>{packagePresentation.primaryActionLabel}</ActionButton>
+          <ActionButton tone="primary" icon={Plus} ariaLabel="Add approved references to package draft" onClick={handlePrimaryPackageAction}>Add approved references</ActionButton>
           <ActionButton icon={UploadCloud} ariaLabel="Save package draft" disabled={saving || !canSaveDraft} disabledReason={saving ? "Saving draft now." : saveDisabledReason} onClick={saveDraft}>{saving ? "Saving..." : "Save draft"}</ActionButton>
-          <ActionButton icon={MoreHorizontal} ariaLabel="Review package readiness actions" onClick={() => setPackageMessage("Readiness actions stay locked until selected references pass governance.")}>More actions</ActionButton>
+          <ActionButton icon={MoreHorizontal} ariaLabel="Additional package actions" disabled disabledReason="Reference-only beta: no ZIP, public link, original-file access, external share, or writeback will be created.">More actions</ActionButton>
         </div>
       </header>
 
       {selectedCollection ? (
         <section className="ed-package-source-strip">
-          <PackageCheck size={20} />
+          <PackageCheck size={18} aria-hidden="true" />
           <div>
             <strong>Started from {selectedCollection.name}</strong>
-            <span>{sourceAssets.length.toLocaleString()} visible Portal Ready package refs available here; {collectionVisibleCount.toLocaleString()} visible collection records loaded from {sourceRecordLabel}. {collectionSkippedCount ? `${collectionSkippedCount.toLocaleString()} stay out until readiness evidence passes. ` : ""}Full archive membership stays in DAM source.</span>
+            <span>{sourceAssets.length.toLocaleString()} approved references available. {collectionSkippedCount ? `${collectionSkippedCount.toLocaleString()} records stay out until readiness evidence passes. ` : ""}Full archive membership stays in DAM source.</span>
           </div>
-          <button type="button" onClick={() => setPackageMessage("Collection path imports visible Portal Ready refs only. Review-only or hidden media remain out of this draft.")}>Ref policy</button>
+          <button type="button" onClick={() => setPackageMessage("Collection path imports visible Portal Ready references only. Review-only or hidden media remain out of this draft.")}>Policy</button>
         </section>
       ) : null}
 
       <section className={cn("ed-package-readiness ed-package-readiness-compact", `is-${governance.readinessStatus}`)} aria-label="Package readiness summary">
         <div>
-          <span>Package readiness</span>
-          <strong>{governance.readinessScore}% ready</strong>
+          <span>References</span>
+          <strong>{governance.totalRefs.toLocaleString()}</strong>
         </div>
         <div>
-          <span>Selected</span>
-          <strong>{governance.totalRefs.toLocaleString()} assets selected</strong>
+          <span>Sections ready</span>
+          <strong>{readySections.toLocaleString()} / {requiredSectionCount.toLocaleString()}</strong>
         </div>
         <div>
-          <span>Structure</span>
-          <strong>{sections.length.toLocaleString()} sections</strong>
+          <span>Readiness</span>
+          <strong>{governance.readinessScore}%</strong>
         </div>
         <div>
-          <span>Next step</span>
-          <strong>{packagePresentation.nextStep}</strong>
-        </div>
-        <p>{packagePresentation.readinessMessage}</p>
-      </section>
-
-      <section className={cn("ed-package-assembly", `is-${governance.readinessStatus}`)} aria-labelledby="package-assembly-title">
-        <div className="ed-package-assembly-primary">
-          <span>Package Assembly</span>
-          <h2 id="package-assembly-title">{draft.title || "ResourceSpace Toolkit Draft"}</h2>
-          <p>{packagePresentation.readinessMessage}</p>
-          <div className="ed-package-assembly-actions" aria-label="Package assembly actions">
-            <ActionButton tone="primary" icon={Plus} ariaLabel={`${packagePresentation.primaryActionLabel} for package assembly`} onClick={handlePrimaryPackageAction}>{packagePresentation.primaryActionLabel}</ActionButton>
-            <ActionButton icon={UploadCloud} ariaLabel="Save package assembly draft" disabled={saving || !canSaveDraft} disabledReason={saving ? "Saving draft now." : saveDisabledReason} onClick={saveDraft}>{saving ? "Saving..." : "Save draft"}</ActionButton>
-          </div>
-        </div>
-        <div className="ed-package-assembly-stats" aria-label="Current package assembly status">
-          <p><strong>{governance.readinessScore}%</strong><span>Ready</span></p>
-          <p><strong>{governance.totalRefs.toLocaleString()}</strong><span>Assets selected</span></p>
-          <p><strong>{sections.length.toLocaleString()}</strong><span>Sections</span></p>
-          <p><strong>{governance.blockedRefs.toLocaleString()}</strong><span>Blockers</span></p>
-        </div>
-        <div className="ed-package-assembly-next">
-          <div>
-            <span>Next required step</span>
-            <strong>{packagePresentation.nextStep}</strong>
-            <small>{readinessReason}</small>
-          </div>
-          <div className="ed-package-assembly-commands" aria-label="Readiness commands">
-            {governance.commandCenter.map((item) => (
-              <p className={`is-${item.status}`} key={item.label}>
-                <span>{commandLabel(item.label)}</span>
-                <strong>{commandStatusLabel(item.status)}</strong>
-              </p>
-            ))}
-          </div>
+          <span>Blockers</span>
+          <strong>{governance.blockedRefs.toLocaleString()}</strong>
         </div>
       </section>
 
@@ -296,38 +292,39 @@ export function EnterprisePackageBuilderPage() {
 
       {search.loading ? <LoadingCard /> : search.error ? <ErrorCard message={search.error} source={search.source} /> : (
         <div className="ed-builder-grid">
-          <aside className="ed-package-left-rail" aria-label="Package assembly controls">
+          <aside className="ed-package-left-rail" aria-label="Package outline">
             <section className="ed-panel ed-package-outline" aria-labelledby="package-outline-title">
               <div className="ed-panel-title">
-                <h3 id="package-outline-title">Package outline</h3>
+                <h2 id="package-outline-title">Package outline</h2>
                 <span>{sections.length.toLocaleString()} sections</span>
               </div>
-              <div className="ed-package-outline-list">
+              <div className="ed-package-outline-list" role="tablist" aria-label="Package sections">
                 {sections.map((section) => {
                   const sectionPacket = sectionGovernance.get(section.id);
+                  const status = sectionStatusLabel(sectionPacket?.readinessStatus);
                   return (
-                    <button className={cn(activeSection === section.id && "is-active", sectionPacket && `is-${sectionPacket.readinessStatus}`)} type="button" key={section.id} onClick={() => setActiveSection(section.id)} aria-label={`${sectionLabel(section.title)}: ${section.resourceSpaceAssetIds.length} selected, ${sectionStatusLabel(sectionPacket?.readinessStatus)}`}>
-                      {section.assets[0] ? <AssetThumb asset={section.assets[0]} /> : <FileText size={24} />}
+                    <button className={cn(activeSection === section.id && "is-active", sectionPacket && `is-${sectionPacket.readinessStatus}`)} type="button" role="tab" key={section.id} aria-selected={activeSection === section.id} onClick={() => setActiveSection(section.id)} aria-label={`${sectionLabel(section.title)}: ${section.resourceSpaceAssetIds.length} references, ${status}`}>
+                      {section.assets[0] ? <AssetThumb asset={section.assets[0]} /> : <FileText size={22} aria-hidden="true" />}
                       <span>
                         <strong>{sectionLabel(section.title)}</strong>
-                        <small>{section.resourceSpaceAssetIds.length} selected</small>
-                        <em>{sectionStatusLabel(sectionPacket?.readinessStatus)}</em>
+                        <small>{section.resourceSpaceAssetIds.length.toLocaleString()} references</small>
                       </span>
-                      <MoreHorizontal size={15} aria-hidden="true" />
+                      <em>{status}</em>
                     </button>
                   );
                 })}
               </div>
+              <p className="ed-package-outline-helper">Sections define where approved references appear in the internal media set.</p>
               <details className="ed-package-taxonomy">
-                <summary>Filters and source collections</summary>
+                <summary>Browse ResourceSpace assets</summary>
                 <header>
-                  <span>Taxonomy</span>
+                    <span>Browse ResourceSpace assets</span>
                   {packageFilters.length ? <button type="button" onClick={() => setPackageFilters([])}>Clear</button> : <em>{assets.length.toLocaleString()}</em>}
                 </header>
                 <label className="ed-taxonomy-search">
                   <Search size={14} aria-hidden="true" />
                   <span className="sr-only">Search package filters</span>
-                  <input value={packageFacetQuery} onChange={(event) => setPackageFacetQuery(event.target.value)} placeholder="Search tags, source, type..." />
+                  <input value={packageFacetQuery} onChange={(event) => setPackageFacetQuery(event.target.value)} placeholder="Search tags, type..." />
                 </label>
                 <div>
                   {collections.slice(0, 5).map((collection) => (
@@ -347,108 +344,147 @@ export function EnterprisePackageBuilderPage() {
                 </div>
               </details>
             </section>
-
-            <section className="ed-panel ed-package-browse-panel" aria-labelledby="package-browse-title">
-              <header className="ed-card-head">
-                <div>
-                  <h3 id="package-browse-title">Browse approved assets</h3>
-                  <p>Add governed refs to {sectionLabel(sections.find((section) => section.id === activeSection)?.title || "selected section")}.</p>
-                </div>
-                <SourcePill source={search.source} live={search.live} />
-              </header>
-              <div className="ed-dropzone">
-                <UploadCloud size={34} />
-                <span>Add governed refs from {sourceScopeLabel}</span>
-                <ActionButton ariaLabel={`Add approved media reference to ${sectionLabel(sections.find((section) => section.id === activeSection)?.title || "selected section")}`} disabled={!activeAvailableAssets[0]} disabledReason={`No approved ${sourceScopeLabel} media reference is available for this section.`} onClick={() => addFirstAvailableAsset(activeSection)}>Add approved media references</ActionButton>
-              </div>
-              <div className="ed-table-mini ed-ref-picker">
-                {activeAvailableAssets.length ? activeAvailableAssets.slice(0, 4).map((asset) => (
-                  <p key={asset.id}>
-                    <strong>{displayTitle(asset)}</strong>
-                    <span>{opsView ? `ResourceSpace ${referenceLabel(asset)}` : `Reference ${referenceLabel(asset)}`} · {buildPortalReuseDecision(asset, role).reuse.label}</span>
-                    <button type="button" aria-label={`Add ${displayTitle(asset)} to ${sectionLabel(sections.find((section) => section.id === activeSection)?.title || "selected section")}`} onClick={() => setDraft((current) => addPackageAssetRef(current, activeSection, asset))}>Add</button>
-                  </p>
-                )) : <p>No approved media references available for this section.</p>}
-              </div>
-            </section>
           </aside>
 
           <main className={cn("ed-package-canvas", allSectionsEmpty && "is-empty-package")}>
-            {sections.map((section) => {
-              const sectionPacket = sectionGovernance.get(section.id);
-              return (
-                <section className={cn("ed-card ed-builder-section", activeSection === section.id && "is-active")} key={section.id}>
+            {activeResolvedSection ? (
+              <section className="ed-card ed-builder-section is-active" aria-labelledby="active-package-section-title">
+                <header className="ed-active-section-header">
+                  <div>
+                    <span>Active section</span>
+                    <h2 id="active-package-section-title">{sectionLabel(activeResolvedSection.title)}</h2>
+                    <p>{sectionPurpose(activeResolvedSection.id)}</p>
+                  </div>
+                  <div className="ed-active-section-status">
+                    <strong>{activeResolvedSection.resourceSpaceAssetIds.length.toLocaleString()}</strong>
+                    <span>references</span>
+                    <em className={cn(activeGovernance && `is-${activeGovernance.readinessStatus}`)}>{sectionStatusLabel(activeGovernance?.readinessStatus)}</em>
+                  </div>
+                </header>
+
+                <div className="ed-section-requirements" aria-label={`${activeSectionTitle} requirements`}>
+                  {sectionRequirements.map(([label, value]) => (
+                    <span key={label}>
+                      <small>{label}</small>
+                      <strong>{value}</strong>
+                    </span>
+                  ))}
+                </div>
+
+                <div className="ed-active-section-summary">
+                  <p>{activeResolvedSection.resourceSpaceAssetIds.length ? activeGovernance?.readinessSummary : `No governed references selected for ${activeSectionTitle}.`}</p>
+                  <ActionButton ariaLabel={`Add references to ${activeSectionTitle}`} disabled={!activeAvailableAssets[0]} disabledReason={`No approved ${sourceScopeLabel} reference is available for this section.`} onClick={() => addFirstAvailableAsset(activeResolvedSection.id)}>Add references to {activeSectionTitle}</ActionButton>
+                </div>
+
+                {activeGovernance?.assets.length ? (
+                  <section className="ed-section-reference-workbench" aria-labelledby="selected-references-title">
+                    <header>
+                      <div>
+                        <h3 id="selected-references-title">Selected references</h3>
+                        <p>Governed records assigned to {activeSectionTitle}. Originals stay private.</p>
+                      </div>
+                      <span>{activeGovernance.assets.length.toLocaleString()} selected</span>
+                    </header>
+                    <div className="ed-package-reference-list" aria-label={`${activeSectionTitle} references`}>
+                      {activeGovernance.assets.map((item) => (
+                        <article className="ed-package-reference-row" key={`${item.sectionId}-${item.ref}`}>
+                          <AssetThumb asset={item.asset} className="ed-package-reference-thumb" />
+                          <div className="ed-package-reference-main">
+                            <strong>{displayTitle(item.asset)}</strong>
+                            <span>{opsView ? "ResourceSpace ref" : "Internal ref"} {item.ref}</span>
+                            <div>
+                              <small>{item.reuseLabel}</small>
+                              <small>{item.asset.usageScope || "Usage scope pending"}</small>
+                              <small>{assetType(item.asset)}</small>
+                            </div>
+                          </div>
+                          <div className="ed-package-reference-actions">
+                            <button type="button" disabled={!item.canPreview} title={item.canPreview ? undefined : "Preview waits for approved, role-safe media references."} onClick={() => setPackageMessage(`${displayTitle(item.asset)} preview check stays role-safe. No originals exposed.`)}>Preview</button>
+                            <button type="button" onClick={() => setDraft((current) => removePackageAssetRef(current, activeResolvedSection.id, item.asset))}>Remove</button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : (
+                  <div className="ed-section-empty">
+                    <FileText size={28} aria-hidden="true" />
+                    <div>
+                      <strong>No governed references selected for {activeSectionTitle}</strong>
+                      <span>Add approved preview references that have cleared rights and usage review. Original files remain private and are never copied into this draft.</span>
+                      <button type="button" disabled={!activeAvailableAssets[0]} title={!activeAvailableAssets[0] ? `No approved ${sourceScopeLabel} reference is available for this section.` : undefined} onClick={() => addFirstAvailableAsset(activeResolvedSection.id)}>Add references to {activeSectionTitle}</button>
+                    </div>
+                  </div>
+                )}
+
+                <section className="ed-reference-picker-panel" aria-labelledby="reference-picker-title">
                   <header>
                     <div>
-                      <h2>{sectionLabel(section.title)}</h2>
-                      <p>{section.resourceSpaceAssetIds.length} selected · {sectionStatusLabel(sectionPacket?.readinessStatus)}</p>
+                      <h3 id="reference-picker-title">Reference picker</h3>
+                      <p>Approved candidates from {sourceScopeLabel}. This picker adds references only.</p>
                     </div>
-                    <div className="ed-section-actions">
-                      <button type="button" aria-label={`Add approved media references to ${sectionLabel(section.title)}`} onClick={() => addFirstAvailableAsset(section.id)}>Add approved media references</button>
-                      <button className="ed-link-button" type="button" aria-label={`Review portal-local settings for ${sectionLabel(section.title)}`} onClick={() => setPackageMessage(`${sectionLabel(section.title)} settings stay portal-local in this beta.`)}>Section settings</button>
-                    </div>
+                    <span className="ed-package-source-pill">{dataSourceSummary}</span>
                   </header>
-                  <p>{section.resourceSpaceAssetIds.length ? sectionPacket?.readinessSummary : "Ready for approved media references."}</p>
-                  <div className="ed-builder-assets">
-                    {section.assets.length ? section.assets.map((asset) => {
-                      const governedAsset = sectionPacket?.assets.find((item) => item.asset.id === asset.id);
-                      return (
-                        <div className="ed-package-ref" key={asset.id}>
-                          <AssetCard asset={asset} />
-                          <p className="ed-ref-governance">{governedAsset?.reuseLabel || "Review"} · {governedAsset?.reason || "Governance check pending"}</p>
-                          <button type="button" aria-label={`Remove ${displayTitle(asset)} from ${sectionLabel(section.title)}`} onClick={() => setDraft((current) => removePackageAssetRef(current, section.id, asset))}>Remove ref</button>
-                        </div>
-                      );
-                    }) : (
-                      <div className="ed-section-empty">
-                        <FileText size={20} />
-                        <span>Add approved media references when ready.</span>
-                        <button type="button" aria-label={`Add approved media references to ${sectionLabel(section.title)}`} onClick={() => addFirstAvailableAsset(section.id)}>Add approved media references</button>
-                      </div>
+                  <div className="ed-reference-picker-list">
+                    {activeAvailableAssets.length ? activeAvailableAssets.slice(0, 3).map((asset) => (
+                      <button type="button" key={asset.id} onClick={() => setDraft((current) => addPackageAssetRef(current, activeResolvedSection.id, asset))}>
+                        <AssetThumb asset={asset} className="ed-reference-picker-thumb" />
+                        <span>
+                          <strong>{displayTitle(asset)}</strong>
+                          <small>{referenceLabel(asset)} · {buildPortalReuseDecision(asset, role).reuse.label}</small>
+                        </span>
+                        <em>Add</em>
+                      </button>
+                    )) : (
+                      <p>No approved references available for this section.</p>
                     )}
                   </div>
-                  <footer>
-                    <span>{section.resourceSpaceAssetIds.length} refs · {sectionPacket?.blockedRefs || 0} readiness blockers · {sectionPacket?.readinessScore || 0}% ready</span>
-                    <button type="button" aria-label={`Select ${sectionLabel(section.title)} section`} onClick={() => setActiveSection(section.id)}>Select section</button>
-                  </footer>
                 </section>
-              );
-            })}
+              </section>
+            ) : null}
           </main>
 
-          <aside className="ed-panel ed-package-details">
-            <section>
-              <h3>Package readiness</h3>
-              <div className="ed-command-readiness">{governance.commandCenter.map((item) => <p className={`is-${item.status}`} key={item.label}><strong>{commandLabel(item.label)}</strong><span>{commandDetail(item.label, item.detail)}</span></p>)}</div>
+          <aside className="ed-panel ed-package-details" aria-label="Readiness and governance inspector">
+            <details open>
+              <summary>Readiness</summary>
+              <div className="ed-command-readiness">
+                {readinessRows.map((item) => (
+                  <p className={`ed-readiness-row is-${item.status}`} key={item.label}>
+                    <strong>{item.label}</strong>
+                    <span>{item.detail}</span>
+                  </p>
+                ))}
+              </div>
+            </details>
+            <details open>
+              <summary>Safe actions</summary>
               <div className="ed-package-rail-actions">
-                <ActionButton icon={Eye} ariaLabel="Check role-safe reference preview" disabled={!governance.canPreview} disabledReason={previewDisabledReason} onClick={previewPackage}>Check preview</ActionButton>
-                <ActionButton icon={Send} ariaLabel="Check package access scope" disabled={!governance.canShare} disabledReason={shareDisabledReason} onClick={prepareShare}>Check access</ActionButton>
+                <ActionButton icon={Eye} ariaLabel="Preview reference set" disabled={!governance.canPreview} disabledReason={previewDisabledReason} onClick={previewPackage}>Preview set</ActionButton>
+                <ActionButton icon={Send} ariaLabel="Check internal access scope" disabled={!governance.canShare} disabledReason={shareDisabledReason} onClick={prepareShare}>Access scope</ActionButton>
                 <ActionButton tone="primary" icon={Lock} ariaLabel="Review package readiness gate" disabled={publishBlocked} disabledReason={publishDisabledReason} onClick={queuePublish}>Review readiness</ActionButton>
               </div>
-              <p className="ed-governance-note">{packagePresentation.governanceNote}</p>
-            </section>
-            <section>
-              <h3>Package details</h3>
-              <label>Package name<input className="ed-input" value={draft.title} onChange={(event) => setDraft((current) => updatePackageTitle(current, event.target.value))} /></label>
-              <label>Description<input className="ed-input" value={draft.description || `A portal-local package draft referencing ${sourceScopeLabel} assets.`} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} /></label>
-            </section>
-            <section>
-              <h3>Sharing & access</h3>
-              <label>Visibility<select className="ed-input" defaultValue="Shared with specific people"><option>Shared with specific people</option></select></label>
-              <label>Message<input className="ed-input" placeholder="Add a message to recipients..." /></label>
-            </section>
-            <section>
-              <h3>Governance</h3>
-              <p className="ed-checkline"><CheckCircle2 size={16} />{opsView ? "ResourceSpace IDs retained" : "Media references retained"}</p>
-              <p className="ed-checkline"><CheckCircle2 size={16} />No ZIP, no public link, no copied originals</p>
-              <p className={cn("ed-checkline", publishBlocked && "is-warn")}><ShieldCheck size={16} />{readinessReason}</p>
-              <p className="ed-governance-note">{governance.auditMessage}</p>
+              <p className="ed-action-helper">{readinessUnlockCopy}</p>
+              <p className="ed-action-helper">Reference-only beta: no ZIP, public link, original-file access, external share, or ResourceSpace writeback is created.</p>
+            </details>
+            <details>
+              <summary>Access scope</summary>
+              <p className="ed-action-helper">Internal reference set only. No public link, ZIP package, original copying, or external share is created in beta.</p>
               <label className="ed-toggle">Portal Ready only <input type="checkbox" checked={approvedOnly} onChange={(event) => setApprovedOnly(event.target.checked)} /></label>
-            </section>
-            <section>
-              <h3>Package summary</h3>
-              <div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(governance.totalRefs), "Selected refs"], [String(governance.portalReadyRefs), "Portal Ready"], [String(governance.blockedRefs), "Readiness blockers"], ["0", "Copied assets"], [sourceLabel(search.source), "Source"]].map(([v, l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div>
-            </section>
+            </details>
+            <details open>
+              <summary>Governance guarantees</summary>
+              <p className="ed-checkline"><CheckCircle2 size={16} />References retained only</p>
+              {opsView ? <p className="ed-checkline"><CheckCircle2 size={16} />DAM record refs retained</p> : null}
+              <p className="ed-checkline"><CheckCircle2 size={16} />Original copying disabled</p>
+              <p className="ed-checkline"><CheckCircle2 size={16} />Original files remain private</p>
+              <p className="ed-checkline"><ShieldCheck size={16} />No ResourceSpace writeback from this draft</p>
+              <p className="ed-governance-note">{governance.auditMessage}</p>
+            </details>
+            <details open>
+              <summary>Package summary</summary>
+              <div className="ed-summary-grid">{[[String(sections.length), "Sections"], [String(governance.totalRefs), "References"], [String(governance.portalReadyRefs), "Portal Ready"], [String(governance.blockedRefs), "Blockers"], ["0", "File copies"], ["References only", "Original copying disabled"], ["Protected", "Original files"]].map(([v, l]) => <span key={l}><strong>{v}</strong><small>{l}</small></span>)}</div>
+              <p className="ed-governance-note">Data source: {dataSourceSummary}</p>
+            </details>
           </aside>
         </div>
       )}

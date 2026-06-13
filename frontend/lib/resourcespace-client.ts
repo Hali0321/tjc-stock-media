@@ -2,12 +2,20 @@ import crypto from "node:crypto";
 import { normalizedResourceSpaceBaseUrl, resourceSpaceApiKey, resourceSpaceApiUser } from "@/lib/env";
 
 const resourceSpaceApiTimeoutMs = 8000;
+const defaultSearchPageSize = 500;
+const defaultSearchMaxPages = 10000;
 
 export type ResourceSpaceApiResult<T = unknown> = {
   ok: boolean;
   status: number;
   data?: T;
   error?: string;
+};
+
+export type ResourceSpacePagedResult<T = unknown> = ResourceSpaceApiResult<T[]> & {
+  complete: boolean;
+  pages: number;
+  records: number;
 };
 
 function normalizeBaseUrl() {
@@ -96,6 +104,82 @@ export async function resourceSpaceApiDiagnostics() {
     status: result.status,
     error: result.error
   };
+}
+
+function resourceSpaceSearchPageSize() {
+  const configured = Number(process.env.RESOURCESPACE_API_PAGE_SIZE || "");
+  if (!Number.isFinite(configured)) return defaultSearchPageSize;
+  return Math.max(1, Math.min(1000, Math.trunc(configured)));
+}
+
+function resourceSpaceSearchMaxPages() {
+  const configured = Number(process.env.RESOURCESPACE_API_MAX_PAGES || "");
+  if (!Number.isFinite(configured)) return defaultSearchMaxPages;
+  return Math.max(1, Math.min(defaultSearchMaxPages, Math.trunc(configured)));
+}
+
+export async function resourceSpaceSearchAll<T = unknown>(params: Record<string, string | number | boolean | undefined>): Promise<ResourceSpacePagedResult<T>> {
+  const pageSize = resourceSpaceSearchPageSize();
+  const maxPages = resourceSpaceSearchMaxPages();
+  const records: T[] = [];
+  for (let page = 0; page < maxPages; page += 1) {
+    const offset = page * pageSize;
+    const result = await resourceSpaceApiRequest<unknown[]>({
+      ...params,
+      fetchrows: pageSize,
+      offset
+    });
+    if (!result.ok) {
+      return {
+        ok: false,
+        status: result.status,
+        error: result.error || `ResourceSpace API page ${page + 1} failed.`,
+        complete: false,
+        pages: page + 1,
+        records: records.length,
+        data: records
+      };
+    }
+    if (!Array.isArray(result.data)) {
+      return {
+        ok: false,
+        status: 502,
+        error: "ResourceSpace API search page returned a non-array payload.",
+        complete: false,
+        pages: page + 1,
+        records: records.length,
+        data: records
+      };
+    }
+    const pageRows = result.data as T[];
+    records.push(...pageRows);
+    if (pageRows.length === 0 || pageRows.length < pageSize) {
+      return {
+        ok: true,
+        status: 200,
+        complete: true,
+        pages: page + 1,
+        records: records.length,
+        data: records
+      };
+    }
+  }
+  return {
+    ok: false,
+    status: 508,
+    error: `ResourceSpace API pagination exceeded ${maxPages} pages without completion.`,
+    complete: false,
+    pages: maxPages,
+    records: records.length,
+    data: records
+  };
+}
+
+export async function resourceSpaceGetResourceData(resourceId: string | number) {
+  return resourceSpaceApiRequest<Record<string, unknown>>({
+    function: "get_resource_data",
+    resource: resourceId
+  });
 }
 
 export async function resourceSpaceUpdateField(resourceId: string, field: string | number, value: string) {

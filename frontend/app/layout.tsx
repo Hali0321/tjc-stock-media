@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Crimson_Text, Geist_Mono, Noto_Sans_TC, Playfair_Display, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import "./dam-v3-final.css";
 import "./dam-enterprise.css";
 import { AppChrome } from "@/components/AppChrome";
 import { RoleProvider } from "@/components/RoleProvider";
+import { BETA_SESSION_COOKIE, betaAuthEnabled, verifyBetaSessionCookieValue } from "@/lib/beta-auth";
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
@@ -42,11 +44,18 @@ export const metadata: Metadata = {
   description: "Approved media for ministry teams"
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const betaEnabled = betaAuthEnabled();
+  const cookieStore = await cookies();
+  const betaSession = betaEnabled
+    ? await verifyBetaSessionCookieValue(cookieStore.get(BETA_SESSION_COOKIE)?.value)
+    : null;
+  const role = betaSession?.role || "Viewer";
+
   return (
     <html lang="en">
       <body className={`${sourceSans.variable} ${crimsonText.variable} ${playfairDisplay.variable} ${notoSansTc.variable} ${geistMono.variable} font-sans`}>
-        <RoleProvider>
+        <RoleProvider initialRole={role} betaLocked={Boolean(betaEnabled && betaSession)}>
           <AppChrome>{children}</AppChrome>
         </RoleProvider>
       </body>

@@ -1,6 +1,7 @@
 import { normalizeDateField, normalizeDisplayTextField, normalizePublicTextField, normalizeUrlField } from "@/lib/request-validation";
+import { fileRequiresAdminIntake, routeUploadIntakeForReview, type IntakeRoutingReason } from "@/lib/intake-routing";
 import { nonCanonicalUploadTags } from "@/lib/upload-tags";
-import { LARGE_MEDIA_BYTES, uploadDefaultState } from "@/lib/workflow-policy";
+import { uploadDefaultState } from "@/lib/workflow-policy";
 import type { AuditEventRecord } from "@/lib/audit-log";
 import type { DemoRole } from "@/lib/types";
 
@@ -12,6 +13,12 @@ export type UploadIntakePacket = {
   eventDate: string;
   ministry: string;
   source: string;
+  sourceFolder: string;
+  sourceAccount: string;
+  importBatch: string;
+  checksumManifest: string;
+  originalFilenames: string[];
+  masterCustodyPathStatus: "planned";
   peopleVisible: string;
   minorsVisible: string;
   usageRights: string;
@@ -23,6 +30,7 @@ export type UploadIntakePacket = {
   invalidTags: string[];
   largeFiles: File[];
   reviewWarnings: string[];
+  smartRoutingReasons: IntakeRoutingReason[];
 };
 export type UploadIntakeValidationError = {
   body: {
@@ -34,7 +42,7 @@ export type UploadIntakeValidationError = {
   status: 400 | 403;
 };
 type UploadIntakeAuditPacket = Pick<UploadIntakePacket, "eventName" | "files" | "sourceLink"> &
-  Partial<Pick<UploadIntakePacket, "largeFiles" | "reviewWarnings">>;
+  Partial<Pick<UploadIntakePacket, "largeFiles" | "reviewWarnings" | "smartRoutingReasons">>;
 type UploadIntakeAuditEvent = Omit<AuditEventRecord, "id" | "createdAt" | "actor"> & { actor?: string };
 const MAX_UPLOAD_INTAKE_FILES = 80;
 
@@ -49,6 +57,11 @@ export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
   const eventDate = normalizeDateField(form.get("eventDate"));
   const ministry = normalizeDisplayTextField(form.get("ministry"), "", 120);
   const source = normalizeDisplayTextField(form.get("source"), "", 160);
+  const sourceFolder = normalizeDisplayTextField(form.get("sourceFolder"), "", 240);
+  const sourceAccount = normalizeDisplayTextField(form.get("sourceAccount"), source, 160);
+  const importBatch = normalizeDisplayTextField(form.get("importBatch"), "", 160);
+  const checksumManifest = normalizePublicTextField(form.get("checksumManifest"), "", 600);
+  const originalFilenames = files.map((file) => file.name).filter(Boolean);
   const peopleVisible = normalizePublicTextField(form.get("peopleVisible"), "Unknown", 40);
   const minorsVisible = normalizePublicTextField(form.get("minorsVisible"), "Unknown", 40);
   const usageRights = normalizePublicTextField(form.get("usageRights"), "Unknown - needs review", 80);
@@ -70,13 +83,30 @@ export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
     !suggestedTags && "suggested tags",
     !intakeNotes && "intake notes"
   ].filter((item): item is string => Boolean(item));
+  const smartRoutingReasons = routeUploadIntakeForReview({
+    files,
+    sourceFolder,
+    sourceAccount,
+    importBatch,
+    checksumManifest,
+    originalFilenames,
+    suggestedTags,
+    intakeNotes,
+    eventName,
+    ministry,
+    peopleVisible,
+    minorsVisible,
+    usageRights,
+    consentRestrictions
+  });
   const reviewWarnings = [
     !source && "Source/photographer missing",
     peopleVisible === "Unknown" && "People visibility unknown",
     minorsVisible === "Unknown" && "Children/youth visibility unknown",
     minorsVisible === "Yes" && "Children/youth visible",
     /unknown|needs review/i.test(usageRights) && "Usage rights unclear",
-    /church-wide|public/i.test(approvalSuggestion) && (!/permission confirmed|tjc-owned/i.test(usageRights) || peopleVisible === "Unknown" || minorsVisible !== "No") && "Public approval suggestion conflicts with rights/people fields"
+    /church-wide|public/i.test(approvalSuggestion) && (!/permission confirmed|tjc-owned/i.test(usageRights) || peopleVisible === "Unknown" || minorsVisible !== "No") && "Public approval suggestion conflicts with rights/people fields",
+    ...smartRoutingReasons.map((reason) => reason.label)
   ].filter((warning): warning is string => Boolean(warning));
 
   return {
@@ -87,6 +117,12 @@ export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
     eventDate,
     ministry,
     source,
+    sourceFolder,
+    sourceAccount,
+    importBatch,
+    checksumManifest,
+    originalFilenames,
+    masterCustodyPathStatus: "planned",
     peopleVisible,
     minorsVisible,
     usageRights,
@@ -96,8 +132,9 @@ export function normalizeUploadIntake(form: FormData): UploadIntakePacket {
     intakeNotes,
     missingRequired,
     invalidTags: nonCanonicalUploadTags(suggestedTags),
-    largeFiles: files.filter((file) => file.size > LARGE_MEDIA_BYTES),
-    reviewWarnings
+    largeFiles: files.filter(fileRequiresAdminIntake),
+    reviewWarnings,
+    smartRoutingReasons
   };
 }
 
@@ -107,6 +144,7 @@ export function uploadIntakeAuditDetails(intake: UploadIntakeAuditPacket) {
     fileCount: intake.files.length,
     sourceLinkCaptured: Boolean(intake.sourceLink),
     largeFileCount: intake.largeFiles?.length || 0,
+    routingReasonIds: intake.smartRoutingReasons?.map((reason) => reason.id) || [],
     reviewWarnings: intake.reviewWarnings || []
   };
 }
@@ -184,7 +222,7 @@ export function buildUploadIntakeResponse(intake: UploadIntakePacket) {
       defaultReviewState: uploadDefaultState.status,
       fileCount: intake.files.length,
       largeFileCount: intake.largeFiles.length,
-      sourceLinkCaptured: Boolean(intake.sourceLink)
+      sourceLinkCaptured: Boolean(intake.sourceLink),
     };
   }
   return {

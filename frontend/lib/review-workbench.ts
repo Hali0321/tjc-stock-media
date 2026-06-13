@@ -15,7 +15,7 @@ export type ReviewDecisionAction = {
   icon: "check" | "file" | "alert";
 };
 
-export const reviewWorkbenchTabs = ["Details", "Metadata", "Rights & Checks", "Comments", "Activity", "History"];
+export const reviewWorkbenchTabs = ["Details", "Rights", "Comments", "Activity"];
 
 export const reviewEvidenceGroups: Array<{
   title: string;
@@ -24,8 +24,8 @@ export const reviewEvidenceGroups: Array<{
   { title: "Source", fields: ["sourceConfirmed", "proofLinkAttached"] },
   { title: "Rights", fields: ["rightsConfirmed", "attributionConfirmed", "creditRequirementChecked"] },
   { title: "People/minors", fields: ["peopleVisibilityConfirmed", "childrenYouthChecked"] },
-  { title: "Usage", fields: ["usageScopeSelected", "sensitiveContextChecked", "expirationRereviewSet"] },
-  { title: "Delivery", fields: ["derivativeAvailable"] }
+  { title: "Usage scope", fields: ["usageScopeSelected", "sensitiveContextChecked", "expirationRereviewSet"] },
+  { title: "Approval decision", fields: ["derivativeAvailable"] }
 ];
 
 export const reviewDecisionActions: ReviewDecisionAction[] = [
@@ -117,10 +117,12 @@ export function reviewWaitingDays(asset?: StockMediaAsset, now = Date.now()) {
 }
 
 export function checklistActionLabel(field: keyof ReviewEvidenceChecklist, complete: boolean) {
-  if (complete) return "View details";
+  if (complete) return "View evidence";
   if (field === "proofLinkAttached") return "Add evidence";
-  if (field === "sourceConfirmed" || field === "usageScopeSelected" || field === "derivativeAvailable") return "Open";
-  return "Mark checked";
+  if (field === "rightsConfirmed" || field === "attributionConfirmed" || field === "creditRequirementChecked") return "Add evidence";
+  if (field === "peopleVisibilityConfirmed" || field === "childrenYouthChecked" || field === "sensitiveContextChecked" || field === "expirationRereviewSet") return "Record reviewer decision";
+  if (field === "sourceConfirmed" || field === "usageScopeSelected" || field === "derivativeAvailable") return "Open evidence";
+  return "Add evidence";
 }
 
 function rightsEvidenceMissing(asset: StockMediaAsset) {
@@ -144,7 +146,7 @@ export function buildReviewSignals(assets: StockMediaAsset[]): ReviewSignal[] {
   const count = (matcher: (asset: StockMediaAsset) => boolean) => assets.filter(matcher).length;
   return [
     { label: "Missing copyright evidence", count: count(rightsEvidenceMissing) },
-    { label: "People/minors unknown", count: count((asset) => !asset.peopleRisk || asset.peopleRisk === "Unknown" || asset.peopleRisk === "Possible minors") },
+    { label: "People/minors status unresolved", count: count((asset) => !asset.peopleRisk || asset.peopleRisk === "Unknown" || asset.peopleRisk === "Possible minors") },
     { label: "Source access restricted", count: count((asset) => /restricted|read.?only|export/i.test(`${asset.sourceSystem || ""} ${asset.downloadPolicy || ""}`)) },
     { label: "Rights review needed", count: count((asset) => reviewRiskFlags(asset).includes("Rights unclear")) },
     { label: "Usage scope needed", count: count((asset) => !asset.usageScope || /unknown|review/i.test(asset.usageScope)) },

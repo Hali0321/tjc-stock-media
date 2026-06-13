@@ -12,12 +12,27 @@ import { presentReviewContext } from "@/lib/portal-context-presenters";
 import { emptyReviewChecklist, initialReviewChecklistForAsset, reviewChecklistItems, reviewDecisionMissingLabels, reviewEvidenceCompletion } from "@/lib/review-decision-presenter";
 import { buildReviewQueueMetrics, buildReviewSignals, buildSelectedReviewGuidance, checklistActionLabel, reviewEvidenceGroups, reviewMetadataCompleteness, reviewWaitingDays, reviewWorkbenchTabs, type PendingReviewDecisionSummary } from "@/lib/review-workbench";
 import { routeWithRole } from "@/lib/role-routes";
-import type { ReviewEvidenceChecklist } from "@/lib/types";
+import type { ReviewEvidenceChecklist, StockMediaAsset } from "@/lib/types";
 import { normalizeReviewQueueId, reviewRiskFlags, type ReviewQueueId } from "@/lib/workflow-policy";
 import { cn } from "@/lib/ui";
-import { ActionButton, AssetThumb, ErrorCard, IconButton, LoadingCard, SourcePill, StatusBadge } from "./EnterpriseShared";
+import { ActionButton, AssetThumb, ErrorCard, IconButton, LoadingCard, SourcePill } from "./EnterpriseShared";
 
 const reviewQueuePageSizeOptions = [8, 12, 20];
+const evidenceRequiredBeforeCompletion = new Set<keyof ReviewEvidenceChecklist>([
+  "rightsConfirmed",
+  "attributionConfirmed",
+  "creditRequirementChecked"
+]);
+
+function reviewChipLabels(asset: StockMediaAsset) {
+  const flags = reviewRiskFlags(asset);
+  const chips = new Set<string>();
+  if (assetEnterpriseStatus(asset) === "Needs Review") chips.add("Needs review");
+  if (flags.includes("Rights unclear")) chips.add("Rights missing");
+  if (flags.includes("People/minors status unresolved")) chips.add("People unresolved");
+  if (flags.some((flag) => /source/i.test(flag))) chips.add("Source missing");
+  return [...chips].slice(0, 3);
+}
 
 export function EnterpriseReviewPage() {
   const { role, ready } = useDemoRole();
@@ -116,8 +131,10 @@ export function EnterpriseReviewPage() {
   const evidencePercent = Math.round((evidenceCompletion.completed / evidenceCompletion.total) * 100);
   const metadataCompleteness = reviewMetadataCompleteness(selectedAsset);
   const selectedGuidance = buildSelectedReviewGuidance({ asset: selectedAsset, checklist, comment, pending: selectedPending });
-  const topBlocker = evidenceCompletion.missingLabels[0] || selectedGuidance.riskFlags.find((flag) => flag !== "Standard review") || "No required evidence blocker";
-  const nextSafeAction = evidenceCompletion.missingLabels.length ? "Complete required evidence" : "Review evidence checklist";
+  const topBlocker = selectedGuidance.approveMissingLabels[0] || evidenceCompletion.missingLabels[0] || selectedGuidance.riskFlags.find((flag) => flag !== "Standard review") || "No required evidence blocker";
+  const nextSafeAction = topBlocker === "Owner/license evidence missing"
+    ? "Add or verify required rights evidence"
+    : evidenceCompletion.missingLabels.length ? "Add or verify required evidence" : "Review evidence checklist";
   const selectedRiskFlags = selectedGuidance.riskFlags.filter((flag) => flag !== "Standard review");
   const reviewPresentation = selectedAsset ? presentReviewContext({
     asset: selectedAsset,
@@ -189,21 +206,21 @@ export function EnterpriseReviewPage() {
               <h1 id="review-triage-title">{pageTitle}</h1>
               <p>{pageSubtitle}</p>
             </div>
-            <div className="ed-review-triage-count" aria-label={`${queue.length} total pending records`}>
-              <strong>{queue.length.toLocaleString()}</strong>
-              <span>pending</span>
+            <div className="ed-review-triage-count" aria-label={`${filteredQueue.length} records in current filtered queue`}>
+              <strong>{filteredQueue.length.toLocaleString()}</strong>
+              <span>active queue</span>
             </div>
           </header>
           <div className="ed-review-triage-grid" aria-label="Review Queue Triage summary">
             <article>
-              <span>Total queue</span>
+              <span>Queue</span>
               <strong>{filteredQueue.length.toLocaleString()}</strong>
-              <p>{currentQueueLabel} records shown after current search.</p>
+              <p>{queueSearch.trim() ? `${queue.length.toLocaleString()} total in ${currentQueueLabel}; search narrows this view.` : `${currentQueueLabel} records in the active review queue.`}</p>
             </article>
             <article>
-              <span>Selected asset</span>
-              <strong>{displayTitle(selectedAsset)}</strong>
-              <p>ResourceSpace ID {assetRecordRef(selectedAsset)} · {selectedStatus}</p>
+              <span>Record</span>
+              <strong>{assetRecordRef(selectedAsset)}</strong>
+              <p>{displayTitle(selectedAsset)} · {selectedStatus}</p>
             </article>
             <article>
               <span>Evidence</span>
@@ -216,37 +233,19 @@ export function EnterpriseReviewPage() {
               <p>Next safe action: {nextSafeAction}.</p>
             </article>
           </div>
-          <div className="ed-review-selected-summary" aria-label="Compact selected asset summary">
-            <AssetThumb asset={selectedAsset} fit="contain" />
-            <div>
-              <span className="ed-section-eyebrow">Current review target</span>
-              <h2>{displayTitle(selectedAsset)}</h2>
-              <p>ResourceSpace ID {assetRecordRef(selectedAsset)} · {selectedStatus} · Evidence {evidenceCompletion.completed}/{evidenceCompletion.total}</p>
-              <div className="ed-review-summary-tags" aria-label="Selected asset risk and source facts">
-                <StatusBadge status={selectedStatus} />
-                {(selectedRiskFlags.length ? selectedRiskFlags : ["Standard review"]).slice(0, 3).map((flag) => <span key={flag}>{flag}</span>)}
-                <span>Read-only ResourceSpace export</span>
-              </div>
-            </div>
-            <div className="ed-review-triage-actions" aria-label="Primary safe review actions">
-              <ActionButton tone="primary" icon={Save} onClick={() => queuePortalNote("Reviewer progress saved")}>Save progress</ActionButton>
-              <ActionButton icon={ArrowRight} onClick={selectNextAsset}>Next asset</ActionButton>
-              <ActionButton icon={MoreVertical} onClick={() => setDecisionMessage("More reviewer actions stay in the review workbench. ResourceSpace remains unchanged.")}>More actions</ActionButton>
-            </div>
-          </div>
         </section>
         <aside className="ed-review-list ed-panel">
           <header className="ed-review-list-head">
             <div>
               <h2>Queue list</h2>
-              <p>{queue.length.toLocaleString()} items waiting for reviewer triage.</p>
+              <p>{filteredQueue.length.toLocaleString()} active records{queueSearch.trim() ? ` from ${queue.length.toLocaleString()} queue records` : ""}.</p>
             </div>
             <IconButton label="Filter" onClick={() => setReviewListMessage("Use saved views and search for this review pass. More facets stay disabled until ResourceSpace exposes stable review fields.")}><Filter size={16} /></IconButton>
           </header>
           <SourcePill source={review.source} live={review.live} />
           <div className="ed-review-inbox-head">
             <span>{currentQueueLabel}</span>
-            <strong>{filteredQueue.length.toLocaleString()} shown</strong>
+            <strong>{filteredQueue.length.toLocaleString()} active</strong>
           </div>
           <label className="ed-review-queue-search">
             <Search size={14} aria-hidden="true" />
@@ -255,12 +254,12 @@ export function EnterpriseReviewPage() {
           </label>
           <div className="ed-review-taxonomy" aria-label="Review taxonomy rail and evidence signals">
             <section>
-              <header><span>Saved views</span><em>{(review.data?.queues || []).length.toLocaleString()}</em></header>
+              <header><span>Global saved views</span><em>{(review.data?.queues || []).length.toLocaleString()}</em></header>
               <div>
                 {(review.data?.queues || []).map((tab) => (
                   <button className={cn(queueId === tab.id && "is-active")} type="button" key={tab.id} aria-current={queueId === tab.id ? "true" : undefined} onClick={() => selectQueue(normalizeReviewQueueId(tab.id))}>
                     <span>{tab.label}</span>
-                    <em>{tab.count.toLocaleString()}</em>
+                    <em title="Global saved-view record count">{tab.count.toLocaleString()} global</em>
                   </button>
                 ))}
               </div>
@@ -318,8 +317,8 @@ export function EnterpriseReviewPage() {
           </div>
           {pagedQueue.map((asset) => {
             const recordAgeDays = reviewWaitingDays(asset);
-            const rowFlags = reviewRiskFlags(asset).slice(0, 2);
-            return <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {formatBytes(asset.fileSizeBytes)}</small><small>ResourceSpace ID {assetRecordRef(asset)}{recordAgeDays ? ` · ${recordAgeDays}d record age` : ""}</small><span className="ed-review-row-meta"><StatusBadge status={assetEnterpriseStatus(asset)} />{rowFlags.map((flag) => <em key={flag}>{flag}</em>)}</span>{pendingDecisionById[asset.id] || pendingWritesByAssetId[asset.id] || asset.pendingReviewWrite ? <em>Pending sync to ResourceSpace</em> : null}</span></button>;
+            const rowFlags = reviewChipLabels(asset);
+            return <button className={cn("ed-queue-item", selectedAsset?.id === asset.id && "is-active")} type="button" key={asset.id} onClick={() => setSelectedId(asset.id)}><AssetThumb asset={asset} /><span><strong title={displayTitle(asset)}>{displayTitle(asset)}</strong><small>{assetType(asset)} · {formatBytes(asset.fileSizeBytes)}</small><small>Record {assetRecordRef(asset)}{recordAgeDays ? ` · ${recordAgeDays}d` : ""}</small><span className="ed-review-row-meta">{rowFlags.map((flag) => <em key={flag}>{flag}</em>)}</span>{pendingDecisionById[asset.id] || pendingWritesByAssetId[asset.id] || asset.pendingReviewWrite ? <em>Pending sync</em> : null}</span></button>;
           })}
           <nav className="ed-review-pager" aria-label="Review queue pages">
             <span>{filteredQueue.length ? `${(pageStart + 1).toLocaleString()}-${pageEnd.toLocaleString()} of ${filteredQueue.length.toLocaleString()}` : "No review records"}</span>
@@ -352,21 +351,28 @@ export function EnterpriseReviewPage() {
                 <button type="button" onClick={() => queuePortalNote("Reviewer guidance viewed")}>View guidance</button>
               </section>
               <div className={cn("ed-hero-preview is-review", previewExpanded && "is-expanded")}>
+                <span className="ed-preview-derivative-label">Portal-safe preview derivative</span>
                 <AssetThumb asset={selectedAsset} className="ed-review-preview-image" fit="contain" />
                 <button className="ed-preview-corner" type="button" aria-label="Open preview record" onClick={() => queuePortalNote("Preview record opened")}>▣</button>
                 <div className="ed-preview-toolbar" aria-label="Preview zoom controls">
-                  <button type="button" aria-label="Zoom out"><Minus size={15} /></button>
-                  <button type="button" aria-label="Zoom in"><Plus size={15} /></button>
+                  <button type="button" aria-label="Zoom out" disabled title="Zoom controls are disabled for beta fixtures."><Minus size={15} /></button>
+                  <button type="button" aria-label="Zoom in" disabled title="Zoom controls are disabled for beta fixtures."><Plus size={15} /></button>
                   <strong>100%</strong>
                   <button type="button" aria-label={previewExpanded ? "Collapse preview" : "Expand preview"} onClick={() => setPreviewExpanded((expanded) => !expanded)}><Grid3X3 size={15} /></button>
                 </div>
                 <button className="ed-preview-ratio" type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)}>1:1</button>
               </div>
+              <section className="ed-review-summary-strip" aria-label="Selected review record summary">
+                <span><small>Record ID</small><strong>{assetRecordRef(selectedAsset)}</strong></span>
+                <span><small>Rights status</small><strong>{selectedAsset.rightsStatus || "Needs evidence"}</strong></span>
+                <span><small>Policy</small><strong>{selectedAsset.downloadPolicy || "not-downloadable"}</strong></span>
+                <span><small>Next required action</small><strong>{topBlocker}</strong></span>
+              </section>
               <nav className="ed-tabs is-large" role="tablist" aria-label="Review workbench sections">{reviewWorkbenchTabs.map((tab) => <button className={activeWorkbenchTab === tab ? "is-active" : ""} type="button" role="tab" aria-selected={activeWorkbenchTab === tab} key={tab} onClick={() => setActiveWorkbenchTab(tab)}>{tab}</button>)}</nav>
               <section className="ed-card ed-metadata-card"><dl className="ed-metadata is-two">{detailRows.map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl></section>
               <div className="ed-review-cards">
-                <section className="ed-card ed-score-card"><h3>Metadata completeness</h3><div className="ed-score-ring">{metadataCompleteness.percent}%</div><p>{metadataCompleteness.label} required</p><button type="button" onClick={() => setActiveWorkbenchTab("Metadata")}>View details</button></section>
-                <section className="ed-card"><h3>Risk signals</h3>{selectedGuidance.riskFlags.length ? selectedGuidance.riskFlags.slice(0, 3).map((row, index) => <p className="ed-checkline" key={`${row}-${index}`}><ShieldAlert size={16} />{row}</p>) : <p className="ed-review-muted">No elevated signal exported.</p>}{selectedGuidance.riskFlags.length > 3 ? <button type="button" onClick={() => setActiveWorkbenchTab("Rights & Checks")}>View all signals ({selectedGuidance.riskFlags.length})</button> : null}</section>
+                <section className="ed-card ed-score-card"><h3>Metadata completeness</h3><div className="ed-score-ring">{metadataCompleteness.percent}%</div><p>{metadataCompleteness.label} required</p><button type="button" onClick={() => setActiveWorkbenchTab("Details")}>View details</button></section>
+                <section className="ed-card"><h3>Risk signals</h3>{selectedGuidance.riskFlags.length ? selectedGuidance.riskFlags.slice(0, 3).map((row, index) => <p className="ed-checkline" key={`${row}-${index}`}><ShieldAlert size={16} />{row}</p>) : <p className="ed-review-muted">No elevated signal exported.</p>}{selectedGuidance.riskFlags.length > 3 ? <button type="button" onClick={() => setActiveWorkbenchTab("Rights")}>View all signals ({selectedGuidance.riskFlags.length})</button> : null}</section>
                 <section className="ed-card"><h3>Review policy</h3><p>ResourceSpace remains final approval truth.</p><button type="button" onClick={() => queuePortalNote("Review policy opened")}>View policy</button><button type="button" onClick={requestGatedDownload}>Open gated copy</button></section>
               </div>
             </main>
@@ -381,6 +387,7 @@ export function EnterpriseReviewPage() {
                 </header>
                 <div className="ed-evidence-progress"><strong>{evidenceCompletion.completed}/{evidenceCompletion.total} checks complete</strong><span>{evidencePercent}%</span></div>
                 <div className="ed-evidence-meter" aria-label={`${evidenceCompletion.completed} of ${evidenceCompletion.total} review checks complete`}><span style={{ width: `${evidencePercent}%` }} /></div>
+                <p className="ed-evidence-model">Checklist model: 11 evidence checks plus 1 reviewer note. Rights checks require evidence before approval can proceed.</p>
                 <p className="ed-evidence-next"><span>Next required check</span><strong>{evidenceCompletion.missingLabels[0] || "Ready for final reviewer action"}</strong></p>
                 <div className="ed-evidence-table">
                   {evidenceTableRows.map(([leftLabel, leftValue, rightLabel, rightValue]) => (
@@ -394,35 +401,34 @@ export function EnterpriseReviewPage() {
                 <div className="ed-evidence-checks">
                   {reviewEvidenceGroups.map((group) => (
                     <section className="ed-evidence-group" key={group.title}>
-                      <h4>{group.title}</h4>
+                      <h4>{group.title}<span>{group.fields.filter((field) => checklist[field]).length}/{group.fields.length}</span></h4>
                       {group.fields.map((field) => {
                         const item = reviewChecklistItems.find((candidate) => candidate.field === field);
                         if (!item) return null;
                         const complete = checklist[item.field];
-                        return <label className={complete ? "is-complete" : ""} key={item.field}><input type="checkbox" checked={complete} onChange={() => toggleChecklist(item.field)} /><span><strong>{item.label}</strong><small>{item.hint}</small></span><em>{checklistActionLabel(item.field, complete)}</em><ChevronRight size={16} /></label>;
+                        const evidenceLocked = evidenceRequiredBeforeCompletion.has(item.field) && !checklist.proofLinkAttached && !complete;
+                        return <label className={cn(complete && "is-complete", evidenceLocked && "is-locked")} key={item.field}><input type="checkbox" checked={complete} disabled={evidenceLocked} onChange={() => toggleChecklist(item.field)} /><span><strong>{item.label}</strong><small>{evidenceLocked ? "Add proof link or evidence note before this can be completed." : item.hint}</small></span><em>{checklistActionLabel(item.field, complete)}</em><ChevronRight size={16} /></label>;
                       })}
+                      {group.title === "Approval decision" ? (
+                        <label className={comment.trim().length > 10 ? "is-complete is-note" : "is-note"}>
+                          <span><strong>Reviewer note</strong><small>Required for final decision</small></span>
+                          <textarea className="ed-review-note" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add evidence note, reviewer name, scope, or follow-up needed..." />
+                        </label>
+                      ) : null}
                     </section>
                   ))}
-                  <section className="ed-evidence-group">
-                    <h4>Review notes</h4>
-                    <label className={comment.trim().length > 10 ? "is-complete is-note" : "is-note"}>
-                      <span><strong>Reviewer note</strong><small>Required for final decision</small></span>
-                      <textarea className="ed-review-note" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add evidence note, reviewer name, scope, or follow-up needed..." />
-                    </label>
-                  </section>
                 </div>
                 <div className="ed-review-panel-actions">
                   <ActionButton tone="primary" icon={Save} onClick={() => queuePortalNote("Reviewer progress saved")}>Save progress</ActionButton>
                   <ActionButton icon={FileText} onClick={() => queuePortalNote("Submission package review requested")}>View details</ActionButton>
                 </div>
+                <nav className="ed-review-decision-actions" aria-label="Review decision actions">
+                  <button type="button" onClick={() => decide("Approved", "Approve Public")}>Approve public</button>
+                  <button type="button" onClick={() => decide("Needs Review", "Request More Info")}>Request info</button>
+                  <button type="button" onClick={() => decide("Restricted", "Do Not Use")}>Restrict use</button>
+                </nav>
               </section>
             </aside>
-            <footer className="ed-review-decision-footer" aria-label="Review decision actions">
-              <button type="button" onClick={() => queuePortalNote("Issue reported for reviewer follow-up")}>Report Issue</button>
-              <button type="button" onClick={() => queuePortalNote("Reviewer progress saved")}>Save progress</button>
-              <button type="button" onClick={selectNextAsset}>Next asset <ArrowRight size={14} /></button>
-              <button type="button" className="is-primary" onClick={() => decide("Needs Review", "Request More Info")}>Request info <ChevronDown size={14} /></button>
-            </footer>
           </>
         ) : <main><ErrorCard message="No reviewable ResourceSpace records found." source={review.source} /></main>}
       </div>

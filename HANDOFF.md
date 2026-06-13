@@ -3,7 +3,7 @@
 ## What Runs Locally
 
 - ResourceSpace backend: `http://localhost:8088`
-- TJC Stock Media frontend: `http://localhost:3008`
+- TJC Stock Media frontend: `http://localhost:4867`
 
 Run:
 
@@ -20,6 +20,12 @@ make demo-check
 ```
 
 Latest local QA captured the required screenshots under `docs/screenshots/` from a fresh production Next server at `http://localhost:3029` with `TJC_STOCK_MEDIA_ROOT` set to the repo root. The set includes desktop plus 320/390 mobile screenshots for Library, Collections, Upload, Review, Asset Detail, Guide, and Admin, plus primitive proof captures. Full browser QA covered 1440, 1280, 1024, 768, 390, and 320 px with zero failures, zero warnings, zero console errors, and zero network failures.
+
+## Production Hardening Truth
+
+Current branch hardens the portal boundary instead of promoting the portal into a second DAM. Production client role overrides are ignored. Without trusted SSO headers, privileged API actions fail closed. Local beta `?role=` and `localStorage` switching are QA-only and must not be described as production auth.
+
+Runtime `.runtime` JSON/JSONL remains local/private-beta storage. In production, stateful writes that require durability must use an explicit durable runtime store or fail closed. Review writeback is only ResourceSpace truth when live API writeback succeeds and a re-read confirms status, reviewer, date, and notes.
 
 The current frontend shell is the final dense ministry DAM UI:
 
@@ -136,10 +142,10 @@ If the current ResourceSpace export lacks a usable preview derivative for the ro
 
 ## Remaining Before Church PC/NAS
 
-- Configure production host and storage.
+- Configure production host and durable runtime storage.
 - Restore ResourceSpace backup on clean church machine.
 - Protect access through Cloudflare Access or Google Workspace allowlist.
 - Configure signed ResourceSpace API field mapping for portal review/upload writes.
 - Confirm backup job and restore test on the target host.
 - Pilot video/audio import with large-media intake.
-- Replace local demo role switch with real church access control.
+- Replace local demo role switch with real church access control and trusted SSO headers.

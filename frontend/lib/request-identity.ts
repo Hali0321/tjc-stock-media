@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import { normalizeRole, strongestRole } from "@/lib/permissions";
-import { trustedSsoHeadersEnabled } from "@/lib/env";
+import { isKnownRole, normalizeRole, strongestRole } from "@/lib/permissions";
+import { betaAuthEnabled } from "@/lib/beta-auth";
+import { localBetaRoleOverridesEnabled, productionRuntime, productionTrustedIdentityRequired, trustedSsoHeadersEnabled } from "@/lib/env";
 import { normalizePersistedDisplayText } from "@/lib/request-validation";
 import type { DamUser, DemoRole } from "@/lib/types";
 
@@ -28,10 +29,6 @@ export type RequestIdentityOptions = {
 
 function requestIsLocalhost(request: NextRequest) {
   return ["localhost", "127.0.0.1", "::1"].includes(request.nextUrl.hostname);
-}
-
-function productionRuntime() {
-  return process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
 }
 
 function downloadBodyDemoRolesAllowed() {
@@ -65,6 +62,18 @@ export function resolveClientRoleOverride(
   explicitRoleOrOptions?: string | null | RequestIdentityOptions
 ): ClientRoleOverrideDecision {
   const options = normalizeIdentityOptions(explicitRoleOrOptions);
+  if (betaAuthEnabled() && isKnownRole(request.headers.get("x-tjc-beta-role"))) {
+    return {
+      requestedRole: typeof options.explicitRole === "string" && options.explicitRole.trim() ? options.explicitRole : null,
+      role: request.headers.get("x-tjc-beta-role"),
+      source: "query",
+      policy: options.overridePolicy,
+      allowed: false,
+      ignored: true,
+      denied: false,
+      reasonCode: "beta-session-authoritative"
+    };
+  }
   const requestedRole = typeof options.explicitRole === "string" && options.explicitRole.trim()
     ? options.explicitRole
     : null;
@@ -79,17 +88,20 @@ export function resolveClientRoleOverride(
     reasonCode: null
   };
   if (!requestedRole) return base;
+  if (productionRuntime()) {
+    return { ...base, ignored: true, reasonCode: "production-client-role-ignored" };
+  }
   if (trustedSsoHeadersEnabled()) {
     return { ...base, ignored: true, reasonCode: "trusted-sso-authoritative" };
   }
 
   if (options.overridePolicy !== "download-gate") {
-    return { ...base, role: requestedRole, allowed: true };
+    if (requestIsLocalhost(request) || localBetaRoleOverridesEnabled()) {
+      return { ...base, role: requestedRole, allowed: true };
+    }
+    return { ...base, denied: true, reasonCode: "client-role-disabled" };
   }
 
-  if (productionRuntime()) {
-    return { ...base, ignored: true, reasonCode: "production-client-role-ignored" };
-  }
   if (options.overrideSource === "query" && downloadQueryDemoRolesAllowed(request)) {
     return { ...base, role: requestedRole, allowed: true };
   }
@@ -158,11 +170,29 @@ function mappedRole(groups: string[]) {
 }
 
 export function requestIdentity(request: NextRequest, explicitRoleOrOptions?: string | null | RequestIdentityOptions): DamUser {
+  const betaRole = request.headers.get("x-tjc-beta-role");
+  if (betaAuthEnabled() && isKnownRole(betaRole)) {
+    return {
+      id: `internal-beta:${betaRole}`,
+      name: `${betaRole} beta persona`,
+      role: betaRole,
+      sourceSystem: "local-beta"
+    };
+  }
+
   const override = resolveClientRoleOverride(request, explicitRoleOrOptions);
   const explicitRole = override.role;
   const headers = request.headers;
   const localFallbackRole = normalizeRole(explicitRole);
   if (!trustedSsoHeadersEnabled()) {
+    if (productionRuntime() && productionTrustedIdentityRequired()) {
+      return {
+        id: "production:trusted-identity-missing",
+        name: "Trusted identity missing",
+        role: "Viewer",
+        sourceSystem: "local-beta"
+      };
+    }
     return {
       id: `local-beta:${localFallbackRole}`,
       name: localFallbackRole,

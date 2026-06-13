@@ -11,7 +11,10 @@ import {
 } from "@/lib/env";
 import { pendingReviewWriteDiagnostics } from "@/lib/pending-review-writes";
 import { packageDraftDiagnostics } from "@/lib/package-store";
+import { derivativeIndexDiagnostics } from "@/lib/derivative-index";
 import { resourceSpaceFieldMapDiagnostics, resourceSpaceWritebackFieldMapDiagnostics } from "@/lib/resourcespace-field-map";
+import { resourceSpaceApiReadDiagnostics } from "@/lib/media-source/resourcespace-api";
+import { runtimeStoreDiagnostics } from "@/lib/runtime-file-store";
 import { savedSearchDiagnostics } from "@/lib/saved-search-store";
 import { usageAnalyticsDiagnostics } from "@/lib/usage-analytics";
 import type { IntegrationReadinessItem, MediaSourceStatus } from "@/lib/types";
@@ -38,6 +41,8 @@ export function buildIntegrationReadiness({
   const packages = packageDraftDiagnostics();
   const savedSearches = savedSearchDiagnostics();
   const writebackFieldMap = resourceSpaceWritebackFieldMapDiagnostics();
+  const runtimeStore = runtimeStoreDiagnostics();
+  const derivativeIndex = derivativeIndexDiagnostics();
   const liveWritebackReady = apiConfigured && resourceSpaceWritebackEnabled() && writebackFieldMap.valid;
   const brandHubConfigured = Boolean(brandKitCollectionId("BRAND_KIT_MVP_2024_COLLECTION_ID"));
   const sourceIsResourceSpace = status.adapter === "resourcespace-api" || status.adapter === "exported-metadata";
@@ -53,11 +58,13 @@ export function buildIntegrationReadiness({
     {
       id: "resourcespace-live-api",
       label: "ResourceSpace live API",
-      ready: status.adapter === "resourcespace-api",
+      ready: status.adapter === "resourcespace-api" && resourceSpaceApiReadDiagnostics.complete,
       owner: "ResourceSpace",
-      state: apiConfigured ? "Degraded" : "Not configured",
+      state: status.adapter === "resourcespace-api" && resourceSpaceApiReadDiagnostics.complete ? "Operational" : apiConfigured ? "Degraded" : "Not configured",
       detail: apiConfigured
-        ? "Credentials are present, but live API read/write adapter still requires field and endpoint verification."
+        ? resourceSpaceApiReadDiagnostics.complete
+          ? `Live API read completed ${resourceSpaceApiReadDiagnostics.records.toLocaleString()} record${resourceSpaceApiReadDiagnostics.records === 1 ? "" : "s"} over ${resourceSpaceApiReadDiagnostics.pages.toLocaleString()} page${resourceSpaceApiReadDiagnostics.pages === 1 ? "" : "s"}.`
+          : `Live API read is incomplete or failed safely; export fallback may be in use. Last error: ${resourceSpaceApiReadDiagnostics.error || "none"}.`
         : "Server-side ResourceSpace API credentials are not configured. Export mode remains read-only."
     },
     {
@@ -75,11 +82,11 @@ export function buildIntegrationReadiness({
     {
       id: "resourcespace-preview",
       label: "ResourceSpace preview proxy",
-      ready: sourceIsResourceSpace,
+      ready: sourceIsResourceSpace && derivativeIndex.indexed,
       owner: "ResourceSpace",
-      state: sourceIsResourceSpace ? "Operational" : "Blocked",
+      state: sourceIsResourceSpace && derivativeIndex.indexed ? "Operational" : sourceIsResourceSpace ? "Degraded" : "Blocked",
       detail: sourceIsResourceSpace
-        ? "Previews route through backend thumbnail API and local derivative lookup. Missing derivatives show explicit unavailable states."
+        ? `Previews route through backend thumbnail API and derivative manifest. Indexed entries: ${derivativeIndex.entries.toLocaleString()}. Missing derivatives show explicit unavailable states. ${derivativeIndex.detail}`
         : "Preview route falls back only when ResourceSpace/export data is unavailable."
     },
     {
@@ -97,6 +104,14 @@ export function buildIntegrationReadiness({
         : "Review decisions save as portal pending-sync events. They are not final ResourceSpace truth."
     },
     {
+      id: "runtime-state-store",
+      label: "Runtime state durability",
+      ready: runtimeStore.statefulWritesAllowed && (runtimeStore.durable || !runtimeStore.production),
+      owner: "Portal",
+      state: runtimeStore.state === "Blocked" ? "Blocked" : runtimeStore.durable ? "Operational" : "Degraded",
+      detail: `${runtimeStore.detail} Mode: ${runtimeStore.mode}; adapter: ${runtimeStore.adapter}.`
+    },
+    {
       id: "pending-review-writes",
       label: "Pending review write queue",
       ready: pending.count === 0,
@@ -107,11 +122,11 @@ export function buildIntegrationReadiness({
     {
       id: "audit-log",
       label: "Portal audit log",
-      ready: auditEvents.count > 0,
+      ready: auditEvents.count > 0 && auditEvents.storage.durable,
       owner: "Portal",
-      state: auditEvents.count > 0 ? "Operational" : "Pending setup",
+      state: auditEvents.storage.durable ? (auditEvents.count > 0 ? "Operational" : "Degraded") : auditEvents.count > 0 ? "Degraded" : "Pending setup",
       detail: auditEvents.count
-        ? `${auditEvents.count.toLocaleString()} recent audit event${auditEvents.count === 1 ? "" : "s"}. Latest event: ${auditEvents.latestAt || "none"}.`
+        ? `${auditEvents.count.toLocaleString()} recent audit event${auditEvents.count === 1 ? "" : "s"}. Latest event: ${auditEvents.latestAt || "none"}. ${auditEvents.storage.detail}`
         : "No local portal audit events recorded yet. Production still needs durable identity-backed audit storage."
     },
     {
@@ -180,7 +195,7 @@ export function buildIntegrationReadiness({
       state: analytics.enabled ? (analytics.totalEvents > 0 ? "Operational" : "Degraded") : "Pending setup",
       detail: analytics.enabled
         ? `Usage analytics is enabled with ${analytics.storageMode}. Recorded events: ${analytics.totalEvents.toLocaleString()}.`
-        : "Insights uses real ResourceSpace counts plus clearly labeled sample trend/package charts until portal event logging is connected."
+        : "Usage analytics is unavailable; search, zero-result, and trend metrics must not be reported as zero-success until durable event logging is connected."
     },
     {
       id: "beta-feedback-storage",
@@ -206,7 +221,7 @@ export function buildIntegrationReadiness({
       ready: packages.count > 0,
       owner: "Portal",
       state: packages.count > 0 ? "Degraded" : "Pending setup",
-      detail: `Package drafts use ${packages.storageMode}; suitable for local/private beta only, not wider rollout. Drafts: ${packages.count.toLocaleString()}; open: ${packages.openCount.toLocaleString()}; blocked refs: ${packages.blockedRefs.toLocaleString()}. Connect durable backend storage before package sharing or invites.`
+      detail: `Package drafts use ${packages.storageMode}; suitable for local/private beta only, not wider rollout. Production-ready sharing: ${packages.productionReadySharing ? "yes" : "no"}. Drafts: ${packages.count.toLocaleString()}; open: ${packages.openCount.toLocaleString()}; blocked refs: ${packages.blockedRefs.toLocaleString()}. Connect durable backend storage before package sharing or invites.`
     },
     {
       id: "brand-kit-collections",

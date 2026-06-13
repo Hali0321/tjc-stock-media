@@ -2,9 +2,16 @@ import type { DemoRole, MetadataConfidence, ReuseBlocker, ReuseDecision, ReuseSt
 import {
   assetHasChildrenYouthRisk,
   assetHasCompatibleUsageScope,
+  assetHasConsentEvidence,
+  assetHasDomainReviewClearance,
+  assetHasHymnMusicRisk,
+  assetHasPastoralSensitivityEvidence,
+  assetHasPublicChannelClearance,
   assetHasRenditionGap,
   assetHasSensitiveContext,
   assetHasSourceProvenance,
+  assetHasUnresolvedAiSuggestionDebt,
+  assetLifecycleIsCurrent,
   assetIsArchiveOnly,
   assetIsBlocked,
   assetIsApproved,
@@ -75,6 +82,28 @@ export type PortalReuseDecisionPacket = {
   viewerVerdict: ViewerVerdict;
 };
 
+export type OriginalAccessRequestStatus = "pending" | "approved" | "denied" | "revoked" | "expired";
+export type OriginalAccessRequestState = "requestable" | "blocked" | "pending" | "expired" | "revoked";
+
+export type OriginalAccessRequestEvidence = {
+  status?: OriginalAccessRequestStatus;
+  expiresAt?: string;
+  approver?: string;
+  auditId?: string;
+};
+
+export type OriginalAccessRequestDecision = {
+  state: OriginalAccessRequestState;
+  liveAccessAllowed: false;
+  requestOnly: true;
+  requiresApprover: true;
+  timeLimited: true;
+  audited: true;
+  revocable: true;
+  reasonCodes: string[];
+  reason: string;
+};
+
 const blockerLabels: Record<ReuseState, string> = {
   "portal-ready": "Portal ready",
   "internal-ready": "Internal ready",
@@ -136,6 +165,14 @@ function isReviewer(role: DemoRole) {
   return reviewerRoles.includes(role);
 }
 
+function dateIsExpired(value?: string, now: Date | number = new Date()) {
+  if (!value) return false;
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return false;
+  const current = now instanceof Date ? now.getTime() : now;
+  return parsed <= current;
+}
+
 function firstBlockingState(blockers: ReuseBlocker[]): ReuseState {
   return blockers[0]?.code || "preview-only";
 }
@@ -182,14 +219,23 @@ export function reuseBlockers(asset: StockMediaAsset) {
 
   if (assetIsBlocked(asset)) addBlocker("blocked-do-not-use");
   if (assetIsArchiveOnly(asset)) addBlocker("blocked-archive");
+  if (asset.reuseTier === "context-safe") addBlocker("blocked-needs-review");
+  if (asset.visibilityTier && asset.visibilityTier !== "public") addBlocker("blocked-needs-review");
+  if (!assetLifecycleIsCurrent(asset)) addBlocker("blocked-reviewer-date");
   if (assetNeedsReview(asset) || !assetIsApproved(asset)) addBlocker("blocked-needs-review");
   if (!trustedPublicImport && !assetHasSourceProvenance(asset)) addBlocker("blocked-source");
   if (!trustedPublicImport && assetNeedsRightsReview(asset)) addBlocker("blocked-rights");
   if (!assetHasCompatibleUsageScope(asset)) addBlocker("blocked-needs-review");
   if (!trustedPublicImport && (!asset.peopleRisk || asset.peopleRisk === "Unknown" || assetHasChildrenYouthRisk(asset))) addBlocker("blocked-people-minors");
+  if (assetHasChildrenYouthRisk(asset) && !assetHasConsentEvidence(asset)) addBlocker("blocked-people-minors");
   if (!trustedPublicImport && (!asset.reviewer || !asset.reviewedDate)) addBlocker("blocked-reviewer-date");
   if (assetHasRenditionGap(asset)) addBlocker("blocked-derivative");
   if (assetHasSensitiveContext(asset)) addBlocker("blocked-sensitive");
+  if (!assetHasDomainReviewClearance(asset)) addBlocker("blocked-sensitive");
+  if (!assetHasPastoralSensitivityEvidence(asset)) addBlocker("blocked-sensitive");
+  if (assetHasHymnMusicRisk(asset) && (!asset.requiredNotice || !asset.approvedChannels?.length)) addBlocker("blocked-rights");
+  if (!assetHasPublicChannelClearance(asset)) addBlocker("blocked-rights");
+  if (assetHasUnresolvedAiSuggestionDebt(asset)) addBlocker("blocked-needs-review");
   if (assetNeedsStaleApprovalReview(asset)) addBlocker("blocked-reviewer-date");
   return blockers;
 }
@@ -222,7 +268,7 @@ export function buildReuseDecision(asset: StockMediaAsset): ReuseDecision {
     state,
     label,
     summary: publicReady
-      ? "Source, rights, people/minors, review, and approved-copy checks pass."
+      ? "Source, rights, people/minors, channel, lifecycle, review, and approved-copy checks pass."
       : internalReady
         ? "Approved for internal ministry use with required checks complete."
         : blockers.length
@@ -354,6 +400,91 @@ export function decideAccess(role: DemoRole, action: AccessAction, asset?: Stock
   }
 
   return { allowed: false, effect: "block", reasonCodes: ["action-not-supported"], allowedRenditions: [], reason: "Unsupported access action." };
+}
+
+export function buildOriginalAccessRequestDecision(
+  role: DemoRole,
+  asset?: StockMediaAsset,
+  request?: OriginalAccessRequestEvidence,
+  now: Date | number = new Date()
+): OriginalAccessRequestDecision {
+  const base = {
+    liveAccessAllowed: false as const,
+    requestOnly: true as const,
+    requiresApprover: true as const,
+    timeLimited: true as const,
+    audited: true as const,
+    revocable: true as const
+  };
+
+  if (!asset) {
+    return {
+      ...base,
+      state: "blocked",
+      reasonCodes: ["asset-required"],
+      reason: "Asset record is required before source-file access can be requested."
+    };
+  }
+  if (request?.status === "revoked") {
+    return {
+      ...base,
+      state: "revoked",
+      reasonCodes: ["original-access-revoked"],
+      reason: "Source-file access request was revoked; a new governed request is required."
+    };
+  }
+  if (request?.status === "expired" || dateIsExpired(request?.expiresAt, now)) {
+    return {
+      ...base,
+      state: "expired",
+      reasonCodes: ["original-access-expired"],
+      reason: "Source-file access request expired; original/master access remains restricted."
+    };
+  }
+  if (request?.status === "pending" || request?.status === "approved") {
+    return {
+      ...base,
+      state: "pending",
+      reasonCodes: request.status === "approved" ? ["original-live-grant-not-configured"] : ["original-access-pending"],
+      reason: request.status === "approved"
+        ? "Approval evidence exists, but no live source-file grant is configured in this portal."
+        : "Source-file access is waiting for approver review."
+    };
+  }
+  if (!isReviewer(role)) {
+    return {
+      ...base,
+      state: "blocked",
+      reasonCodes: ["original-access-reviewer-request-required"],
+      reason: "Source-file access must be requested through reviewers or DAM admins."
+    };
+  }
+  if (assetIsBlocked(asset) || assetIsArchiveOnly(asset)) {
+    return {
+      ...base,
+      state: "blocked",
+      reasonCodes: ["original-access-policy-blocked"],
+      reason: "Source-file access is blocked by asset policy until DAM Admin review."
+    };
+  }
+  return {
+    ...base,
+    state: "requestable",
+    reasonCodes: ["original-access-request-only"],
+    reason: "Source-file access can be requested for approval, expiry, audit, and revocation; no live grant is issued by the portal."
+  };
+}
+
+export function approvedCopyAccessBoundary(asset: StockMediaAsset, role: DemoRole) {
+  const approvedCopy = decideAccess(role, "downloadApprovedCopy", asset);
+  const original = buildOriginalAccessRequestDecision(role, asset);
+  return {
+    approvedCopyAllowed: approvedCopy.allowed,
+    approvedCopyRenditions: approvedCopy.allowedRenditions || [],
+    originalLiveAccessAllowed: original.liveAccessAllowed,
+    originalState: original.state,
+    separateFromOriginalMaster: true
+  };
 }
 
 export function viewerVerdictForAsset(asset: StockMediaAsset, role: DemoRole): ViewerVerdict {

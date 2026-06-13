@@ -121,6 +121,11 @@ complete enough for its use case:
 
 Missing data is not a UI bug. It is a readiness signal. The portal should show
 `Needs review`, `Needs metadata`, or `Not portal-ready` rather than guessing.
+Raw ResourceSpace `Approved Public` is not enough for portal-ready reuse. The
+portal contract also requires rights, people/minors, reviewer/date, derivative,
+and production reuse fields to be present or explicitly warned. Portal pending
+review writes are sidecar evidence only until ResourceSpace live writeback
+succeeds and a post-write read confirms the status, reviewer, date, and notes.
 
 ## Schema Drift Rules
 

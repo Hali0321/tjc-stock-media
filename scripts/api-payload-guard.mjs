@@ -343,14 +343,18 @@ for (const route of [
 const uploadRoute = "frontend/app/api/upload/route.ts";
 const uploadRouteSource = fs.readFileSync(path.join(root, uploadRoute), "utf8");
 const uploadIntakeSource = fs.readFileSync(path.join(root, "frontend/lib/upload-intake.ts"), "utf8");
+const intakeRoutingSource = fs.readFileSync(path.join(root, "frontend/lib/intake-routing.ts"), "utf8");
 if (!uploadRouteSource.includes("normalizeUploadIntake(form)")) {
   failures.push(`${uploadRoute} must delegate intake field normalization to upload-intake`);
 }
 if (!uploadRouteSource.includes("uploadIntakeValidationError(intake)") || !uploadRouteSource.includes("buildUploadIntakeResponse(intake)") || !uploadRouteSource.includes("uploadIntakeRoleDeniedError()") || !uploadRouteSource.includes("uploadIntakeDeniedAuditEvent(role, identity.id)") || !uploadRouteSource.includes("uploadIntakeSubmittedAuditEvent(intake, role, identity.id)")) {
   failures.push(`${uploadRoute} must delegate intake validation responses, role denial copy, audit details, and response payloads to upload-intake`);
 }
-if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("LARGE_MEDIA_BYTES") || !uploadIntakeSource.includes("MAX_UPLOAD_INTAKE_FILES") || !uploadIntakeSource.includes("function uploadIntakeValidationError") || !uploadIntakeSource.includes("function uploadIntakeRoleDeniedError") || !uploadIntakeSource.includes("function uploadIntakeDeniedAuditEvent") || !uploadIntakeSource.includes("function uploadIntakeSubmittedAuditEvent") || !uploadIntakeSource.includes("function buildUploadIntakeResponse")) {
+if (!uploadIntakeSource.includes("normalizePublicTextField") || !uploadIntakeSource.includes("nonCanonicalUploadTags") || !uploadIntakeSource.includes("fileRequiresAdminIntake") || !uploadIntakeSource.includes("MAX_UPLOAD_INTAKE_FILES") || !uploadIntakeSource.includes("function uploadIntakeValidationError") || !uploadIntakeSource.includes("function uploadIntakeRoleDeniedError") || !uploadIntakeSource.includes("function uploadIntakeDeniedAuditEvent") || !uploadIntakeSource.includes("function uploadIntakeSubmittedAuditEvent") || !uploadIntakeSource.includes("function buildUploadIntakeResponse")) {
   failures.push("upload-intake must normalize public intake text, canonical tags, large-media threshold, file-count threshold, validation responses, denial copy, audit details, and response payloads in one module");
+}
+if (!intakeRoutingSource.includes("LARGE_MEDIA_LIMIT_BYTES") || !intakeRoutingSource.includes("function fileRequiresAdminIntake") || !intakeRoutingSource.includes("file.size > LARGE_MEDIA_LIMIT_BYTES") || !intakeRoutingSource.includes("/^video\\//i") || !intakeRoutingSource.includes("/^audio\\//i")) {
+  failures.push("intake-routing must own large-media threshold and video/audio admin-intake detection used by upload-intake");
 }
 if (/normalize(DateField|DisplayTextField|PublicTextField|UrlField)\(|missingRequired|invalidTags|largeFiles|uploadDefaultState|upload_(denied|submitted)|role-cannot-submit|This role can search approved media but cannot upload|Upload intake denied for role/.test(uploadRouteSource)) {
   failures.push(`${uploadRoute} must not hand-roll upload intake field normalization, validation, denial copy, audit details, or response payloads`);

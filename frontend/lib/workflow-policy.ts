@@ -1,7 +1,11 @@
 import type { StockMediaAsset } from "@/lib/types";
 import {
   assetHasChildrenYouthRisk,
+  assetHasHymnMusicRisk,
+  assetHasSacramentRisk,
   assetHasTaxonomyDrift,
+  assetHasTestimonyRisk,
+  assetHasUnresolvedAiSuggestionDebt,
   assetIsDuplicateCandidate,
   assetIsArchiveOnly,
   assetIsApproved,
@@ -12,14 +16,15 @@ import {
   assetNeedsStaleApprovalReview,
   assetNeedsUsageGuidance
 } from "@/lib/asset-governance";
+import { LARGE_MEDIA_LIMIT_BYTES, routeAssetForReview } from "@/lib/intake-routing";
 
-export const LARGE_MEDIA_BYTES = 100 * 1024 * 1024;
+export const LARGE_MEDIA_BYTES = LARGE_MEDIA_LIMIT_BYTES;
 
 export const uploadDefaultState = {
   status: "Needs Review / Do Not Publish",
   message: "New media starts in review. A reviewer approves it before anyone can reuse it.",
   largeMediaMessage:
-    "Video/audio over 100 MB uses the large-media intake path. It still needs review before reuse."
+    "Video/audio and files over 100 MB use the large-media intake path. They still need review before reuse."
 };
 
 export const reviewActions = [
@@ -35,7 +40,7 @@ export type ReviewActionBackend = (typeof reviewActions)[number]["backend"];
 
 export const reviewQueues = [
   { id: "pending", label: "Missing copyright evidence", description: "Evidence packet incomplete or needs reviewer decision." },
-  { id: "children-youth", label: "People/minors unknown", description: "Contains, may contain, or has not ruled out people/youth." },
+  { id: "children-youth", label: "People/minors status unresolved", description: "Contains, may contain, or has not ruled out people/youth." },
   { id: "missing-source", label: "Source access restricted", description: "Source, album, photographer, or custody path missing." },
   { id: "rights-review", label: "Rights review needed", description: "Owner, license, consent, attribution, or proof unclear." },
   { id: "usage-guidance", label: "Usage scope needed", description: "Approved/useful record lacks safe channel guidance." },
@@ -45,7 +50,10 @@ export const reviewQueues = [
   { id: "ai-enrichment", label: "AI Enrichment", description: "Needs tags, dimensions, people check, or TJC terms." },
   { id: "taxonomy-drift", label: "Taxonomy Drift", description: "Generic title or sparse controlled vocabulary." },
   { id: "stale-approvals", label: "Expiring/re-review due", description: "Approved assets that should be rechecked." },
-  { id: "large-media", label: "Large Media", description: "Video/audio or large file intake." }
+  { id: "large-media", label: "Large Media", description: "Video/audio or large file intake." },
+  { id: "doctrine-sacrament", label: "Doctrine/Sacrament Review", description: "Baptism, Holy Communion, footwashing, Holy Spirit, or doctrine context." },
+  { id: "music-rights", label: "Music/Hymn Rights", description: "Hymns, music, choir, livestream, or worship audio/video clearance." },
+  { id: "rendition-readiness", label: "Rendition Readiness", description: "Approved copy, derivative URL, or dimensions missing." }
 ] as const;
 
 export type ReviewQueueId = (typeof reviewQueues)[number]["id"];
@@ -87,6 +95,12 @@ export function assetMatchesReviewQueue(asset: StockMediaAsset, queueId: ReviewQ
       return assetNeedsStaleApprovalReview(asset);
     case "large-media":
       return largeMedia;
+    case "doctrine-sacrament":
+      return routeAssetForReview(asset).some((reason) => reason.id === "doctrine-sacrament-review");
+    case "music-rights":
+      return routeAssetForReview(asset).some((reason) => reason.id === "music-rights-review");
+    case "rendition-readiness":
+      return routeAssetForReview(asset).some((reason) => reason.id === "rendition-readiness-review");
   }
 }
 
@@ -97,8 +111,11 @@ function meaningfulMetadataValue(value?: string) {
 export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: Map<string, number>) {
   const flags: string[] = [];
   if (assetHasChildrenYouthRisk(asset)) flags.push("Children/youth");
+  if (assetHasSacramentRisk(asset)) flags.push("Doctrine/sacrament review");
+  if (assetHasHymnMusicRisk(asset)) flags.push("Music/hymn rights review");
+  if (assetHasTestimonyRisk(asset)) flags.push("Testimony/pastoral sensitivity review");
   if (asset.peopleRisk === "Adults visible") flags.push("People visible");
-  if (!asset.peopleRisk || asset.peopleRisk === "Unknown") flags.push("People/minors unknown");
+  if (!asset.peopleRisk || asset.peopleRisk === "Unknown") flags.push("People/minors status unresolved");
   if (assetNeedsSourceReview(asset)) flags.push("Missing source");
   if (assetNeedsRightsReview(asset)) flags.push("Rights unclear");
   if (!meaningfulMetadataValue(asset.consentStatus)) flags.push("Consent unknown");
@@ -107,7 +124,9 @@ export function reviewRiskFlags(asset: StockMediaAsset, duplicateGroupCounts?: M
   if (assetNeedsAiEnrichment(asset)) flags.push("Metadata enrichment");
   if (assetHasTaxonomyDrift(asset)) flags.push("Taxonomy drift");
   if (assetNeedsStaleApprovalReview(asset)) flags.push("Stale approval");
+  if (assetHasUnresolvedAiSuggestionDebt(asset)) flags.push("AI/smart suggestion review");
   if (asset.mediaType === "video" || asset.mediaType === "audio" || (asset.fileSizeBytes || 0) > LARGE_MEDIA_BYTES) flags.push("Large media");
+  routeAssetForReview(asset).forEach((reason) => flags.push(reason.label));
   if (meaningfulMetadataValue(asset.sensitiveContext)) flags.push("Sensitive context");
   else if (asset.sensitiveContext === "Unknown") flags.push("Sensitivity unknown");
   return flags.length ? flags : ["Standard review"];

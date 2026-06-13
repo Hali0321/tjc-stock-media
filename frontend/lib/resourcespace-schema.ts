@@ -1,5 +1,17 @@
 import { safeNonNegativeInt } from "@/lib/persisted-record-safety";
-import type { PublishStatus, StockMediaAsset, UsageScope } from "@/lib/types";
+import type {
+  ApprovedChannel,
+  DomainReviewer,
+  MasterCustodyPathStatus,
+  PublishStatus,
+  ReuseTier,
+  RightsBasis,
+  SensitivityClass,
+  StockMediaAsset,
+  UsageScope,
+  VisibilityTier,
+  WithdrawalStatus
+} from "@/lib/types";
 
 export type ResourceSpaceRecord = Record<string, string | number | null | undefined>;
 
@@ -42,6 +54,108 @@ export function splitResourceSpaceList(input?: string) {
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 12);
+}
+
+function normalizeControlledValue<T extends string>(input: string | undefined, aliases: Array<[T, RegExp]>): T | undefined {
+  const raw = (input || "").trim();
+  if (!raw) return undefined;
+  const normalized = raw.toLowerCase().replace(/[_\s]+/g, "-");
+  for (const [value, pattern] of aliases) {
+    if (pattern.test(raw) || pattern.test(normalized)) return value;
+  }
+  return undefined;
+}
+
+function normalizeReuseTier(input: string): ReuseTier | undefined {
+  return normalizeControlledValue<ReuseTier>(input, [
+    ["stock-safe", /stock[-\s]?safe|approved stock|broad reuse|portal[-\s]?ready/i],
+    ["context-safe", /context[-\s]?safe|context only|limited|event context/i],
+    ["archive-only", /archive[-\s]?only|preservation|searchable archive|cold archive/i]
+  ]);
+}
+
+function normalizeVisibilityTier(input: string): VisibilityTier | undefined {
+  return normalizeControlledValue<VisibilityTier>(input, [
+    ["public", /^public$|public-safe|external/i],
+    ["internal/member", /internal|member|ministry/i],
+    ["reviewer/admin", /reviewer|admin|restricted/i],
+    ["archive", /archive|cold/i]
+  ]);
+}
+
+function normalizeSensitivityClass(input: string): SensitivityClass | undefined {
+  return normalizeControlledValue<SensitivityClass>(input, [
+    ["public-safe", /public[-\s]?safe|none/i],
+    ["member-sensitive", /member[-\s]?sensitive|member only|fellowship/i],
+    ["sacrament-sensitive", /sacrament|baptism|footwashing|holy communion|communion/i],
+    ["youth-sensitive", /youth|minor|children|religious education|\bRE\b/i],
+    ["testimony-sensitive", /testimony|pastoral|healing|illness|grief|counseling/i],
+    ["internal-governance", /internal governance|governance|board|admin/i],
+    ["archive-restricted", /archive[-\s]?restricted|restricted archive|cold archive/i]
+  ]);
+}
+
+function normalizeRightsBasis(input: string): RightsBasis | undefined {
+  return normalizeControlledValue<RightsBasis>(input, [
+    ["TJC-owned", /tjc[-\s]?owned|church owned|owned/i],
+    ["contributor-license", /contributor|permission confirmed|licensed contributor|release/i],
+    ["public-domain", /^public domain$/i],
+    ["jurisdiction-limited-public-domain", /jurisdiction|country|territory.*public domain/i],
+    ["hymn-license", /hymn.*license|music.*license/i],
+    ["hymn-permission", /hymn.*permission|music.*permission/i],
+    ["fair-use-internal-only", /fair use|internal only/i],
+    ["unknown", /unknown|needs review|not confirmed/i]
+  ]);
+}
+
+function normalizeApprovedChannel(input: string): ApprovedChannel | undefined {
+  return normalizeControlledValue<ApprovedChannel>(input, [
+    ["website", /website|web|hero/i],
+    ["livestream", /livestream|stream/i],
+    ["projection", /projection|slides?|screen/i],
+    ["choir-upload", /choir/i],
+    ["print", /print|newsletter|bulletin/i],
+    ["social", /social|instagram|facebook/i],
+    ["internal-training", /internal training|training/i],
+    ["limited-share-link", /limited share|share link/i],
+    ["archive-only", /archive/i]
+  ]);
+}
+
+function normalizeApprovedChannels(input: string): ApprovedChannel[] {
+  return splitResourceSpaceList(input)
+    .map(normalizeApprovedChannel)
+    .filter((item): item is ApprovedChannel => Boolean(item));
+}
+
+function normalizeDomainReviewer(input: string): DomainReviewer | undefined {
+  return normalizeControlledValue<DomainReviewer>(input, [
+    ["doctrine", /doctrine|sacrament/i],
+    ["music-rights", /music|hymn/i],
+    ["RE/minors", /minor|youth|children|religious education|\bRE\b/i],
+    ["pastoral-sensitivity", /pastoral|testimony|sensitivity/i],
+    ["archive", /archive|preservation/i],
+    ["DAM-reviewer", /dam|media reviewer|reviewer/i]
+  ]);
+}
+
+function normalizeMasterCustodyPathStatus(input: string): MasterCustodyPathStatus | undefined {
+  return normalizeControlledValue<MasterCustodyPathStatus>(input, [
+    ["verified", /verified|confirmed/i],
+    ["planned", /planned|intended/i],
+    ["missing", /missing|none/i],
+    ["not-exported", /not exported|not-exported/i]
+  ]);
+}
+
+function normalizeWithdrawalStatus(input: string): WithdrawalStatus | undefined {
+  return normalizeControlledValue<WithdrawalStatus>(input, [
+    ["active", /active|current/i],
+    ["withdrawn", /withdrawn|withdrawal/i],
+    ["takedown-requested", /takedown|remove request/i],
+    ["embargoed", /embargo/i],
+    ["expired", /expired/i]
+  ]);
 }
 
 function titleCase(input: string) {
@@ -181,6 +295,74 @@ export function validateResourceSpaceRecord(row: ResourceSpaceRecord) {
   };
 }
 
+function isMeaningful(value?: string) {
+  return Boolean(value && !/^(unknown|not exported|not applicable|none|n\/a|needs review|review required)$/i.test(value.trim()));
+}
+
+export type MetadataContractValidation = {
+  ok: boolean;
+  missing: string[];
+  warnings: string[];
+};
+
+export function validateAssetMetadataContract(asset: StockMediaAsset): MetadataContractValidation {
+  const missing: string[] = [];
+  const warnings: string[] = [];
+  const requireField = (field: string, present: boolean) => {
+    if (!present) missing.push(field);
+  };
+  const warnField = (field: string, present: boolean) => {
+    if (!present) warnings.push(field);
+  };
+
+  requireField("asset_id", Boolean(asset.id || asset.resourceSpaceId));
+  requireField("media_type", Boolean(asset.mediaType));
+  requireField("source_system", Boolean(asset.sourceSystem || asset.sourcePlatform));
+  requireField("source_album_or_event", Boolean(asset.sourceAlbum || asset.sourceFolder || asset.collection || asset.eventName));
+  requireField("original_filename", Boolean(asset.originalFilename));
+  requireField("master_custody_status", asset.masterCustodyPathStatus === "verified" || Boolean(asset.masterDrivePath));
+  requireField("checksum_sha256", Boolean(asset.checksumSha256));
+
+  if (asset.status === "Approved Public" || asset.status === "Approved Internal") {
+    requireField("rights_status", isMeaningful(asset.rightsStatus));
+    requireField("reviewed_by", Boolean(asset.reviewer));
+    requireField("reviewed_date", Boolean(asset.reviewedDate));
+    requireField("approval_notes", isMeaningful(asset.rightsNotes));
+    requireField("people_visible", Boolean(asset.peopleRisk && asset.peopleRisk !== "Unknown"));
+    requireField("approved_use_copy", Boolean(asset.imageUrls?.download));
+  }
+
+  if (asset.status === "Approved Public") {
+    requireField("usage_scope_public", asset.usageScope === "Public" || asset.usageScope === "Public and Internal");
+    requireField("derivative_dimensions", Boolean(asset.imageDimensions));
+    requireField("rights_basis", isMeaningful(asset.rightsBasis));
+    requireField("approved_channels", Boolean(asset.approvedChannels?.length));
+  }
+
+  warnField("reuse_tier", isMeaningful(asset.reuseTier));
+  warnField("visibility_tier", isMeaningful(asset.visibilityTier));
+  warnField("sensitivity_class", isMeaningful(asset.sensitivityClass));
+  warnField("rights_basis", isMeaningful(asset.rightsBasis));
+  warnField("approved_channels", Boolean(asset.approvedChannels?.length));
+  warnField("required_notice", asset.requiredNotice !== undefined);
+  warnField("expiration_or_recheck_date", isMeaningful(asset.expirationOrRecheckDate));
+  warnField("domain_reviewer", isMeaningful(asset.domainReviewer));
+
+  const peopleOrYouth = asset.peopleRisk === "Adults visible" || asset.peopleRisk === "Possible minors";
+  if (peopleOrYouth) warnField("consent_release_record_id", isMeaningful(asset.consentReleaseRecordId));
+  if (asset.peopleRisk === "Possible minors") warnField("domain_reviewer_re_minors", asset.domainReviewer === "RE/minors");
+
+  const aiLooksFinal = Boolean(asset.aiTitleSuggestion || asset.aiVisibleTagSuggestions?.length || asset.aiTjcTermSuggestions?.length || asset.aiQualitySuggestion || asset.aiPeopleOrMinorFlag)
+    && !/accepted|edited|rejected/i.test(asset.humanAiDecision || "");
+  if (aiLooksFinal) warnings.push("ai_suggestions_not_human_approved");
+
+  return {
+    ok: missing.length === 0,
+    missing,
+    warnings
+  };
+}
+
 export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMediaAsset {
   const validation = validateResourceSpaceRecord(row);
   const id = validation.id || value(row, "canonical_asset_id") || "unknown-resource";
@@ -214,6 +396,7 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     sourceAlbumPath: value(row, "source_album_path") || undefined,
     sourceAlbumMemberships: splitResourceSpaceList(value(row, "source_album_memberships")),
     eventName: value(row, "event_name", "event_or_topic") || undefined,
+    eventSeries: value(row, "event_series") || undefined,
     eventDate: value(row, "event_date") || undefined,
     capturedDate: value(row, "captured_date") || undefined,
     importDate: value(row, "import_date") || undefined,
@@ -242,6 +425,7 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     resourceSpaceId: value(row, "resource_id", "resourcespace_ref", "ref") || undefined,
     sourcePath: value(row, "source_path") || undefined,
     masterDrivePath: value(row, "master_drive_path") || undefined,
+    masterCustodyPathStatus: normalizeMasterCustodyPathStatus(value(row, "master_custody_path_status", "master_drive_path_status")),
     originalFilename: value(row, "original_filename") || undefined,
     fileExtension: value(row, "file_extension", "original_extension", "file_format") || undefined,
     fileSizeBytes,
@@ -252,6 +436,33 @@ export function normalizeResourceSpaceRecord(row: ResourceSpaceRecord): StockMed
     aiTjcTermSuggestions: splitResourceSpaceList(value(row, "ai_tjc_term_suggestions")),
     aiQualitySuggestion: value(row, "ai_quality_suggestion") || undefined,
     aiPeopleOrMinorFlag: value(row, "ai_people_or_minor_flag") || undefined,
-    humanAiDecision: value(row, "human_ai_decision") || undefined
+    humanAiDecision: value(row, "human_ai_decision") || undefined,
+    reuseTier: normalizeReuseTier(value(row, "reuse_tier")),
+    visibilityTier: normalizeVisibilityTier(value(row, "visibility_tier")),
+    sensitivityClass: normalizeSensitivityClass(value(row, "sensitivity_class")),
+    rightsBasis: normalizeRightsBasis(value(row, "rights_basis")),
+    approvedChannels: normalizeApprovedChannels(value(row, "approved_channels")),
+    requiredNotice: value(row, "required_notice") || undefined,
+    consentReleaseRecordId: value(row, "consent_release_record_id") || undefined,
+    publishDate: value(row, "publish_date") || undefined,
+    embargoDate: value(row, "embargo_date") || undefined,
+    expirationDate: value(row, "expiration_date") || undefined,
+    approvalRecheckDate: value(row, "approval_recheck_date") || undefined,
+    expirationOrRecheckDate: value(row, "expiration_or_recheck_date") || undefined,
+    rightsExpirationDate: value(row, "rights_expiration_date") || undefined,
+    consentExpirationDate: value(row, "consent_expiration_date") || undefined,
+    withdrawalStatus: normalizeWithdrawalStatus(value(row, "withdrawal_status", "takedown_status")),
+    domainReviewer: normalizeDomainReviewer(value(row, "domain_reviewer")),
+    doctrineSacramentTheme: value(row, "doctrine_sacrament_theme") || undefined,
+    hymnNumberOrTitle: value(row, "hymn_number_or_title", "hymn_number", "hymn_title") || undefined,
+    sermonTitle: value(row, "sermon_title") || undefined,
+    testimonyTheme: value(row, "testimony_theme") || undefined,
+    religiousEducationLevel: value(row, "religious_education_level", "re_level") || undefined,
+    church: value(row, "church", "local_church") || undefined,
+    region: value(row, "region") || undefined,
+    publicationTitle: value(row, "publication_title") || undefined,
+    language: value(row, "language") || undefined,
+    versionOrEdition: value(row, "version_or_edition", "edition") || undefined,
+    duplicateSimilarityHint: value(row, "duplicate_similarity_hint", "near_duplicate_hint") || undefined
   };
 }
