@@ -74,9 +74,9 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `infra/photo-only-resourcespace-readiness`
+Lane: `final-20h-integration-report`
 
-Goal: add photo-only ResourceSpace readiness docs/scripts without mutating infra, paid resources, source media, or ResourceSpace data.
+Goal: summarize pushed branches, PR order, checks, blockers, and conservative beta recommendation.
 
 ## Completed lanes
 
@@ -90,6 +90,7 @@ Goal: add photo-only ResourceSpace readiness docs/scripts without mutating infra
 | `qa/redaction-crawler` | `b8d9b75` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/11 | PR base is `hardening/truth-scope-fixture-photo-only`; crawler pass for 27 local routes, focused production-hardening tests 9/9, full tests 45/45, typecheck, build, guards, and launch-readiness pass; launch-readiness warnings only from local runtime/evidence gaps |
 | `feature/governed-tagging-taxonomy-foundation` | `3811d94` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/12 | foundation-only helper/test; focused governed-taxonomy tests 4/4, full tests 45/45, typecheck, build, guards, and launch-readiness pass; no UI/search/writeback behavior changed |
 | `feature/smart-rules-dry-run` | `edd0204` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/13 | PR base is `feature/governed-tagging-taxonomy-foundation`; dry-run-only helper/test; focused smart-rules tests 2/2, full tests 47/47, typecheck, build, guards, and launch-readiness pass; no UI/search/writeback/approval behavior changed |
+| `infra/photo-only-resourcespace-readiness` | `893f763` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/14 | docs/script dry run only; node check, `make photo-only-resourcespace-readiness`, git/private/public/hygiene guards, and launch-readiness pass; no hosted/env/infra calls |
 
 ## Docs lane included paths
 
@@ -120,6 +121,7 @@ hardening/media-delivery-preview-proxy
 qa/redaction-crawler
 feature/governed-tagging-taxonomy-foundation
 feature/smart-rules-dry-run
+infra/photo-only-resourcespace-readiness
 ```
 
 ## PR links
@@ -133,6 +135,7 @@ https://github.com/Hali0321/tjc-stock-media/pull/10
 https://github.com/Hali0321/tjc-stock-media/pull/11
 https://github.com/Hali0321/tjc-stock-media/pull/12
 https://github.com/Hali0321/tjc-stock-media/pull/13
+https://github.com/Hali0321/tjc-stock-media/pull/14
 ```
 
 ## Blockers
@@ -141,6 +144,7 @@ https://github.com/Hali0321/tjc-stock-media/pull/13
 - Hardening branch refs from prior weekend all resolve to `ca18451`; prior QA evidence must be reconstructed into clean branches before push/PR.
 - PR #11 is intentionally stacked on PR #9; retarget after PR #9 lands.
 - PR #13 is intentionally stacked on PR #12; retarget after PR #12 lands.
+- Premium UI lane remains held: primary worktree has broad dirty UI/app/lib/docs changes and needs separate arbitration before staging.
 - Hosted mutating smokes remain human-gated.
 
 ## Remaining human gates
