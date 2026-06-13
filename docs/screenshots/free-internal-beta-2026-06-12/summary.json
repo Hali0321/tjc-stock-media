@@ -1,0 +1,115 @@
+{
+  "generatedFromCommit": "050bba1 feat: refine DAM shell and role-aware sidebar",
+  "evidencePurpose": "Internal beta handoff screenshots only; not production analytics, SSO, or durable storage proof.",
+  "persona": "Viewer",
+  "screenshotMode": "viewport",
+  "ignoredRscAborts": 0,
+  "results": [
+    {
+      "viewport": {
+        "name": "desktop-1440",
+        "width": 1440,
+        "height": 1000
+      },
+      "loginProof": {
+        "route": "/beta-login",
+        "hasInternalBeta": true,
+        "hasQaOnly": true,
+        "hasNotSso": true,
+        "outsideDamShell": true,
+        "overflowX": 0
+      },
+      "appProof": {
+        "route": "/",
+        "hasLibrary": true,
+        "hasDistributionSets": true,
+        "hasBetaCopy": true,
+        "hasSourceSafeCopy": true,
+        "hasForbiddenViewerNav": false,
+        "forbiddenViewerNavPresent": [],
+        "oldLabelsPresent": [],
+        "leakHits": [],
+        "overflowX": 0,
+        "clientWidth": 1440,
+        "scrollWidth": 1440
+      },
+      "logs": [],
+      "network": [],
+      "screenshots": [
+        "docs/screenshots/free-internal-beta-2026-06-12/desktop-1440-login.png",
+        "docs/screenshots/free-internal-beta-2026-06-12/desktop-1440-library.png"
+      ]
+    },
+    {
+      "viewport": {
+        "name": "mobile-390",
+        "width": 390,
+        "height": 900
+      },
+      "loginProof": {
+        "route": "/beta-login",
+        "hasInternalBeta": true,
+        "hasQaOnly": true,
+        "hasNotSso": true,
+        "outsideDamShell": true,
+        "overflowX": 0
+      },
+      "appProof": {
+        "route": "/",
+        "hasLibrary": true,
+        "hasDistributionSets": true,
+        "hasBetaCopy": true,
+        "hasSourceSafeCopy": true,
+        "hasForbiddenViewerNav": false,
+        "forbiddenViewerNavPresent": [],
+        "oldLabelsPresent": [],
+        "leakHits": [],
+        "overflowX": 0,
+        "clientWidth": 390,
+        "scrollWidth": 390
+      },
+      "logs": [],
+      "network": [],
+      "screenshots": [
+        "docs/screenshots/free-internal-beta-2026-06-12/mobile-390-login.png",
+        "docs/screenshots/free-internal-beta-2026-06-12/mobile-390-library.png"
+      ]
+    },
+    {
+      "viewport": {
+        "name": "mobile-320",
+        "width": 320,
+        "height": 780
+      },
+      "loginProof": {
+        "route": "/beta-login",
+        "hasInternalBeta": true,
+        "hasQaOnly": true,
+        "hasNotSso": true,
+        "outsideDamShell": true,
+        "overflowX": 0
+      },
+      "appProof": {
+        "route": "/",
+        "hasLibrary": true,
+        "hasDistributionSets": true,
+        "hasBetaCopy": true,
+        "hasSourceSafeCopy": true,
+        "hasForbiddenViewerNav": false,
+        "forbiddenViewerNavPresent": [],
+        "oldLabelsPresent": [],
+        "leakHits": [],
+        "overflowX": 0,
+        "clientWidth": 320,
+        "scrollWidth": 320
+      },
+      "logs": [],
+      "network": [],
+      "screenshots": [
+        "docs/screenshots/free-internal-beta-2026-06-12/mobile-320-login.png",
+        "docs/screenshots/free-internal-beta-2026-06-12/mobile-320-library.png"
+      ]
+    }
+  ],
+  "failures": []
+}

@@ -1,6 +1,6 @@
-import { ReviewPage } from "@/components/ReviewPage";
+import { EnterpriseReviewPage } from "@/components/dam/EnterpriseDamPages";
 
 export default async function Page({ searchParams }: { searchParams?: Promise<{ queue?: string }> }) {
-  const params = await searchParams;
-  return <ReviewPage initialQueue={params?.queue} />;
+  await searchParams;
+  return <EnterpriseReviewPage />;
 }

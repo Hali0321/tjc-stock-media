@@ -1,5 +1,3 @@
-import path from "node:path";
-import { repoRoot } from "@/lib/env";
 import { clearDerivativeFileIndex, findResourceSpaceImageDerivative, type ImageVariant } from "@/lib/images";
 import type { MediaSourceStatus, StockMediaAsset } from "@/lib/types";
 import { demoFallbackAssets, demoFallbackStatus } from "@/lib/media-source/demo-fallback";
@@ -8,40 +6,53 @@ import { getAssetsFromResourceSpaceApi, resourceSpaceApiStatus } from "@/lib/med
 
 let cachedAssets: StockMediaAsset[] | null = null;
 let cachedStatus: MediaSourceStatus | null = null;
+let cachedSourceKey: string | null = null;
 
 export async function getActiveMediaSource() {
+  const exportPath = latestMetadataExportPath();
   if (cachedAssets && cachedStatus) {
-    return { assets: cachedAssets, status: cachedStatus };
+    const nextSourceKey = cachedStatus.adapter === "exported-metadata"
+      ? exportPath
+      : cachedStatus.adapter === "demo-fallback" && exportPath
+        ? exportPath
+        : cachedSourceKey;
+    if (cachedSourceKey === nextSourceKey) {
+      return { assets: cachedAssets, status: cachedStatus };
+    }
+    clearMediaSourceCache();
   }
 
   const apiAssets = await getAssetsFromResourceSpaceApi();
   if (apiAssets?.length) {
     cachedAssets = apiAssets;
     cachedStatus = resourceSpaceApiStatus;
+    cachedSourceKey = "resourcespace-api";
     return { assets: cachedAssets, status: cachedStatus };
   }
 
   const exportAssets = await getAssetsFromExport();
   if (exportAssets?.length) {
     cachedAssets = exportAssets;
-    const exportPath = latestMetadataExportPath();
     cachedStatus = {
       ...exportedMetadataStatus,
       detail: exportPath
-        ? `Reading ${path.relative(repoRoot(), exportPath)}. Approval writes still require ResourceSpace API field mapping.`
+        ? "Reading latest ResourceSpace metadata export. Approval writes still require ResourceSpace API field mapping."
         : exportedMetadataStatus.detail
     };
+    cachedSourceKey = exportPath;
     return { assets: cachedAssets, status: cachedStatus };
   }
 
   cachedAssets = demoFallbackAssets;
   cachedStatus = demoFallbackStatus;
+  cachedSourceKey = exportPath ? null : "demo-fallback";
   return { assets: cachedAssets, status: cachedStatus };
 }
 
 export function clearMediaSourceCache() {
   cachedAssets = null;
   cachedStatus = null;
+  cachedSourceKey = null;
   clearDerivativeFileIndex();
 }
 

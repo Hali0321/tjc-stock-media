@@ -1,11 +1,28 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Noto_Sans_TC } from "next/font/google";
+import { cookies } from "next/headers";
+import { Crimson_Text, Geist_Mono, Noto_Sans_TC, Playfair_Display, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
+import "./dam-v3-final.css";
+import "./dam-enterprise.css";
 import { AppChrome } from "@/components/AppChrome";
 import { RoleProvider } from "@/components/RoleProvider";
+import { BETA_SESSION_COOKIE, betaAuthEnabled, verifyBetaSessionCookieValue } from "@/lib/beta-auth";
 
-const inter = Inter({
-  variable: "--font-inter",
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
+  subsets: ["latin"],
+  display: "swap"
+});
+
+const crimsonText = Crimson_Text({
+  variable: "--font-crimson-text",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap"
+});
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
   subsets: ["latin"],
   display: "swap"
 });
@@ -23,15 +40,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TJC Stock Media",
+  title: "True Jesus Church Media Library",
   description: "Approved media for ministry teams"
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const betaEnabled = betaAuthEnabled();
+  const cookieStore = await cookies();
+  const betaSession = betaEnabled
+    ? await verifyBetaSessionCookieValue(cookieStore.get(BETA_SESSION_COOKIE)?.value)
+    : null;
+  const role = betaSession?.role || "Viewer";
+
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${notoSansTc.variable} ${geistMono.variable} font-sans`}>
-        <RoleProvider>
+      <body className={`${sourceSans.variable} ${crimsonText.variable} ${playfairDisplay.variable} ${notoSansTc.variable} ${geistMono.variable} font-sans`}>
+        <RoleProvider initialRole={role} betaLocked={Boolean(betaEnabled && betaSession)}>
           <AppChrome>{children}</AppChrome>
         </RoleProvider>
       </body>
