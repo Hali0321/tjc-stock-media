@@ -1,5 +1,10 @@
 # Import Runbook
 
+Data engineering contract: every import is a small batch pipeline. Name the
+source boundary, create or update a source manifest, validate counts/checksums,
+stage or manifest-only-stage master paths, import/index in ResourceSpace, then
+export audit evidence. See `docs/data-engineering-playbook.md`.
+
 ## Current MVP 2024 Import
 
 - Source: `/Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024`
@@ -15,6 +20,15 @@
 - Metadata export: `.runtime/exports/resourcespace-metadata-20260604-171242.csv`
 
 ## Commands
+
+| Command | Outcome | Writes or mutates | Operator gate |
+|---|---|---|---|
+| `make import-audit` | Creates source manifest CSV and readable summary with counts/checksums. | Writes `.runtime/audits/*`; does not import or touch source media. | Row count, source path, batch name, and extension mix match expectation. |
+| `make smoke` | Confirms local ResourceSpace/runtime health before import. | Runtime health checks only. | Must pass before live import. |
+| `make import-mvp-batch` | Copies current batch into ResourceSpace and writes import audit CSV. | Writes ResourceSpace records/files and `.runtime/audits/*`; source media remains untouched. | Use only after audit review; imported assets default to `Needs Review / Do Not Publish`. |
+| `DRY_RUN=1 make lm-photos-stream-run` | Lists ZIP album order, media counts, planned audit paths, and disk context. | Writes run folders/order files under `.runtime`; does not extract/import/delete ZIPs. | Choose next album/process limit and confirm disk. |
+| `DRY_RUN=0 PROCESS_LIMIT=1 make lm-photos-stream-run` | Extracts one album, stages or manifest-only stages masters, imports/indexes in ResourceSpace, then verifies source count equals import audit count. | Writes `.runtime`, staging mirror/manifests, and ResourceSpace records; source ZIP deletion only follows `DELETE_VERIFIED_ZIPS=1`. | Continue only after count match, audit review, and preview/rights follow-up. |
+| `make lm-photos-run-report` | Builds decision-ready batch report from manifests/import audits. | Writes `docs/runs/batch-02-run-report.md`. | Use before approving next run or broadening batch size. |
 
 Generate a source manifest before import:
 
@@ -118,6 +132,9 @@ Large video/audio files should use Shared Drive Incoming or local admin intake, 
 ## Import Rules
 
 - Use manageable batches.
+- Name the batch boundary before import: source system, source account/owner,
+  album/folder/ZIP, snapshot time or date range, import batch ID, and rerun rule.
+- Make reruns idempotent by checksum, source path, and import batch.
 - Do not use multiple upload tabs for the same batch.
 - Apply default metadata immediately.
 - Keep source files untouched.

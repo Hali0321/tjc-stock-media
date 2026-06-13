@@ -1,0 +1,139 @@
+import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { durableRuntimeStoreConfigured, productionRuntime, runtimeStoreMode } from "@/lib/env";
+
+export type RuntimeStateCategory =
+  | "audit-log"
+  | "pending-review-writes"
+  | "download-tickets"
+  | "beta-feedback"
+  | "package-drafts"
+  | "saved-searches"
+  | "usage-events"
+  | "runtime";
+
+function categoryForPath(filePath: string): RuntimeStateCategory {
+  if (filePath.includes("audit-log")) return "audit-log";
+  if (filePath.includes("pending-review-writes")) return "pending-review-writes";
+  if (filePath.includes("download-tickets")) return "download-tickets";
+  if (filePath.includes("beta-feedback")) return "beta-feedback";
+  if (filePath.includes("package-drafts")) return "package-drafts";
+  if (filePath.includes("saved-searches")) return "saved-searches";
+  if (filePath.includes("usage")) return "usage-events";
+  return "runtime";
+}
+
+export function runtimeStoreDiagnostics() {
+  const durable = durableRuntimeStoreConfigured();
+  const production = productionRuntime();
+  return {
+    mode: runtimeStoreMode(),
+    adapter: "local-filesystem",
+    durable,
+    production,
+    statefulWritesAllowed: !production || durable,
+    state: production && !durable ? "Blocked" : durable ? "Operational" : "Local beta only",
+    detail: production && !durable
+      ? "Production stateful features require a configured durable runtime store. Local filesystem state is blocked."
+      : durable
+        ? "Durable runtime store is configured for production readiness checks."
+        : "Local filesystem runtime state is enabled for local/private beta only."
+  };
+}
+
+export function assertRuntimeWriteAllowed(category: RuntimeStateCategory) {
+  if (productionRuntime() && !durableRuntimeStoreConfigured()) {
+    throw new Error(`Durable runtime store required for production ${category} writes.`);
+  }
+}
+
+export function ensureRuntimeDir(dir: string) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+export function readRuntimeJsonFile<TRecord>(filePath: string, normalize: (input: unknown) => TRecord | null) {
+  try {
+    return normalize(JSON.parse(fs.readFileSync(filePath, "utf8")));
+  } catch {
+    return null;
+  }
+}
+
+function writeRuntimeFileAtomically(filePath: string, contents: string) {
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${randomUUID().slice(0, 8)}.tmp`;
+  try {
+    fs.writeFileSync(tmpPath, contents, "utf8");
+    fs.renameSync(tmpPath, filePath);
+  } catch (error) {
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      // Best-effort temp cleanup; preserve original write failure.
+    }
+    throw error;
+  }
+}
+
+export function writeRuntimeJsonFile(filePath: string, record: unknown) {
+  assertRuntimeWriteAllowed(categoryForPath(filePath));
+  ensureRuntimeDir(path.dirname(filePath));
+  writeRuntimeFileAtomically(filePath, `${JSON.stringify(record, null, 2)}\n`);
+}
+
+export type RuntimeFileListOptions = {
+  maxFilesFromEnd?: number;
+};
+
+function fileWindow(files: string[], options?: RuntimeFileListOptions) {
+  const maxFiles = Math.trunc(options?.maxFilesFromEnd || 0);
+  return maxFiles > 0 ? [...files].sort().slice(-maxFiles) : files;
+}
+
+export function listRuntimeFiles(dir: string, extension: string, options?: RuntimeFileListOptions) {
+  if (!fs.existsSync(dir)) return [];
+  const files = fs
+    .readdirSync(dir)
+    .filter((file) => file.endsWith(extension));
+  return fileWindow(files, options)
+    .map((file) => path.join(dir, file));
+}
+
+export function appendRuntimeJsonLine(filePath: string, record: unknown) {
+  assertRuntimeWriteAllowed(categoryForPath(filePath));
+  ensureRuntimeDir(path.dirname(filePath));
+  fs.appendFileSync(filePath, `${JSON.stringify(record)}\n`, "utf8");
+}
+
+export type RuntimeJsonLinesOptions = {
+  maxLinesFromEnd?: number;
+};
+
+function lineWindow(lines: string[], options?: RuntimeJsonLinesOptions) {
+  const maxLines = Math.trunc(options?.maxLinesFromEnd || 0);
+  return maxLines > 0 ? lines.slice(-maxLines) : lines;
+}
+
+export function readRuntimeJsonLines<TRecord>(
+  filePath: string,
+  normalize: (input: unknown) => TRecord | null,
+  options?: RuntimeJsonLinesOptions
+) {
+  try {
+    const lines = fs
+      .readFileSync(filePath, "utf8")
+      .split("\n")
+      .filter(Boolean);
+    return lineWindow(lines, options)
+      .map((line) => {
+        try {
+          return normalize(JSON.parse(line));
+        } catch {
+          return null;
+        }
+      })
+      .filter((record): record is TRecord => Boolean(record));
+  } catch {
+    return [];
+  }
+}

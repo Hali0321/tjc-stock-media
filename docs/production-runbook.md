@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Move from Hali's local prototype to a church-owned PC/NAS launch without copying hidden local state blindly.
+Move from a local prototype to a church-owned PC/NAS launch without copying hidden local state blindly.
 
 ## Launch Migration
 
@@ -20,7 +20,7 @@ Copy local runtime directly
 
 Why:
 
-- Proves Hali's Mac is not required.
+- Proves the local prototype machine is not required.
 - Proves backup and restore work.
 - Avoids carrying prototype passwords and local paths into launch.
 - Creates a repeatable recovery path.
@@ -36,7 +36,7 @@ Why:
 7. Run launch readiness checks.
 8. Configure Cloudflare Tunnel and Cloudflare Access.
 9. Verify ResourceSpace over HTTPS.
-10. Turn off Hali Mac and verify church host still works.
+10. Turn off the local prototype machine and verify church host still works.
 
 ## Backup Must Include
 

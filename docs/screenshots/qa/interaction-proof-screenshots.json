@@ -1,0 +1,17 @@
+{
+  "capturedAt": "2026-06-06T13:27:18.245Z",
+  "failures": [],
+  "screenshots": [
+    "command-palette-open.png",
+    "upload-selected-file-preview.png",
+    "asset-actions-menu-open.png",
+    "request-original-dialog-open.png",
+    "review-pending-write-dialog-open.png",
+    "review-hold-to-confirm.png",
+    "after-admin-desktop.png",
+    "after-library-mobile-320.png",
+    "after-detail-mobile-320.png",
+    "after-upload-mobile-320.png",
+    "after-review-mobile-320.png"
+  ]
+}

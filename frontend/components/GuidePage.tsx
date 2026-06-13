@@ -1,142 +1,263 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  ChevronDown,
+  Download,
+  ExternalLink,
+  FileCheck2,
+  FileLock2,
+  FileText,
+  FolderOpen,
+  Globe2,
+  MessageCircle,
+  Search,
+  ShieldCheck,
+  UploadCloud
+} from "lucide-react";
 
-const guideBlocks = [
+type HelpTask = {
+  id: string;
+  title: string;
+  summary: string;
+  href: string;
+  icon: typeof Search;
+};
+
+type HelpFaq = {
+  question: string;
+  answer: string;
+};
+
+const gettingStarted = [
+  { label: "1. Find media", detail: "Search by use case, event, ministry, topic, or package.", icon: Search },
+  { label: "2. Check status", detail: "Open the record to review approval, rights, and usage.", icon: ShieldCheck },
+  { label: "3. Download", detail: "Download the approved derivative for your intended use.", icon: Download },
+  { label: "4. If unsure", detail: "Request DAM review for help or additional access.", icon: ArrowRight }
+];
+
+const commonTasks: HelpTask[] = [
+  { id: "find", title: "Find approved media", summary: "Search by use case, event, ministry, topic, or package.", href: "/", icon: Search },
+  { id: "status", title: "Check approval status", summary: "View approval, rights, usage scope, and expiration.", href: "/", icon: ShieldCheck },
+  { id: "download", title: "Download approved copy", summary: "Open the record and download the approved derivative.", href: "/", icon: Download },
+  { id: "collection", title: "Use a collection", summary: "Start from a curated ministry collection and confirm each item.", href: "/collections", icon: FolderOpen },
+  { id: "source", title: "Request source-file access", summary: "Request access to source/original files when needed.", href: "/guide#request-review", icon: FileLock2 },
+  { id: "send", title: "Send media for review", summary: "Submit files or links for review and approval.", href: "/upload", icon: UploadCloud },
+  { id: "public", title: "Public / external use", summary: "Review rules for public, social, and external use.", href: "/guide#policies", icon: Globe2 },
+  { id: "incident", title: "Rights incident or takedown", summary: "Report rights issues or request content removal.", href: "/review?queue=rights-review", icon: FileCheck2 }
+];
+
+const reviewReasons = [
+  "Approval, rights, or scope is unclear",
+  "Need access to source/original files",
+  "New use, audience, or channel",
+  "Rights incident or takedown"
+];
+
+const quickLinks = [
+  { title: "Collections", detail: "Open ministry collections and kits", href: "/collections", icon: FolderOpen },
+  { title: "Recent uploads", detail: "Open upload intake and recent media", href: "/upload", icon: UploadCloud },
+  { title: "Source-file access", detail: "Jump to review request guidance", href: "/guide#request-review", icon: FileLock2 },
+  { title: "Review requests", detail: "Open review and access queue", href: "/review", icon: FileText }
+];
+
+const policies = [
+  { title: "Usage policy", detail: "Approved uses and restrictions" },
+  { title: "Rights & consent", detail: "Copyright, consent, and licensing" },
+  { title: "Official TJC Identity Site ↗", detail: "Logo, color, typography, and identity guidance.", href: "https://identity.tjc.org", external: true },
+  { title: "Public use rules", detail: "Social, web, and external distribution" },
+  { title: "Metadata standards", detail: "Naming, tagging, and descriptions" }
+];
+
+const faqs: HelpFaq[] = [
   {
-    title: "How to search",
-    body: "Start with ministry need first: Bible Study, fellowship, worship, flowers, website hero, slides, newsletter, no people, or event name.",
-    doText: "Combine use case and safety terms, such as website hero no people.",
-    avoidText: "Do not search only by old filenames unless a DAM admin asks for source tracing."
+    question: "What is an approved derivative?",
+    answer: "The approved derivative is the safe copy cleared for distribution. Source/original access is restricted by default."
   },
   {
-    title: "How to know if something is approved",
-    body: "Use raw ResourceSpace status and portal reuse state together. ResourceSpace approval alone is not enough for public reuse.",
-    doText: "Use Portal ready or Internal ready assets inside their stated scope.",
-    avoidText: "Do not treat Please review before public sharing, Archive only, or Contains children/youth as publishable."
+    question: "How do I know if I can use this media publicly?",
+    answer: "Open the media record and confirm approval status, usage scope, rights evidence, consent notes, reviewer, and review date. If any part is unclear, request DAM review."
   },
   {
-    title: "Church-wide vs internal",
-    body: "Church-wide assets can support public ministry communication. Internal assets stay within coworkers, recap decks, and local ministry coordination.",
-    doText: "Choose internal assets for team updates, planning, and private recap material.",
-    avoidText: "Do not move internal media into public posts, web pages, or printed outreach without another review."
+    question: "What should I do if I need source files?",
+    answer: "Submit a source-file access request. Include the record, ministry use, deadline, and why the approved derivative is not enough."
   },
   {
-    title: "Photo use",
-    body: "Keep ministry context intact. Cropping, contrast, and layout choices should preserve worship, service, fellowship, and event meaning.",
-    doText: "Use portal-ready images for newsletters, slides, local updates, and website articles.",
-    avoidText: "Do not crop in a way that changes ministry context or isolates people without clear reason."
-  },
-  {
-    title: "Logo and graphic use",
-    body: "Use approved logo, template, and graphic files when available. Source and version matter for public-facing work.",
-    doText: "Use latest approved copy or ask a media coworker for the right file.",
-    avoidText: "Do not recreate logos from screenshots, old flyers, or social posts."
-  },
-  {
-    title: "Children/youth",
-    body: "Children/youth visibility requires extra care. Portal blocks unsafe downloads and calls out risk labels.",
-    doText: "Ask a reviewer before public sharing when children/youth may be visible.",
-    avoidText: "Do not post, crop tightly, or reuse youth media before approval."
-  },
-  {
-    title: "Credit/source",
-    body: "Source, photographer, collection, and ResourceSpace ID stay with each asset record for traceability.",
-    doText: "Keep required credit notes with final layout or caption.",
-    avoidText: "Do not remove provenance notes when handing media to another coworker."
-  },
-  {
-    title: "Large media intake",
-    body: "Video/audio over 100 MB uses Shared Drive Incoming or admin intake, then ResourceSpace indexing.",
-    doText: "Send large files through approved intake path so checksum, source, and review state remain traceable.",
-    avoidText: "Do not force large video/audio through browser upload or place it directly into master folders."
+    question: "How long is media approved for?",
+    answer: "Use the review date and expiration or re-review notes on the media record. If approval looks old or scope changed, request a new review."
   }
 ];
 
-const decisionRows = [
-  ["Need public flyer or website image", "Use Portal ready and download approved web copy."],
-  ["Need coworker recap or planning deck", "Use Internal ready, if audience stays internal."],
-  ["People, children/youth, or source unclear", "Pause and ask a media coworker or reviewer."],
-  ["Original/master requested", "Request access. Normal users use approved copies only."]
-];
-
-export function GuidePage() {
+export function GuidePage({ policyCenter = false }: { policyCenter?: boolean }) {
   const [query, setQuery] = useState("");
-  const visibleBlocks = useMemo(() => {
+  const [openFaq, setOpenFaq] = useState(0);
+
+  const visibleTasks = useMemo(() => {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return guideBlocks;
-    return guideBlocks.filter((block) => {
-      const haystack = `${block.title} ${block.body} ${block.doText} ${block.avoidText}`.toLowerCase();
+    if (!terms.length) return commonTasks;
+    return commonTasks.filter((task) => {
+      const haystack = `${task.title} ${task.summary}`.toLowerCase();
       return terms.every((term) => haystack.includes(term));
     });
   }, [query]);
 
+  const leftTasks = visibleTasks.filter((_, index) => index % 2 === 0);
+  const rightTasks = visibleTasks.filter((_, index) => index % 2 === 1);
+
   return (
-    <div className="mx-auto max-w-[1280px] px-3 py-5 md:px-5">
-      <section className="border-b border-tjc-line pb-4">
-        <span className="text-sm font-semibold text-tjc-evergreen">Usage guide</span>
-        <h1 className="mt-2 dam-page-title">Use approved media with care</h1>
-        <p className="mt-2 max-w-[68ch] text-sm leading-relaxed text-tjc-muted">
-          Quick rules for searching, checking approval, downloading copies, and knowing when to ask a reviewer.
-        </p>
-        <label className="mt-4 grid max-w-xl gap-2 text-sm font-semibold text-tjc-ink" htmlFor="guide-search">
-          Search guide
-          <span className="grid grid-cols-[auto_1fr] items-center gap-2 rounded-md border border-tjc-line bg-white px-3">
-            <Search size={16} strokeWidth={1.8} aria-hidden="true" className="text-tjc-evergreen" />
+    <div className="dam-help-center">
+      <main className="help-center-main">
+        <section className="help-center-hero" aria-labelledby="help-center-title">
+          <div>
+            <h1 id="help-center-title">{policyCenter ? "Policy Center" : "Media Help Center"}</h1>
+            <p>{policyCenter ? "Policy-safe DAM guidance for reuse, rights, consent, and metadata standards." : "Find approved media, check reuse status, and request review when needed."}</p>
+          </div>
+          <form className="help-center-search" role="search">
+            <Search size={19} strokeWidth={1.9} aria-hidden="true" />
+            <label htmlFor="help-center-search-input" className="sr-only">Search help articles, topics, and guides</label>
             <input
-              id="guide-search"
-              className="min-h-10 min-w-0 bg-transparent text-sm font-medium placeholder:text-[#7f8a82]"
+              id="help-center-search-input"
+              type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search children, source, public, original..."
-              type="search"
+              placeholder="Search help articles, topics, and guides..."
             />
-          </span>
-        </label>
-      </section>
+          </form>
+        </section>
 
-      <section className="mt-4 rounded-md border border-tjc-line bg-white p-4" aria-label="Download decision guide">
-        <h2 className="text-base font-semibold">Before downloading</h2>
-        <div className="mt-3 grid gap-2">
-          {decisionRows.map(([need, action]) => (
-            <div className="grid gap-2 border-b border-tjc-line px-1 py-3 last:border-b-0 md:grid-cols-[18rem_1fr]" key={need}>
-              <strong className="text-sm text-tjc-ink">{need}</strong>
-              <span className="text-sm leading-relaxed text-tjc-muted">{action}</span>
+        <section className="help-center-proof" aria-label="Safe copy rule">
+          <span><ShieldCheck size={22} strokeWidth={1.9} aria-hidden="true" /></span>
+          <div>
+            <strong>Approved derivative is the safe copy</strong>
+            <p>Use the approved copy for distribution. Source/original access is restricted by default.</p>
+            <Link href="#faq">Learn more about safe reuse <ArrowRight size={15} aria-hidden="true" /></Link>
+          </div>
+        </section>
+
+        <section className="help-center-start" aria-labelledby="getting-started-title">
+          <h2 id="getting-started-title">Getting started</h2>
+          <div className="help-start-steps">
+            {gettingStarted.map((item, index) => {
+              const StepIcon = item.icon;
+              return (
+                <article key={item.label}>
+                  <span><StepIcon size={24} strokeWidth={1.8} aria-hidden="true" /></span>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{item.detail}</p>
+                  </div>
+                  {index < gettingStarted.length - 1 ? <ArrowRight className="help-step-arrow" size={18} strokeWidth={1.8} aria-hidden="true" /> : null}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="help-center-tasks" aria-labelledby="common-tasks-title">
+          <h2 id="common-tasks-title">Common tasks</h2>
+          {visibleTasks.length ? (
+            <div className="help-task-columns">
+              {[leftTasks, rightTasks].map((tasks, columnIndex) => (
+                <div className="help-task-column" key={columnIndex}>
+                  {tasks.map((task) => {
+                    const TaskIcon = task.icon;
+                    return (
+                      <Link className="help-task-row" href={task.href} key={task.id}>
+                        <TaskIcon size={22} strokeWidth={1.85} aria-hidden="true" />
+                        <span>
+                          <strong>{task.title}</strong>
+                          <small>{task.summary}</small>
+                        </span>
+                        <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          ) : (
+            <p className="help-empty-result">No help task matched. Request DAM review when unsure.</p>
+          )}
+        </section>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {visibleBlocks.map((block) => (
-          <section className="rounded-md border border-tjc-line bg-white p-3" key={block.title}>
-            <h2 className="text-base font-semibold">{block.title}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-tjc-muted">{block.body}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-md border border-[#b8d9c6] bg-[#edf8f1] p-3 text-sm text-[#24583d]">
-                <strong className="block font-semibold">Do</strong>
-                <span className="mt-1 block leading-relaxed">{block.doText}</span>
-              </div>
-              <div className="rounded-md border border-[#ead6a8] bg-[#fff8e8] p-3 text-sm text-[#725216]">
-                <strong className="block font-semibold">Avoid</strong>
-                <span className="mt-1 block leading-relaxed">{block.avoidText}</span>
-              </div>
+        <section id="faq" className="help-center-faq" aria-labelledby="faq-title">
+          <header>
+            <h2 id="faq-title">Help topics (FAQ)</h2>
+            <Link href="/guide">View all articles <ArrowRight size={15} aria-hidden="true" /></Link>
+          </header>
+          <div className="help-faq-list">
+            {faqs.map((item, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <article className={isOpen ? "is-open" : ""} key={item.question}>
+                  <button type="button" onClick={() => setOpenFaq(isOpen ? -1 : index)} aria-expanded={isOpen}>
+                    <span>{item.question}</span>
+                    <ChevronDown size={18} strokeWidth={1.8} aria-hidden="true" />
+                  </button>
+                  {isOpen ? <p>{item.answer}</p> : null}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      </main>
+
+      <aside className="help-center-rail" aria-label="Media help actions">
+        <section id="request-review" className="help-review-card">
+          <header>
+            <MessageCircle size={22} strokeWidth={1.8} aria-hidden="true" />
+            <div>
+              <h2>Request DAM Review</h2>
+              <p>If approval, source access, rights, or use scope is unclear, open a request with the media team.</p>
             </div>
-          </section>
-        ))}
-      </div>
+          </header>
+          <a className="help-review-primary" href="mailto:media@tjc.org?subject=Request%20DAM%20review&body=Please%20review%20this%20media%20for%20safe%20reuse.%0AContext:%20">
+            Open review request <ExternalLink size={15} strokeWidth={1.8} aria-hidden="true" />
+          </a>
+          <div>
+            <h3>When to request review</h3>
+            <ul>
+              {reviewReasons.map((reason) => (
+                <li key={reason}><CheckCircle2 size={15} strokeWidth={1.9} aria-hidden="true" />{reason}</li>
+              ))}
+            </ul>
+          </div>
+          <Link href="#faq">Learn more about request types <ArrowRight size={15} aria-hidden="true" /></Link>
+        </section>
 
-      {!visibleBlocks.length ? (
-        <div className="mt-4 rounded-md border border-tjc-line bg-white p-6 text-sm text-tjc-muted">No guide sections match that search.</div>
-      ) : null}
+        <section className="help-side-card">
+          <h2>Quick links</h2>
+          <div className="help-link-list">
+            {quickLinks.map((item) => {
+              const LinkIcon = item.icon;
+              return (
+                <Link href={item.href} key={item.title}>
+                  <LinkIcon size={21} strokeWidth={1.8} aria-hidden="true" />
+                  <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+                  <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
+                </Link>
+              );
+            })}
+          </div>
+        </section>
 
-      <section className="mt-4 rounded-md border border-[#cbd8e4] bg-[#f2f7fb] p-4 text-[#52677a]">
-        <h2 className="text-base font-semibold text-[#27435b]">Ask a media coworker</h2>
-        <p className="mt-2 text-sm leading-relaxed">
-          If approval, source, people visibility, children/youth risk, or usage scope is unclear, pause. Correct next action is review, not guessing.
-        </p>
-      </section>
+        <section id="policies" className="help-side-card">
+          <h2>Policies &amp; Guidelines</h2>
+          <div className="help-link-list is-policy">
+            {policies.map((item) => (
+              <Link href={item.href || "/guide"} key={item.title} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}>
+                <BookOpen size={20} strokeWidth={1.8} aria-hidden="true" />
+                <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+                {item.external ? <ExternalLink size={15} strokeWidth={1.8} aria-hidden="true" /> : null}
+              </Link>
+            ))}
+          </div>
+        </section>
+      </aside>
     </div>
   );
 }

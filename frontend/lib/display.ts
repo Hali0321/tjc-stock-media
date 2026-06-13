@@ -13,8 +13,13 @@ export function normalizeAssetTitle(rawTitle: string, originalFilename?: string,
   const source = rawTitle || originalFilename || "Untitled asset";
   const cleaned = source
     .replace(/^copy of\s+/i, "")
+    .replace(/^\d{3,6}\s*x\s*\d{3,6}\b/i, "")
     .replace(/\.(jpe?g|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac|pdf)$/i, "")
-    .replace(/\b(cleanup|edited|final|copy)\b/gi, "")
+    .replace(/\b\d{1,5}\s*(raw|edit|edited|final|copy)\b/gi, "")
+    .replace(/\b(raw|edit|edited|final|copy)\s*\d{1,5}\b/gi, "")
+    .replace(/\b(cleanup|edited|final|copy|uncropped|raw)\b/gi, "")
+    .replace(/\btheappbuilder\s+icon\b/gi, "")
+    .replace(/\b\d{1,2}(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\d{2,4}\b/gi, "")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -26,7 +31,7 @@ export function normalizeAssetTitle(rawTitle: string, originalFilename?: string,
   if (/^image\s*(\d+)/i.test(cleaned)) return `Image ${cleaned.match(/\d+/)?.[0] || ""}`.trim();
   if (/^bible\s+\d+/i.test(cleaned)) return context ? `${titleCase(context)} Detail` : "Bible Study Detail";
   if (/^mvp\s+2024\s+plant\s+\d+/i.test(cleaned)) return "Plant Detail";
-  if (/^mvp\s+2024\s+photo\s+\d+/i.test(cleaned)) return context ? `MVP 2024 ${titleCase(context)}` : titleCase(cleaned);
+  if (/^mvp\s+2024\s+photo\s+\d+/i.test(cleaned)) return context ? `${titleCase(context)} Detail` : "Media Detail";
   if (/^copy\s*of\s*img/i.test(source)) return titleCase(cleaned);
 
   return titleCase(cleaned || source);
@@ -35,9 +40,9 @@ export function normalizeAssetTitle(rawTitle: string, originalFilename?: string,
 export function shortStatusLabel(status: StockMediaAsset["status"]) {
   switch (status) {
     case "Approved Public":
-      return "RS approved";
+      return "Approved";
     case "Approved Internal":
-      return "RS internal";
+      return "Internal";
     case "Needs Review":
       return "Needs review";
     case "Searchable Archive":
@@ -82,11 +87,11 @@ export function collectionImageUrl(asset: StockMediaAsset) {
 
 export function friendlySourceLabel(asset: Pick<StockMediaAsset, "collection" | "resourceSpaceId" | "id">) {
   if (asset.collection) return asset.collection;
-  return asset.resourceSpaceId ? `ResourceSpace ${asset.resourceSpaceId}` : `Asset ${asset.id}`;
+  return "Media library";
 }
 
 export function friendlyReviewTrace(asset: Pick<StockMediaAsset, "reviewedDate" | "reviewer" | "resourceSpaceId" | "id">) {
   if (asset.reviewedDate && asset.reviewer) return `Reviewed ${asset.reviewedDate} by ${asset.reviewer}`;
   if (asset.reviewedDate) return `Reviewed ${asset.reviewedDate}`;
-  return asset.resourceSpaceId ? `ResourceSpace ID ${asset.resourceSpaceId}` : `Asset ID ${asset.id}`;
+  return `Reference code ${asset.id}`;
 }
