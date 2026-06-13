@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Toaster } from "sonner";
 import { BetaPrototypeTools } from "@/components/BetaPrototypeTools";
 import { AppSidebar } from "@/components/dam/shell/AppSidebar";
@@ -39,13 +40,36 @@ function PersistentSidebarProvider({ children }: { children: ReactNode }) {
 }
 
 function DamFooter() {
-  const { role } = useDemoRole();
+  const { role, betaLocked } = useDemoRole();
   return (
     <footer className="relative z-10 mx-auto flex w-full max-w-[1760px] flex-wrap items-center gap-3 border-t border-[#d8e1da] px-4 py-6 text-sm font-semibold text-tjc-muted md:px-6">
       <Link href={routeWithRole("/guide", role)} className="font-black text-tjc-evergreen">Help</Link>
       <span>Review queues, evidence, and audit-safe actions stay together.</span>
-      <span>Production access follows assigned DAM roles.</span>
+      <span>{betaLocked ? "Internal beta access. Role personas are for QA testing only. Not production SSO." : "Production access follows assigned DAM roles."}</span>
     </footer>
+  );
+}
+
+function BetaAccessBanner() {
+  const { betaLocked } = useDemoRole();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+  if (!betaLocked) return null;
+  async function logout() {
+    setLoggingOut(true);
+    await fetch("/api/beta-auth/logout", { method: "POST" }).catch(() => null);
+    router.replace("/beta-login");
+    router.refresh();
+  }
+  return (
+    <section className="beta-access-banner" aria-label="Internal beta access notice">
+      <strong>Internal beta access</strong>
+      <span>Role personas are for QA testing only.</span>
+      <span>Not production SSO.</span>
+      <span>Do not upload sensitive production media yet.</span>
+      <span>Source system connection pending; previews and metadata are beta fixtures where noted.</span>
+      <button type="button" onClick={logout} disabled={loggingOut}>Log out</button>
+    </section>
   );
 }
 
@@ -60,6 +84,7 @@ export function DamShell({ children }: { children: ReactNode }) {
         <Suspense fallback={null}>
           <DamCommandHeader />
         </Suspense>
+        <BetaAccessBanner />
         <div id="main-content" className="relative z-10 min-w-0 flex-1 pb-4 md:pb-10">
           <Suspense fallback={null}>{children}</Suspense>
         </div>

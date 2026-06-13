@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, ChevronDown, Database, Loader2 } from "lucide-react";
 import { routeWithRole } from "@/lib/role-routes";
+import { canAdmin } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import type { DemoRole, MediaSourceStatus } from "@/lib/types";
 
@@ -94,6 +95,7 @@ export function DamSourceStatus({ role, compact = false, className }: { role: De
           <span>Source status</span>
           <strong>{state.label}</strong>
           <p>{state.detail}</p>
+          <p>Source system connection pending where noted. Original/source files remain restricted.</p>
         </div>
         <div className="dam-source-status-meta">
           <span>Mode</span>
@@ -103,7 +105,7 @@ export function DamSourceStatus({ role, compact = false, className }: { role: De
           <span>Last check</span>
           <strong>Current session</strong>
         </div>
-        <Link href={routeWithRole("/admin#launch-gate", role)} role="menuitem">Open source details</Link>
+        {canAdmin(role) ? <Link href={routeWithRole("/admin#launch-gate", role)} role="menuitem">Open source details</Link> : <span className="dam-source-status-note">Admin-only source diagnostics hidden for this persona.</span>}
       </div>
     </details>
   );

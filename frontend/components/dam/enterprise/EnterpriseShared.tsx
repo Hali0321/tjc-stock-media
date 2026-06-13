@@ -236,7 +236,7 @@ export function SourcePill({ source, live }: { source?: MediaSourceStatus | null
 }
 
 export function LoadingCard({ label = "Loading ResourceSpace data..." }: { label?: string }) {
-  return <section className="ed-card ed-empty-state" role="status"><Database size={24} /><h2>{label}</h2><p>Reading through backend API routes. No frontend secrets are used.</p></section>;
+  return <section className="ed-card ed-empty-state" role="status"><Database size={24} /><h2>{label}</h2><p>Source system connection pending where noted. Previews and metadata may be beta fixtures. No frontend secrets are used.</p></section>;
 }
 
 export function ErrorCard({ message, source }: { message: string; source?: MediaSourceStatus | null }) {
@@ -556,10 +556,11 @@ export function InspectorDrawer({ asset, source, live }: { asset?: StockMediaAss
       </dl>
       {message ? <p className="ed-inline-success">{message}</p> : null}
       <div className="ed-inspector-actions">
-        <ActionButton tone="dark" icon={Download} disabled={!presentation.approved} onClick={() => setMessage("Open the asset record to run the backend download gate before downloading.")}>Download</ActionButton>
-        <ActionButton icon={Folder} onClick={() => setMessage("Use Package Builder to add media references without copying originals.")}>Add to package</ActionButton>
-        <ActionButton icon={Share2} onClick={() => setMessage("Share links wait for identity and access policy. No public link was created.")}>Share asset</ActionButton>
+        <ActionButton tone="dark" icon={Download} disabled disabledReason="Open the full record to run the backend download gate. Original/source files remain restricted.">Download</ActionButton>
+        <ActionButton icon={Folder} disabled disabledReason="Use Package Builder for governed references. This panel does not copy originals.">Add to package</ActionButton>
+        <ActionButton icon={Share2} disabled disabledReason="Public links are not available in internal beta.">Share asset</ActionButton>
       </div>
+      <p className="ed-action-helper">Open full record for backend download-ticket checks. Package and share actions stay disabled here; no ZIP, public link, or original copy is created.</p>
     </aside>
   );
 }
@@ -634,9 +635,10 @@ export function AssetQuickLookDrawer({
         </div>
         <div className="ed-quicklook-actions">
           <Link className="ed-action is-dark" href={routeWithRole(`/assets/${asset.id}`, role)}>Open full record</Link>
-          <ActionButton icon={Download} disabled={!canUseAsset} disabledReason="Needs review before download is available.">Download</ActionButton>
-          <ActionButton icon={Folder} disabled={!canUseAsset} disabledReason="Resolve rights review before adding this asset to a package.">Add to package</ActionButton>
+          <ActionButton icon={Download} disabled disabledReason={canUseAsset ? "Use full record download gate before any approved-copy download." : "Needs review before download is available."}>Download</ActionButton>
+          <ActionButton icon={Folder} disabled disabledReason={canUseAsset ? "Use Package Builder for governed references." : "Resolve rights review before adding this asset to a package."}>Add to package</ActionButton>
         </div>
+        <p className="ed-action-helper px-5 pb-5">Quick look is read-only. Original/source files remain restricted; no package copy, ZIP, or public link is created here.</p>
       </SheetContent>
     </Sheet>
   );
@@ -660,7 +662,7 @@ export function KpiCard({ label, value, delta, icon: Icon, danger = false, showT
 export function ChartCard({ title, large = false, sample = false, children }: { title: string; large?: boolean; sample?: boolean; children?: ReactNode }) {
   return (
     <section className={cn("ed-card ed-chart", large && "is-large")}>
-      <header><h3>{title}</h3><button type="button">View all</button></header>
+      <header><h3>{title}</h3><button type="button" disabled title="Expanded analytics view pending beta instrumentation.">View all</button></header>
       {sample ? <p className="ed-sample-label">Sample until portal usage logging is connected</p> : null}
       {children}
     </section>

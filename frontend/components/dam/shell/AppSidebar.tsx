@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { HelpCircle, Menu, PanelLeftClose } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { HelpCircle, LogOut, Menu, PanelLeftClose } from "lucide-react";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useDemoRole } from "@/components/RoleProvider";
 import {
@@ -154,14 +154,29 @@ function BrandLockup() {
 }
 
 function SidebarUserCard() {
-  const { role } = useDemoRole();
+  const { role, betaLocked } = useDemoRole();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function logout() {
+    setLoggingOut(true);
+    await fetch("/api/beta-auth/logout", { method: "POST" }).catch(() => null);
+    router.replace("/beta-login");
+    router.refresh();
+  }
+
   return (
     <div className="dam-sidebar-user">
       <div className="dam-sidebar-avatar" aria-hidden="true">LC</div>
       <div className="min-w-0">
-        <strong>Leanne Chu</strong>
+        <strong>{betaLocked ? "Internal beta access" : "Leanne Chu"}</strong>
         <span>{role}</span>
       </div>
+      {betaLocked ? (
+        <button className="dam-sidebar-logout" type="button" onClick={logout} disabled={loggingOut} aria-label="Log out of internal beta access" title="Log out">
+          <LogOut className="size-4" aria-hidden="true" />
+        </button>
+      ) : null}
     </div>
   );
 }

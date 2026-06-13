@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import type { CatalogSort, StockMediaAsset } from "@/lib/types";
 import { sourceNoun } from "@/lib/enterprise-display";
+import { canReview } from "@/lib/permissions";
 import { routeWithRole } from "@/lib/role-routes";
 import { ActionButton, AssetCard, AssetQuickLookDrawer, DamSegmentedNav, DamToolbar, ErrorCard, InspectorDrawer, LoadingCard, PageHeader, SavedViewPanel, SourcePill } from "./EnterpriseShared";
 
@@ -340,10 +341,10 @@ export function EnterpriseLibraryPage() {
     <div className="enterprise-page enterprise-library">
       <PageHeader
         title="Library"
-        subtitle="Browse approved and source-tracked media for ministry use."
+        subtitle="Browse role-safe media for ministry use. Source/original files remain restricted."
       />
       {libraryMessage ? <p className="ed-inline-success">{libraryMessage}</p> : null}
-      <section className="ed-approved-banner"><CheckCircle2 size={24} /><div><strong>{search.live ? `Showing ${sourceNoun(search.source)}-backed records` : `${sourceNoun(search.source)} disconnected or read-only`}</strong><span>{search.source?.detail || "The UI is waiting for the backend DAM source."}</span></div><SourcePill source={search.source} live={search.live} /><button type="button" onClick={() => announceLibraryAction("Source banner kept visible for tester safety; it cannot be dismissed in this beta.")}>×</button></section>
+      <section className="ed-approved-banner"><CheckCircle2 size={24} /><div><strong>{search.live ? `Showing ${sourceNoun(search.source)}-backed records` : `${sourceNoun(search.source)} disconnected or read-only`}</strong><span>{search.source?.detail || "Source system connection pending where noted. Previews and metadata are beta fixtures. Original/source files remain restricted."}</span></div><SourcePill source={search.source} live={search.live} /></section>
       <DamSegmentedNav
         label="Library workspace views"
         activeId="assets"
@@ -351,19 +352,19 @@ export function EnterpriseLibraryPage() {
           { id: "assets", label: "Assets", icon: Grid3X3, href: routeWithRole("/", role) },
           { id: "collections", label: "Collections", icon: Folder, href: routeWithRole("/collections", role) },
           { id: "packages", label: "Packages", icon: Archive, href: routeWithRole("/packages", role) },
-          { id: "rights", label: "Rights", icon: ShieldCheck, href: routeWithRole("/review?queue=rights-review", role) }
+          ...(canReview(role) ? [{ id: "rights", label: "Rights", icon: ShieldCheck, href: routeWithRole("/review?queue=rights-review", role) }] : [])
         ]}
       />
       <DamToolbar
         label="Library asset toolbar"
         searchValue={query}
-        searchPlaceholder="Search ResourceSpace title, filename, collection, ID..."
+        searchPlaceholder={canReview(role) ? "Search ResourceSpace title, filename, collection, ID..." : "Search title, collection, ministry, tag..."}
         onSearchChange={setQuery}
         onClearSearch={() => setQuery("")}
         onOpenFilters={() => setFiltersOpen(true)}
         filterCount={activeFilterCount}
         selectedCount={selectedIds.length}
-        sortControl={<div className="ed-library-view-controls"><div className="ed-view-toggle" aria-label="Asset view mode"><button type="button" className="is-active" aria-label="Grid view"><Grid3X3 size={15} aria-hidden="true" /></button><button type="button" aria-label="List view"><List size={15} aria-hidden="true" /></button></div><label><span className="sr-only">Sort assets</span><select className="ed-input" value={sort} onChange={(event) => setSort(event.target.value as CatalogSort)}><option>Approved first</option><option>Recently approved</option><option>Newest</option><option>A-Z</option></select></label></div>}
+        sortControl={<div className="ed-library-view-controls"><div className="ed-view-toggle" aria-label="Asset view mode"><button type="button" className="is-active" aria-label="Grid view"><Grid3X3 size={15} aria-hidden="true" /></button><button type="button" aria-label="List view" disabled title="List view is not enabled for this beta."><List size={15} aria-hidden="true" /></button></div><label><span className="sr-only">Sort assets</span><select className="ed-input" value={sort} onChange={(event) => setSort(event.target.value as CatalogSort)}><option>Approved first</option><option>Recently approved</option><option>Newest</option><option>A-Z</option></select></label></div>}
         quickFilters={[{ id: "approved public", label: "Approved" }, { id: "portal ready", label: "Public use" }, { id: "no people", label: "No people" }, { id: "landscape", label: "Landscape" }, { id: "photo", label: "Photo" }].map((item) => ({ id: item.id, label: item.label, active: filters.includes(item.id), onClick: () => toggleFilter(item.id) }))}
       />
       <AppliedFilterBar
@@ -461,7 +462,7 @@ export function EnterpriseLibraryPage() {
           <SheetHeader className="border-b border-[#d8e2dc] px-4 py-4">
             <SheetTitle className="text-base font-black text-tjc-ink">Filters</SheetTitle>
             <SheetDescription className="text-sm font-semibold text-tjc-muted">
-              Refine assets by saved views, rights, source, people visibility, and media properties.
+              Refine assets by saved views, rights, source-safe fields, people visibility, and media properties.
             </SheetDescription>
           </SheetHeader>
           <div className="ed-mobile-filter-body">{filterPanel}</div>
