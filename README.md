@@ -1,8 +1,13 @@
-# TJC Stock Media DAM Prototype
+# TJC Stock Media DAM Portal
 
-North Star: a TJC user can find a rights-safe asset for a real communication need in under 60 seconds.
+North Star: a TJC user can find, trust, request, or review a ministry media asset without confusing demo state with final ResourceSpace truth.
 
-This repo sets up a local ResourceSpace DAM prototype and a TJC-facing Next.js portal for True Jesus Church stock media. Google Shared Drive remains the master-original warehouse. ResourceSpace is the source of truth for assets, metadata, search, rights review, and approval fields. The Next.js portal is the friendly search/upload/review surface for stakeholders and ministry users; it does not replace ResourceSpace or become a second DAM.
+This repo sets up a local ResourceSpace DAM prototype and a private TJC-facing Next.js portal for True Jesus Church ministry media governance. Google Shared Drive remains the master-original warehouse. ResourceSpace is the source of truth for assets, metadata, search, rights review, and approval fields. The Next.js portal is the governed workbench for Library, Intake, Review, Collections, Asset Detail, and Governance; it does not replace ResourceSpace or become a second DAM.
+
+Data engineering posture: use a lightweight canonical asset metadata catalog, not
+a separate data platform. See `docs/data-engineering-playbook.md` for source
+boundaries, idempotent imports, data quality contracts, schema drift, AI
+suggestion rules, and the trigger points for adding heavier infrastructure.
 
 ```text
 Legacy sources
@@ -16,7 +21,7 @@ master warehouse / selected originals / organized storage
         | manual import now
         | Phase 2: Google Drive connector or StaticSync-style workflow
         v
-ResourceSpace prototype on Hali Mac
+ResourceSpace local prototype
 DAM index / tags / search / review / downloads
         |
         v
@@ -28,7 +33,7 @@ Portal-ready reuse is computed separately from raw ResourceSpace approval.
 
 ## Clone And Local Setup
 
-Teammates can clone this repo and work from it normally:
+Clone the repo and install dependencies:
 
 ```bash
 git clone https://github.com/Hali0321/tjc-stock-media.git
@@ -56,10 +61,10 @@ npm install
 npm run dev
 ```
 
-By default the portal runs at `http://localhost:3008`. If that port is busy, run a different port:
+By default the dev portal runs at `http://localhost:4867`. If that port is busy, run a different port:
 
 ```bash
-npx next dev --port 3018
+npx next dev --port 3029
 ```
 
 Local-only files are intentionally not committed:
@@ -70,7 +75,7 @@ Local-only files are intentionally not committed:
 - generated PNG screenshots
 - `frontend/node_modules/` and `.next/`
 
-This means a fresh clone has the full project code, docs, scripts, Docker config, ResourceSpace helpers, and portal frontend, but each teammate still needs their own local runtime data or metadata export.
+This means a fresh clone has the full project code, docs, scripts, Docker config, ResourceSpace helpers, portal frontend, and safe fallback demo data. Each local environment still needs its own `.env`, ResourceSpace runtime data, or metadata export for full-fidelity media/search behavior.
 
 ## Launch Plan
 
@@ -85,7 +90,7 @@ Key launch wording:
 with tiered archive import and partial human review.
 ```
 
-Launch is blocked until a church-owned PC/NAS can run ResourceSpace without Hali's Mac, Cloudflare Access protects the site, backups restore on a clean host, large media has an admin intake path, and unreviewed assets cannot be mistaken for approved media.
+Launch is blocked until a church-owned PC/NAS can run ResourceSpace independently, Cloudflare Access protects the site, backups restore on a clean host, large media has an admin intake path, and unreviewed assets cannot be mistaken for approved media.
 
 ## First Batch
 
@@ -145,7 +150,28 @@ Open ResourceSpace:
 
 Open TJC Stock Media portal:
 
-`http://localhost:3008`
+`http://localhost:4867`
+
+## Current Frontend State
+
+Latest UI pass: 2026-06-08 enterprise DAM architecture pass over the launch-polish baseline.
+
+The portal now targets a hybrid ministry DAM model: enterprise metadata/permission/audit spine, ResourceSpace companion truth layer, private media operations shell, role-aware Library results, governed internal Collections, contributor Intake sessions, Review workbench, Asset Detail trust record, Governance/Ops console, command palette, unified state/toast primitives, and user-facing Guide flows.
+
+Safety remains unchanged: ResourceSpace is still source of truth, Google Shared Drive keeps master originals, pending review writes are local/not final, uploads stay `Needs Review / Do Not Publish`, unsafe Viewer downloads remain blocked, and original/master access remains restricted.
+
+Current hardening pass:
+
+- Production client role overrides are ignored globally. Without trusted SSO headers, privileged routes fail closed.
+- Local beta role switch is QA convenience only; it is not production auth, SSO, impersonation, or permission delegation.
+- ResourceSpace live reads use paginated search and fail safely instead of silently capping archive reads at 1,000 records.
+- Review writeback returns ResourceSpace success only after live API update and post-write confirmation. Otherwise it remains queued, failed, or conflicted sidecar state.
+- `.runtime` JSON/JSONL remains local beta storage. Production stateful features require durable runtime storage or fail closed.
+- Approved Public is not automatically portal-ready; rights, people/minors, reviewer/date, schema, and derivative evidence still gate reuse.
+
+Still blocked for real production until church host, trusted SSO, durable runtime storage, backup/restore evidence, large-media intake, and ResourceSpace field map/writeback are configured and verified.
+
+Refreshed screenshots live under `docs/screenshots/`, including desktop plus 320/390 mobile captures and primitive proofs under `docs/screenshots/primitive-proof/`. Latest `portal-browser-qa` checked 15 routes across 1440/1280/1024/768/390/320, refreshed 20 required page screenshots, and reported zero failures, zero warnings, zero console errors, and zero network failures from a local QA server.
 
 Current local prototype login:
 
@@ -192,7 +218,7 @@ make export-metadata # export current ResourceSpace MVP metadata CSV
 make backup          # dump database and archive filestore/config
 make restore-test    # non-destructive backup restore check
 make launch-readiness # local launch documentation/config guardrail check
-make frontend-dev # run Next.js portal locally at http://localhost:3008
+make frontend-dev # run Next.js portal locally at http://localhost:4867
 make frontend-check # typecheck/build frontend and scan for media/secrets/runtime files
 make demo-check # frontend checks plus demo/doc guardrails
 make portal-api-smoke # API contract smoke for access/search/review/upload/admin
@@ -235,23 +261,25 @@ Current search and collection behavior:
 
 Current UI and workflow notes:
 
-- Primary navigation is `Library`, `Collections`, `Upload`, and `Review`; `Guide` moved to utility/footer access.
-- Navigation now uses a maintained `AppNav` component with a restrained Tubelight-inspired active surface for the four primary workflows; command palette, Guide, ResourceSpace, and Admin links remain utility/role-aware.
-- `Cmd/Ctrl+K` opens a command palette for library search, saved DAM views, collection jumps, review queues, ResourceSpace ID lookup, upload intake, guide, and admin diagnostics.
+- Primary navigation is `Library`, `Collections`, `Intake`, and `Review`; `Govern` appears for DAM Admin role.
+- Navigation uses a maintained `AppNav` component with a restrained role-aware workflow surface; command palette, Guide, ResourceSpace, and Governance links remain utility/role-aware.
+- `Cmd/Ctrl+K` opens a command palette for library search, saved DAM views, governed collections, review queues, ResourceSpace ID lookup, intake sessions, guide, and governance diagnostics.
 - The frontend now uses Tailwind v4 through PostCSS, a small token/base layer in `frontend/app/globals.css`, Inter + Noto Sans TC via `next/font/google`, and existing `lucide-react` icons.
 - Review includes isolated GSAP motion for desktop reviewer workflow only; reduced-motion disables the pin/scale effects.
-- Library is now a DAM command workspace, not a hero page: compact search, use-case buttons, source/safety strip, operational saved views, compact collection rail, filters, and real asset results high on the page.
-- Asset cards now show a short status badge, usage label, normalized display title, collection/event, one tag, and download/blocked indicator. Deeper provenance appears on hover/focus or on the detail page.
-- Assets without exported preview derivatives show honest `Preview pending` or `Preview unavailable` states instead of broken thumbnails. This is a ResourceSpace/export readiness signal, not fake media.
+- Library is now a table-first DAM command workspace: compact search, saved views, facets, operational lanes, list/table results by default, and optional grid browsing.
+- Asset rows/cards show workflow, distribution, rights, people/release, availability, source, review, ResourceSpace reference, and action health without treating one vague badge as the whole truth.
+- Assets without exported preview derivatives show honest restricted/pending preview states with safe media type and collection context instead of broken thumbnails. This is a ResourceSpace/export readiness signal, not fake media.
 - Display titles are normalized for presentation only; original filenames stay visible in asset detail metadata.
-- Detail pages keep approved-copy download visually separate from original/master restriction and add usage guidance plus source/review/technical provenance.
-- Asset detail and Review inspector use maintained `DropdownActionMenu` / `AssetActionsMenu` for secondary copy/open actions. Viewers and Reviewers can copy ResourceSpace ID and portal link; DAM Admin can open the ResourceSpace source-of-truth link when configured.
+- Detail pages keep approved-copy download visually separate from original/master restriction and add a trust matrix, usage guidance, source/review/technical provenance, and request history.
+- Asset detail and Review workspaces use maintained `DropdownActionMenu` / `AssetActionsMenu` for secondary copy/open actions. Viewers and Reviewers can copy ResourceSpace ID and portal link; DAM Admin can open the ResourceSpace source-of-truth link when configured.
 - Asset detail and Review inspector use maintained `DamTabs` with real tab semantics, arrow-key movement, and verified `aria-controls` targets.
 - Request original access, request review, and ask-media-coworker actions open `ReuseRequestDialog` first. The dialog explains that email drafts do not grant original access, update ResourceSpace, or create pending writes.
 - Review uses `HoldReleaseButton` for high-risk `Archive only` and `Do not publish externally` decisions after evidence is complete, so accidental clicks do not queue those pending writes.
-- Upload is a guided contributor intake with maintained `UploadFileDropzone`, taxonomy-backed `InputWithTags`, selected-file preview, type/size display, remove/clear controls, required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, and notes.
-- Review is a role-gated workbench with queue tabs, selected-asset inspector, required checklist, audit preview, pending write result copy, and an explicit `Show more review items` gate so mobile is not forced through all loaded queue rows at once.
-- `/admin` is DAM Admin-only and shows current data source, API read/write readiness, required field refs, pending write queue, role matrix, and production blockers.
+- Intake is a guided contributor session with maintained `UploadFileDropzone`, taxonomy-backed `InputWithTags`, selected-file preview, type/size display, remove/clear controls, required title, event, ministry, source, people/minors, rights, consent/restriction, suggested tags, notes, save draft, and submit-for-DAM-review behavior.
+- Review is a role-gated three-pane workbench with queue groups, compact queue rows, selected-asset workspace, evidence checklist, decision lock panel, audit preview, and local pending-write copy. Mobile keeps selected review workspace before queue items.
+- `/admin` is DAM Admin-only Governance/Ops and shows launch gate, data source, API read/write readiness, required field refs, pending write queue, role matrix, production blockers, audit signals, and DataTables for backlog, integration readiness, field mapping, and vocabulary.
+- `MediaPreviewPanel` supports image, video, audio, document, restricted, and unknown-file modes. The current export contains photo records, so document/video/audio proof is safe shell behavior until production export includes role-safe rows.
+- `tjc-toasts` centralizes Sonner feedback for upload, draft, share/copy, review, pending-write, blocked-download, and save-failure events. Toasts supplement persistent safety banners and panels.
 - Safe-download logic uses the portal reuse policy, not raw ResourceSpace approval alone.
 - Theme toggle is deferred until dark-mode safety labels and contrast can be fully designed and verified.
 
@@ -273,6 +301,17 @@ Keep HEIC originals as the master files. When ResourceSpace cannot preview a HEI
 ## Not Production
 
 This is a local prototype. It does not prove 24/7 uptime, production security, remote access, or full backup policy. Production hosting is a later decision.
+
+## 2026-06-07 UI Tightening
+
+- Asset detail trust panels now use one `TjcStatusBadge` primitive with semantic wrappers for raw ResourceSpace status, portal reuse state, review state, rights, visibility, and download state.
+- Admin now includes read-only DataTables plus an Audit log section for integration readiness, pending review writes, and top action backlog items.
+- Guide mobile navigation now wraps instead of scrolling offscreen, preserving no-horizontal-overflow QA at 320/390/768.
+- AppNav now uses a 320px icon-first label treatment so Admin navigation does not clip on small screens.
+- Library 320px now uses a single-column 12-card page for readability; 390px keeps the denser contact-sheet feel.
+- Review mobile now uses a compact queue selector and 8 visible queue cards before load-more; desktop/xl keeps a real Review DataTable and load-more workflow.
+- `docs/ui-system/21st-primitive-implementation-matrix.md` records the primitive/source-status proof, including auth-gated or unavailable references without source-level overclaiming.
+- Fresh QA ran against `http://localhost:3047` with `TJC_STOCK_MEDIA_ROOT` set to the repo root. Required screenshots and primitive proofs were refreshed under `docs/screenshots/`.
 
 ## LM Photos Completion
 

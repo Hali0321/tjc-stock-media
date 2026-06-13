@@ -1,0 +1,141 @@
+# DAM UI Modules
+
+This UI system keeps business safety logic in existing policy modules and moves route composition toward smaller DAM presentation modules. Figma is not a dependency for implementation or verification; browser-visible previews and screenshots are references only.
+
+## Module Boundaries
+
+### `DamShell`
+
+Owns app chrome, role-aware navigation, mobile menu behavior, command entry placement, footer copy, and safe top-level language. Viewer/Contributor shells never expose ops-only destinations.
+
+### `DamWorkspace`
+
+Owns page headers, task headers, search-first toolbars, result shells, empty states, saved/suggested view surfaces, and responsive workspace stacking. Used by Find, Packages, Guide, and Governance where the surface behaves like a workspace.
+
+### `DamRecord`
+
+Owns protected preview presentation, media record panels, "Can I use this?" verdict display, metadata rows, related media, and request-review/source-access presentation. It displays decisions from `viewer-verdict`; it does not invent reuse decisions.
+
+### `DamPortal`
+
+Owns package covers, package cards, package inspectors, package metadata summaries, ministry-kit visual language, and item-level approval warnings. Package approval is always presented as separate from item-level reuse approval.
+
+### `DamOperations`
+
+Owns review queue rows, selected review asset shells, evidence matrices, locked decision panels, governance metrics, blocker/diagnostic rows, audit rows, and ResourceSpace write-mapping presentation. Operational terms stay Reviewer/Admin-only.
+
+### `DamFormFlow`
+
+Owns upload/send-media steppers, required-field panels, selected-file/source-link previews, review packet summaries, draft/submit states, and intake language. It reinforces that Send media never publishes or approves anything.
+
+## Viewer-Safe vs Ops Helpers
+
+Viewer/Contributor route code imports viewer-safe presentation through `DamWorkspace`, `DamRecord`, `DamPortal`, and `DamFormFlow`. Reviewer/Admin route code may import `DamOperations`.
+
+Rendered Viewer/Contributor copy should avoid:
+
+- ResourceSpace
+- Shared Drive
+- source of truth
+- pending write
+- API mapping
+- launch gate
+- diagnostics
+- field refs
+- export
+- original/master path
+
+Reviewer/Admin copy may use operational terms when the user role and route authorize it.
+
+## Safety Logic Ownership
+
+Safety decisions remain in:
+
+- `frontend/lib/reuse-policy.ts`
+- `frontend/lib/viewer-verdict.ts`
+- `frontend/lib/access-decisions.ts`
+- API routes
+
+UI modules render policy outputs and disabled-action explanations. They must not duplicate or weaken approval, download, review lock, RBAC, source access, or audit behavior.
+
+## Data Truth Modules
+
+### `MediaSourceSession`
+
+Owns request-time source truth for the DAM portal. It wraps the active media source adapter and produces one source envelope with `source`, `sourceStatus`, `sourceKind`, and `live`. Server routes use this seam instead of recalculating ResourceSpace/export/fallback status or role-safe media-library copy rules.
+
+Client-safe source truth helpers live separately from server-side source lookup so rendered pages can label source states without importing filesystem-backed adapters.
+
+### `DamApiClient`
+
+Owns client-side JSON fetch timeout, API error normalization, and source-envelope extraction for DAM hooks. Rendered pages should receive `{ data, loading, error, source, live }` state from hooks instead of managing fetch lifecycles directly.
+
+### `CatalogLanguage`
+
+Owns saved views, collection definitions, search intent aliases, filter matching, and the catalog haystack. `catalog.ts` remains the orchestration module for search, pagination, counts, collection summaries, and review queues.
+
+Saved views are workflow shortcuts over ResourceSpace-backed records. Collections are ResourceSpace/source groupings or curated portal perspectives. Neither should copy or replace asset records.
+
+### `CatalogSummaries`
+
+Owns saved-view counts, collection cards, metadata health, zero-result insights, and operational insight rows. `catalog.ts` should assemble these summaries, not duplicate the definitions or scoring logic.
+
+### `BrandKitRegistry`
+
+Owns ministry kit configuration, editorial guidance, ResourceSpace collection environment keys, collection matching, setup warnings, and role-safe asset payloads. Brand Hub routes use this module instead of embedding collection mapping or ministry-kit copy inside transport code.
+
+Brand kits may contain editorial guidance in the portal, but downloadable assets remain ResourceSpace-backed records or explicit setup states.
+
+### `PackageDrafts`
+
+Owns portal-local package draft creation, section refs, ResourceSpace ref add/remove operations, asset resolution, approved-only available asset filtering, and publish readiness. Package pages render this interface instead of copying asset records into draft state.
+
+Package drafts may hold ResourceSpace references and editorial package fields. They must not become a second asset record store or bypass item-level reuse approval.
+
+### `ReviewDecision`
+
+Owns review checklist normalization, required evidence rules, and local pending-review-write creation. Review routes validate transport and permissions, then call this module so pending-sync behavior stays honest and reusable when ResourceSpace writeback is configured later.
+
+### `ReviewWorkbenchModel`
+
+Owns reviewer-facing workbench tabs and decision actions, including missing-consent pending-sync handling. Review pages render these actions so read-only ResourceSpace export mode cannot accidentally imply final write success.
+
+### `DamReadinessIntegrations`
+
+Owns Admin readiness rows for ResourceSpace export/API, preview, writeback, pending review writes, audit log, SSO, Google Shared Drive, S3 delivery, usage analytics, Brand Kit mapping, and package publishing. `dam-readiness.ts` owns aggregate asset health and calls this module for integration custody state.
+
+### `DamReadinessMetadata`
+
+Owns ResourceSpace field coverage and vocabulary drift summaries for Admin readiness. Field-map and taxonomy terminology stay local to this module instead of leaking through score assembly.
+
+### `AdminControlRegistry`
+
+Owns control-center navigation, custody map rows, integration table labels, policy summary rows, readiness state normalization, and system-health rail rows. Admin pages render this registry so governance language stays consistent with the ResourceSpace/Drive/S3 custody model.
+
+### `InsightsDashboardModel`
+
+Owns executive dashboard KPI rows, explicit sample-chart declarations, and asset health rows. Insights pages render this model so real ResourceSpace counts and sample portal analytics cannot silently blend together.
+
+### `EnterpriseDisplay`
+
+Owns small but repeated display rules for enterprise DAM pages: asset title fallback, ResourceSpace/reference labels, source nouns, metadata quality labels, dates, file type labels, and byte formatting. Page modules render these decisions instead of redefining them inline.
+
+### `EnterpriseStatus`
+
+Owns enterprise UI status vocabulary and badge tone mapping for ResourceSpace-backed pages. Page modules ask for an asset's enterprise status instead of each surface translating raw ResourceSpace states differently.
+
+### `EnterpriseMetadata`
+
+Owns metadata row shaping for enterprise DAM surfaces: inspector tabs, asset detail, rights/restrictions, review metadata, and review evidence. Page modules render rows instead of repeating `Not provided` and ResourceSpace field fallback rules.
+
+### `MediaPreviewState`
+
+Owns preview-state labels and missing-preview explanations for ResourceSpace thumbnails, failed derivatives, restricted previews, loading states, and unsupported file types. Visual components should render this state instead of inventing placeholder imagery.
+
+### `AssetRecordWorkbench`
+
+Owns asset inspector tabs, asset record tabs, and tab-group predicates for activity/usage surfaces. Detail pages render this vocabulary so drawer and full-record workbench stay aligned as ResourceSpace metadata grows.
+
+## Current Implementation Shape
+
+The first system pass keeps existing stable components in place and introduces `frontend/components/dam/*` as import boundaries. This lets route files depend on named DAM responsibilities while preserving behavior and reducing risk during continued polish.

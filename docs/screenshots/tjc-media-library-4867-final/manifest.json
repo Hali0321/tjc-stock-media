@@ -1,0 +1,96 @@
+{
+  "base": "http://localhost:4867",
+  "capturedAt": "2026-06-10T06:33:28.820Z",
+  "shots": [
+    {
+      "name": "library-1440.png",
+      "route": "/",
+      "role": "Viewer",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/library-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Asset Library 8,422 assets",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "asset-368-1440.png",
+      "route": "/assets/368",
+      "role": "Viewer",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/asset-368-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Serene mountain lake at sunrise",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "review-1440.png",
+      "route": "/review",
+      "role": "Reviewer",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/review-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Review Queue 128 items",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "admin-1440.png",
+      "route": "/admin",
+      "role": "DAM Admin",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/admin-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "DAM Control Center",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "collections-1440.png",
+      "route": "/collections",
+      "role": "Viewer",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/collections-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "MVP 2024 v1.0",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "guide-1440.png",
+      "route": "/guide",
+      "role": "Viewer",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/guide-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Safe reuse guide",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "upload-contributor-1440.png",
+      "route": "/upload",
+      "role": "Contributor",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/upload-contributor-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Send media for review",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "insights-1440.png",
+      "route": "/insights",
+      "role": "DAM Admin",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/insights-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Insights / Analytics",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    },
+    {
+      "name": "packages-1440.png",
+      "route": "/packages",
+      "role": "Reviewer",
+      "path": "/Users/halim4pro/Desktop/MVP/tjc-stock-media/docs/screenshots/tjc-media-library-4867-final/packages-1440.png",
+      "title": "True Jesus Church Media Library",
+      "h1": "Summer Launch Toolkit",
+      "overflowX": false,
+      "textSample": "Skip to content Search assets, collections, and folders ⌘ K 3 AK Alex Kim Brand Team Viewer Contributor Reviewer DAM Admin Media Library Library Collections Packages Approvals 28 Usage Insights Brand Hub Admin Quick access Favorites Recent My uploads Storage 2"
+    }
+  ]
+}

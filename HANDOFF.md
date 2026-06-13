@@ -3,7 +3,7 @@
 ## What Runs Locally
 
 - ResourceSpace backend: `http://localhost:8088`
-- TJC Stock Media frontend: `http://localhost:3008`
+- TJC Stock Media frontend: `http://localhost:4867`
 
 Run:
 
@@ -19,7 +19,13 @@ make frontend-check
 make demo-check
 ```
 
-Latest local QA captured the required screenshots under `docs/screenshots/` from `http://127.0.0.1:3008` and checked 1440 px desktop plus 320 px mobile browser widths with no horizontal page overflow. Full browser QA also covered 1280, 1024, 768, 390, and 320 px with zero failures, zero warnings, and zero console errors.
+Latest local QA captured the required screenshots under `docs/screenshots/` from a fresh production Next server at `http://localhost:3029` with `TJC_STOCK_MEDIA_ROOT` set to the repo root. The set includes desktop plus 320/390 mobile screenshots for Library, Collections, Upload, Review, Asset Detail, Guide, and Admin, plus primitive proof captures. Full browser QA covered 1440, 1280, 1024, 768, 390, and 320 px with zero failures, zero warnings, zero console errors, and zero network failures.
+
+## Production Hardening Truth
+
+Current branch hardens the portal boundary instead of promoting the portal into a second DAM. Production client role overrides are ignored. Without trusted SSO headers, privileged API actions fail closed. Local beta `?role=` and `localStorage` switching are QA-only and must not be described as production auth.
+
+Runtime `.runtime` JSON/JSONL remains local/private-beta storage. In production, stateful writes that require durability must use an explicit durable runtime store or fail closed. Review writeback is only ResourceSpace truth when live API writeback succeeds and a re-read confirms status, reviewer, date, and notes.
 
 The current frontend shell is the final dense ministry DAM UI:
 
@@ -29,12 +35,14 @@ The current frontend shell is the final dense ministry DAM UI:
 - Mobile at 320 px uses icon-first nav with accessible labels to preserve fit.
 - Usage Guide: secondary utility/footer link, not primary navigation.
 - Command palette: `Cmd/Ctrl+K` for search, saved views, collections, upload, stable review queue URLs, ResourceSpace ID lookup, Guide, and Admin diagnostics.
-- Library: compact command bar, early search, use-case shortcuts, saved views, filters, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
-- Collections: album-style records opened by stable collection ID, including Sabbath wording.
-- Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit `Preview pending` when the export lacks a derivative.
-- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets. Use/Source/Review/Files/Related use maintained `DamTabs`. Secondary copy/open actions use maintained `DropdownActionMenu` / `AssetActionsMenu`; the ResourceSpace source-of-truth link remains DAM Admin only.
-- Upload: guided three-step intake with maintained dropzone/selected-file preview, taxonomy-backed `InputWithTags`, type/size display, remove/clear controls, required evidence markers, reviewer handoff checklist, large-media guidance, and blocked-until-review receipt.
-- Review: queue tabs, compact decision rows, selected-asset inspector tabs, evidence checklist, note field, audit preview, pending write state, explicit load-more gate for long queues, secondary inspector actions via maintained `AssetActionsMenu`, hold-and-release controls for archive/do-not-publish decisions, and desktop-only GSAP motion disabled by reduced-motion.
+- Library: compact command bar, early search, desktop saved-view/browse rail, use-case shortcuts, right filter panel, sort controls, honest count truth, contact-sheet results, and collapsible production signals.
+- Collections: album-style records opened by stable collection ID, compact thumbnail rails, selected collection inspector, `Open Library results` action, and Sabbath wording.
+- Asset cards: short status, usage label, display-normalized title, collection/event, blocked/download signal, provenance on hover/focus, and explicit restricted/pending preview states when the export lacks a derivative.
+- Asset detail: trust record for raw ResourceSpace status, portal reuse state, blocker reasons, usage guidance, source/review/technical provenance, `MediaPreviewPanel`, safe derivative comparison panel, approved copy separated from original/master restriction. Mobile shows trust/download state before preview/related assets. Use/Source/Review/Files/Related use maintained `DamTabs`. Secondary copy/open actions use maintained `DropdownActionMenu` / `AssetActionsMenu`; the ResourceSpace source-of-truth link remains DAM Admin only.
+- Upload: guided three-step intake with autosave checkpoint, maintained dropzone/selected-file preview, taxonomy-backed `InputWithTags`, type/size display, remove/clear controls, required evidence markers, reviewer handoff packet, large-media guidance, bottom action bar, and blocked-until-review receipt.
+- Review: queue tabs, queue toolbar, xl desktop DataTable, compact tablet/mobile decision rows, selected-asset `Overview / Metadata / Usage / AI Insights / Pending write` inspector tabs, evidence checklist, note field, audit preview, pending write state, explicit load-more gate for long queues, secondary inspector actions via maintained `AssetActionsMenu`, hold-and-release controls for archive/do-not-publish decisions, and desktop-only GSAP motion disabled by reduced-motion.
+- Admin: production readiness console with left admin sidebar, readiness progress panel, source/read/write cards, launch gate, DataTables for backlog/integration/field/vocabulary, pending blockers, field mapping coverage, vocabulary, and portal gate.
+- Guide: editorial usage guide with anchor nav, uncertainty callout, row icons, Do/Avoid columns, media coworker callout, and a collapsible preview safety states section.
 
 ## Architecture
 
@@ -79,13 +87,13 @@ Reviewer/DAM Admin can open review queue. Review actions go through `/api/review
 
 Request-original, request-review, and ask-media-coworker dialogs only open email drafts. They do not grant original access, approve reuse, update ResourceSpace, or create pending review writes.
 
-Latest checked behavior on 2026-06-06:
+Latest checked behavior on 2026-06-07:
 
 | Check | Result |
 |---|---|
-| Viewer download for blocked candidate asset `367` | 403 blocked |
-| Viewer blocked detail asset `367` | visible as preview/detail candidate, no active download link |
-| Reviewer blocked detail asset `367` | visible for review, no active download link |
+| Viewer download for non-portal-ready / unsafe assets | 403 blocked |
+| Viewer blocked detail asset | visible as trust record, no unsafe active download link |
+| Reviewer blocked detail asset | visible for review, no unsafe active download link |
 | Viewer review POST | 403 blocked |
 | Reviewer review POST without note/checklist | 400 missing evidence |
 | Reviewer review POST with valid evidence | 202 local pending write |
@@ -117,14 +125,27 @@ If the current ResourceSpace export lacks a usable preview derivative for the ro
 ## Deferred UI Items
 
 - Theme toggle is intentionally deferred. Dark mode needs a full contrast/safety-label pass before it can be enabled without weakening approval, warning, blocked, people/minors, or pending-write clarity.
-- Load-more/pagination beyond the current API cap remains a follow-up; current browser QA still verifies count truth and responsive layout.
+- Library pagination is implemented with preserved search/view/filter/sort state and exact `Showing X-Y of Z` copy. Richer collection/detail pagination remains a follow-up only if those views need deeper browsing.
+
+## 2026-06-07 Handoff Delta
+
+- `frontend/components/StatusBadge.tsx` now owns the shared `TjcStatusBadge` primitive and semantic wrappers for raw status, reuse, rights, review, visibility, and download states. Asset Detail uses the wrappers in `AssetTrustPanel`.
+- `frontend/components/DataTable.tsx` is visible in Admin backlog/integration/field/vocabulary tables and Review xl desktop queue.
+- `frontend/components/MediaPreviewPanel.tsx` supports image/video/audio/document/restricted/unknown modes; document/video/audio modes are safe shells until ResourceSpace exports matching safe derivatives.
+- `frontend/lib/tjc-toasts.tsx` wires Sonner feedback for upload, draft, share/copy, review, pending write, blocked download, and save failure events.
+- `frontend/components/AdminPage.tsx` includes an `Audit log` sidebar anchor and read-only audit section. Pending review writes still remain local queue records until ResourceSpace write mapping is configured.
+- `frontend/components/GuidePage.tsx` mobile jump links wrap instead of scrolling offscreen; browser QA confirmed no clipped Guide controls at 768/390/320.
+- `frontend/components/ReviewPage.tsx` uses a mobile queue selector plus an 8-card compact mobile queue while desktop/xl keeps the Review DataTable and load-more gate expected by browser QA.
+- `frontend/components/AppNav.tsx` preserves Tubelight-style active state and uses 320px icon-first labels to avoid clipped Admin navigation.
+- `docs/ui-system/21st-primitive-implementation-matrix.md` documents source status, app-native targets, real usage, screenshot evidence, accessibility behavior, rejected behavior, and debt for each mapped 21st.dev primitive.
+- Required screenshots and primitive proofs were refreshed against `http://localhost:3029`; the capture manifest records no horizontal overflow.
 
 ## Remaining Before Church PC/NAS
 
-- Configure production host and storage.
+- Configure production host and durable runtime storage.
 - Restore ResourceSpace backup on clean church machine.
 - Protect access through Cloudflare Access or Google Workspace allowlist.
 - Configure signed ResourceSpace API field mapping for portal review/upload writes.
 - Confirm backup job and restore test on the target host.
 - Pilot video/audio import with large-media intake.
-- Replace local demo role switch with real church access control.
+- Replace local demo role switch with real church access control and trusted SSO headers.

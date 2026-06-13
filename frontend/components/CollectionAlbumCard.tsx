@@ -1,8 +1,9 @@
 "use client";
 
-import { PointerEvent, useState } from "react";
-import { ArrowRight, FolderOpen, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, FolderOpen, Images, Users } from "lucide-react";
 import { MediaPreview } from "@/components/MediaPreview";
+import { TjcStatusBadge } from "@/components/StatusBadge";
+import { cn } from "@/lib/ui";
 
 type CollectionAlbumCardProps = {
   name: string;
@@ -13,11 +14,25 @@ type CollectionAlbumCardProps = {
   approvalSummary: string;
   peopleWarning?: string;
   images: { src: string; alt: string }[];
+  isActive?: boolean;
+  inspectLabel?: string;
+  onInspect?: () => void;
   onOpen: () => void;
 };
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
+function AlbumPlaceholder({ name, title, className, label = "Album cover" }: { name: string; title: string; className?: string; label?: string }) {
+  return (
+    <span className={cn("relative grid h-full min-h-20 w-full place-items-center overflow-hidden rounded-md border border-[#cfd9d2] bg-[#eef3ef] p-3 text-center text-[#174d37]", className)} aria-label={`${name} package cover`}>
+      <span className="absolute inset-2 rounded-md border border-[#d8e2dc]" aria-hidden="true" />
+      <span className="relative z-[1] grid justify-items-center gap-1.5">
+        <span className="grid h-10 w-10 place-items-center rounded-md border border-[#cfd9d2] bg-white">
+          <FolderOpen size={18} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <strong className="text-[11px] font-black leading-tight">{title}</strong>
+        <span className="text-[10px] font-black uppercase opacity-70">{label}</span>
+      </span>
+    </span>
+  );
 }
 
 export function CollectionAlbumCard({
@@ -29,66 +44,110 @@ export function CollectionAlbumCard({
   approvalSummary,
   peopleWarning,
   images,
+  isActive = false,
+  inspectLabel = "View details",
+  onInspect,
   onOpen
 }: CollectionAlbumCardProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeImage = images[activeIndex] || images[0];
-
-  function scrubPreview(event: PointerEvent<HTMLButtonElement>) {
-    if (images.length <= 1) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 0.999);
-    setActiveIndex(Math.floor(ratio * images.length));
-  }
+  const hasPeopleWarning = Boolean(peopleWarning);
+  const hasAssets = !countLabel.startsWith("0 ");
+  const statusTone = hasPeopleWarning ? "warning" : hasAssets ? "success" : "neutral";
+  const statusLabel = hasPeopleWarning ? "People review" : hasAssets ? "Package ready" : "No assets yet";
+  const bestUse = /slide|sermon|teaching|bible/i.test(`${name} ${description}`)
+    ? "Best for slides and teaching visuals"
+    : /website|hero|banner/i.test(`${name} ${description}`)
+      ? "Best for website pages"
+      : /newsletter|social|announcement/i.test(`${name} ${description}`)
+        ? "Best for newsletters and announcements"
+        : "Best as a ministry starting point";
+  const safetySummary = hasPeopleWarning
+    ? "Open item guidance before any public sharing."
+    : hasAssets
+      ? "Start here, then confirm each item before reuse."
+      : "Reviewer-approved media will appear here later.";
 
   return (
-    <button
-      type="button"
-      className="group grid overflow-hidden rounded-md border border-tjc-line bg-white text-left transition duration-150 hover:border-[#9fb8ae] active:translate-y-px"
-      onClick={onOpen}
-      onPointerMove={scrubPreview}
-      onPointerLeave={() => setActiveIndex(0)}
-      aria-label={`Browse ${name}`}
+    <article
+      className={cn(
+        "group relative grid min-w-0 gap-4 overflow-hidden rounded-md border bg-white p-3 text-left transition hover:border-[#8aa99a] hover:bg-[#fbfdfb] md:grid-cols-[minmax(12rem,16rem)_minmax(0,1fr)]",
+        isActive ? "border-[#0b4b42] bg-[#f6fbf7] ring-1 ring-inset ring-[#8fb2a5]" : "border-[#d4ded7]"
+      )}
+      aria-label={`${name} package card`}
+      onPointerEnter={onInspect}
     >
-      <span className="grid grid-cols-[7rem_1fr] gap-1.5 border-b border-tjc-line bg-[#eef1ed] p-1.5">
-        <span className="grid aspect-[4/3] place-items-center overflow-hidden rounded bg-white">
-          {activeImage ? (
-            <MediaPreview src={activeImage.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
-          ) : (
-            <span className="grid h-full w-full place-items-center rounded-md bg-[#f6f8f5] text-center text-[11px] font-semibold leading-tight text-tjc-muted" aria-hidden="true">
-              <FolderOpen size={18} strokeWidth={1.8} />
-              No previews
+      <button className="absolute inset-0 z-[1] hidden rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f4f45] md:block" type="button" onClick={onInspect} aria-label={`Select ${name}`} />
+      <div className="pointer-events-none relative z-[2] grid max-w-full grid-cols-[1.45fr_.88fr] gap-2 overflow-hidden rounded-md bg-[#edf3ef] p-1.5" aria-hidden="true">
+        {images.length ? (
+          <>
+            <span className="row-span-2 grid aspect-[4/3] place-items-center overflow-hidden rounded-md border border-[#d6e0d8] bg-[#f4f7f4]">
+              <MediaPreview src={images[0]?.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
             </span>
-          )}
-        </span>
-        <span className="grid min-w-0 grid-cols-4 gap-1" aria-hidden="true">
-          {(images.length ? images.slice(0, 4) : []).map((image, index) => (
-            <span className="grid min-h-12 place-items-center overflow-hidden rounded bg-white" key={`${image.src}-${index}`}>
-              <MediaPreview src={image.src} alt="" />
+            {images.slice(1, 3).map((image, index) => (
+              <span className="grid aspect-[4/3] place-items-center overflow-hidden rounded-md border border-[#d6e0d8] bg-[#f4f7f4]" key={`${image.src}-${index}`}>
+                <MediaPreview src={image.src} alt="" imgClassName="transition duration-300 ease-out group-hover:scale-[1.025]" />
+              </span>
+            ))}
+          </>
+        ) : (
+          <>
+            <AlbumPlaceholder name={name} className="row-span-2 aspect-[4/3]" title={name} label="Package cover" />
+            <AlbumPlaceholder name={`${name}-shelf`} className="aspect-[4/3]" title="Package" label="Preview" />
+            <AlbumPlaceholder name={`${name}-stable`} className="aspect-[4/3]" title="Media kit" label="Preview" />
+          </>
+        )}
+      </div>
+      <div className="pointer-events-none relative z-[2] grid min-w-0 content-between gap-4 py-1">
+        <div className="grid gap-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <span className="text-[11px] font-black uppercase tracking-[.08em] text-tjc-muted">{ministry}</span>
+              <h2 className="mt-1 line-clamp-2 text-xl font-black leading-tight text-tjc-ink">{name}</h2>
+            </div>
+            <TjcStatusBadge domain="reuse" status={statusLabel} tone={statusTone} icon={hasPeopleWarning ? Users : hasAssets ? CheckCircle2 : FolderOpen} label={statusLabel} size="xs" />
+          </div>
+          <p className="line-clamp-2 text-sm font-semibold leading-snug text-tjc-muted">{description}</p>
+          <div className="grid gap-1 rounded-md border border-[#dbe4dd] bg-[#fbfcfa] p-2 text-xs font-semibold text-[#4d5b52]">
+            <span><strong className="text-tjc-ink">Best use:</strong> {bestUse}</span>
+            <span><strong className="text-tjc-ink">Safety:</strong> {safetySummary}</span>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs font-black text-[#4d5b52]">
+            <span className="inline-flex min-h-8 max-w-full min-w-0 items-center gap-1.5 rounded-md border border-[#dbe4dd] bg-[#f9fbf9] px-2">
+              <Images size={13} strokeWidth={1.8} aria-hidden="true" />
+              <span className="truncate">{countLabel}</span>
             </span>
-          ))}
-        </span>
-      </span>
-      <span className="grid gap-2 p-2.5">
-        <span className="flex min-w-0 items-start justify-between gap-3">
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold leading-tight text-tjc-ink">{name}</span>
-            <span className="mt-1 block text-xs leading-snug text-tjc-muted">{description}</span>
-          </span>
-          <ArrowRight className="shrink-0 text-tjc-evergreen transition group-hover:translate-x-1" size={16} strokeWidth={1.8} aria-hidden="true" />
-        </span>
-        <span className="grid gap-1 text-[11px] text-[#5c675f]">
-          <span>{countLabel} / {dateRange}</span>
-          <span>{ministry}</span>
-          <strong className="font-semibold text-tjc-evergreen">{approvalSummary}</strong>
-        </span>
-        {peopleWarning ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#725216]">
+            <span className="inline-flex min-h-8 max-w-full min-w-0 items-center gap-1.5 rounded-md border border-[#dbe4dd] bg-[#f9fbf9] px-2">
+              <CheckCircle2 size={13} strokeWidth={1.8} aria-hidden="true" />
+              <span className="truncate">{approvalSummary}</span>
+            </span>
+            <span className="inline-flex min-h-8 max-w-full min-w-0 items-center gap-1.5 rounded-md border border-[#dbe4dd] bg-[#f9fbf9] px-2">
+              <CalendarDays size={13} strokeWidth={1.8} aria-hidden="true" />
+              <span className="truncate">{dateRange}</span>
+            </span>
+          </div>
+          {peopleWarning ? (
+          <span className="inline-flex items-center gap-1 text-xs font-black text-[#725216]">
             <Users size={13} strokeWidth={1.8} aria-hidden="true" />
             {peopleWarning}
           </span>
         ) : null}
-      </span>
-    </button>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e6eee8] pt-3">
+          <span className="text-xs font-black text-tjc-muted">
+            {hasAssets ? "Open Find results to confirm each asset before reuse." : "No assets yet."}
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {onInspect ? (
+              <button className="pointer-events-auto inline-flex min-h-9 items-center rounded-md border border-[#c9d8cf] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={onInspect}>
+                {inspectLabel}
+              </button>
+            ) : null}
+            {hasAssets ? <button className="pointer-events-auto inline-flex min-h-9 items-center gap-2 rounded-md border border-[#c9d8cf] bg-white px-3 text-sm font-black text-tjc-evergreen transition hover:bg-[#eef7f1] active:translate-y-px" type="button" onClick={onOpen}>
+              Open Find results
+              <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
+            </button> : null}
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }

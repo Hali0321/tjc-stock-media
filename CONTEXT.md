@@ -15,9 +15,13 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - **Master warehouse**: `TJC Stock Media Library` Google Shared Drive. It stores selected master originals by year/source album.
 - **Approved delivery copy**: curated output copy, shortcut, or derivative placed in Approved Public/Internal folders after review. It is not the only master record.
 - **DAM**: Digital Asset Management system. ResourceSpace is the DAM layer for tags, search, previews, rights review, and approved downloads.
+- **Media source session**: one request-time view of the active media source, including whether the portal is reading ResourceSpace live, ResourceSpace export, local fixture fallback, or role-safe media-library copy. It is the portal's way to keep source truth honest without exposing operational details to roles that should not see them.
 - **Source system**: where media originally came from, such as Google Photos, old Drive folders, IA DME folders, or local downloads.
 - **Source album**: original Google Photos album name. It is provenance and collection context, not the whole taxonomy.
 - **Collection**: ResourceSpace grouping used for source albums, run batches, and curated sets. Collections do not replace metadata/status fields.
+- **Saved view**: named portal search perspective for a recurring media job, such as website heroes, no-people assets, or children/youth review. It is a workflow shortcut, not a separate collection.
+- **Brand kit**: curated ministry guidance and downloadable ResourceSpace collection mapping for one campaign or identity use case. Editorial copy can live in the portal; downloadable media remains ResourceSpace-backed.
+- **Package draft**: portal-local curation object for assembling a ministry toolkit. It stores section names and ResourceSpace references only; asset records, approval state, and rights truth remain in ResourceSpace.
 - **Import batch**: a selected group of files imported into ResourceSpace for review.
 - **Rights reviewer**: person allowed to approve public/internal/restricted use.
 - **Quality status**: whether an asset is useful for stock media, such as `Hero Candidate`, `Useful`, `Context Only`, `Low Use`, or `Reject`.
@@ -26,6 +30,7 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 - **Approved Public**: raw ResourceSpace status indicating ResourceSpace approval. It is not automatically portal-reusable unless portal reuse policy also passes.
 - **Approved Internal**: safe inside TJC, not public.
 - **Portal Ready**: computed portal state where source, rights/consent, people/minors, reviewer/date, usage scope, and derivative checks all pass.
+- **Portal reuse state**: computed user-facing answer to whether an asset can be reused now, previewed only, or blocked for source/rights/people/derivative reasons. It does not replace ResourceSpace approval fields.
 - **Batch Approved With Blockers**: raw ResourceSpace-approved asset that still lacks one or more portal reuse requirements. User-facing label: `Needs portal review`.
 - **Pending Review Write**: local queued review decision that has not yet been written to ResourceSpace; audit evidence and retry state, not source of truth.
 - **Needs Review**: default state for imported assets.
@@ -42,17 +47,23 @@ A TJC user can find a rights-safe asset for a real communication need in under 6
 
 ## Current Portal Product Surface
 
-- **Library**: find and reuse workspace with compact search, stable saved views, filters, count truth, collection entry points, and contact-sheet asset records.
+- **Library**: find and reuse workspace with compact search, desktop saved-view/browse rail, quiet right filter drawer, count truth, collection entry points, pagination, and contact-sheet asset records.
 - **Command palette**: `Cmd/Ctrl+K` utility for search, stable saved views, collections, upload, review queues, ResourceSpace ID lookup, guide, and admin diagnostics.
-- **Collections**: album-oriented browsing by stable collection ID. Sabbath language is used instead of Sunday language.
-- **Asset detail**: trust record for raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors confidence, files, related assets, and download/original restrictions.
+- **Collections**: album-oriented browsing by stable collection ID, compact thumbnail rails, selected collection inspector, source/count/date facts, and one `Open Library results` action. Sabbath language is used instead of Sunday language.
+- **Asset detail**: trust record for raw ResourceSpace status, portal reuse state, blockers, source/provenance, reviewer/date, rights, people/minors confidence, files, safe derivative comparison panel, related assets, and download/original restrictions.
+- **Media preview panel**: app-native image/video/audio/document/restricted/unknown wrapper. Image/restricted modes are proven with current export data; document/video/audio modes are implemented as safe shells until ResourceSpace exports role-safe rows of those media types.
 - **Request dialog**: focused dialog for original access, review request, or media coworker help. It opens an email draft only; it does not update ResourceSpace, approve reuse, grant original access, or create a pending review write.
-- **Upload**: contributor intake workflow. New media remains blocked as `Needs Review / Do Not Publish` until review.
+- **Upload**: contributor intake workflow with autosave checkpoint, selected-file count, selected-file preview/remove controls, taxonomy tag input, reviewer packet, and bottom action bar. New media remains blocked as `Needs Review / Do Not Publish` until review.
 - **Upload preview**: selected files are previewed as filename/type/size evidence; large video/audio over 100 MB is routed to Shared Drive Incoming guidance.
-- **Review**: governance workbench with queue tabs, risk/missing metadata triage, inspector tabs, required checklist, note field, audit preview, local pending-write queue, and a load-more gate for long queues.
+- **Review**: governance workbench with queue tabs, queue toolbar, xl desktop DataTable, risk/missing metadata triage, contact-sheet strip, `Overview / Metadata / Usage / AI Insights / Pending write` inspector tabs, required checklist, note field, audit preview, local pending-write queue, and a load-more gate for long queues.
 - **Review load-more gate**: explicit `Show more review items` control that keeps mobile reviewers near the inspector/action area without changing review queue truth.
-- **Guide**: secondary searchable help for Do/Avoid rules, download decisions, children/youth, source/credit, and large-media intake.
-- **No-preview state**: if ResourceSpace export lacks a derivative for the current role, the portal labels the tile as `Preview pending` or `Preview unavailable`; it does not invent or commit media.
+- **Guide**: secondary searchable editorial help with anchor nav, uncertainty callout, row icons, Do/Avoid rules, download decisions, children/youth, source/credit, and large-media intake.
+- **Guide mobile jump nav**: wrapping chip navigation for Guide sections. It keeps all controls inside the viewport at 320/390/768 instead of relying on offscreen horizontal scrolling.
+- **TjcStatusBadge**: shared status primitive for raw ResourceSpace status, portal reuse state, rights, review, visibility, and download eligibility. Semantic wrappers keep status text, icon, and tone consistent without relying on color alone.
+- **DataTable**: shared Admin/Review table primitive with search, sort, page-size control, pagination, and mobile cards. It is read-only UI over existing export/API data.
+- **Toast feedback**: shared Sonner helpers for upload, draft, copy/share, review queued, pending write, blocked download, and save failure events. Safety truth also stays visible inline.
+- **Admin audit log**: read-only Admin section that surfaces integration readiness, pending-write queue state, and top backlog items as audit signals; it does not claim ResourceSpace persistence.
+- **No-preview state**: if ResourceSpace export lacks a derivative for the current role, the portal labels the tile as a restricted/pending policy state with safe media type and collection context; it does not invent or commit media.
 
 ## Current LM Photos Completion Source
 

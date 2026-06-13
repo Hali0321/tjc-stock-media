@@ -16,6 +16,52 @@ export type UsageScope =
   | "Do Not Publish"
   | "Do Not Use";
 
+export type ReuseTier = "stock-safe" | "context-safe" | "archive-only";
+
+export type VisibilityTier = "public" | "internal/member" | "reviewer/admin" | "archive";
+
+export type SensitivityClass =
+  | "public-safe"
+  | "member-sensitive"
+  | "sacrament-sensitive"
+  | "youth-sensitive"
+  | "testimony-sensitive"
+  | "internal-governance"
+  | "archive-restricted";
+
+export type RightsBasis =
+  | "TJC-owned"
+  | "contributor-license"
+  | "public-domain"
+  | "jurisdiction-limited-public-domain"
+  | "hymn-license"
+  | "hymn-permission"
+  | "fair-use-internal-only"
+  | "unknown";
+
+export type ApprovedChannel =
+  | "website"
+  | "livestream"
+  | "projection"
+  | "choir-upload"
+  | "print"
+  | "social"
+  | "internal-training"
+  | "limited-share-link"
+  | "archive-only";
+
+export type DomainReviewer =
+  | "doctrine"
+  | "music-rights"
+  | "RE/minors"
+  | "pastoral-sensitivity"
+  | "archive"
+  | "DAM-reviewer";
+
+export type MasterCustodyPathStatus = "verified" | "planned" | "missing" | "not-exported";
+
+export type WithdrawalStatus = "active" | "withdrawn" | "takedown-requested" | "embargoed" | "expired";
+
 export type StockMediaAsset = {
   id: string;
   title: string;
@@ -27,7 +73,7 @@ export type StockMediaAsset = {
     card: string;
     collection: string;
     detail: string;
-    download: string;
+    download?: string;
   };
   mediaType: "photo" | "video" | "audio" | "graphic" | "document";
   collection: string;
@@ -38,9 +84,13 @@ export type StockMediaAsset = {
   sourcePlatform?: string;
   sourceSystem?: string;
   sourceAccount?: string;
+  sourceFolder?: string;
+  sourceAlbum?: string;
   sourceAlbumPath?: string;
   sourceAlbumMemberships?: string[];
+  importBatch?: string;
   eventName?: string;
+  eventSeries?: string;
   eventDate?: string;
   capturedDate?: string;
   importDate?: string;
@@ -66,11 +116,47 @@ export type StockMediaAsset = {
   resourceSpaceId?: string;
   sourcePath?: string;
   masterDrivePath?: string;
+  masterCustodyPathStatus?: MasterCustodyPathStatus;
   originalFilename?: string;
   fileExtension?: string;
   fileSizeBytes?: number;
   tags?: string[];
   tjcTerms?: string[];
+  suggestedTags?: string[];
+  controlledVocabularySource?: "approved-historical-tjc" | "review-suggestion" | "unknown";
+  aiTitleSuggestion?: string;
+  aiVisibleTagSuggestions?: string[];
+  aiTjcTermSuggestions?: string[];
+  aiQualitySuggestion?: string;
+  aiPeopleOrMinorFlag?: string;
+  humanAiDecision?: string;
+  reuseTier?: ReuseTier;
+  visibilityTier?: VisibilityTier;
+  sensitivityClass?: SensitivityClass;
+  rightsBasis?: RightsBasis;
+  approvedChannels?: ApprovedChannel[];
+  requiredNotice?: string;
+  consentReleaseRecordId?: string;
+  publishDate?: string;
+  embargoDate?: string;
+  expirationDate?: string;
+  approvalRecheckDate?: string;
+  expirationOrRecheckDate?: string;
+  rightsExpirationDate?: string;
+  consentExpirationDate?: string;
+  withdrawalStatus?: WithdrawalStatus;
+  domainReviewer?: DomainReviewer;
+  doctrineSacramentTheme?: string;
+  hymnNumberOrTitle?: string;
+  sermonTitle?: string;
+  testimonyTheme?: string;
+  religiousEducationLevel?: string;
+  church?: string;
+  region?: string;
+  publicationTitle?: string;
+  language?: string;
+  versionOrEdition?: string;
+  duplicateSimilarityHint?: string;
   reuseDecision?: ReuseDecision;
   pendingReviewWrite?: ReviewWriteRecordSummary;
 };
@@ -122,19 +208,24 @@ export type MetadataConfidence = {
 export type ReviewEvidenceChecklist = {
   sourceConfirmed: boolean;
   rightsConfirmed: boolean;
+  attributionConfirmed: boolean;
   peopleVisibilityConfirmed: boolean;
   childrenYouthChecked: boolean;
   usageScopeSelected: boolean;
   derivativeAvailable: boolean;
   sensitiveContextChecked: boolean;
   creditRequirementChecked: boolean;
+  expirationRereviewSet: boolean;
+  proofLinkAttached: boolean;
 };
 
 export type ReviewWriteSyncState =
   | "queued"
   | "ready_to_sync"
+  | "syncing"
   | "sync_failed"
   | "synced_to_resourcespace"
+  | "conflict_detected"
   | "cancelled"
   | "superseded";
 
@@ -159,6 +250,151 @@ export type ReviewWriteRecordSummary = Pick<
   ReviewWriteRecord,
   "id" | "resourceId" | "requestedStatus" | "createdAt" | "updatedAt" | "syncState" | "lastError"
 >;
+
+export type DamAssetStatus =
+  | "approved"
+  | "needs-review"
+  | "restricted"
+  | "missing-consent"
+  | "expiring-soon"
+  | "unknown";
+
+export type DamMediaType = "image" | "video" | "document" | "audio" | "other";
+
+export type DamAssetVersion = {
+  id: string;
+  label: string;
+  createdAt?: string;
+  createdBy?: string;
+  isCurrent?: boolean;
+  resourceSpaceId?: number | string;
+};
+
+export type DamActivity = {
+  id: string;
+  type: string;
+  actor?: string;
+  createdAt: string;
+  summary: string;
+};
+
+export type DamAsset = {
+  id: string;
+  resourceSpaceId: number | string;
+  title: string;
+  filename: string;
+  type: DamMediaType;
+  mime?: string;
+  extension?: string;
+  dimensions?: string;
+  duration?: string;
+  fileSize?: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  downloadUrl?: string;
+  status: DamAssetStatus;
+  approvalStatusRaw?: string;
+  createdBy?: string;
+  uploadedBy?: string;
+  createdAt?: string;
+  uploadedAt?: string;
+  modifiedAt?: string;
+  categories: string[];
+  keywords: string[];
+  collections: string[];
+  usageChannels: string[];
+  licenseType?: string;
+  usageRights?: string;
+  territory?: string;
+  durationRights?: string;
+  modelRelease?: "yes" | "no" | "not-required" | "unknown";
+  propertyRelease?: "yes" | "no" | "not-required" | "unknown";
+  sourceSystem: "resourcespace";
+  storageSource?: "s3" | "google-drive" | "resourcespace" | "unknown";
+  versions?: DamAssetVersion[];
+  activity?: DamActivity[];
+  raw?: unknown;
+};
+
+export type ResourceSpaceFieldMap = {
+  title: string | number;
+  description: string | number;
+  approvalStatus: string | number;
+  usageRights: string | number;
+  licenseType: string | number;
+  territory: string | number;
+  modelRelease: string | number;
+  propertyRelease: string | number;
+  categories: string | number;
+  keywords: string | number;
+  ministry: string | number;
+  campaign: string | number;
+  usageChannels: string | number;
+  [key: string]: string | number;
+};
+
+export type DamUser = {
+  id: string;
+  name: string;
+  email?: string;
+  role: DemoRole;
+  team?: string;
+  sourceSystem?: "sso" | "local-beta";
+};
+
+export type BetaFeedbackSeverity = "low" | "medium" | "high" | "critical";
+
+export type BetaFeedbackStatus = "new" | "triaged" | "agent-ready" | "fixed" | "wont-fix";
+
+export type BetaFeedbackRecord = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  role: DemoRole;
+  route: string;
+  task: string;
+  severity: BetaFeedbackSeverity;
+  expected: string;
+  actual: string;
+  status: BetaFeedbackStatus;
+  notes?: string;
+  reporterName?: string;
+  browser?: string;
+  device?: string;
+  viewport?: string;
+  attachmentUrl?: string;
+  storageMode: "vercel-kv" | "local-json";
+  actor?: string;
+};
+
+export type DamPackageSection = {
+  id: string;
+  title: string;
+  resourceSpaceAssetIds: Array<string | number>;
+};
+
+export type DamPackage = {
+  id: string;
+  title: string;
+  description?: string;
+  status: "draft" | "pending-review" | "approved" | "archived";
+  collectionId?: string | number;
+  sections: DamPackageSection[];
+  createdBy?: string;
+  updatedAt?: string;
+};
+
+export type DamAuditEvent = {
+  id: string;
+  type: string;
+  actor: string;
+  role?: DemoRole;
+  resourceSpaceId?: string | number;
+  packageId?: string;
+  status: "allowed" | "denied" | "blocked" | "queued" | "preview";
+  summary: string;
+  createdAt: string;
+};
 
 export type SavedViewSummary = {
   id: string;
@@ -262,7 +498,36 @@ export type IntegrationReadinessItem = {
   label: string;
   ready: boolean;
   detail: string;
-  owner: "ResourceSpace" | "Google Shared Drive" | "DAM Admin" | "Reviewers";
+  owner: "ResourceSpace" | "Google Shared Drive" | "Amazon S3" | "Identity Provider" | "DAM Admin" | "Reviewers" | "Portal";
+  state?: "Operational" | "Degraded" | "Not configured" | "Read-only" | "Blocked" | "Pending setup";
+};
+
+export type BetaReadinessFact = {
+  id: string;
+  label: string;
+  ready: boolean;
+  state: "pass" | "warn" | "block";
+  detail: string;
+  source: "integration" | "qa-report" | "environment" | "launch-readiness" | "git-hygiene" | "catalog";
+};
+
+export type BetaReadinessResult = {
+  ready: boolean;
+  score: number;
+  generatedAt: string;
+  facts: BetaReadinessFact[];
+};
+
+export type AuditEventSummary = {
+  id: string;
+  type: string;
+  createdAt: string;
+  role: DemoRole;
+  actor: string;
+  status: "allowed" | "denied" | "blocked" | "queued" | "preview";
+  assetId?: string;
+  resourceSpaceId?: string;
+  summary: string;
 };
 
 export type AssetGovernancePassport = {
@@ -314,6 +579,14 @@ export type DamReadinessResult = {
   portalPolicy: PortalPolicyCheck[];
   actionBacklog: AdminActionItem[];
   integrationReadiness: IntegrationReadinessItem[];
+  betaReadiness: BetaReadinessResult;
+  auditLog: {
+    count: number;
+    latestAt?: string;
+    denied: number;
+    queued: number;
+    recent: AuditEventSummary[];
+  };
 };
 
 export type SearchResult = {
@@ -359,15 +632,51 @@ export type SearchResult = {
     matchedCollection?: string;
     confidence: "exact" | "synonym" | "none";
   };
+  discovery: {
+    mode: "browse" | "smart-query" | "saved-view" | "collection";
+    summary: string;
+    expandedTerms: string[];
+    suggestedFilters: Array<{
+      label: string;
+      filter: string;
+      count: number;
+      kind: "policy" | "media" | "people" | "shape" | "workflow" | "ministry";
+    }>;
+    noResultHelp?: {
+      title: string;
+      guidance: string;
+      querySuggestions: string[];
+      filters: Array<{
+        label: string;
+        filter: string;
+        count: number;
+        kind: "policy" | "media" | "people" | "shape" | "workflow" | "ministry";
+      }>;
+      savedViews: Array<{
+        id: string;
+        label: string;
+      }>;
+    };
+    scoreHint: string;
+  };
   zeroResultInsights: ZeroResultInsight[];
   operationalInsights: OperationalInsight[];
   savedViews: SavedViewSummary[];
   collections: CatalogCollection[];
+  usageAnalytics?: {
+    enabled: boolean;
+    totalEvents: number;
+    topSearches: Array<{ label: string; value: number }>;
+    topAssets: Array<{ label: string; value: number }>;
+    dailyEvents?: Array<{ date: string; value: number }>;
+  };
 };
 
 export type MediaSourceStatus = {
-  adapter: "resourcespace-api" | "exported-metadata" | "demo-fallback";
+  adapter: "resourcespace-api" | "exported-metadata" | "demo-fallback" | "media-library";
   label: string;
   detail: string;
   readOnly: boolean;
+  live?: boolean;
+  sourceKind?: "resourcespace" | "fallback-fixtures" | "media-library";
 };

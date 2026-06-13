@@ -64,7 +64,7 @@ Curated copies/exports, not the only master archive
 - ResourceSpace is the DAM/search/review/download layer.
 - Church IT/admin owns the live system.
 - Appointed ministry reviewers approve public/internal use.
-- Hali/build team prepares setup and handoff, but is not long-term production owner.
+- Prototype build owners prepare setup and handoff, but are not long-term production owners.
 
 ## Launch Blockers
 
@@ -73,7 +73,7 @@ Launch is blocked until all items pass:
 1. Church PC/NAS fresh install works.
 2. ResourceSpace restore from backup works on a clean host.
 3. Cloudflare Access protects the site.
-4. Hali's Mac can be turned off.
+4. The local prototype machine can be turned off.
 5. Backup job runs automatically.
 6. Restore test is documented.
 7. Contributor upload goes to `Needs Review / Do Not Publish`.
@@ -82,6 +82,19 @@ Launch is blocked until all items pass:
 10. Large video/audio upload path is tested outside Cloudflare browser upload limits.
 11. AI cost kill switch is tested.
 12. One-page user guide and 5-minute demo exist.
+13. Production trusted SSO headers are enabled and verified; client role overrides are ignored.
+14. Durable runtime storage is configured for audit log, pending review writes, download tickets, feedback, packages, saved searches, and usage events, or those stateful features fail closed.
+15. ResourceSpace live API reads prove paginated full-archive behavior and do not silently cap at 1,000 records.
+16. ResourceSpace review writeback is confirmed by re-reading the updated record; queued portal review is not final ResourceSpace truth.
+17. Approved Public is checked against portal-ready policy before reuse; raw approval alone is not a download grant.
+18. DAM Admin readiness reports distinguish diagnostics from permission truth:
+    `portal-ready` is stricter than raw `Approved Public`; blocked/stale/expired
+    assets remain visible; missing analytics or durable storage is reported as
+    unavailable, not as zero-success.
+19. Governance metrics surface rights, minors/consent, doctrine/sacrament,
+    testimony/pastoral, hymn/music, stale lifecycle, missing derivative, missing
+    source, duplicate/canonical candidates, package blockers, and audit/download
+    coverage where real data exists.
 
 ## Storage Requirement
 
@@ -191,6 +204,20 @@ approval_notes
 approved_use_copy_path
 ```
 
+Required before broad portal-ready reuse:
+
+```text
+reuse_tier
+visibility_tier
+sensitivity_class
+rights_basis
+approved_channels
+required_notice when applicable
+consent_release_record_id when people/minors require consent evidence
+expiration_or_recheck_date when rights need future review
+domain_reviewer when doctrine, music, youth, testimony, or pastoral sensitivity applies
+```
+
 ## AI V1
 
 Allowed:
@@ -227,7 +254,7 @@ Not allowed:
 - Restore DB/filestore/config from prototype backup.
 - Admin login works.
 - Sample assets display.
-- Hali Mac off test passes.
+- Local prototype machine off test passes.
 
 ### Week 3 - Access And Permissions
 
@@ -270,7 +297,7 @@ Not allowed:
 
 Infrastructure:
 
-- [ ] Church PC/NAS runs without Hali Mac.
+- [ ] Church PC/NAS runs without the local prototype machine.
 - [ ] Docker services auto-start after reboot.
 - [ ] Storage has enough free headroom.
 - [ ] Backup target is separate from main storage.
@@ -332,4 +359,3 @@ Training:
 - [ ] Five-minute demo done.
 - [ ] Reviewer guide done.
 - [ ] Admin runbook done.
-

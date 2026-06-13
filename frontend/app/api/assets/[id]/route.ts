@@ -1,34 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
+import { assetResourceRef } from "@/lib/asset-refs";
+import {
+  assetDetailMalformedIdError,
+  assetDetailNotFoundError,
+  assetDetailRoleDeniedError,
+  buildAssetDetailResponse
+} from "@/lib/asset-detail-response";
 import { getAssetById } from "@/lib/catalog";
-import { canOpenResourceSpace, canSeeAsset, normalizeRole } from "@/lib/permissions";
-import { assetWithRoleImageUrls } from "@/lib/presentation";
+import { createDamRouteSession } from "@/lib/dam-route-session";
+import { canSeeAsset } from "@/lib/permissions";
 import { normalizeAssetId } from "@/lib/request-validation";
-import { resourceSpaceAssetUrl } from "@/lib/resourcespace-client";
-import { latestPendingWriteForResource, pendingReviewWriteSummary } from "@/lib/pending-review-writes";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = normalizeAssetId((await params).id);
-  const role = normalizeRole(request.nextUrl.searchParams.get("role"));
+  const session = createDamRouteSession(request, request.nextUrl.searchParams.get("role"));
+  const role = session.role;
   if (!id) {
-    return NextResponse.json({ error: "Malformed asset id." }, { status: 400 });
+    const error = assetDetailMalformedIdError();
+    return NextResponse.json(error.body, { status: error.status });
   }
-  const { asset, source, related } = await getAssetById(id);
+  const { asset, source, related } = await getAssetById(id, role);
   if (!asset) {
-    return NextResponse.json({ error: "Asset not found", source }, { status: 404 });
+    const error = assetDetailNotFoundError(session, source);
+    return NextResponse.json(error.body, { status: error.status });
   }
   if (!canSeeAsset(role, asset)) {
-    return NextResponse.json({ error: "This role cannot view this asset.", source }, { status: 403 });
+    const error = assetDetailRoleDeniedError(session, source);
+    return NextResponse.json(error.body, { status: error.status });
   }
-  const pending = latestPendingWriteForResource(asset.resourceSpaceId || asset.id);
-  return NextResponse.json({
-    asset: {
-      ...assetWithRoleImageUrls(asset, role),
-      pendingReviewWrite: pending ? pendingReviewWriteSummary(pending) : undefined
-    },
-    source,
-    related: related.filter((item) => canSeeAsset(role, item)).map((item) => assetWithRoleImageUrls(item, role)),
-    resourceSpaceUrl: asset.resourceSpaceId && canOpenResourceSpace(role) ? resourceSpaceAssetUrl(asset.resourceSpaceId) : null
+  const resourceSpaceId = assetResourceRef(asset);
+  session.recordUsage({
+    type: "asset_view",
+    assetId: asset.id,
+    resourceSpaceId,
+    route: `/api/assets/${asset.id}`
   });
+  return NextResponse.json(buildAssetDetailResponse({ asset, related, resourceSpaceId, session, source }));
 }
