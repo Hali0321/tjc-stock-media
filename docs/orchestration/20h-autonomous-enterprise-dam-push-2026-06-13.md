@@ -74,15 +74,16 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `security/beta-login-throttling`
+Lane: `hardening/feedback-durability-attachments`
 
-Goal: reconstruct SEC-002 beta login throttling into a clean PR-ready branch without changing production auth architecture.
+Goal: make hosted feedback durability and attachment safety honest without exposing private/source material.
 
 ## Completed lanes
 
 | Branch | Commit | Push | PR | Checks |
 | --- | --- | --- | --- | --- |
 | `docs/weekend-enterprise-dam-runbooks` | `7625050` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/6 | `git diff --check`, `git-hygiene`, `private-source`, `public-env`, `make launch-readiness` pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
+| `security/beta-login-throttling` | `09c31f4` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/7 | focused beta-auth tests 6/6, full tests 44/44, typecheck, build, guards, launch-readiness pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 
 ## Docs lane included paths
 
@@ -106,12 +107,14 @@ docs/orchestration/20h-autonomous-enterprise-dam-push-2026-06-13.md
 
 ```text
 docs/weekend-enterprise-dam-runbooks
+security/beta-login-throttling
 ```
 
 ## PR links
 
 ```text
 https://github.com/Hali0321/tjc-stock-media/pull/6
+https://github.com/Hali0321/tjc-stock-media/pull/7
 ```
 
 ## Blockers
