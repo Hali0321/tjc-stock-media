@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-06T09:36:35.393Z",
+  "checkedAt": "2026-06-12T21:57:50.006Z",
   "viewports": [
     1440,
     1280,
@@ -8,20 +8,43 @@
     390,
     320
   ],
-  "pages": 15,
+  "pages": 17,
+  "qaAsset": {
+    "detail": {
+      "id": "368",
+      "path": "/assets/368",
+      "title": "Bench Bible"
+    },
+    "unsafe": {
+      "id": "644",
+      "path": "/assets/644",
+      "title": "2012 Photo 644"
+    }
+  },
   "screenshots": [
     "library-desktop.png",
-    "collections-desktop.png",
-    "asset-detail-desktop.png",
-    "upload-desktop.png",
-    "review-desktop.png",
-    "guide-desktop.png",
-    "admin-desktop.png",
     "library-mobile-320.png",
-    "detail-mobile-320.png",
-    "review-mobile-320.png",
+    "library-mobile-390.png",
+    "collections-desktop.png",
+    "collections-mobile-320.png",
+    "collections-mobile-390.png",
+    "packages-desktop.png",
+    "packages-mobile-320.png",
+    "upload-desktop.png",
     "upload-mobile-320.png",
-    "guide-mobile-320.png"
+    "upload-mobile-390.png",
+    "review-desktop.png",
+    "review-mobile-320.png",
+    "review-mobile-390.png",
+    "asset-detail-desktop.png",
+    "detail-mobile-320.png",
+    "detail-mobile-390.png",
+    "admin-desktop.png",
+    "admin-mobile-320.png",
+    "admin-mobile-390.png",
+    "guide-desktop.png",
+    "guide-mobile-320.png",
+    "guide-mobile-390.png"
   ],
   "consoleErrors": [],
   "expectedDeniedConsole": [

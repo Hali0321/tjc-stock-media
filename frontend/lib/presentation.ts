@@ -1,10 +1,26 @@
 import { decideAccess } from "@/lib/access-decisions";
 import { assetNeedsRightsReview } from "@/lib/asset-governance";
 import { normalizeAssetTitle, usageLabel, shortStatusLabel } from "@/lib/display";
+import { canReview } from "@/lib/permissions";
 import { statusToUserLabel, usageScopeToUserLabel } from "@/lib/resourcespace-schema";
 import { buildReuseDecision, canPreviewAsset, metadataConfidence } from "@/lib/reuse-policy";
 import { missingReviewFields, reviewRiskFlags } from "@/lib/workflow-policy";
 import type { DemoRole, StockMediaAsset } from "@/lib/types";
+
+function redactRestrictedMetadata(asset: StockMediaAsset, hideResourceSpaceId = false): StockMediaAsset {
+  const {
+    checksumSha256: _checksumSha256,
+    fileSizeBytes: _fileSizeBytes,
+    masterDrivePath: _masterDrivePath,
+    originalFilename: _originalFilename,
+    sourceAlbumPath: _sourceAlbumPath,
+    sourcePath: _sourcePath,
+    ...safeAsset
+  } = asset;
+  if (!hideResourceSpaceId) return safeAsset;
+  const { resourceSpaceId: _resourceSpaceId, ...viewerSafeAsset } = safeAsset;
+  return viewerSafeAsset;
+}
 
 export function imageUrlForRole(url: string | undefined, role?: DemoRole) {
   if (!url || !role) return url;
@@ -19,16 +35,7 @@ export function imageUrlForRole(url: string | undefined, role?: DemoRole) {
 
 function assetMetadataForRole(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
   if (decideAccess(role, "viewOriginalMetadata", asset).allowed) return asset;
-  const {
-    checksumSha256: _checksumSha256,
-    fileSizeBytes: _fileSizeBytes,
-    masterDrivePath: _masterDrivePath,
-    originalFilename: _originalFilename,
-    sourceAlbumPath: _sourceAlbumPath,
-    sourcePath: _sourcePath,
-    ...safeAsset
-  } = asset;
-  return safeAsset;
+  return redactRestrictedMetadata(asset, role === "Viewer");
 }
 
 export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): StockMediaAsset {
@@ -53,8 +60,7 @@ export function assetWithRoleImageUrls(asset: StockMediaAsset, role: DemoRole): 
           small: imageUrlForRole(asset.imageUrls.small, role) || asset.imageUrls.small,
           card: imageUrlForRole(asset.imageUrls.card, role) || asset.imageUrls.card,
           collection: imageUrlForRole(asset.imageUrls.collection, role) || asset.imageUrls.collection,
-          detail: imageUrlForRole(asset.imageUrls.detail, role) || asset.imageUrls.detail,
-          download: imageUrlForRole(asset.imageUrls.download, role) || asset.imageUrls.download
+          detail: imageUrlForRole(asset.imageUrls.detail, role) || asset.imageUrls.detail
         }
       : undefined
   };
@@ -80,7 +86,8 @@ export function assetDisplayTitle(asset: StockMediaAsset) {
 }
 
 export function provenanceSummary(asset: StockMediaAsset, role: DemoRole) {
-  const source = asset.sourceAccount || asset.sourceSystem || asset.collection || "ResourceSpace";
+  const opsView = canReview(role);
+  const source = asset.sourceAccount || (opsView ? asset.sourceSystem : undefined) || asset.collection || (opsView ? "ResourceSpace" : "Media archive");
   const origin = asset.eventName || asset.sourcePlatform || asset.collection;
   const adminDecision = decideAccess(role, "viewOriginalMetadata", asset);
   return {
@@ -106,7 +113,7 @@ export function downloadState(asset: StockMediaAsset, role: DemoRole) {
 
 export function guidanceFacts(asset: StockMediaAsset, role: DemoRole) {
   const canDownload = decideAccess(role, "downloadApprovedCopy", asset).allowed;
-  const context = [...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])].slice(0, 3).join(", ") || asset.collection;
+  const context = Array.from(new Set([...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])])).slice(0, 3).join(", ") || asset.collection;
   return [
     {
       label: "Best used for",
@@ -200,9 +207,10 @@ function bestUseCopy(asset: StockMediaAsset) {
 export function trustFacts(asset: StockMediaAsset, role: DemoRole) {
   const provenance = provenanceSummary(asset, role);
   const reuse = buildReuseDecision(asset);
+  const opsView = canReview(role);
   return [
-    { label: "ResourceSpace status", value: statusToUserLabel(asset.status) },
-    { label: "Portal reuse state", value: `${reuse.label} - ${reuse.summary}` },
+    { label: opsView ? "ResourceSpace status" : "Approval state", value: statusToUserLabel(asset.status) },
+    { label: opsView ? "Portal reuse state" : "Use guidance state", value: `${reuse.label} - ${reuse.summary}` },
     { label: "Usage scope", value: usageScopeToUserLabel(asset.usageScope) },
     { label: "Source / provenance", value: provenance.publicLabel },
     { label: "Reviewer", value: asset.reviewer && asset.reviewedDate ? `${asset.reviewer} - ${asset.reviewedDate}` : "Review pending" },
@@ -226,7 +234,7 @@ export function reviewFacts(asset: StockMediaAsset) {
 
 export function assetPresentation(asset: StockMediaAsset, role: DemoRole) {
   const title = assetDisplayTitle(asset);
-  const quickTerms = [...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])].slice(0, 2);
+  const quickTerms = Array.from(new Set([...(asset.usageTerms || []), ...(asset.tjcTerms || []), ...(asset.tags || [])])).slice(0, 2);
   return {
     title,
     shortStatus: shortStatusLabel(asset.status),

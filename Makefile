@@ -1,4 +1,4 @@
-.PHONY: init up down restart logs smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui lm-photos-zip-inventory lm-photos-stream-run lm-photos-run-report video-manifest export-metadata backup restore-test launch-readiness frontend-dev frontend-check demo-check portal-api-smoke portal-browser-qa
+.PHONY: init up down restart logs smoke tag-search-static-smoke import-audit import-mvp-batch approve-mvp-batch heic-derivatives polish-mvp-ui lm-photos-zip-inventory lm-photos-stream-run lm-photos-run-report video-manifest export-metadata backup restore-test launch-readiness photo-only-resourcespace-readiness live-dam-surface-guard api-identity-guard api-audit-guard api-payload-guard private-source-guard public-env-guard git-hygiene-guard storage-honesty-guard frontend-dev frontend-check demo-check portal-api-smoke portal-sso-smoke portal-usage-smoke portal-delivery-smoke portal-download-ticket-smoke portal-writeback-guard-smoke portal-package-smoke portal-saved-search-smoke portal-feedback-smoke portal-beta-rehearsal portal-hosted-smoke portal-browser-qa
 
 IMPORT_DIR ?= /Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Imported/MVP 2024
 LM_PHOTOS_ZIP_DIR ?= /Users/halim4pro/Desktop/MVP/Stock Media/01_Source Exports/Photos/Incoming/lm-photo
@@ -21,6 +21,9 @@ logs:
 
 smoke:
 	./scripts/smoke.sh
+
+tag-search-static-smoke:
+	./scripts/tag-search-static-smoke.mjs
 
 import-audit:
 	./scripts/import-audit.sh "$(IMPORT_DIR)"
@@ -61,8 +64,35 @@ restore-test:
 launch-readiness:
 	./scripts/launch-readiness.sh
 
+photo-only-resourcespace-readiness:
+	node scripts/photo-only-resourcespace-readiness.mjs
+
+live-dam-surface-guard:
+	./scripts/live-dam-surface-guard.mjs
+
+api-identity-guard:
+	./scripts/api-identity-guard.mjs
+
+api-audit-guard:
+	./scripts/api-audit-guard.mjs
+
+api-payload-guard:
+	./scripts/api-payload-guard.mjs
+
+private-source-guard:
+	./scripts/private-source-guard.mjs
+
+public-env-guard:
+	./scripts/public-env-guard.mjs
+
+git-hygiene-guard:
+	./scripts/git-hygiene-guard.mjs
+
+storage-honesty-guard:
+	./scripts/storage-honesty-guard.mjs
+
 frontend-dev:
-	npm --prefix frontend run dev
+	cd frontend && npm run dev
 
 frontend-check:
 	./scripts/frontend-check.sh
@@ -72,6 +102,36 @@ demo-check:
 
 portal-api-smoke:
 	./scripts/portal-api-smoke.sh
+
+portal-sso-smoke:
+	./scripts/portal-sso-smoke.sh
+
+portal-usage-smoke:
+	./scripts/portal-usage-smoke.sh
+
+portal-delivery-smoke:
+	./scripts/portal-delivery-smoke.sh
+
+portal-download-ticket-smoke:
+	./scripts/portal-download-ticket-smoke.sh
+
+portal-writeback-guard-smoke:
+	./scripts/portal-writeback-guard-smoke.sh
+
+portal-package-smoke:
+	./scripts/portal-package-smoke.sh
+
+portal-saved-search-smoke:
+	./scripts/portal-saved-search-smoke.sh
+
+portal-feedback-smoke:
+	./scripts/portal-feedback-smoke.sh
+
+portal-beta-rehearsal:
+	./scripts/portal-beta-rehearsal.sh
+
+portal-hosted-smoke:
+	./scripts/portal-hosted-smoke.sh
 
 portal-browser-qa:
 	./scripts/portal-browser-qa.mjs
