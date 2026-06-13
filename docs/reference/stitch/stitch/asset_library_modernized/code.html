@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Enterprise DAM Asset Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#95d3ba",
+                        "tertiary": "#442800",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary-fixed": "#0d1c2e",
+                        "surface": "#f8f9fa",
+                        "primary-fixed": "#b0f0d6",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-container": "#f69f0d",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-tertiary-fixed": "#2a1700",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "outline": "#707974",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-container": "#80bea6",
+                        "surface-variant": "#e1e3e4",
+                        "tertiary-container": "#623c00",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary": "#515f74",
+                        "on-secondary": "#ffffff",
+                        "primary": "#003527",
+                        "secondary-container": "#d5e3fc",
+                        "on-primary-fixed-variant": "#0b513d",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#ffddb8",
+                        "outline-variant": "#bfc9c3",
+                        "on-secondary-container": "#57657a",
+                        "on-surface-variant": "#404944",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#064e3b",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-fixed-variant": "#3a485b",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-primary-fixed": "#002117",
+                        "secondary-fixed": "#d5e3fc",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-background": "#191c1d",
+                        "surface-tint": "#2b6954",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#b9c7df",
+                        "inverse-primary": "#95d3ba",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#edeeef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-max": "1600px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "mono-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full h-14 z-50 flex justify-between items-center px-gutter bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">TJC Stock Media</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-sm"></div>
+<button class="px-md py-sm bg-surface text-primary border border-outline-variant rounded-DEFAULT font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+                Role Switcher
+            </button>
+</div>
+</header>
+<!-- Main Layout -->
+<div class="flex pt-14 h-screen overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col w-[280px] h-full bg-surface-container-low border-r border-outline-variant z-40 flex-shrink-0 p-md overflow-y-auto">
+<div class="mb-lg">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a person looking confident in a corporate environment. The image should be well-lit with a neutral background, conveying trust and reliability suitable for an enterprise software interface. The color palette should be muted and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrOGkmBzBEguqLyofcwbEPC3VAafXVgypivnYexu1Be8pddLIK2zG8iX8Rf2bcdWSt3GRea5CbD-knRYyGgC3FzFrWmOkJgzObMqzv2Zw4Rmcq6DWjGh1jbJbaitqma8PEfjH-Hy8NAcego_JFC8Vj7zWsgtB3rW5UbqSrv3qCvY9csR_TXDFU8KWfampVGvk6F7wjd1_gpJf5RDiMF1e6t3P2dXbUlQyd9N3mtBh7Ty5uwX7npr6eMY7lQOwIZUvQACwujo8zCSQJ"/>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm font-black text-primary">TJC Stock Media</div>
+<div class="text-on-surface-variant font-body-sm text-body-sm">DAM Operations</div>
+</div>
+</div>
+</div>
+<button class="w-full py-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-DEFAULT mb-lg flex items-center justify-center gap-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">upload</span>
+                Upload Assets
+            </button>
+<nav class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-primary-container text-on-primary-container font-bold opacity-80 transition-opacity duration-150 scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-md text-label-md">Find</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Packages</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+<span class="font-label-md text-label-md">Send</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="move_to_inbox">move_to_inbox</span>
+<span class="font-label-md text-label-md">Review Inbox</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span class="font-label-md text-label-md">Governance</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Help</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col bg-surface h-full overflow-hidden">
+<!-- Search & Filters Header -->
+<div class="p-lg border-b border-outline-variant bg-surface flex-shrink-0">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-lg">Find Approved Media</h1>
+<div class="flex flex-col gap-md">
+<!-- Search Bar -->
+<div class="relative w-full max-w-3xl">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-xl pr-md py-sm bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-body-md text-body-md focus:border-primary focus:ring-2 focus:ring-primary-fixed-dim/20 focus:outline-none transition-shadow h-12" placeholder="Search by asset ID, metadata, or keywords..." type="text"/>
+<button class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<!-- Filter Chips -->
+<div class="flex flex-wrap gap-sm">
+<button class="px-md py-xs rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-colors flex items-center gap-xs">
+                            Website image
+                        </button>
+<button class="px-md py-xs rounded-full border border-primary bg-primary-container/10 text-primary font-label-sm text-label-sm hover:bg-primary-container/20 transition-colors flex items-center gap-xs">
+                            Slide background
+                            <span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+<button class="px-md py-xs rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-colors flex items-center gap-xs">
+                            Newsletter/social
+                        </button>
+<button class="px-md py-xs rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-colors flex items-center gap-xs">
+                            Youth-safe
+                        </button>
+<button class="px-md py-xs rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-colors flex items-center gap-xs">
+                            Logos
+                        </button>
+</div>
+</div>
+</div>
+<!-- Asset Grid -->
+<div class="flex-1 overflow-y-auto p-lg bg-surface-container-low">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
+<!-- Asset Card 1: Ready to Use -->
+<div class="group flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden hover:bg-surface transition-colors relative">
+<div class="absolute top-sm right-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+<input class="w-5 h-5 rounded-DEFAULT border-outline-variant text-primary focus:ring-primary-fixed-dim bg-surface cursor-pointer" type="checkbox"/>
+</div>
+<div class="aspect-video w-full bg-surface-variant relative overflow-hidden">
+<img alt="Corporate Office" class="w-full h-full object-cover" data-alt="A wide architectural shot of a modern, bright corporate office interior. The space features clean lines, glass partitions, and minimalist furniture. Natural light floods the area, creating a highly professional and sterile yet welcoming atmosphere. The color palette emphasizes cool whites, grays, and subtle blues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSdDfcSbeo3PRUq7CYV7wMxPGC7e7xlDtfB4ZPLY9HVhrZZmJC-Yvx3uIku5GcDHKPF-AM8YyI8F5bE57CMWP6zpGxNtu5V4syOUaLyy0AJ2KK5VibeUsmjODwW70UWCNEoIGlk7CTP_xTyT-6LN8HpbWm0_19JhF6WySKh0ACKLcTBQ6MDjxjKuosplxW0mAxXNJBbPBHJC5gFyoLwcSHQqKiiwNscu-bddFulu30ZCd-A_ye9TQaLOrkeqZ2BPLc9wWkMeThylBJ"/>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm gap-sm">
+<h3 class="font-label-md text-label-md text-on-surface truncate" title="Global_HQ_Lobby_2024.jpg">Global_HQ_Lobby_2024.jpg</h3>
+<span class="px-2 py-0.5 rounded-sm bg-primary-fixed/20 text-primary font-label-sm text-label-sm whitespace-nowrap flex-shrink-0">Ready to use</span>
+</div>
+<div class="text-on-surface-variant font-mono-sm text-mono-sm mb-md">JPG • 4.2 MB • 3840x2160</div>
+<div class="mt-auto flex justify-between items-center pt-sm border-t border-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-DEFAULT hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+<button class="px-md py-xs bg-primary-container text-on-primary rounded-DEFAULT font-label-sm text-label-sm flex items-center gap-xs hover:opacity-90">
+<span class="material-symbols-outlined text-[16px]">download</span> Download
+                                </button>
+</div>
+</div>
+</div>
+<!-- Asset Card 2: Needs Review -->
+<div class="group flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden hover:bg-surface transition-colors relative">
+<div class="absolute top-sm right-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+<input class="w-5 h-5 rounded-DEFAULT border-outline-variant text-primary focus:ring-primary-fixed-dim bg-surface cursor-pointer" type="checkbox"/>
+</div>
+<div class="aspect-video w-full bg-surface-variant relative overflow-hidden">
+<img alt="Team Meeting" class="w-full h-full object-cover" data-alt="A diverse group of professionals engaged in a collaborative meeting around a modern conference table. They are looking at a laptop and discussing ideas. The setting is a bright, contemporary office space with glass walls. The lighting is natural and even, highlighting a productive and focused mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCYStanbZJrqWOuSPszS7nP3dxnURxG_JnYPvfc43XmzsY_QeJFRFid6Qy-_e7E0o4SZJSuC-js29ZAbU45wMAjdHq-vLcNT1yE1_AuSUq6XMx9cZFXFHsTcYQEsN7eFBwC_hjvxbU1mNGTDzcaYacCbbOMOYLX208OAwFcuonW0HoBZRLuHdW8RmJMrpAIyfrbdO_-_YNAxP1w7nXpb8eI60o5zL03sqnfqINZy6qS0zu3k899EKCEdduuycB8KvxvkddwdUt6c_I"/>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm gap-sm">
+<h3 class="font-label-md text-label-md text-on-surface truncate" title="Q3_Strategy_Session.mp4">Q3_Strategy_Session.mp4</h3>
+<span class="px-2 py-0.5 rounded-sm bg-tertiary-fixed/30 text-tertiary-container font-label-sm text-label-sm whitespace-nowrap flex-shrink-0">Needs review</span>
+</div>
+<div class="text-on-surface-variant font-mono-sm text-mono-sm mb-md">MP4 • 128 MB • 02:45</div>
+<div class="mt-auto flex justify-between items-center pt-sm border-t border-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-DEFAULT hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+<button class="px-md py-xs bg-surface border border-outline-variant text-secondary rounded-DEFAULT font-label-sm text-label-sm flex items-center gap-xs hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[16px]">gavel</span> Request review
+                                </button>
+</div>
+</div>
+</div>
+<!-- Asset Card 3: Ready to Use -->
+<div class="group flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden hover:bg-surface transition-colors relative">
+<div class="absolute top-sm right-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+<input class="w-5 h-5 rounded-DEFAULT border-outline-variant text-primary focus:ring-primary-fixed-dim bg-surface cursor-pointer" type="checkbox"/>
+</div>
+<div class="aspect-video w-full bg-surface-variant relative overflow-hidden flex items-center justify-center p-xl">
+<!-- Simulated Vector Logo -->
+<div class="w-full h-full bg-surface flex items-center justify-center rounded border border-outline-variant border-dashed">
+<span class="font-display-lg text-primary font-black opacity-50">TJC</span>
+</div>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm gap-sm">
+<h3 class="font-label-md text-label-md text-on-surface truncate" title="Brand_Mark_Primary.svg">Brand_Mark_Primary.svg</h3>
+<span class="px-2 py-0.5 rounded-sm bg-primary-fixed/20 text-primary font-label-sm text-label-sm whitespace-nowrap flex-shrink-0">Ready to use</span>
+</div>
+<div class="text-on-surface-variant font-mono-sm text-mono-sm mb-md">SVG • 45 KB • Vector</div>
+<div class="mt-auto flex justify-between items-center pt-sm border-t border-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-DEFAULT hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+<button class="px-md py-xs bg-primary-container text-on-primary rounded-DEFAULT font-label-sm text-label-sm flex items-center gap-xs hover:opacity-90">
+<span class="material-symbols-outlined text-[16px]">download</span> Download
+                                </button>
+</div>
+</div>
+</div>
+<!-- Asset Card 4: Needs Review -->
+<div class="group flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden hover:bg-surface transition-colors relative">
+<div class="absolute top-sm right-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+<input class="w-5 h-5 rounded-DEFAULT border-outline-variant text-primary focus:ring-primary-fixed-dim bg-surface cursor-pointer" type="checkbox"/>
+</div>
+<div class="aspect-video w-full bg-surface-variant relative overflow-hidden">
+<img alt="Data Analysis" class="w-full h-full object-cover" data-alt="A close-up view of business professionals analyzing data charts and graphs on a printed document and a laptop screen. The focus is sharp on the data with a shallow depth of field blurring the background. The mood is analytical and serious, suitable for corporate reporting visuals." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK0VZvZvfhYP5ormzQrrJuiGnDkFB3wP7lC-baq-1iKGOghOjd4jVV1w76VoFN4_99xIkMrYWnf62w6Ch0DHCWvZZDwoCw6ZRzBVDnYO7D4ayiiB1XnWB6hiFyx_YsY2CFaSypJ5ILcFbILdsdLWY1rbkXeqBCnp3qQVhrJOtu5R0XofLQMmGP7InkFDbQI7jBHdo2SmwHwpdZruHUl8jtneZ8lccK-H8A1UcmdJ3Dnf9XdmvbpF9v0ys6xck1oNG1j6OBwbaUdChB"/>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm gap-sm">
+<h3 class="font-label-md text-label-md text-on-surface truncate" title="Annual_Report_Charts_v2.png">Annual_Report_Charts_v2.png</h3>
+<span class="px-2 py-0.5 rounded-sm bg-tertiary-fixed/30 text-tertiary-container font-label-sm text-label-sm whitespace-nowrap flex-shrink-0">Needs review</span>
+</div>
+<div class="text-on-surface-variant font-mono-sm text-mono-sm mb-md">PNG • 1.8 MB • 2400x1600</div>
+<div class="mt-auto flex justify-between items-center pt-sm border-t border-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-DEFAULT hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+<button class="px-md py-xs bg-surface border border-outline-variant text-secondary rounded-DEFAULT font-label-sm text-label-sm flex items-center gap-xs hover:bg-surface-variant">
+<span class="material-symbols-outlined text-[16px]">gavel</span> Request review
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

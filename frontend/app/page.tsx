@@ -1,5 +1,5 @@
-import { LibraryPage } from "@/components/LibraryPage";
+import { EnterpriseLibraryPage } from "@/components/dam/EnterpriseDamPages";
 
 export default function Page() {
-  return <LibraryPage />;
+  return <EnterpriseLibraryPage />;
 }
