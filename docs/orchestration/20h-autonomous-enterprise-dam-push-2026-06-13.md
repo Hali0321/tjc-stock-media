@@ -74,9 +74,9 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `feature/governed-tagging-taxonomy-foundation`
+Lane: `feature/smart-rules-dry-run`
 
-Goal: decide whether safe tagging/taxonomy work is narrow enough for code; otherwise keep to docs/backlog.
+Goal: add deterministic suggestion-only rule helpers if narrow; stop before any approval/writeback/UI expansion.
 
 ## Completed lanes
 
@@ -88,6 +88,7 @@ Goal: decide whether safe tagging/taxonomy work is narrow enough for code; other
 | `hardening/truth-scope-fixture-photo-only` | `7383b3f` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/9 | focused production-hardening tests 7/7, full tests 43/43, typecheck, build, guards, tag static smoke, launch-readiness, local API smoke, and local download-ticket smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `hardening/media-delivery-preview-proxy` | `77abe99` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/10 | focused media-delivery tests 3/3, full tests 44/44, typecheck, build, guards, launch-readiness, local download-ticket smoke, and local delivery smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `qa/redaction-crawler` | `b8d9b75` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/11 | PR base is `hardening/truth-scope-fixture-photo-only`; crawler pass for 27 local routes, focused production-hardening tests 9/9, full tests 45/45, typecheck, build, guards, and launch-readiness pass; launch-readiness warnings only from local runtime/evidence gaps |
+| `feature/governed-tagging-taxonomy-foundation` | `3811d94` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/12 | foundation-only helper/test; focused governed-taxonomy tests 4/4, full tests 45/45, typecheck, build, guards, and launch-readiness pass; no UI/search/writeback behavior changed |
 
 ## Docs lane included paths
 
@@ -116,6 +117,7 @@ hardening/feedback-durability-attachments
 hardening/truth-scope-fixture-photo-only
 hardening/media-delivery-preview-proxy
 qa/redaction-crawler
+feature/governed-tagging-taxonomy-foundation
 ```
 
 ## PR links
@@ -127,6 +129,7 @@ https://github.com/Hali0321/tjc-stock-media/pull/8
 https://github.com/Hali0321/tjc-stock-media/pull/9
 https://github.com/Hali0321/tjc-stock-media/pull/10
 https://github.com/Hali0321/tjc-stock-media/pull/11
+https://github.com/Hali0321/tjc-stock-media/pull/12
 ```
 
 ## Blockers
