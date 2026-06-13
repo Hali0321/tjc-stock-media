@@ -74,9 +74,9 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `hardening/truth-scope-fixture-photo-only`
+Lane: `hardening/media-delivery-preview-proxy`
 
-Goal: keep normal beta UI photo-only and prevent fixture/demo data from looking like real governed DAM truth.
+Goal: harden approved-copy, thumbnail, and preview delivery boundaries without exposing originals or backend URLs.
 
 ## Completed lanes
 
@@ -85,6 +85,7 @@ Goal: keep normal beta UI photo-only and prevent fixture/demo data from looking 
 | `docs/weekend-enterprise-dam-runbooks` | `7625050` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/6 | `git diff --check`, `git-hygiene`, `private-source`, `public-env`, `make launch-readiness` pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `security/beta-login-throttling` | `09c31f4` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/7 | focused beta-auth tests 6/6, full tests 44/44, typecheck, build, guards, launch-readiness pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 | `hardening/feedback-durability-attachments` | `eb7a1a2` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/8 | focused feedback tests 4/4, full tests 45/45, typecheck, build, guards, launch-readiness pass, local feedback smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
+| `hardening/truth-scope-fixture-photo-only` | `7383b3f` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/9 | focused production-hardening tests 7/7, full tests 43/43, typecheck, build, guards, tag static smoke, launch-readiness, local API smoke, and local download-ticket smoke pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
 
 ## Docs lane included paths
 
@@ -110,6 +111,7 @@ docs/orchestration/20h-autonomous-enterprise-dam-push-2026-06-13.md
 docs/weekend-enterprise-dam-runbooks
 security/beta-login-throttling
 hardening/feedback-durability-attachments
+hardening/truth-scope-fixture-photo-only
 ```
 
 ## PR links
@@ -118,6 +120,7 @@ hardening/feedback-durability-attachments
 https://github.com/Hali0321/tjc-stock-media/pull/6
 https://github.com/Hali0321/tjc-stock-media/pull/7
 https://github.com/Hali0321/tjc-stock-media/pull/8
+https://github.com/Hali0321/tjc-stock-media/pull/9
 ```
 
 ## Blockers
