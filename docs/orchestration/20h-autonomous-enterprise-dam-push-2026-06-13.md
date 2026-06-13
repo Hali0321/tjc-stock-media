@@ -74,9 +74,17 @@ Baseline checks:
 
 ## Active lane
 
-Lane: `docs/weekend-enterprise-dam-runbooks`
+Lane: `security/beta-login-throttling`
 
-Goal: collect docs-only launch hardening artifacts into one clean PR-ready branch.
+Goal: reconstruct SEC-002 beta login throttling into a clean PR-ready branch without changing production auth architecture.
+
+## Completed lanes
+
+| Branch | Commit | Push | PR | Checks |
+| --- | --- | --- | --- | --- |
+| `docs/weekend-enterprise-dam-runbooks` | `7625050` | pushed to `origin` | https://github.com/Hali0321/tjc-stock-media/pull/6 | `git diff --check`, `git-hygiene`, `private-source`, `public-env`, `make launch-readiness` pass; launch-readiness warnings only from missing clean-worktree local runtime artifacts |
+
+## Docs lane included paths
 
 Included paths:
 
@@ -94,17 +102,17 @@ docs/merge-readiness-report-2026-06-13.md
 docs/orchestration/20h-autonomous-enterprise-dam-push-2026-06-13.md
 ```
 
-## Completed lanes
-
-None yet.
-
 ## Pushed branches
 
-None yet.
+```text
+docs/weekend-enterprise-dam-runbooks
+```
 
 ## PR links
 
-None yet.
+```text
+https://github.com/Hali0321/tjc-stock-media/pull/6
+```
 
 ## Blockers
 
@@ -125,4 +133,3 @@ None yet.
 ## Current recommendation
 
 Hold next batch. Tiny named beta may continue only while safety boundaries hold. Wider church rollout remains NO-GO until SSO/origin protection, durable storage, ResourceSpace writeback proof, derivative delivery, rights/media review, and backup/restore gates are proven.
-
