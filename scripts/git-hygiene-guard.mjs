@@ -2,7 +2,10 @@
 import { execFileSync } from "node:child_process";
 
 const mediaPattern = /\.(jpg|jpeg|png|heic|heif|gif|tif|tiff|mp4|mov|m4v|mp3|wav|m4a|aac|flac)$/i;
-const allowedMediaPattern = /^frontend\/public\/brand\/[^/]+\.png$/i;
+const allowedMediaPatterns = [
+  /^frontend\/public\/brand\/[^/]+\.png$/i,
+  /^docs\/screenshots\/free-internal-beta-2026-06-12\/[^/]+\.png$/i,
+];
 const runtimePattern = /(^|\/)(\.env$|\.runtime|data\/runtime|filestore|mariadb|ComfyUI|models\/)/;
 
 function gitLsFiles() {
@@ -13,7 +16,9 @@ function gitLsFiles() {
 }
 
 const tracked = gitLsFiles();
-const mediaFiles = tracked.filter((file) => mediaPattern.test(file) && !allowedMediaPattern.test(file));
+const mediaFiles = tracked.filter(
+  (file) => mediaPattern.test(file) && !allowedMediaPatterns.some((pattern) => pattern.test(file)),
+);
 const runtimeFiles = tracked.filter((file) => runtimePattern.test(file));
 const failures = [];
 
